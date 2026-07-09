@@ -62,41 +62,6 @@
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Dark Mode Variables (Automatically loads if user's OS is in dark mode) */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-main: #0c120f;          /* very dark forest black background */
-    --bg-surface: #111a14;       /* surface green */
-    --bg-card: #14241d;          /* rich forest green card */
-    --bg-card-hover: #192d24;
-    --border-color: #1e3529;      /* green border */
-    --border-focus: #e2ede5;
-
-    --text-main: #e2ede5;        /* mint white text */
-    --text-muted: #84a993;       /* high contrast sage text */
-    --text-inverse: #0c120f;
-
-    --primary: #e2ede5;          /* light primary */
-    --primary-hover: #ffffff;
-    --primary-glow: rgba(226, 237, 229, 0.1);
-
-    --secondary: #d97746;        /* terracotta accent */
-    --secondary-hover: #c26333;
-    --secondary-glow: rgba(217, 119, 70, 0.1);
-
-    --accent: #d97746;
-
-    /* Sidebar Colors (In Dark Mode, sidebar is dark charcoal/forest) */
-    --sidebar-bg: #090e0c;
-    --sidebar-text: #84a993;
-    --sidebar-active-bg: #14241d;
-    --sidebar-active-text: #e2ede5;
-    --sidebar-border: rgba(255, 255, 255, 0.04);
-    --sidebar-primary: #d97746;
-    --sidebar-accent: #0f1c16;
-  }
-}
-
 
 /* Global Reset */
 *, *::before, *::after {
