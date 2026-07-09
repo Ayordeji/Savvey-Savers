@@ -495,6 +495,20 @@ export default function Home() {
             </div>
           )}
 
+          {googleError && (
+            <div style={{
+              backgroundColor: 'var(--status-error-bg)',
+              color: 'var(--status-error)',
+              border: '1px solid rgba(153, 27, 27, 0.2)',
+              padding: '12px',
+              borderRadius: '6px',
+              fontSize: '0.875rem',
+              marginBottom: '16px'
+            }}>
+              {googleError}
+            </div>
+          )}
+
           {!isSignUp ? (
             /* SIGN IN FORM */
             <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
