@@ -149,7 +149,10 @@ export async function POST(request: Request) {
     });
 
     // Handle email triggering
-    const activationLink = `http://localhost:3000/activate?invite=${invitationId}`;
+    const host = request.headers.get('host') || 'savvey-savers.vercel.app';
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const origin = `${protocol}://${host}`;
+    const activationLink = `${origin}/activate?invite=${invitationId}`;
     let emailSubject = '';
     let emailBody = '';
 
