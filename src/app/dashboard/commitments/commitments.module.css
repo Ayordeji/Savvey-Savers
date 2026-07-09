@@ -1,0 +1,162 @@
+.filterContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.filtersLeft {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  max-width: 600px;
+}
+
+.searchWrapper {
+  position: relative;
+  flex: 1.5;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 13px;
+  color: var(--text-muted);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.yearSelect {
+  flex: 0.8;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.9rem;
+}
+
+/* Row Expansion Details CSS */
+.expandedRow {
+  background-color: rgba(31, 41, 55, 0.2);
+}
+
+.expandedContainer {
+  padding: 20px;
+  border-left: 3px solid var(--primary);
+  background-color: rgba(17, 24, 39, 0.3);
+}
+
+.expandedHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.expandedTitle {
+  font-size: 0.95rem;
+  fontWeight: 700;
+}
+
+.paymentsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.paymentCard {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.paymentMeta {
+  display: flex;
+  flex-direction: column;
+}
+
+.paymentMonth {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.paymentAmount {
+  font-size: 0.9rem;
+  color: var(--primary);
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* Actions trigger popup */
+.actionsDropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdownTrigger {
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.dropdownTrigger:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+
+.dropdownMenu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  width: 200px;
+  overflow: hidden;
+}
+
+.dropdownItem {
+  width: 100%;
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color var(--transition-fast);
+}
+
+.dropdownItem:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.dropdownItemDanger {
+  color: var(--status-error);
+}
+
+.dropdownItemDanger:hover {
+  background-color: var(--status-error-bg);
+}

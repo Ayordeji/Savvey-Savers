@@ -1,0 +1,344 @@
+# Product Requirements Document: Ajo Savings Contribution Platform
+
+**Version:** 1.0
+**Author:** Praise (Ayodeji Eluyemi)
+**Date:** July 2026
+**Status:** Draft for development
+
+---
+
+## 1. Overview
+
+### 1.1 Product Summary
+The Ajo Savings Contribution Platform is a web application for tracking a traditional "Ajo" (rotating thrift/savings) group. It is a **record-keeping system, not a payment processor** — all money changes hands offline (cash, bank transfer outside the app, etc.). The platform's job is to track savings commitments, confirm when payments have been received, manage the release ("harvest") of contributions back to members, and keep members and admins informed via dashboards and notifications.
+
+### 1.2 Problem Statement
+Ajo/thrift groups are currently tracked manually (spreadsheets, notebooks, WhatsApp messages), which makes it hard to see who has paid, who owes what, when payouts are due, and to keep a clean audit trail. This platform digitizes that record-keeping.
+
+### 1.3 Goals
+- Give admins a single source of truth for all members' contributions, requests, and payouts.
+- Give members a clear personal view of their own savings commitments and status.
+- Support the full lifecycle of a savings commitment: creation → collection request → payment confirmation → harvest release.
+- Provide reminders and notifications so nothing is missed.
+- Maintain historical/audit records (including soft-deleted records and a waiting list of prospective members).
+
+### 1.4 Non-Goals
+- No real online payment processing (no card/bank integration for moving money). The app only **records** that a payment happened offline.
+- No multi-currency conversion logic (single currency per instance; symbol shown is £ in mockups but should be configurable).
+
+---
+
+## 2. User Roles & Access Control
+
+### 2.1 Roles
+| Role | Description |
+|---|---|
+| **Admin** | Manages the entire Ajo group. Full visibility into all members' data, all financial records, and all settings. Can create/edit/delete members, savings commitments, and settings. |
+| **Member** | A regular saver. Can only see their own dashboard, their own savings commitments, their own submitted requests, and general notifications. Cannot see other members' financial data or admin tools. |
+
+### 2.2 Access Rules
+- Every page/tab must check the logged-in user's role server-side (not just hide UI elements) before returning data.
+- **Admin Dashboard**: aggregated values across all members.
+- **Member Dashboard**: values scoped to `WHERE user_id = current_user`.
+- Admin-only tabs: Manage Users, Settings, Deleted Records, Waiting List, Savings Commitments Report (full), Submitted Requests (all members).
+- Member-accessible tabs: Dashboard (own data), Savings Commitment (own records, read + request), Notifications (own), Submitted Requests (own only).
+
+### 2.3 Authentication
+- Email + password login, with password reset flow.
+- Invitation-based onboarding (see Section 4 — Manage Users).
+- Session/JWT-based auth; role stored in the token/session and re-validated per request.
+
+---
+
+## 3. Dashboard Tab
+
+### 3.1 Purpose
+At-a-glance summary of the group's (Admin) or the member's own (Member) financial health.
+
+### 3.2 Metrics / Widgets
+| Widget | Definition | Admin scope | Member scope |
+|---|---|---|---|
+| Revenue to Date | Sum of all confirmed payments received | All members | Own payments only |
+| Payments Not Yet Confirmed | Count of pending payments vs. total expected payments this cycle, shown as `X / Y` | All members | Own only |
+| Harvest Released to Date | Count of harvests released vs. total harvests due, shown as `X of Y` | All members | Own only |
+| Active Users vs Invited | Count of active accounts vs. total invited accounts | All members (admin only widget) | N/A — hide for member |
+| Total Revenue | Cumulative total across all time | All members | Own only |
+
+### 3.3 Charts
+- A **bar/line chart** showing revenue (or contributions) by month, with a **Year selector** (Jan–Dec) to filter the chart to a chosen calendar year.
+- A **Users chart/widget** showing user growth or active-vs-invited breakdown over time (admin only).
+- All chart data must be filterable by year using the year selector control shown in the mockup.
+
+### 3.4 Currency
+- Amounts formatted with the configured currency symbol (default £), 2 decimal places.
+
+---
+
+## 4. Manage Users Tab *(Admin only)*
+
+### 4.1 Table Columns
+| Column | Notes |
+|---|---|
+| Invitation ID | System-generated unique ID |
+| Name | Full name |
+| Email | Unique, used for login/invite |
+| Phone Number | |
+| Role | Admin / Member |
+| Created On | Date record created |
+| Is Active | Boolean — whether the user has activated/logged into their account |
+| Membership | Membership status/type (e.g., Active, Pending, Suspended — define enum with client) |
+| Action | Hamburger menu: View / Edit / Delete |
+
+### 4.2 Search
+- A search input above the table that filters by name, email, or phone number (server-side or client-side filtering, debounced).
+
+### 4.3 Add Member Flow
+- **"Add Member" button** at the top opens a modal form with fields: Name, Email, Phone Number, Role, Membership.
+- Two submit actions on the form:
+  1. **"Save"** — creates the member record and sends an email to both the Admin and the new member. The email is a registration/welcome notice only (no login link).
+  2. **"Save and Invite"** — creates the member record and sends a welcome email to the member that **includes a unique invitation link** to access the dashboard and sign in (e.g., a tokenized URL that lets them set a password and log in). Also notifies the admin.
+- Both emails should be transactional templates (see Section 12 — Notifications & Emails).
+
+### 4.4 Row Actions (Hamburger Menu)
+- **View** — read-only detail view/modal of the member's profile.
+- **Edit** — opens the same form pre-filled, allows updating details.
+- **Delete** — soft-delete (moves record to **Deleted Records** tab, does not hard-delete from the database) with a confirmation prompt.
+
+---
+
+## 5. Savings Commitment Tab
+
+### 5.1 Table Columns
+| Column | Notes |
+|---|---|
+| Record ID | System-generated |
+| Member Name | |
+| Savings Amount | Committed contribution amount |
+| Collection Month | Month this commitment/collection cycle applies to |
+| End Date | End date of the commitment |
+| Status | e.g., Pending, Payment Confirmed, Harvest Released, Cancelled — define enum with client |
+| Action | Hamburger menu (see 5.5) |
+
+### 5.2 Search & Filters
+- Search input (by member name).
+- **Year filter** dropdown to scope the table to a specific year.
+
+### 5.3 "New Savings Commitment" Button → Modal Form
+Form fields (all dropdowns sourced from existing system data):
+| Field | Source of options |
+|---|---|
+| Savers * | Dropdown list of registered members (from Manage Users) |
+| Savings Commitment Amount * | Dropdown from **Settings → Commitment Amount** list |
+| Collection Month * | Dropdown, Jan–Dec |
+| Collection Year * | Dropdown of years (e.g., current year ± a configurable range) |
+| Savings Commitment Goal * | Dropdown from **Settings → Savings Commitment** goal list (Debt Repayment, Dream Holiday, Investment, My First Home, Property Purchase, Savings, School Fees, Wedding, Other) |
+
+Two buttons on the form:
+- **"Request Collection Month"** — submits the commitment and triggers a **request/notification workflow** asking the member to confirm/acknowledge the collection month (appears under Submitted Requests and Notifications).
+- **"Save"** — saves the commitment directly without triggering the request workflow.
+
+> **Open question for client:** Confirm exact difference in system behavior between "Request Collection Month" and "Save" — assumption above is that "Request" creates a pending request needing member/admin action, while "Save" commits it immediately as active.
+
+### 5.4 "Send Reminder" Button → Modal Form
+Fields:
+| Field | Source |
+|---|---|
+| Savers * | Dropdown of members |
+| Saving Commitment * | Dropdown of that member's existing savings commitments |
+
+- **"Send"** button dispatches a reminder notification/email to the selected saver about their selected commitment (e.g., upcoming due date or unconfirmed payment).
+
+### 5.5 Row Actions (Hamburger Menu)
+- **Confirm Payment Receipt** — admin marks the offline payment as received/confirmed for that record.
+- **Payment for Past Month** — allows logging/backfilling a payment against a prior month's collection cycle.
+- **Release Harvest** — marks the accumulated savings as released/paid out to the member; updates "Harvest Released to Date" metric.
+- **Cancel** — cancels the commitment record (should prompt confirmation; consider whether this soft-deletes to Deleted Records or just sets Status = Cancelled).
+
+### 5.6 Member View
+- Members see only their own rows in this tab (their own commitments), and can view status but cannot access admin-only actions like Confirm Payment Receipt or Release Harvest.
+
+---
+
+## 6. Notification Tab
+
+### 6.1 Purpose
+Central feed of notifications/messages related to:
+- Savings commitments **requested** (e.g., "Request Collection Month" submissions)
+- Commitments **being processed** (e.g., payment confirmation pending)
+- Commitments **accepted/confirmed**
+
+### 6.2 Requirements
+- Chronological list (most recent first), read/unread state.
+- Members see only notifications relevant to them; Admins see notifications across all members (or a filtered admin feed — confirm with client whether admin notification feed should include every member event or just ones requiring admin action).
+- Clicking a notification should deep-link to the relevant record (e.g., the Savings Commitment row or Submitted Request).
+
+---
+
+## 7. Submitted Requests Tab
+
+### 7.1 Table Columns
+| Column | Notes |
+|---|---|
+| Request ID | System-generated |
+| Saver Name | |
+| Savings Goal | From the commitment goal list |
+| Amount | |
+| Requested Month | |
+| Status | e.g., Pending, Approved, Rejected — define enum with client |
+| Request Date | |
+| Action | e.g., Approve / Reject / View — confirm exact actions needed with client |
+
+### 7.2 Scope
+- **Admin:** sees all submitted requests across all members.
+- **Member:** sees only their own submitted requests (read-only, or with ability to cancel their own pending request — confirm with client).
+
+---
+
+## 8. Deleted Records Tab *(Admin only)*
+
+### 8.1 Purpose
+Holds soft-deleted records (deleted members, cancelled/deleted savings commitments, etc.) for audit and possible restore.
+
+### 8.2 Requirements
+- Table listing deleted records with: original record type, key identifying fields, deleted date, deleted by (which admin).
+- Action to **Restore** a record (undo soft delete) and/or **Permanently Delete**.
+- This tab should never appear in Member view.
+
+---
+
+## 9. Waiting List Tab *(Admin only)*
+
+### 9.1 Table Columns
+| Column | Notes |
+|---|---|
+| ID | System-generated |
+| Name | |
+| Email | |
+| Phone Number | |
+| Monthly Savings Commitment | Intended amount they'd like to commit |
+| Is Referred | Boolean |
+| Referred By | Name/ID of referring member (if Is Referred = true) |
+| Created On | Date added to waiting list |
+
+### 9.2 Requirements
+- This is a pre-membership list — prospective savers who have expressed interest but are not yet full members.
+- Should support converting a waiting list entry into a full member (pre-fills the "Add Member" form in Manage Users).
+- Search/filter capability similar to other tables (recommended, confirm with client).
+
+---
+
+## 10. Settings Tab *(Admin only)*
+
+### 10.1 Savings Commitment Goals (Toggle List)
+Admin can enable/disable which savings goals are available for selection elsewhere in the app (e.g., in the New Savings Commitment form). Each goal has an on/off toggle:
+- Debt Repayment
+- Dream Holiday
+- Investment
+- My First Home
+- Property Purchase
+- Savings
+- School Fees
+- Wedding
+- Other
+
+Only "on" goals should appear as selectable options in dropdowns throughout the app.
+
+### 10.2 Commitment Amounts (Toggle List)
+Admin can enable/disable preset commitment amount options, also each with an on/off toggle. Example seed values:
+55.00, 100.00, 101.00, 120.00, 122.00, 200.00, 250.00, 300.00, 400.00, 500.00, 600.00, 700.00, 750.00, 1000.00, 1021.00, 1100.00, 2000.00, 20000.00
+
+> Note: the original list had duplicate 400.00 and 1100.00 entries — dedupe when seeding data, but keep the ability for admin to add new custom amounts (recommend adding an "Add new amount" input alongside the toggle list rather than a fixed hardcoded set).
+
+### 10.3 Requirements
+- Only "on"/active toggled goals and amounts should populate the dropdowns in the Savings Commitment form (Section 5.3).
+- Admin should be able to add new custom goals/amounts, not just toggle the seed list (recommended — confirm with client).
+
+---
+
+## 11. Savings Commitments Report Tab
+
+### 11.1 Table Columns
+| Column | Notes |
+|---|---|
+| Record ID | |
+| Member Name | |
+| Savings Amount | |
+| Savings Goal | |
+| Collection Month | |
+| End Date | |
+| Status | |
+
+### 11.2 Purpose
+A reporting/export view of all savings commitments (likely with filtering and export-to-CSV/PDF capability — recommend adding export button; confirm with client).
+
+### 11.3 Scope
+- Admin: all members.
+- Member: own records only (or this tab may be admin-only — confirm with client, since Section 5 already gives members their own commitment view).
+
+---
+
+## 12. Notifications & Emails
+
+### 12.1 Email Triggers
+| Trigger | Recipient(s) | Content |
+|---|---|---|
+| Member added via "Save" | Admin + New Member | Registration/welcome notice, no login link |
+| Member added via "Save and Invite" | Admin + New Member | Welcome message + unique tokenized invite link to set password and log in |
+| Send Reminder (manual, admin-triggered) | Selected Member | Reminder about a specific savings commitment |
+| Request Collection Month submitted | Admin (and/or Member, confirm) | Notification that a collection month request needs action |
+| Payment Confirmed | Member | Confirmation that their payment was recorded |
+| Harvest Released | Member | Confirmation that their harvest/payout was released |
+
+### 12.2 In-App Notifications
+- Mirror key email events as entries in the Notification Tab (Section 6) so users don't have to rely solely on email.
+
+---
+
+## 13. Data Model (Suggested Entities)
+
+- **User**: id, name, email, phone, role (admin/member), is_active, membership_status, created_on, invitation_token, invitation_status
+- **SavingsCommitment**: id, user_id (FK), amount, goal (FK to CommitmentGoal), collection_month, collection_year, end_date, status, created_on
+- **PaymentRecord**: id, savings_commitment_id (FK), amount, month_covered, confirmed_by (admin user_id), confirmed_on, status
+- **HarvestRelease**: id, savings_commitment_id (FK), released_on, released_by (admin user_id), amount
+- **Request**: id, savings_commitment_id (FK, nullable), user_id (FK), type (collection_month_request, etc.), status, requested_on
+- **Notification**: id, user_id (FK, nullable for admin-broadcast), type, message, related_record_type, related_record_id, is_read, created_on
+- **WaitingListEntry**: id, name, email, phone, monthly_commitment_interest, is_referred, referred_by, created_on
+- **DeletedRecord**: id, original_table, original_record_id (or JSON snapshot), deleted_on, deleted_by
+- **CommitmentGoalSetting**: id, label, is_active (toggle)
+- **CommitmentAmountSetting**: id, amount, is_active (toggle)
+
+> This is a starting schema — finalize field types, constraints, and relationships with the developer during technical design.
+
+---
+
+## 14. Non-Functional Requirements
+
+- **Security**: role-based access control enforced server-side on every endpoint; passwords hashed; invite tokens expire after a configurable period (e.g., 7 days).
+- **Auditability**: all financial state changes (payment confirmed, harvest released, cancellations) should be logged with timestamp and acting admin.
+- **Data integrity**: soft-delete pattern for Members and Savings Commitments so nothing is permanently lost without going through Deleted Records.
+- **Responsiveness**: dashboard and tables must work on desktop and mobile (mobile-responsive tables — consider card view on small screens).
+- **Currency formatting**: configurable currency symbol (default £), consistent 2-decimal formatting across dashboard, tables, and reports.
+- **Performance**: tables should support pagination and server-side search/filter once member counts grow beyond a small number.
+
+---
+
+## 15. Open Questions for Client Sign-Off
+
+1. Exact status enum values for Savings Commitment, Submitted Requests, and Membership (e.g., what are all valid statuses?).
+2. Behavior difference between "Request Collection Month" and "Save" on the New Savings Commitment form.
+3. Does "Cancel" on a Savings Commitment soft-delete to Deleted Records, or just change status to Cancelled?
+4. Should Members be able to cancel their own pending Submitted Requests?
+5. Should the Savings Commitments Report tab be Admin-only, or should Members see their own report too (distinct from the Savings Commitment tab)?
+6. Should Settings allow adding brand-new custom goals/amounts, or only toggling the seeded list on/off?
+7. Should the admin Notification feed show every member event, or only events needing admin action?
+8. Multi-currency support needed, or single fixed currency (£) is sufficient for v1?
+
+---
+
+## 16. Suggested Tech Stack (for reference, not mandatory)
+
+Given prior related work in this ecosystem: React + Vite + Tailwind CSS (frontend), Supabase (Postgres + Auth + Row-Level Security for role-based access) or a Node/Express + Postgres backend, and Resend for transactional emails (invites, reminders, confirmations).
+
+---
+
+*End of PRD.*

@@ -1,0 +1,11 @@
+- [x] Create POST password reset endpoint in `src/app/api/auth/reset-password/route.ts` generating Firebase action link and sending via Resend.
+- [x] Update frontend login form in `src/app/page.tsx` to fetch our custom password reset endpoint.
+- [x] Verify Resend password reset delivery.
+- [x] Clean up unused dependencies (Prisma, SQLite, bcryptjs, jose, nodemailer) and delete legacy folders.
+- [x] Rename platform references to "Savvey Savers" across layout, views, sidebar, and notification emails.
+- [x] Create `clear-firestore.js` script to reset database collections (preserving active Super Admin).
+- [x] Add archive clearing via `DELETE` in `/api/admin/deleted-records` and "Empty Archive" button.
+- [x] Add notification deletion via `DELETE` in `/api/admin/notifications` and "Clear All" button.
+- [x] Implement global promise-based Dialog modal system (`DialogContext.tsx`) and wrap layout.
+- [x] Replace native `confirm()` and `alert()` calls across all pages with custom Dialog modal calls.
+- [x] Enforce sequential and uniform record IDs (e.g. `cmt_000001`, `pay_000001`) in `src/lib/db.ts` create().
