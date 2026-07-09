@@ -18,7 +18,11 @@ const cleanString = (str: string | undefined) => {
 
 const cleanProjectId = cleanString(projectId);
 const cleanClientEmail = cleanString(clientEmail);
-let cleanPrivateKey = cleanString(privateKey).replace(/\\n/g, '\n');
+
+// Robust private key cleaner that strips any outer/inner quotes and normalizes newlines
+let cleanPrivateKey = (privateKey || '').trim();
+cleanPrivateKey = cleanPrivateKey.replace(/["']/g, ''); // strip any quotes pasted by mistake
+cleanPrivateKey = cleanPrivateKey.replace(/\\n/g, '\n'); // replace escaped newlines with actual newlines
 
 if (!admin.apps.length) {
   if (cleanProjectId && cleanClientEmail && cleanPrivateKey) {
