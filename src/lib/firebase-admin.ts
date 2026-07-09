@@ -24,6 +24,18 @@ let cleanPrivateKey = (privateKey || '').trim();
 cleanPrivateKey = cleanPrivateKey.replace(/["']/g, ''); // strip any quotes pasted by mistake
 cleanPrivateKey = cleanPrivateKey.replace(/\\n/g, '\n'); // replace escaped newlines with actual newlines
 
+console.log('--- Firebase Private Key Debug ---');
+console.log('Is Raw Key Defined?:', !!privateKey);
+if (privateKey) {
+  console.log('Raw Key Length:', privateKey.length);
+  console.log('Raw Key Starts With:', privateKey.substring(0, 40));
+  console.log('Raw Key Ends With:', privateKey.substring(privateKey.length - 40));
+  console.log('Clean Key Length:', cleanPrivateKey.length);
+  console.log('Clean Key Starts With:', cleanPrivateKey.substring(0, 40));
+  console.log('Clean Key Ends With:', cleanPrivateKey.substring(cleanPrivateKey.length - 40));
+}
+console.log('----------------------------------');
+
 if (!admin.apps.length) {
   if (cleanProjectId && cleanClientEmail && cleanPrivateKey) {
     admin.initializeApp({
