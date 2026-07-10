@@ -42,7 +42,6 @@ export default function Sidebar({ user }: SidebarProps) {
     { name: 'Deleted Records', href: '/dashboard/deleted-records', icon: Trash2 },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
     { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
-    { name: 'Mock Mailbox', href: '/dashboard/mock-mailbox', icon: Mail },
   ];
 
   const memberLinks = [

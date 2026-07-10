@@ -28,7 +28,6 @@ export async function proxy(request: NextRequest) {
       '/dashboard/settings',
       '/dashboard/waiting-list',
       '/dashboard/deleted-records',
-      '/dashboard/mock-mailbox',
     ];
 
     const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));

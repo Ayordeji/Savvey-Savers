@@ -73,22 +73,27 @@ export async function POST(request: Request) {
     }
 
     let isNewUser = false;
-
-    // Auto-registration if user does not exist in database yet
+ 
+    // Auto-registration check: only allow pre-invited users or the default admin@savveysavers.com initializer
     if (!user) {
-      isNewUser = true;
-      // Default first registered user or admin@savveysavers.com as ADMIN
       const isDefaultAdmin = normalizedEmail === 'admin@savveysavers.com';
-      
+      if (!isDefaultAdmin) {
+        return NextResponse.json(
+          { error: 'Your email address is not registered on the platform. Please join the waiting list to request access.' },
+          { status: 403 }
+        );
+      }
+
+      isNewUser = true;
       user = await db.users.create({
         id: uid,
         name: reqName || tokenName || email.split('@')[0],
         email: normalizedEmail,
         phone: reqPhone || '',
-        role: isDefaultAdmin ? 'ADMIN' : 'MEMBER',
+        role: 'ADMIN',
         isActive: true,
       });
-
+ 
       // System notification
       await db.notifications.create({
         userId: user.id,

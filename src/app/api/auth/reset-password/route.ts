@@ -16,7 +16,8 @@ export async function POST(request: Request) {
     // Check if user exists in Firestore
     const user = await db.users.findFirst((u) => u.email.toLowerCase() === normalizedEmail);
     if (!user) {
-      return NextResponse.json({ error: 'No user account found with this email address.' }, { status: 404 });
+      // Mitigate user enumeration by returning a success status even if email is not found
+      return NextResponse.json({ success: true, message: 'If this email is registered, a password reset link has been sent.' });
     }
 
     // Generate standard password reset link using Firebase Admin SDK

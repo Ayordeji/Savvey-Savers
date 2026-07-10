@@ -12,6 +12,28 @@ export async function POST(request: Request) {
       );
     }
 
+    // Input length validation
+    if (
+      name.length > 100 ||
+      email.length > 100 ||
+      phone.length > 30 ||
+      (referredBy && referredBy.length > 100)
+    ) {
+      return NextResponse.json(
+        { error: 'Input fields exceed maximum allowed length limits.' },
+        { status: 400 }
+      );
+    }
+
+    // Input format validation: Email regex check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Please enter a valid email address.' },
+        { status: 400 }
+      );
+    }
+
     const commitmentVal = parseFloat(monthlySavingsCommitment);
     if (isNaN(commitmentVal) || commitmentVal <= 0) {
       return NextResponse.json(
