@@ -223,6 +223,61 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'User not found.' }, { status: 404 });
     }
 
+    if (body.action === 'send_invite') {
+      const invitationId = 'invite_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      const invitationExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
+
+      await db.users.update({
+        where: { id },
+        data: { invitationId, invitationExpiresAt }
+      });
+
+      const host = request.headers.get('host') || 'savvey-savers.vercel.app';
+      const protocol = request.headers.get('x-forwarded-proto') || 'https';
+      const origin = `${protocol}://${host}`;
+      const activationLink = `${origin}/activate?invite=${invitationId}`;
+
+      const emailSubject = 'Welcome to Savvey Savers - Invitation to Join';
+      const emailBody = `Hello ${user.name},\n\nYou have been invited to join the Savvey Savers Platform as a ${user.role === 'ADMIN' ? 'Coordinator' : 'Saver'}.\n\nClick the link below to set your password and access your dashboard:\n${activationLink}\n\nThis link is active for 72 hours.\n\nBest regards,\nSavvey Savers Team`;
+
+      const mailRes = await sendEmail({
+        to: user.email,
+        subject: emailSubject,
+        body: emailBody
+      });
+
+      if (!mailRes.success) {
+        return NextResponse.json({ error: `Failed to send email: ${mailRes.error}` }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, message: 'Invitation email resent successfully.' });
+    }
+
+    if (body.action === 'send_reset') {
+      let resetLink = '';
+      try {
+        resetLink = await adminAuth.generatePasswordResetLink(user.email);
+      } catch (authErr: any) {
+        console.error('Firebase Admin generatePasswordResetLink error:', authErr);
+        return NextResponse.json({ error: `Firebase Auth error: ${authErr.message}` }, { status: 500 });
+      }
+
+      const emailSubject = 'Savvey Savers - Password Reset Request';
+      const emailBody = `Hello ${user.name},\n\nYou requested a password reset for your Savvey Savers account.\n\nClick the link below to reset your password:\n${resetLink}\n\nIf you did not request this, you can safely ignore this email.\n\nBest regards,\nSavvey Savers Team`;
+
+      const mailRes = await sendEmail({
+        to: user.email,
+        subject: emailSubject,
+        body: emailBody
+      });
+
+      if (!mailRes.success) {
+        return NextResponse.json({ error: `Failed to send email: ${mailRes.error}` }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, message: 'Password reset link sent.' });
+    }
+
     let updateData: any = {};
 
     if ('isActive' in body) {

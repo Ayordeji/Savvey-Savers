@@ -35,13 +35,7 @@ export default function Home() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
 
-  // Sign up states
-  const [signupName, setSignupName] = useState('');
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-  const [signupPhone, setSignupPhone] = useState('');
-  const [signupLoading, setSignupLoading] = useState(false);
-  const [signupError, setSignupError] = useState('');
+
 
   // Google OAuth states
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -153,63 +147,7 @@ export default function Home() {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSignupLoading(true);
-    setSignupError('');
 
-    try {
-      if (signupPassword.length < 8) {
-        setSignupError('Password must be at least 8 characters long.');
-        setSignupLoading(false);
-        return;
-      }
-
-      let idToken = '';
-
-      if (isFirebaseConfigured) {
-        // 1. Register with Firebase Client Auth
-        const userCredential = await createUserWithEmailAndPassword(auth, signupEmail, signupPassword);
-        idToken = await userCredential.user.getIdToken();
-      } else {
-        // Fallback simulator: create a mock token
-        idToken = `mock_token_${signupEmail.trim()}_${encodeURIComponent(signupName.trim())}`;
-      }
-
-      // 2. Exchange token and register custom fields (name, phone) on backend
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          idToken,
-          name: signupName,
-          phone: signupPhone,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        router.push('/dashboard');
-        router.refresh();
-      } else {
-        setSignupError(data.error || 'Registration failed. Please try again.');
-      }
-    } catch (err: any) {
-      console.error('Firebase Signup Error:', err);
-      let message = 'Registration failed. Please try again.';
-      if (err.code === 'auth/email-already-in-use') {
-        message = 'An account with this email already exists.';
-      } else if (err.code === 'auth/invalid-email') {
-        message = 'Please enter a valid email address.';
-      } else if (err.code === 'auth/weak-password') {
-        message = 'Password is too weak.';
-      }
-      setSignupError(message);
-    } finally {
-      setSignupLoading(false);
-    }
-  };
 
   const handleGoogleAuth = async (idToken: string) => {
     setGoogleLoading(true);
@@ -427,7 +365,7 @@ export default function Home() {
           {/* Tab Toggles */}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', backgroundColor: 'var(--bg-main)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
             <button
-              onClick={() => { setIsSignUp(false); setLoginError(''); setSignupError(''); }}
+              onClick={() => { setIsSignUp(false); setLoginError(''); }}
               style={{
                 flex: 1,
                 padding: '8px 16px',
@@ -444,7 +382,7 @@ export default function Home() {
               Sign In
             </button>
             <button
-              onClick={() => { setIsSignUp(true); setLoginError(''); setSignupError(''); }}
+              onClick={() => { setIsSignUp(true); setLoginError(''); }}
               style={{
                 flex: 1,
                 padding: '8px 16px',
@@ -458,12 +396,12 @@ export default function Home() {
                 transition: 'background-color 0.2s, color 0.2s'
               }}
             >
-              Sign Up
+              Waiting List
             </button>
           </div>
 
           <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '24px', fontFamily: 'var(--font-family-title)' }}>
-            {isSignUp ? 'Create an Account' : 'Sign In to Your Dashboard'}
+            {isSignUp ? 'Join the Waiting List' : 'Sign In to Your Dashboard'}
           </h2>
 
           {/* Error notifications */}
@@ -478,20 +416,6 @@ export default function Home() {
               marginBottom: '16px'
             }}>
               {loginError}
-            </div>
-          )}
-
-          {signupError && isSignUp && (
-            <div style={{
-              backgroundColor: 'var(--status-error-bg)',
-              color: 'var(--status-error)',
-              border: '1px solid rgba(153, 27, 27, 0.2)',
-              padding: '12px',
-              borderRadius: '6px',
-              fontSize: '0.875rem',
-              marginBottom: '16px'
-            }}>
-              {signupError}
             </div>
           )}
 
@@ -602,122 +526,178 @@ export default function Home() {
               </button>
             </form>
           ) : (
-            /* SIGN UP FORM */
-            <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Full Name</label>
-                <div style={{ position: 'relative' }}>
-                  <User size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                  <input
-                    type="text"
-                    required
-                    value={signupName}
-                    onChange={(e) => setSignupName(e.target.value)}
-                    placeholder="John Doe"
-                    className="form-input"
-                    style={{
-                      paddingLeft: '38px',
-                      backgroundColor: 'var(--bg-main)',
-                      borderColor: 'var(--border-color)',
-                      color: 'var(--text-main)',
-                      borderRadius: 'var(--radius-md)'
-                    }}
-                  />
+            /* WAITING LIST FORM */
+            <>
+              {waitSuccess ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
+                  <div style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--status-success-bg)',
+                    color: 'var(--status-success)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <CheckCircle2 size={32} />
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-main)', fontFamily: 'var(--font-family-title)' }}>
+                    You are on the Waiting List!
+                  </h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                    Thank you for expressing interest. Our administrators will review your application and send an invitation email with dashboard access links if approved.
+                  </p>
+                  <button
+                    onClick={() => setWaitSuccess(false)}
+                    className="btn btn-secondary"
+                    style={{ marginTop: '16px', borderRadius: '9999px', width: '100%' }}
+                  >
+                    Submit another request
+                  </button>
                 </div>
-              </div>
+              ) : (
+                <form onSubmit={handleWaitingList} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Full Name</label>
+                    <div style={{ position: 'relative' }}>
+                      <User size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
+                      <input
+                        type="text"
+                        required
+                        value={waitName}
+                        onChange={(e) => setWaitName(e.target.value)}
+                        placeholder="Jane Smith"
+                        className="form-input"
+                        style={{
+                          paddingLeft: '38px',
+                          backgroundColor: 'var(--bg-main)',
+                          borderColor: 'var(--border-color)',
+                          color: 'var(--text-main)',
+                          borderRadius: 'var(--radius-md)'
+                        }}
+                      />
+                    </div>
+                  </div>
 
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Email Address</label>
-                <div style={{ position: 'relative' }}>
-                  <Mail size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                  <input
-                    type="email"
-                    required
-                    value={signupEmail}
-                    onChange={(e) => setSignupEmail(e.target.value)}
-                    placeholder="john@example.com"
-                    className="form-input"
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Email Address</label>
+                    <div style={{ position: 'relative' }}>
+                      <Mail size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
+                      <input
+                        type="email"
+                        required
+                        value={waitEmail}
+                        onChange={(e) => setWaitEmail(e.target.value)}
+                        placeholder="jane@example.com"
+                        className="form-input"
+                        style={{
+                          paddingLeft: '38px',
+                          backgroundColor: 'var(--bg-main)',
+                          borderColor: 'var(--border-color)',
+                          color: 'var(--text-main)',
+                          borderRadius: 'var(--radius-md)'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Phone Number</label>
+                    <div style={{ position: 'relative' }}>
+                      <Phone size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
+                      <input
+                        type="tel"
+                        required
+                        value={waitPhone}
+                        onChange={(e) => setWaitPhone(e.target.value)}
+                        placeholder="+44 7700 900022"
+                        className="form-input"
+                        style={{
+                          paddingLeft: '38px',
+                          backgroundColor: 'var(--bg-main)',
+                          borderColor: 'var(--border-color)',
+                          color: 'var(--text-main)',
+                          borderRadius: 'var(--radius-md)'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Intended Monthly Saving Commitment (£)</label>
+                    <div style={{ position: 'relative' }}>
+                      <PiggyBank size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
+                      <input
+                        type="number"
+                        required
+                        min="1"
+                        value={waitAmount}
+                        onChange={(e) => setWaitAmount(e.target.value)}
+                        placeholder="300"
+                        className="form-input"
+                        style={{
+                          paddingLeft: '38px',
+                          backgroundColor: 'var(--bg-main)',
+                          borderColor: 'var(--border-color)',
+                          color: 'var(--text-main)',
+                          borderRadius: 'var(--radius-md)'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Referred By (Optional Member Name)</label>
+                    <div style={{ position: 'relative' }}>
+                      <User size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
+                      <input
+                        type="text"
+                        value={waitReferrer}
+                        onChange={(e) => setWaitReferrer(e.target.value)}
+                        placeholder="John Doe"
+                        className="form-input"
+                        style={{
+                          paddingLeft: '38px',
+                          backgroundColor: 'var(--bg-main)',
+                          borderColor: 'var(--border-color)',
+                          color: 'var(--text-main)',
+                          borderRadius: 'var(--radius-md)'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={waitLoading}
+                    className="btn"
                     style={{
-                      paddingLeft: '38px',
-                      backgroundColor: 'var(--bg-main)',
-                      borderColor: 'var(--border-color)',
-                      color: 'var(--text-main)',
-                      borderRadius: 'var(--radius-md)'
+                      width: '100%',
+                      marginTop: '8px',
+                      backgroundColor: 'transparent',
+                      border: '1px solid var(--primary)',
+                      color: 'var(--primary)',
+                      fontWeight: 600,
+                      borderRadius: '9999px',
+                      cursor: 'pointer',
+                      height: '44px',
+                      transition: 'background-color 0.2s, color 0.2s'
                     }}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Password (Min 8 characters)</label>
-                <div style={{ position: 'relative' }}>
-                  <Lock size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                  <input
-                    type="password"
-                    required
-                    value={signupPassword}
-                    onChange={(e) => setSignupPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="form-input"
-                    style={{
-                      paddingLeft: '38px',
-                      backgroundColor: 'var(--bg-main)',
-                      borderColor: 'var(--border-color)',
-                      color: 'var(--text-main)',
-                      borderRadius: 'var(--radius-md)'
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--primary)';
+                      e.currentTarget.style.color = '#ffffff';
                     }}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Phone Number</label>
-                <div style={{ position: 'relative' }}>
-                  <Phone size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                  <input
-                    type="tel"
-                    required
-                    value={signupPhone}
-                    onChange={(e) => setSignupPhone(e.target.value)}
-                    placeholder="+447700900011"
-                    className="form-input"
-                    style={{
-                      paddingLeft: '38px',
-                      backgroundColor: 'var(--bg-main)',
-                      borderColor: 'var(--border-color)',
-                      color: 'var(--text-main)',
-                      borderRadius: 'var(--radius-md)'
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = 'var(--primary)';
                     }}
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={signupLoading || googleLoading}
-                className="btn"
-                style={{
-                  width: '100%',
-                  marginTop: '8px',
-                  backgroundColor: 'var(--primary)',
-                  color: '#ffffff',
-                  fontWeight: 600,
-                  borderRadius: '9999px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '46px',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--primary-hover)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--primary)'}
-              >
-                {signupLoading ? 'Creating Account...' : 'Create Account'}
-                {!signupLoading && <ArrowRight size={16} style={{ marginLeft: '8px' }} />}
-              </button>
-            </form>
+                  >
+                    {waitLoading ? 'Submitting Application...' : 'Register for Waiting List'}
+                  </button>
+                </form>
+              )}
+            </>
           )}
 
           {/* Divider */}
@@ -732,7 +712,7 @@ export default function Home() {
             {!showGoogleSimulator ? (
               <button
                 onClick={handleGoogleLogin}
-                disabled={googleLoading || loginLoading || signupLoading}
+                disabled={googleLoading || loginLoading}
                 className="btn"
                 style={{
                   width: '100%',
@@ -801,203 +781,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Waiting List Section */}
-        <div className="glass-panel" style={{ padding: '32px', backgroundColor: '#ffffff', borderColor: 'var(--border-color)', boxShadow: 'var(--shadow-md)', borderRadius: 'var(--radius-lg)' }}>
-          {waitSuccess ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
-              <div style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--status-success-bg)',
-                color: 'var(--status-success)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <CheckCircle2 size={32} />
-              </div>
-              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-main)', fontFamily: 'var(--font-family-title)' }}>
-                You are on the Waiting List!
-              </h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-                Thank you for expressing interest. Our administrators will review your application and send an invitation email with dashboard access links if approved.
-              </p>
-              <button
-                onClick={() => setWaitSuccess(false)}
-                className="btn btn-secondary"
-                style={{ marginTop: '16px', borderRadius: '9999px' }}
-              >
-                Submit another request
-              </button>
-            </div>
-          ) : (
-            <>
-              <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '6px', fontFamily: 'var(--font-family-title)' }}>
-                  Join the Waiting List
-                </h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  Not a member yet? Express your interest in joining the savings group.
-                </p>
-              </div>
-
-              {waitError && (
-                <div style={{
-                  backgroundColor: 'var(--status-error-bg)',
-                  color: 'var(--status-error)',
-                  border: '1px solid rgba(153, 27, 27, 0.2)',
-                  padding: '12px',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem',
-                  marginBottom: '16px'
-                }}>
-                  {waitError}
-                </div>
-              )}
-
-              <form onSubmit={handleWaitingList} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Full Name</label>
-                  <div style={{ position: 'relative' }}>
-                    <User size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                    <input
-                      type="text"
-                      required
-                      value={waitName}
-                      onChange={(e) => setWaitName(e.target.value)}
-                      placeholder="Jane Smith"
-                      className="form-input"
-                      style={{
-                        paddingLeft: '38px',
-                        backgroundColor: 'var(--bg-main)',
-                        borderColor: 'var(--border-color)',
-                        color: 'var(--text-main)',
-                        borderRadius: 'var(--radius-md)'
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Email Address</label>
-                  <div style={{ position: 'relative' }}>
-                    <Mail size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                    <input
-                      type="email"
-                      required
-                      value={waitEmail}
-                      onChange={(e) => setWaitEmail(e.target.value)}
-                      placeholder="jane@example.com"
-                      className="form-input"
-                      style={{
-                        paddingLeft: '38px',
-                        backgroundColor: 'var(--bg-main)',
-                        borderColor: 'var(--border-color)',
-                        color: 'var(--text-main)',
-                        borderRadius: 'var(--radius-md)'
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Phone Number</label>
-                  <div style={{ position: 'relative' }}>
-                    <Phone size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                    <input
-                      type="tel"
-                      required
-                      value={waitPhone}
-                      onChange={(e) => setWaitPhone(e.target.value)}
-                      placeholder="+44 7700 900022"
-                      className="form-input"
-                      style={{
-                        paddingLeft: '38px',
-                        backgroundColor: 'var(--bg-main)',
-                        borderColor: 'var(--border-color)',
-                        color: 'var(--text-main)',
-                        borderRadius: 'var(--radius-md)'
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Intended Monthly Saving Commitment (£)</label>
-                  <div style={{ position: 'relative' }}>
-                    <PiggyBank size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={waitAmount}
-                      onChange={(e) => setWaitAmount(e.target.value)}
-                      placeholder="300"
-                      className="form-input"
-                      style={{
-                        paddingLeft: '38px',
-                        backgroundColor: 'var(--bg-main)',
-                        borderColor: 'var(--border-color)',
-                        color: 'var(--text-main)',
-                        borderRadius: 'var(--radius-md)'
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Referred By (Optional Member Name)</label>
-                  <div style={{ position: 'relative' }}>
-                    <User size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                    <input
-                      type="text"
-                      value={waitReferrer}
-                      onChange={(e) => setWaitReferrer(e.target.value)}
-                      placeholder="John Doe"
-                      className="form-input"
-                      style={{
-                        paddingLeft: '38px',
-                        backgroundColor: 'var(--bg-main)',
-                        borderColor: 'var(--border-color)',
-                        color: 'var(--text-main)',
-                        borderRadius: 'var(--radius-md)'
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={waitLoading}
-                  className="btn"
-                  style={{
-                    width: '100%',
-                    marginTop: '8px',
-                    backgroundColor: 'transparent',
-                    border: '1px solid var(--primary)',
-                    color: 'var(--primary)',
-                    fontWeight: 600,
-                    borderRadius: '9999px',
-                    cursor: 'pointer',
-                    height: '44px',
-                    transition: 'background-color 0.2s, color 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--primary)';
-                    e.currentTarget.style.color = '#ffffff';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = 'var(--primary)';
-                  }}
-                >
-                  {waitLoading ? 'Submitting Application...' : 'Register for Waiting List'}
-                </button>
-              </form>
-            </>
-          )}
-        </div>
       </main>
 
       <footer style={{

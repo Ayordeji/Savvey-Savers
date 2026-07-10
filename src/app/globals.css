@@ -442,3 +442,24 @@ button {
     transform: translateY(0);
   }
 }
+
+/* Responsive adjustments for mobile and tablets */
+@media (max-width: 768px) {
+  .hidden-mobile {
+    display: none !important;
+  }
+  header {
+    padding: 0 16px !important;
+  }
+  main {
+    padding: 30px 16px !important;
+    gap: 24px !important;
+  }
+  h1 {
+    font-size: 1.85rem !important;
+  }
+  .glass-panel {
+    padding: 20px !important;
+  }
+}
+

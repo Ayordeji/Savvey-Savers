@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import styles from './users.module.css';
 
@@ -280,6 +280,58 @@ export default function ManageUsersPage() {
     }
   };
 
+  const handleResendInvite = async (userId: string) => {
+    setOpenDropdownId(null);
+    const confirmed = await dialog.confirm(
+      'Resend Invite',
+      'Are you sure you want to resend the setup and password activation email to this user?'
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId, action: 'send_invite' }),
+      });
+      if (res.ok) {
+        await dialog.alert('Invite Sent', 'Activation link has been successfully resent to the user!');
+      } else {
+        const data = await res.json();
+        await dialog.alert('Error', data.error || 'Failed to resend invitation email.');
+      }
+    } catch (err) {
+      console.error('Error sending invitation:', err);
+      await dialog.alert('Error', 'A network error occurred while resending invitation.');
+    }
+  };
+
+  const handleSendResetLink = async (userId: string) => {
+    setOpenDropdownId(null);
+    const confirmed = await dialog.confirm(
+      'Reset Password',
+      'Are you sure you want to send a password reset link to this user via email?'
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId, action: 'send_reset' }),
+      });
+      if (res.ok) {
+        await dialog.alert('Link Sent', 'Password reset link has been successfully emailed to the user!');
+      } else {
+        const data = await res.json();
+        await dialog.alert('Error', data.error || 'Failed to send password reset link.');
+      }
+    } catch (err) {
+      console.error('Error sending reset link:', err);
+      await dialog.alert('Error', 'A network error occurred while sending reset link.');
+    }
+  };
+
   const handleDeleteSubmit = async () => {
     if (!selectedUser) return;
     setFormSubmitting(true);
@@ -553,6 +605,17 @@ export default function ManageUsersPage() {
                               <button onClick={() => handleConfirmFee(u.id)} className={styles.dropdownItem}>
                                 <CheckCircle size={14} />
                                 <span>Confirm Fee</span>
+                              </button>
+                            )}
+                             {!u.isActive ? (
+                              <button onClick={() => handleResendInvite(u.id)} className={styles.dropdownItem}>
+                                <Mail size={14} />
+                                <span>Send Invite Link</span>
+                              </button>
+                            ) : (
+                              <button onClick={() => handleSendResetLink(u.id)} className={styles.dropdownItem}>
+                                <Mail size={14} />
+                                <span>Reset Password Link</span>
                               </button>
                             )}
                             {!u.isSuperAdmin && u.id !== currentUser?.id && (
