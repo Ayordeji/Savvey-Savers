@@ -283,8 +283,8 @@ export default function ManageUsersPage() {
   const handleResendInvite = async (userId: string) => {
     setOpenDropdownId(null);
     const confirmed = await dialog.confirm(
-      'Resend Invite',
-      'Are you sure you want to resend the setup and password activation email to this user?'
+      'Send Access Link',
+      'Are you sure you want to send the setup and password activation access link to this user?'
     );
     if (!confirmed) return;
 
@@ -295,14 +295,14 @@ export default function ManageUsersPage() {
         body: JSON.stringify({ id: userId, action: 'send_invite' }),
       });
       if (res.ok) {
-        await dialog.alert('Invite Sent', 'Activation link has been successfully resent to the user!');
+        await dialog.alert('Access Link Sent', 'Activation and access link has been successfully sent to the user!');
       } else {
         const data = await res.json();
-        await dialog.alert('Error', data.error || 'Failed to resend invitation email.');
+        await dialog.alert('Error', data.error || 'Failed to send invitation email.');
       }
     } catch (err) {
-      console.error('Error sending invitation:', err);
-      await dialog.alert('Error', 'A network error occurred while resending invitation.');
+      console.error('Error sending access link:', err);
+      await dialog.alert('Error', 'A network error occurred while sending access link.');
     }
   };
 
@@ -610,7 +610,7 @@ export default function ManageUsersPage() {
                              {!u.isActive ? (
                               <button onClick={() => handleResendInvite(u.id)} className={styles.dropdownItem}>
                                 <Mail size={14} />
-                                <span>Send Invite Link</span>
+                                <span>Send Access Link</span>
                               </button>
                             ) : (
                               <button onClick={() => handleSendResetLink(u.id)} className={styles.dropdownItem}>
