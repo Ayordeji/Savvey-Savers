@@ -158,7 +158,7 @@ export async function POST(request: Request) {
 
     if (inviteMode === 'SAVE_INVITE') {
       emailSubject = 'Welcome to Savvey Savers - Invitation to Join';
-      emailBody = `Hello ${name},\n\nYou have been invited to join the Savvey Savers Platform as a ${role === 'ADMIN' ? 'Coordinator' : 'Saver'}.\n\nClick the link below to set your password and access your dashboard:\n${activationLink}\n\nThis link is active for 72 hours.\n\nBest regards,\nSavvey Savers Team`;
+      emailBody = `Hello ${name},\n\nYou have been invited to join the Savvey Savers Platform.\n\nClick the link below to set your password and access your dashboard:\n${activationLink}\n\nThis link is active for 72 hours.\n\nBest regards,\nSavvey Savers Team`;
     } else {
       // SAVE only mode
       emailSubject = 'Welcome to Savvey Savers - Account Registered';
@@ -238,7 +238,7 @@ export async function PUT(request: Request) {
       const activationLink = `${origin}/activate?invite=${invitationId}`;
 
       const emailSubject = 'Welcome to Savvey Savers - Invitation to Join';
-      const emailBody = `Hello ${user.name},\n\nYou have been invited to join the Savvey Savers Platform as a ${user.role === 'ADMIN' ? 'Coordinator' : 'Saver'}.\n\nClick the link below to set your password and access your dashboard:\n${activationLink}\n\nThis link is active for 72 hours.\n\nBest regards,\nSavvey Savers Team`;
+      const emailBody = `Hello ${user.name},\n\nYou have been invited to join the Savvey Savers Platform.\n\nClick the link below to set your password and access your dashboard:\n${activationLink}\n\nThis link is active for 72 hours.\n\nBest regards,\nSavvey Savers Team`;
 
       const mailRes = await sendEmail({
         to: user.email,
@@ -279,6 +279,7 @@ export async function PUT(request: Request) {
     }
 
     let updateData: any = {};
+    let isRoleChanging = false;
 
     if ('isActive' in body) {
       updateData.isActive = !!body.isActive;
@@ -300,6 +301,8 @@ export async function PUT(request: Request) {
         country,
         permissions
       } = body;
+
+      isRoleChanging = role && role !== user.role;
 
       if (!email || !phone) {
         return NextResponse.json({ error: 'Email and phone are required.' }, { status: 400 });
@@ -353,6 +356,16 @@ export async function PUT(request: Request) {
       where: { id },
       data: updateData
     });
+
+    if (isRoleChanging) {
+      const targetRoleName = body.role === 'ADMIN' ? 'Coordinator' : 'Saver';
+      await sendEmail({
+        to: updateData.email || user.email,
+        subject: 'Savvey Savers - Role Updated',
+        body: `Hello ${updateData.name || user.name},\n\nYour role on the Savvey Savers Platform has been updated to ${targetRoleName}.\n\nBest regards,\nSavvey Savers Team`
+      });
+      console.log(`Role update notification email sent to ${user.email} (New Role: ${targetRoleName}).`);
+    }
 
     await db.auditLogs.create({
       action: 'ADMIN_USER_UPDATE',
