@@ -15,14 +15,32 @@ export async function GET() {
     const payload = await verifyToken(token);
     if (!payload) {
       const response = NextResponse.json({ loggedIn: false });
-      response.cookies.delete(COOKIE_NAME);
+      response.cookies.set({
+        name: COOKIE_NAME,
+        value: '',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 0,
+        expires: new Date(0)
+      });
       return response;
     }
 
     const user = await db.users.findUnique({ where: { id: payload.id } });
     if (!user) {
       const response = NextResponse.json({ loggedIn: false });
-      response.cookies.delete(COOKIE_NAME);
+      response.cookies.set({
+        name: COOKIE_NAME,
+        value: '',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 0,
+        expires: new Date(0)
+      });
       return response;
     }
 

@@ -20,8 +20,17 @@ export async function POST(request: Request) {
 
     const response = NextResponse.json({ success: true });
     
-    // Clear cookie
-    response.cookies.delete(COOKIE_NAME);
+    // Clear cookie (using explicit settings for __Host- compatibility in production)
+    response.cookies.set({
+      name: COOKIE_NAME,
+      value: '',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0,
+      expires: new Date(0)
+    });
 
     // Audit log
     await db.auditLogs.create({

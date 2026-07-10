@@ -15,6 +15,8 @@ import {
   Bell
 } from 'lucide-react';
 import styles from './layout.module.css';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
 
 interface SidebarProps {
   user: {
@@ -53,6 +55,9 @@ export default function Sidebar({ user }: SidebarProps) {
 
   const handleLogout = async () => {
     try {
+      // Clear Firebase Client Auth session
+      await signOut(auth);
+
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
       });
