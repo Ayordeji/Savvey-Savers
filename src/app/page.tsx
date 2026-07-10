@@ -256,7 +256,7 @@ export default function Home() {
       await handleGoogleAuth(idToken);
     } catch (err: any) {
       console.error('Google Sign In Error:', err);
-      let message = 'Google sign-in failed. Please try again.';
+      let message = `Google sign-in failed (${err.code || err.message}). Please try again.`;
       if (err.code === 'auth/popup-closed-by-user') {
         message = 'Google sign-in popup was closed before authentication.';
       } else if (err.code === 'auth/blocked-by-project') {
