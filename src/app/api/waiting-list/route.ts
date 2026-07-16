@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { sendEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
   try {
@@ -84,6 +85,13 @@ export async function POST(request: Request) {
         message: `New prospect ${name} signed up on the waiting list. Intended amount: £${commitmentVal}.`,
         type: 'WAITING_LIST_SIGNUP',
         isRead: false,
+      });
+
+      // Send email notification to administrators
+      await sendEmail({
+        to: admin.email,
+        subject: 'Savvey Savers - New Waiting List Signup',
+        body: `Hello ${admin.name},\n\nA new prospect has registered on the Savvey Savers waiting list.\n\nDetails:\n- Name: ${name}\n- Email: ${email}\n- Phone: ${phone}\n- Intended Monthly Savings: £${commitmentVal}\n${referredBy ? `- Referred By: ${referredBy}\n` : ''}\nYou can review and approve this signup inside your coordinator dashboard.\n\nBest regards,\nSavvey Savers Team`
       });
     }
 

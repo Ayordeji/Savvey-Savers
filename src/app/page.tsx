@@ -8,7 +8,9 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  signInWithRedirect,
+  getRedirectResult
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
@@ -64,6 +66,27 @@ export default function Home() {
   // Check if Firebase is configured, otherwise fallback to simulator
   const isFirebaseConfigured = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== 'mock-api-key';
 
+  useEffect(() => {
+    if (isFirebaseConfigured) {
+      getRedirectResult(auth)
+        .then(async (userCredential) => {
+          if (userCredential) {
+            setGoogleLoading(true);
+            const idToken = await userCredential.user.getIdToken();
+            await handleGoogleAuth(idToken);
+          }
+        })
+        .catch((err) => {
+          console.error('Redirect auth error:', err);
+          let message = `Google sign-in failed (${err.code || err.message}). Please try again.`;
+          if (err.code === 'auth/popup-blocked') {
+            message = 'Google sign-in popup was blocked by your browser. Please enable popups or try again.';
+          }
+          setGoogleError(message);
+        });
+    }
+  }, [isFirebaseConfigured]);
+
   const handleForgotPassword = () => {
     setShowResetModal(true);
     setResetEmail('');
@@ -86,7 +109,7 @@ export default function Home() {
         });
         const data = await res.json();
         if (res.ok) {
-          setResetMessage(`A password reset link has been successfully sent to ${resetEmail} via Resend.`);
+          setResetMessage(data.message || `A password reset link has been successfully sent to ${resetEmail} via Resend.`);
         } else {
           setResetError(data.error || 'Failed to send password reset email.');
         }
@@ -199,6 +222,16 @@ export default function Home() {
         message = 'Google sign-in popup was closed before authentication.';
       } else if (err.code === 'auth/blocked-by-project') {
         message = 'Google sign-in is blocked. Check your Firebase console configuration.';
+      } else if (err.code === 'auth/popup-blocked') {
+        console.log('Popup blocked. Falling back to signInWithRedirect...');
+        try {
+          const provider = new GoogleAuthProvider();
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirectErr: any) {
+          console.error('Google Redirect Error:', redirectErr);
+          message = `Google sign-in was blocked and redirect fallback failed (${redirectErr.code || redirectErr.message}).`;
+        }
       }
       setGoogleError(message);
       setGoogleLoading(false);

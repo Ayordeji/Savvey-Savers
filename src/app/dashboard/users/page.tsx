@@ -25,6 +25,7 @@ interface User {
   country?: string;
   permissions?: string[];
   membershipFeeConfirmed?: boolean;
+  membershipFeeConfirmedAt?: string | null;
   termsAccepted?: boolean;
   isSuperAdmin?: boolean;
 }
@@ -1122,10 +1123,14 @@ export default function ManageUsersPage() {
                 <tr>
                   <td style={{ fontWeight: 600 }}>1</td>
                   <td>{new Date(selectedUser.createdAt || Date.now()).getFullYear()}</td>
-                  <td>£ 2200.00</td>
+                  <td>£ {selectedUser.membership ? parseFloat(selectedUser.membership).toFixed(2) : '0.00'}</td>
                   <td>
                     {selectedUser.membershipFeeConfirmed ? (
-                      new Date(selectedUser.createdAt || Date.now()).toLocaleDateString('en-GB')
+                      selectedUser.membershipFeeConfirmedAt ? (
+                        new Date(selectedUser.membershipFeeConfirmedAt).toLocaleDateString('en-GB')
+                      ) : (
+                        new Date(selectedUser.createdAt || Date.now()).toLocaleDateString('en-GB')
+                      )
                     ) : (
                       'N/A'
                     )}

@@ -16,6 +16,7 @@ function ActivationForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [autoLoginFailed, setAutoLoginFailed] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,31 +52,49 @@ function ActivationForm() {
         const isFirebaseConfigured = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== 'mock-api-key';
         
         let idToken = '';
+        let loginSuccess = false;
         if (isFirebaseConfigured) {
-          try {
-            const userCredential = await signInWithEmailAndPassword(auth, data.email, password);
-            idToken = await userCredential.user.getIdToken();
-          } catch (fbErr) {
-            console.error('Firebase Auth sign in failed on activation:', fbErr);
+          // Retry signing in up to 3 times to handle any replication lag
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+              const userCredential = await signInWithEmailAndPassword(auth, data.email, password);
+              idToken = await userCredential.user.getIdToken();
+              break;
+            } catch (fbErr) {
+              console.warn(`Firebase Auth sign in attempt ${attempt} failed:`, fbErr);
+              if (attempt < 3) {
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+              }
+            }
           }
         } else {
           idToken = `mock_token_${data.email}_Registered User`;
         }
 
         if (idToken) {
-          await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken })
-          });
+          try {
+            const loginRes = await fetch('/api/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ idToken })
+            });
+            if (loginRes.ok) {
+              loginSuccess = true;
+            }
+          } catch (loginErr) {
+            console.error('Session login call failed:', loginErr);
+          }
         }
 
         setSuccess(true);
-        // Redirect to dashboard after a short delay
-        setTimeout(() => {
-          router.push('/dashboard');
-          router.refresh();
-        }, 2000);
+        if (loginSuccess || !isFirebaseConfigured) {
+          setTimeout(() => {
+            router.push('/dashboard');
+            router.refresh();
+          }, 2000);
+        } else {
+          setAutoLoginFailed(true);
+        }
       } else {
         setError(data.error || 'Failed to activate account.');
       }
@@ -107,10 +126,27 @@ function ActivationForm() {
           <h2 style={{ fontSize: '1.5rem', fontWeight: 700, fontFamily: 'var(--font-family-title)' }}>
             Account Activated!
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-            Your account is now active. You are being logged in and redirected to the dashboard...
-          </p>
-          <div className="loading-spinner" style={{ marginTop: '12px' }}></div>
+          {autoLoginFailed ? (
+            <>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.5 }}>
+                Your account is active, but we couldn't log you in automatically. Please proceed to the login page to sign in manually.
+              </p>
+              <button
+                onClick={() => router.push('/')}
+                className="btn btn-primary"
+                style={{ marginTop: '12px' }}
+              >
+                Go to Login Page
+              </button>
+            </>
+          ) : (
+            <>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+                Your account is now active. You are being logged in and redirected to the dashboard...
+              </p>
+              <div className="loading-spinner" style={{ marginTop: '12px' }}></div>
+            </>
+          )}
         </div>
       ) : (
         <>

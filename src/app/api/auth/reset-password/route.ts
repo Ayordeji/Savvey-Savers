@@ -23,10 +23,20 @@ export async function POST(request: Request) {
     // Generate standard password reset link using Firebase Admin SDK
     let resetLink = '';
     try {
-      resetLink = await adminAuth.generatePasswordResetLink(normalizedEmail);
+      const host = request.headers.get('host') || 'savvey-savers.vercel.app';
+      const protocol = request.headers.get('x-forwarded-proto') || 'https';
+      const origin = `${protocol}://${host}`;
+      
+      resetLink = await adminAuth.generatePasswordResetLink(normalizedEmail, {
+        url: `${origin}/`
+      });
     } catch (authErr: any) {
       console.error('Firebase Admin generatePasswordResetLink error:', authErr);
-      return NextResponse.json({ error: `Firebase Auth error: ${authErr.message}` }, { status: 500 });
+      let errorMsg = authErr.message || 'Unable to generate reset link.';
+      if (errorMsg.includes('Unable to create the email action link') || errorMsg.includes('INTERNAL ASSERT FAILED')) {
+        errorMsg = 'Unable to generate password reset link. Please ensure that "Email/Password" sign-in provider is enabled in your Firebase Console under Authentication > Sign-in method, and that your domain is whitelisted in "Authorized domains" under Settings.';
+      }
+      return NextResponse.json({ error: `Firebase Auth configuration issue: ${errorMsg}` }, { status: 500 });
     }
 
     // Send the password reset email via Resend

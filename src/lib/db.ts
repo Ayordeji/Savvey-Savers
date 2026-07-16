@@ -22,6 +22,7 @@ export interface User {
   country?: string;
   permissions?: string[];
   membershipFeeConfirmed?: boolean;
+  membershipFeeConfirmedAt?: string | null;
   termsAccepted?: boolean;
   isSuperAdmin?: boolean;
 }
