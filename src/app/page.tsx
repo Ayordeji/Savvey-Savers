@@ -87,6 +87,25 @@ export default function Home() {
     }
   }, [isFirebaseConfigured]);
 
+  // Auto-dismiss errors and status messages after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loginError) setLoginError('');
+      if (resetError) setResetError('');
+      if (resetMessage) setResetMessage('');
+      if (googleError) setGoogleError('');
+      if (waitError) setWaitError('');
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [loginError, resetError, resetMessage, googleError, waitError]);
+
+  useEffect(() => {
+    if (waitSuccess) {
+      const timer = setTimeout(() => setWaitSuccess(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [waitSuccess]);
+
   const handleForgotPassword = () => {
     setShowResetModal(true);
     setResetEmail('');

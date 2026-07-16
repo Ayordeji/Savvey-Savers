@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Lock, CheckCircle2, User, KeyRound, ArrowRight } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -18,22 +18,66 @@ function ActivationForm() {
   const [success, setSuccess] = useState(false);
   const [autoLoginFailed, setAutoLoginFailed] = useState(false);
 
+  // Mount verification states
+  const [verifying, setVerifying] = useState(true);
+  const [linkError, setLinkError] = useState('');
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+
+  const isSubmitting = useRef(false);
+
+  useEffect(() => {
+    if (invitationId) {
+      fetch(`/api/auth/activate?invite=${invitationId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.valid) {
+            setEmail(data.email);
+            setName(data.name);
+          } else {
+            setLinkError(data.error);
+          }
+        })
+        .catch(() => {
+          setLinkError('Failed to verify invitation link. Please check your connection.');
+        })
+        .finally(() => {
+          setVerifying(false);
+        });
+    } else {
+      setVerifying(false);
+    }
+  }, [invitationId]);
+
+  // Auto-dismiss errors after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting.current) return;
+    isSubmitting.current = true;
     setError('');
 
     if (!invitationId) {
       setError('Missing invitation code in the URL. Please verify your link.');
+      isSubmitting.current = false;
       return;
     }
 
     if (password.length < 8) {
       setError('Password must be at least 8 characters long.');
+      isSubmitting.current = false;
       return;
     }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
+      isSubmitting.current = false;
       return;
     }
 
@@ -102,17 +146,27 @@ function ActivationForm() {
       setError('A network error occurred. Please try again.');
     } finally {
       setLoading(false);
+      isSubmitting.current = false;
     }
   };
 
-  if (!invitationId) {
+  if (verifying) {
     return (
-      <div className="glass-panel" style={{ padding: '32px', textAlign: 'center' }}>
-        <h2 style={{ color: 'var(--status-error)', marginBottom: '12px', fontSize: '1.5rem', fontWeight: 700 }}>
+      <div className="glass-panel" style={{ padding: '36px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center', maxWidth: '450px', width: '100%' }}>
+        <div className="loading-spinner"></div>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Verifying invitation link...</p>
+      </div>
+    );
+  }
+
+  if (linkError || !invitationId) {
+    return (
+      <div className="glass-panel" style={{ padding: '36px', textAlign: 'center', maxWidth: '450px', width: '100%' }}>
+        <h2 style={{ color: 'var(--status-error)', marginBottom: '12px', fontSize: '1.5rem', fontWeight: 700, fontFamily: 'var(--font-family-title)' }}>
           Invalid Activation Link
         </h2>
-        <p style={{ color: 'var(--text-muted)' }}>
-          This link does not contain a valid invitation code. Please contact your Savvey Savers coordinator to receive a new invitation link.
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.5 }}>
+          {linkError || 'This link does not contain a valid invitation code. Please contact your Savvey Savers coordinator to receive a new invitation link.'}
         </p>
       </div>
     );
@@ -155,7 +209,7 @@ function ActivationForm() {
               Set Your Password
             </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              Create a secure password to activate your Savvey Savers account.
+              Create a secure password to activate your Savvey Savers account for <strong style={{ color: 'white' }}>{email}</strong>.
             </p>
           </div>
 

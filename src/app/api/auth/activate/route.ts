@@ -59,16 +59,27 @@ export async function POST(request: Request) {
       }
     }
 
-    // Activate the user in Firestore by re-creating user document with doc ID = Firebase UID
-    await db.users.delete({ where: { id: user.id } });
-    
-    await db.users.create({
-      ...user,
-      id: uid,
-      isActive: true,
-      invitationId: null,
-      invitationExpiresAt: null
-    });
+    // Activate the user in Firestore
+    if (user.id === uid) {
+      await db.users.update({
+        where: { id: user.id },
+        data: {
+          isActive: true,
+          invitationId: null,
+          invitationExpiresAt: null
+        }
+      });
+    } else {
+      // Legacy user compatibility: delete temporary doc and create matching doc ID
+      await db.users.delete({ where: { id: user.id } });
+      await db.users.create({
+        ...user,
+        id: uid,
+        isActive: true,
+        invitationId: null,
+        invitationExpiresAt: null
+      });
+    }
 
     // System notifications
     await db.notifications.create({
@@ -93,6 +104,50 @@ export async function POST(request: Request) {
     console.error('Activation error:', err);
     return NextResponse.json(
       { error: 'An unexpected error occurred during account activation.' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const invitationId = searchParams.get('invite');
+
+    if (!invitationId) {
+      return NextResponse.json(
+        { valid: false, error: 'Missing invitation code in the URL. Please verify your link.' },
+        { status: 400 }
+      );
+    }
+
+    const user = await db.users.findFirst(
+      (u) => u.invitationId === invitationId && !u.isActive
+    );
+
+    if (!user) {
+      return NextResponse.json(
+        { valid: false, error: 'This invitation link is invalid or has already been used.' },
+        { status: 400 }
+      );
+    }
+
+    if (user.invitationExpiresAt && new Date() > new Date(user.invitationExpiresAt)) {
+      return NextResponse.json(
+        { valid: false, error: 'This invitation link has expired. Please contact your coordinator for a new one.' },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({
+      valid: true,
+      email: user.email,
+      name: user.name
+    });
+  } catch (err: any) {
+    console.error('Verify invitation error:', err);
+    return NextResponse.json(
+      { valid: false, error: 'An unexpected error occurred during verification.' },
       { status: 500 }
     );
   }

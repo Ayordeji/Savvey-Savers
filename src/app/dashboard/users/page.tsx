@@ -44,7 +44,15 @@ export default function ManageUsersPage() {
   const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'VIEW' | 'DELETE_CONFIRM' | 'BULK_DELETE_CONFIRM' | 'MEMBERSHIP_DETAILS' | 'AGREEMENT' | 'SCHEDULE' | 'REVIEWS'>('NONE');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
   const [formSubmitting, setFormSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (errorMsg) {
+      const timer = setTimeout(() => setErrorMsg(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMsg]);
 
   // Form Fields
   const [formFirstName, setFormFirstName] = useState('');
@@ -289,6 +297,7 @@ export default function ManageUsersPage() {
     );
     if (!confirmed) return;
 
+    setIsProcessing(true);
     try {
       const res = await fetch('/api/admin/users', {
         method: 'PUT',
@@ -304,6 +313,8 @@ export default function ManageUsersPage() {
     } catch (err) {
       console.error('Error sending access link:', err);
       await dialog.alert('Error', 'A network error occurred while sending access link.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -315,6 +326,7 @@ export default function ManageUsersPage() {
     );
     if (!confirmed) return;
 
+    setIsProcessing(true);
     try {
       const res = await fetch('/api/admin/users', {
         method: 'PUT',
@@ -330,6 +342,8 @@ export default function ManageUsersPage() {
     } catch (err) {
       console.error('Error sending reset link:', err);
       await dialog.alert('Error', 'A network error occurred while sending reset link.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -425,6 +439,26 @@ export default function ManageUsersPage() {
 
   return (
     <div>
+      {isProcessing && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 9999,
+          backgroundColor: 'rgba(15, 23, 42, 0.4)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px'
+        }}>
+          <div className="loading-spinner"></div>
+          <span style={{ color: 'white', fontWeight: 600, fontSize: '0.95rem' }}>Processing request...</span>
+        </div>
+      )}
       {/* Page Header */}
       <div className={styles.searchBarContainer}>
         <div>

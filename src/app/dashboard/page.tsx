@@ -65,7 +65,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     const confirmedPaymentsAll = allPayments.filter((p) => p.status === 'CONFIRMED');
     totalRevenue = confirmedPaymentsAll.reduce((acc, p) => acc + p.amount, 0);
 
-    const paymentsYearly = allPayments.filter((p) => p.year === selectedYearNum);
+    const paymentsYearly = allPayments.filter((p) => String(p.year) === String(selectedYear));
     const confirmedPaymentsYearly = paymentsYearly.filter((p) => p.status === 'CONFIRMED');
     const pendingPaymentsYearly = paymentsYearly.filter((p) => p.status === 'PENDING');
     
@@ -74,7 +74,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     confirmedPaymentsCount = confirmedPaymentsYearly.length;
 
     const allCommitments = await db.commitments.findMany();
-    const commitmentsYearly = allCommitments.filter((c) => c.collectionYear === selectedYearNum);
+    const commitmentsYearly = allCommitments.filter((c) => String(c.collectionYear) === String(selectedYear));
     totalCommitmentsCount = commitmentsYearly.length;
     completedCommitmentsCount = commitmentsYearly.filter((c) => c.status === 'COMPLETED').length;
 
@@ -92,7 +92,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   } else {
     // Member: Personal data only
     const myCommitments = await db.commitments.findMany((c) => c.memberId === user.id);
-    const myCommitmentsYearly = myCommitments.filter((c) => c.collectionYear === selectedYearNum);
+    const myCommitmentsYearly = myCommitments.filter((c) => String(c.collectionYear) === String(selectedYear));
     totalCommitmentsCount = myCommitmentsYearly.length;
     completedCommitmentsCount = myCommitmentsYearly.filter((c) => c.status === 'COMPLETED').length;
 
@@ -101,7 +101,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     const myConfirmedPaymentsAll = myPaymentsAll.filter((p) => p.status === 'CONFIRMED');
     totalRevenue = myConfirmedPaymentsAll.reduce((acc, p) => acc + p.amount, 0);
 
-    const myPaymentsYearly = myPaymentsAll.filter((p) => p.year === selectedYearNum);
+    const myPaymentsYearly = myPaymentsAll.filter((p) => String(p.year) === String(selectedYear));
     const myConfirmedPaymentsYearly = myPaymentsYearly.filter((p) => p.status === 'CONFIRMED');
     const myPendingPaymentsYearly = myPaymentsYearly.filter((p) => p.status === 'PENDING');
 

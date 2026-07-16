@@ -26,6 +26,13 @@ export default function WaitingListPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (errorMsg) {
+      const timer = setTimeout(() => setErrorMsg(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMsg]);
+
   const fetchEntries = async () => {
     try {
       const res = await fetch('/api/admin/waiting-list');

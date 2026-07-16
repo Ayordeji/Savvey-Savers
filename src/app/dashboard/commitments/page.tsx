@@ -61,6 +61,13 @@ export default function SavingsCommitmentsPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [formSubmitting, setFormSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (errorMsg) {
+      const timer = setTimeout(() => setErrorMsg(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMsg]);
+
   // Add/Edit Commitment Fields
   const [formSaverId, setFormSaverId] = useState('');
   const [formAmount, setFormAmount] = useState('');
