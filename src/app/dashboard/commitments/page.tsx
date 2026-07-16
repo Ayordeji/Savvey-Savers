@@ -68,6 +68,18 @@ export default function SavingsCommitmentsPage() {
     }
   }, [errorMsg]);
 
+  useEffect(() => {
+    if (!openDropdownId) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(`.${styles.actionsDropdown}`)) {
+        setOpenDropdownId(null);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [openDropdownId]);
+
   // Add/Edit Commitment Fields
   const [formSaverId, setFormSaverId] = useState('');
   const [formAmount, setFormAmount] = useState('');
@@ -566,20 +578,24 @@ export default function SavingsCommitmentsPage() {
                                     <Edit size={14} />
                                     <span>Edit Commitment</span>
                                   </button>
-                                  <button onClick={() => handleOpenPastPaymentModal(c)} className={styles.dropdownItem}>
-                                    <DollarSign size={14} />
-                                    <span>Record Past Payment</span>
-                                  </button>
-                                  {c.status !== 'COMPLETED' && (
+                                  {c.status !== 'CANCELLED' && (
+                                    <button onClick={() => handleOpenPastPaymentModal(c)} className={styles.dropdownItem}>
+                                      <DollarSign size={14} />
+                                      <span>Record Past Payment</span>
+                                    </button>
+                                  )}
+                                  {c.status !== 'COMPLETED' && c.status !== 'CANCELLED' && (
                                     <button onClick={() => handleReleaseHarvest(c.id)} className={styles.dropdownItem}>
                                       <Check size={14} />
                                       <span>Release Harvest</span>
                                     </button>
                                   )}
-                                  <button onClick={() => handleCancelCommitment(c.id)} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
-                                    <Trash2 size={14} />
-                                    <span>Cancel Commitment</span>
-                                  </button>
+                                  {c.status !== 'CANCELLED' && c.status !== 'COMPLETED' && (
+                                    <button onClick={() => handleCancelCommitment(c.id)} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
+                                      <Trash2 size={14} />
+                                      <span>Cancel Commitment</span>
+                                    </button>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -615,7 +631,7 @@ export default function SavingsCommitmentsPage() {
                                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
                                         {pay.status === 'CONFIRMED' ? (
                                           <span className="status-pill confirmed" style={{ fontSize: '0.65rem' }}>Confirmed</span>
-                                        ) : currentUser?.role === 'ADMIN' ? (
+                                        ) : (currentUser?.role === 'ADMIN' && c.status !== 'PENDING' && c.status !== 'CANCELLED') ? (
                                           <button
                                             onClick={() => handleConfirmPayment(pay.id, c.id)}
                                             className="btn btn-primary btn-sm"

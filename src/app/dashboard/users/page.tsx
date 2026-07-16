@@ -76,6 +76,18 @@ export default function ManageUsersPage() {
   // Dropdown menus active index
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!openDropdownId) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(`.${styles.actionsDropdown}`)) {
+        setOpenDropdownId(null);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [openDropdownId]);
+
   const fetchUsers = async () => {
     try {
       const res = await fetch('/api/admin/users');
