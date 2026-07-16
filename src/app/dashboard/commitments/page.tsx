@@ -740,14 +740,16 @@ export default function SavingsCommitmentsPage() {
               </div>
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-                <button
-                  onClick={() => handleAddSubmit(false)}
-                  disabled={formSubmitting}
-                  className="btn btn-secondary"
-                  style={{ flex: 1 }}
-                >
-                  Save Record
-                </button>
+                {currentUser?.role === 'ADMIN' && (
+                  <button
+                    onClick={() => handleAddSubmit(false)}
+                    disabled={formSubmitting}
+                    className="btn btn-secondary"
+                    style={{ flex: 1 }}
+                  >
+                    Save Record
+                  </button>
+                )}
                 <button
                   onClick={() => handleAddSubmit(true)}
                   disabled={formSubmitting}
