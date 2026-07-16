@@ -19,20 +19,20 @@ export default function GlobalLoading() {
       backdropFilter: 'blur(8px)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          background: 'linear-gradient(135deg, var(--primary, #3b82f6), var(--secondary, #8b5cf6))',
-          borderRadius: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          fontWeight: 800,
-          fontSize: '1.4rem',
-          boxShadow: '0 0 20px rgba(139, 92, 246, 0.4)',
-          animation: 'pulse 1.8s infinite ease-in-out'
-        }}>₦</div>
+        <img
+          src="/logo_new-removebg-preview.png"
+          alt="Savvey Savers"
+          style={{
+            width: '40px',
+            height: '40px',
+            objectFit: 'contain',
+            backgroundColor: '#ffffff',
+            borderRadius: '50%',
+            padding: '4px',
+            flexShrink: 0,
+            animation: 'pulse 1.8s infinite ease-in-out'
+          }}
+        />
         <span style={{ fontSize: '1.4rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: 'white', letterSpacing: '-0.02em' }}>
           Savvey Savers
         </span>
