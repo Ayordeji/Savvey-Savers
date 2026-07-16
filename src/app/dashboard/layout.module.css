@@ -231,20 +231,32 @@
   }
 
   .dashboardContainer {
-    flex-direction: row; /* Keep sidebar side-by-side */
+    flex-direction: row;
   }
   
   .sidebar {
-    height: 100vh;
-    position: sticky;
+    position: fixed;
+    left: 0;
     top: 0;
+    bottom: 0;
+    height: 100vh;
+    z-index: 100;
     flex-shrink: 0;
     transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-right: 1px solid var(--sidebar-border);
+  }
+
+  .mainContent {
+    transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* --- Mobile Collapsed (Narrow vertical strip) --- */
   .sidebar.mobileCollapsed {
     width: 68px;
+  }
+
+  .sidebar.mobileCollapsed + .mainContent {
+    margin-left: 68px;
   }
 
   .sidebar.mobileCollapsed .logoText {
@@ -308,6 +320,10 @@
   /* --- Mobile Expanded (Slide-out drawer width) --- */
   .sidebar.mobileExpanded {
     width: 240px;
+  }
+
+  .sidebar.mobileExpanded + .mainContent {
+    margin-left: 240px;
   }
 
   .sidebar.mobileExpanded .logoText {
