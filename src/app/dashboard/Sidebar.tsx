@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -31,6 +32,7 @@ interface SidebarProps {
 export default function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Navigation Links based on User Role
   const adminLinks = [
@@ -53,6 +55,7 @@ export default function Sidebar({ user }: SidebarProps) {
   const links = user.role === 'ADMIN' ? adminLinks : memberLinks;
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
     try {
       // Clear Firebase Client Auth session
       await signOut(auth);
@@ -65,9 +68,11 @@ export default function Sidebar({ user }: SidebarProps) {
         router.refresh();
       } else {
         console.error('Logout failed');
+        setIsLoggingOut(false);
       }
     } catch (err) {
       console.error('Logout error:', err);
+      setIsLoggingOut(false);
     }
   };
 
@@ -81,7 +86,38 @@ export default function Sidebar({ user }: SidebarProps) {
   };
 
   return (
-    <aside className={styles.sidebar}>
+    <>
+      {isLoggingOut && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 99999,
+          background: 'rgba(15, 23, 42, 0.45)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '20px',
+          color: 'white',
+        }}>
+          <div className="loading-spinner" style={{
+            width: '36px',
+            height: '36px',
+            border: '3px solid rgba(255, 255, 255, 0.1)',
+            borderTop: '3px solid var(--primary, #3b82f6)',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+          <p style={{ color: '#9ca3af', fontSize: '0.9rem', fontWeight: 500, letterSpacing: '0.05em' }}>
+            Signing out...
+          </p>
+        </div>
+      )}
+      <aside className={styles.sidebar}>
       <div className={styles.sidebarHeader} style={{ gap: '10px' }}>
         <img
           src="/logo_new-removebg-preview.png"
@@ -130,5 +166,6 @@ export default function Sidebar({ user }: SidebarProps) {
         </button>
       </div>
     </aside>
+    </>
   );
 }

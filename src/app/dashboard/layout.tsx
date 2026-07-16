@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import Sidebar from './Sidebar';
 import HeaderTitle from './HeaderTitle';
+import DashboardTransitionLoader from './TransitionLoader';
 import styles from './layout.module.css';
 import Link from 'next/link';
 import { Bell } from 'lucide-react';
@@ -38,6 +39,7 @@ export default async function DashboardLayout({
 
   return (
     <div className={styles.dashboardContainer}>
+      <DashboardTransitionLoader />
       <Sidebar user={{
         id: user.id,
         name: user.name,
