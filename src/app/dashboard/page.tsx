@@ -43,7 +43,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const isAdmin = user.role === 'ADMIN';
 
   // --- QUERY & METRICS COMPUTATION ---
-  let revenueToDate = 0;
+  let pendingPaymentsAmount = 0;
   let totalPaymentsCount = 0;
   let confirmedPaymentsCount = 0;
   let totalCommitmentsCount = 0;
@@ -67,8 +67,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
     const paymentsYearly = allPayments.filter((p) => p.year === selectedYearNum);
     const confirmedPaymentsYearly = paymentsYearly.filter((p) => p.status === 'CONFIRMED');
+    const pendingPaymentsYearly = paymentsYearly.filter((p) => p.status === 'PENDING');
     
-    revenueToDate = confirmedPaymentsYearly.reduce((acc, p) => acc + p.amount, 0);
+    pendingPaymentsAmount = pendingPaymentsYearly.reduce((acc, p) => acc + p.amount, 0);
     totalPaymentsCount = paymentsYearly.length;
     confirmedPaymentsCount = confirmedPaymentsYearly.length;
 
@@ -102,8 +103,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
     const myPaymentsYearly = myPaymentsAll.filter((p) => p.year === selectedYearNum);
     const myConfirmedPaymentsYearly = myPaymentsYearly.filter((p) => p.status === 'CONFIRMED');
+    const myPendingPaymentsYearly = myPaymentsYearly.filter((p) => p.status === 'PENDING');
 
-    revenueToDate = myConfirmedPaymentsYearly.reduce((acc, p) => acc + p.amount, 0);
+    pendingPaymentsAmount = myPendingPaymentsYearly.reduce((acc, p) => acc + p.amount, 0);
     totalPaymentsCount = myPaymentsYearly.length;
     confirmedPaymentsCount = myConfirmedPaymentsYearly.length;
 
@@ -132,7 +134,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         gap: '16px',
         width: '100%'
       }}>
-        {/* Card 1: Revenue to Date */}
+        {/* Card 1: Pending Payments */}
         <div style={{
           backgroundColor: '#ffffff',
           border: '1px solid #f3f4f6',
@@ -146,22 +148,22 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              REVENUE TO DATE
+              PENDING PAYMENTS
             </span>
             <div style={{
               width: '32px', height: '32px', borderRadius: '50%',
-              backgroundColor: 'rgba(221, 107, 32, 0.08)', color: '#c2410c',
+              backgroundColor: 'rgba(245, 158, 11, 0.08)', color: '#d97706',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <TrendingUp size={16} />
+              <Clock size={16} />
             </div>
           </div>
           <div style={{ marginTop: '12px' }}>
             <h3 style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#111827', margin: 0 }}>
-              £{revenueToDate.toFixed(2)}
+              £{pendingPaymentsAmount.toFixed(2)}
             </h3>
             <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, display: 'block', marginTop: '4px' }}>
-              {selectedYear}
+              Awaiting Confirmation ({selectedYear})
             </span>
           </div>
         </div>
