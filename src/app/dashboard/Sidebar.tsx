@@ -13,7 +13,9 @@ import {
   Mail,
   LogOut,
   UserCheck,
-  Bell
+  Bell,
+  Menu,
+  ChevronUp
 } from 'lucide-react';
 import styles from './layout.module.css';
 import { auth } from '@/lib/firebase';
@@ -33,6 +35,7 @@ export default function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isMobileCollapsed, setIsMobileCollapsed] = useState(true);
 
   // Navigation Links based on User Role
   const adminLinks = [
@@ -117,23 +120,32 @@ export default function Sidebar({ user }: SidebarProps) {
           </p>
         </div>
       )}
-      <aside className={styles.sidebar}>
-      <div className={styles.sidebarHeader} style={{ gap: '10px' }}>
-        <img
-          src="/logo_new-removebg-preview.png"
-          alt="Savvey Savers"
-          style={{
-            width: '36px',
-            height: '36px',
-            objectFit: 'contain',
-            backgroundColor: '#ffffff',
-            borderRadius: '50%',
-            padding: '4px',
-            flexShrink: 0
-          }}
-        />
-        <span className={styles.logoText} style={{ color: '#ffffff', fontFamily: 'var(--font-family-title)', fontSize: '1.25rem', fontWeight: 700 }}>Savvey Savers</span>
-      </div>
+      <aside className={`${styles.sidebar} ${isMobileCollapsed ? styles.mobileCollapsed : styles.mobileExpanded}`}>
+        <div className={styles.sidebarHeader} style={{ gap: '10px', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img
+              src="/logo_new-removebg-preview.png"
+              alt="Savvey Savers"
+              style={{
+                width: '36px',
+                height: '36px',
+                objectFit: 'contain',
+                backgroundColor: '#ffffff',
+                borderRadius: '50%',
+                padding: '4px',
+                flexShrink: 0
+              }}
+            />
+            <span className={styles.logoText} style={{ color: '#ffffff', fontFamily: 'var(--font-family-title)', fontSize: '1.25rem', fontWeight: 700 }}>Savvey Savers</span>
+          </div>
+
+          <button
+            onClick={() => setIsMobileCollapsed(!isMobileCollapsed)}
+            className={styles.mobileToggleBtn}
+          >
+            {isMobileCollapsed ? <Menu size={18} /> : <ChevronUp size={18} />}
+          </button>
+        </div>
 
       <nav className={styles.navSection}>
         {links.map((link) => {
@@ -155,8 +167,9 @@ export default function Sidebar({ user }: SidebarProps) {
       <div className={styles.sidebarFooter}>
         <div className={styles.userInfo} style={{ paddingLeft: '12px' }}>
           <div className={styles.userDetails}>
-            <span className={styles.userName} style={{ color: 'var(--sidebar-text)', fontSize: '0.85rem' }}>{user.email}</span>
-            <span className={styles.userRole} style={{ color: '#84a993', fontSize: '0.75rem', marginTop: '2px', display: 'block' }}>{user.role === 'ADMIN' ? 'Admin' : 'Member'}</span>
+            <span className={styles.userName} style={{ color: 'var(--sidebar-text)', fontSize: '0.85rem', fontWeight: 600, display: 'block' }}>{user.name || 'User'}</span>
+            <span className={styles.userEmail} style={{ color: 'var(--text-muted, #9ca3af)', fontSize: '0.75rem', marginTop: '2px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</span>
+            <span className={styles.userRole} style={{ color: '#84a993', fontSize: '0.72rem', marginTop: '2px', display: 'block' }}>{user.role === 'ADMIN' ? 'Admin' : 'Member'}</span>
           </div>
         </div>
 
