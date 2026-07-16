@@ -62,10 +62,17 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   if (isAdmin) {
     // Admin: Aggregated data for all members
     const allPayments = await db.payments.findMany();
-    const confirmedPaymentsAll = allPayments.filter((p) => p.status === 'CONFIRMED');
+    const allCommitments = await db.commitments.findMany();
+    const activeCommitmentIds = allCommitments.map((c) => c.id);
+
+    const confirmedPaymentsAll = allPayments.filter(
+      (p) => p.status === 'CONFIRMED' && activeCommitmentIds.includes(p.commitmentId)
+    );
     totalRevenue = confirmedPaymentsAll.reduce((acc, p) => acc + p.amount, 0);
 
-    const paymentsYearly = allPayments.filter((p) => String(p.year) === String(selectedYear));
+    const paymentsYearly = allPayments.filter(
+      (p) => String(p.year) === String(selectedYear) && activeCommitmentIds.includes(p.commitmentId)
+    );
     const confirmedPaymentsYearly = paymentsYearly.filter((p) => p.status === 'CONFIRMED');
     const pendingPaymentsYearly = paymentsYearly.filter((p) => p.status === 'PENDING');
     
@@ -73,7 +80,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     totalPaymentsCount = paymentsYearly.length;
     confirmedPaymentsCount = confirmedPaymentsYearly.length;
 
-    const allCommitments = await db.commitments.findMany();
     const commitmentsYearly = allCommitments.filter((c) => String(c.collectionYear) === String(selectedYear));
     totalCommitmentsCount = commitmentsYearly.length;
     completedCommitmentsCount = commitmentsYearly.filter((c) => c.status === 'COMPLETED').length;
