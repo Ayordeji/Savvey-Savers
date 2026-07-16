@@ -53,6 +53,17 @@ export async function POST(request: Request) {
         }
       });
 
+      // Automatically complete the commitment upon payment confirmation
+      if (cmt) {
+        await db.commitments.update({
+          where: { id: cmt.id },
+          data: {
+            status: 'COMPLETED',
+            updatedAt: new Date().toISOString()
+          }
+        });
+      }
+
       if (member && cmt) {
         // Dispatch Email Notification
         await sendEmail({
