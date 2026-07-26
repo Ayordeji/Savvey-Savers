@@ -135,7 +135,7 @@ export async function POST(request: Request) {
       phone,
       role,
       membership: membership || undefined,
-      isActive: false, // will activate via setup link
+      isActive: true, // Default to active
       passwordHash: 'pending_activation', // placeholder
       invitationId,
       invitationExpiresAt,

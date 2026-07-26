@@ -194,39 +194,72 @@ export async function POST(request: Request) {
 
     // --- Action 4: SEND_REMINDER ---
     if (action === 'SEND_REMINDER') {
-      if (!memberId || !commitmentId) {
-        return NextResponse.json({ error: 'Member and commitment are required.' }, { status: 400 });
+      const { memberIds, commitmentIds } = await request.json().catch(() => ({})) || {};
+      const targetMemberIds: string[] = Array.isArray(memberIds)
+        ? memberIds
+        : memberId
+        ? [memberId]
+        : [];
+      const targetCommitmentIds: string[] = Array.isArray(commitmentIds)
+        ? commitmentIds
+        : commitmentId
+        ? [commitmentId]
+        : [];
+
+      if (targetMemberIds.length === 0 && targetCommitmentIds.length === 0) {
+        return NextResponse.json({ error: 'At least one member or commitment is required.' }, { status: 400 });
       }
 
-      const member = await db.users.findUnique({ where: { id: memberId } });
-      const cmt = await db.commitments.findUnique({ where: { id: commitmentId } });
+      let count = 0;
 
-      if (!member || !cmt) {
-        return NextResponse.json({ error: 'Member or commitment not found.' }, { status: 404 });
+      if (targetCommitmentIds.length > 0) {
+        for (const cId of targetCommitmentIds) {
+          const cmt = await db.commitments.findUnique({ where: { id: cId } });
+          if (cmt) {
+            const member = await db.users.findUnique({ where: { id: cmt.memberId } });
+            if (member) {
+              await sendEmail({
+                to: member.email,
+                subject: 'Savvey Savers - Friendly Savings Reminder',
+                body: `Hello ${member.name},\n\nThis is a friendly reminder from your Savvey Savers coordinator regarding your savings commitment for "${cmt.goal}" (Monthly amount: £${cmt.amount}).\n\nPlease proceed with your payment/deposit and notify your coordinator to confirm receipt.\n\nBest regards,\nSavvey Savers Collective`
+              });
+              await db.notifications.create({
+                userId: member.id,
+                message: `Friendly reminder regarding your savings commitment "${cmt.goal}".`,
+                type: 'REMINDER_SENT',
+                isRead: false
+              });
+              count++;
+            }
+          }
+        }
+      } else {
+        for (const mId of targetMemberIds) {
+          const member = await db.users.findUnique({ where: { id: mId } });
+          if (member) {
+            await sendEmail({
+              to: member.email,
+              subject: 'Savvey Savers - Friendly Savings Reminder',
+              body: `Hello ${member.name},\n\nThis is a friendly reminder from your Savvey Savers coordinator regarding your active savings commitments.\n\nPlease proceed with your monthly savings payment/deposit and notify your coordinator.\n\nBest regards,\nSavvey Savers Collective`
+            });
+            await db.notifications.create({
+              userId: member.id,
+              message: `Friendly reminder sent by coordinator regarding your savings commitments.`,
+              type: 'REMINDER_SENT',
+              isRead: false
+            });
+            count++;
+          }
+        }
       }
-
-      // Send reminder email
-      await sendEmail({
-        to: member.email,
-        subject: 'Savvey Savers - Friendly Savings Reminder',
-        body: `Hello ${member.name},\n\nThis is a friendly reminder from your Savvey Savers coordinator regarding your outstanding savings commitment for "${cmt.goal}" (Monthly amount: £${cmt.amount}).\n\nPlease proceed with your offline payment/deposit and notify your coordinator to confirm receipt.\n\nBest regards,\nSavvey Savers Team`
-      });
-
-      // Member Notification
-      await db.notifications.create({
-        userId: member.id,
-        message: `Friendly reminder sent by coordinator regarding your savings commitment "${cmt.goal}".`,
-        type: 'REMINDER_SENT',
-        isRead: false
-      });
 
       await db.auditLogs.create({
         action: 'SEND_REMINDER',
-        details: `Sent contribution reminder email to ${member.name} (${member.email}) regarding commitment ${commitmentId}.`,
+        details: `Sent bulk contribution reminder emails to ${count} recipient(s).`,
         userId: session.id
       });
 
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, count });
     }
 
     return NextResponse.json({ error: 'Invalid action.' }, { status: 400 });

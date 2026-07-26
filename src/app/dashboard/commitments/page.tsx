@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Fragment } from 'react';
-import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, DollarSign, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, PoundSterling, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import styles from './commitments.module.css';
 
@@ -14,7 +14,7 @@ interface Commitment {
   collectionMonth: string;
   collectionYear: number;
   endDate: string;
-  status: 'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  status: 'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'NOT_YET_STARTED';
   createdAt: string;
 }
 
@@ -44,7 +44,7 @@ export default function SavingsCommitmentsPage() {
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
-  const [yearFilter, setYearFilter] = useState('');
+  const [yearFilter, setYearFilter] = useState(String(new Date().getFullYear()));
   const [loading, setLoading] = useState(true);
 
   // Settings configs
@@ -86,7 +86,7 @@ export default function SavingsCommitmentsPage() {
   const [formGoal, setFormGoal] = useState('');
   const [formMonth, setFormMonth] = useState('January');
   const [formYear, setFormYear] = useState('2026');
-  const [formStatus, setFormStatus] = useState<'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED'>('ACTIVE');
+  const [formStatus, setFormStatus] = useState<'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'NOT_YET_STARTED'>('ACTIVE');
 
   // Reminder fields
   const [reminderSaverId, setReminderSaverId] = useState('');
@@ -580,7 +580,7 @@ export default function SavingsCommitmentsPage() {
                                   </button>
                                   {c.status !== 'CANCELLED' && (
                                     <button onClick={() => handleOpenPastPaymentModal(c)} className={styles.dropdownItem}>
-                                      <DollarSign size={14} />
+                                      <PoundSterling size={14} />
                                       <span>Record Past Payment</span>
                                     </button>
                                   )}

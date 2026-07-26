@@ -738,30 +738,27 @@ export default function Home() {
                   </div>
 
                   <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Intended Monthly Saving Commitment (£)</label>
-                    <div style={{ position: 'relative' }}>
-                      <PiggyBank size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                      <input
-                        type="number"
-                        required
-                        min="1"
-                        value={waitAmount}
-                        onChange={(e) => setWaitAmount(e.target.value)}
-                        placeholder="300"
-                        className="form-input"
-                        style={{
-                          paddingLeft: '38px',
-                          backgroundColor: 'var(--bg-main)',
-                          borderColor: 'var(--border-color)',
-                          color: 'var(--text-main)',
-                          borderRadius: 'var(--radius-md)'
-                        }}
-                      />
-                    </div>
+                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Target Monthly Savings (£)</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={waitAmount}
+                      onChange={(e) => setWaitAmount(e.target.value)}
+                      placeholder="300"
+                      className="form-input"
+                      style={{
+                        paddingLeft: '14px',
+                        backgroundColor: 'var(--bg-main)',
+                        borderColor: 'var(--border-color)',
+                        color: 'var(--text-main)',
+                        borderRadius: 'var(--radius-md)'
+                      }}
+                    />
                   </div>
 
                   <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Referred By (Optional Member Name)</label>
+                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Referred by a Member? Enter their name below</label>
                     <div style={{ position: 'relative' }}>
                       <User size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
                       <input

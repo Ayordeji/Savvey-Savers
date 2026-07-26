@@ -822,7 +822,7 @@ export default function ManageUsersPage() {
                     </td>
                     <td>
                       <button
-                        onClick={() => handleOpenMembershipModal(u)}
+                        onClick={() => handleOpenViewModal(u)}
                         style={{
                           background: 'none',
                           border: 'none',
@@ -1192,6 +1192,253 @@ export default function ManageUsersPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- CONSOLIDATED VIEW MEMBERSHIP & PROFILE MODAL --- */}
+      {(activeModal === 'VIEW' || activeModal === 'MEMBERSHIP_DETAILS') && selectedUser && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '780px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+
+            <div style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '16px', marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, margin: 0, fontFamily: 'var(--font-family-title)', color: '#111827' }}>
+                Member Profile & Membership Details
+              </h3>
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.875rem', color: '#4b5563', fontWeight: 600 }}>
+                  {selectedUser.name} ({selectedUser.displayId || selectedUser.id})
+                </span>
+                <span style={{ fontSize: '0.8rem', backgroundColor: 'rgba(6, 78, 59, 0.08)', color: '#064e3b', padding: '3px 12px', borderRadius: '12px', fontWeight: 600 }}>
+                  Member Since: {new Date(selectedUser.createdAt || Date.now()).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+                </span>
+              </div>
+            </div>
+
+            {/* SECTION 1: MEMBERSHIP FEE & SAVINGS HISTORY TABLE (5 Columns) */}
+            <div style={{ marginBottom: '28px' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '12px', color: '#1e293b', borderLeft: '4px solid var(--primary)', paddingLeft: '8px' }}>
+                1. Membership Fee & Annual Savings History
+              </h4>
+
+              <table className="custom-table" style={{ fontSize: '0.85rem' }}>
+                <thead>
+                  <tr>
+                    <th>Sr.No.</th>
+                    <th>Payment Year</th>
+                    <th>Total Membership Fee</th>
+                    <th>Payment Received Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const currentYear = new Date().getFullYear();
+                    const records = [...userFeeRecords].sort((a: any, b: any) => b.year - a.year);
+
+                    if (records.length === 0) {
+                      return (
+                        <tr>
+                          <td style={{ fontWeight: 600 }}>1</td>
+                          <td style={{ fontWeight: 600 }}>{currentYear}</td>
+                          <td style={{ fontWeight: 700, color: '#064e3b' }}>£ {getMembershipFee(selectedUser.membership)}</td>
+                          <td>
+                            {selectedUser.membershipFeeConfirmed ? (
+                              selectedUser.membershipFeeConfirmedAt ? (
+                                new Date(selectedUser.membershipFeeConfirmedAt).toLocaleDateString('en-GB')
+                              ) : (
+                                new Date(selectedUser.createdAt || Date.now()).toLocaleDateString('en-GB')
+                              )
+                            ) : (
+                              'N/A'
+                            )}
+                          </td>
+                          <td>
+                            <span className={`status-pill ${selectedUser.membershipFeeConfirmed ? 'completed' : 'pending'}`}>
+                              {selectedUser.membershipFeeConfirmed ? 'Completed' : 'Pending'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return records.map((rec: any, idx: number) => {
+                      const isPaid = rec.status === 'PAID' || rec.status === 'COMPLETED';
+                      const datePaid = rec.paidAt ? new Date(rec.paidAt).toLocaleDateString('en-GB') : 'N/A';
+
+                      return (
+                        <tr key={rec.id || idx}>
+                          <td style={{ fontWeight: 600 }}>{idx + 1}</td>
+                          <td style={{ fontWeight: 600 }}>{rec.year}</td>
+                          <td style={{ fontWeight: 700, color: '#064e3b' }}>£ {(rec.totalFee || 230).toFixed(2)}</td>
+                          <td>{isPaid ? datePaid : 'N/A'}</td>
+                          <td>
+                            <span className={`status-pill ${isPaid ? 'completed' : 'pending'}`}>
+                              {isPaid ? 'Completed' : 'Pending'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    });
+                  })()}
+                </tbody>
+              </table>
+            </div>
+
+            {/* SECTION 2: MEMBER PERSONAL PROFILE DETAILS */}
+            <div>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '14px', color: '#1e293b', borderLeft: '4px solid var(--primary)', paddingLeft: '8px' }}>
+                2. Member Profile Details
+              </h4>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', backgroundColor: '#f9fafb', padding: '18px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>First Name</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.firstName || selectedUser.name.split(' ')[0] || '-'}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Last Name</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.lastName || selectedUser.name.split(' ').slice(1).join(' ') || '-'}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Email</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827', wordBreak: 'break-all' }}>{selectedUser.email}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Phone Number</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.phone || '-'}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Address 1</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.addressLine1 || '-'}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Address 2</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.addressLine2 || '-'}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>City</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.city || '-'}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Post Code</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.postCode || '-'}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Country</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.country || 'United Kingdom'}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Terms & Conditions</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#059669' }}>✓ Accepted</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Invitation Status</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: selectedUser.isActive ? '#059669' : '#d97706' }}>
+                    {selectedUser.isActive ? 'Active' : 'Pending'}
+                  </p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Role</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.role}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Member ID</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.displayId || selectedUser.id}</p>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- REQUEST FOR MEMBERSHIP FEE MODAL --- */}
+      {activeModal === 'REQUEST_FEE' && selectedUser && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '500px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '20px', fontFamily: 'var(--font-family-title)', color: '#111827' }}>
+              Request For Membership Fee
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 600, color: '#374151', fontSize: '0.85rem' }}>Base Membership Fee *</label>
+                  <input
+                    type="number"
+                    value={feeBase}
+                    onChange={(e) => setFeeBase(e.target.value)}
+                    placeholder="Enter base membership fee"
+                    className="form-input"
+                    style={{ backgroundColor: '#ffffff', borderColor: '#d1d5db', borderRadius: '8px', padding: '10px 14px' }}
+                  />
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 600, color: '#374151', fontSize: '0.85rem' }}>Admin Fee</label>
+                  <input
+                    type="number"
+                    value={feeAdmin}
+                    onChange={(e) => setFeeAdmin(e.target.value)}
+                    placeholder="Enter admin fee"
+                    className="form-input"
+                    style={{ backgroundColor: '#ffffff', borderColor: '#d1d5db', borderRadius: '8px', padding: '10px 14px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', padding: '12px 16px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#4b5563' }}>Total:</span>
+                <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#064e3b' }}>
+                  £ {((parseFloat(feeBase) || 0) + (parseFloat(feeAdmin) || 0)).toFixed(2)}
+                </span>
+              </div>
+
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600, color: '#374151', fontSize: '0.85rem' }}>Membership Year *</label>
+                <select
+                  value={feeYear}
+                  onChange={(e) => setFeeYear(e.target.value)}
+                  className="form-input"
+                  style={{ backgroundColor: '#ffffff', borderColor: '#d1d5db', borderRadius: '8px', padding: '10px 14px' }}
+                >
+                  <option value="">Choose Membership Year</option>
+                  {['2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034'].map((yr) => (
+                    <option key={yr} value={yr}>{yr}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ marginTop: '12px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveModal('CONFIRM_REQUEST_FEE')}
+                  className="btn btn-primary"
+                  style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 32px', fontWeight: 600 }}
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveModal('NONE')}
+                  className="btn btn-secondary"
+                  style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 32px', fontWeight: 600 }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -64,8 +64,8 @@ export async function POST(request: Request) {
     const startMonth = collectionMonth || 'January';
     const startYear = parseInt(collectionYear) || new Date().getFullYear();
 
-    // Create commitment
-    const status = requestCollection ? 'PENDING' : 'ACTIVE';
+    const currentYear = new Date().getFullYear();
+    const status = startYear > currentYear ? 'NOT_YET_STARTED' : (requestCollection ? 'PENDING' : 'ACTIVE');
     const newCommitment = await db.commitments.create({
       memberId: targetMemberId,
       amount: parseFloat(amount),
