@@ -292,13 +292,13 @@ function SettingsContent() {
       )}
 
       {/* SUB-TABS NAVIGATION (Security Question / Manage Commitment / Email Template) */}
-      <div style={{ display: 'flex', gap: '8px', borderBottom: '2px solid #e2e8f0', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', borderBottom: '2px solid #e2e8f0', marginBottom: '24px', width: '100%' }}>
         <button
           onClick={() => setActiveTab('security')}
           style={{
-            padding: '12px 24px',
+            padding: '10px 18px',
             fontWeight: 700,
-            fontSize: '0.95rem',
+            fontSize: '0.9rem',
             border: 'none',
             background: 'none',
             cursor: 'pointer',
@@ -311,9 +311,9 @@ function SettingsContent() {
         <button
           onClick={() => setActiveTab('commitment')}
           style={{
-            padding: '12px 24px',
+            padding: '10px 18px',
             fontWeight: 700,
-            fontSize: '0.95rem',
+            fontSize: '0.9rem',
             border: 'none',
             background: 'none',
             cursor: 'pointer',
@@ -326,9 +326,9 @@ function SettingsContent() {
         <button
           onClick={() => setActiveTab('email-templates')}
           style={{
-            padding: '12px 24px',
+            padding: '10px 18px',
             fontWeight: 700,
-            fontSize: '0.95rem',
+            fontSize: '0.9rem',
             border: 'none',
             background: 'none',
             cursor: 'pointer',
@@ -349,33 +349,33 @@ function SettingsContent() {
         <div>
           {/* TAB 1: SECURITY QUESTION */}
           {activeTab === 'security' && (
-            <div className="glass-panel" style={{ padding: '28px', maxWidth: '800px', backgroundColor: '#ffffff', borderRadius: '16px' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '8px', color: '#1e293b' }}>
-                Set Security Questions
+            <div className="glass-panel" style={{ padding: '28px', maxWidth: '700px', backgroundColor: '#ffffff', borderRadius: '16px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
+                Security Questions Configuration
               </h3>
-              <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '24px' }}>
-                Manage authentication security questions requested during member registration and password recovery.
+              <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '24px' }}>
+                Configure security verification questions available to users during account setup.
               </p>
 
-              <form onSubmit={handleAddSecurityQuestion} style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+              <form onSubmit={handleAddSecurityQuestion} style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
                 <input
                   type="text"
-                  placeholder="Enter security question (e.g. What is your mother's maiden name?)"
+                  placeholder="Enter new security question..."
                   value={newSecurityQuestion}
                   onChange={(e) => setNewSecurityQuestion(e.target.value)}
                   className="form-input"
-                  style={{ flex: 1, backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '10px 14px' }}
+                  style={{ flex: 1, minWidth: '200px', backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#0f172a' }}
                 />
-                <button type="submit" className="btn btn-primary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}>
+                <button type="submit" className="btn btn-primary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 20px', fontWeight: 600 }}>
                   <Plus size={16} />
                   <span>Add Question</span>
                 </button>
               </form>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {securityQuestions.map((q, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', border: '1px solid #e2e8f0', borderRadius: '10px', backgroundColor: '#f8fafc' }}>
-                    <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.925rem' }}>{idx + 1}. {q}</span>
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '0.9rem', color: '#1e293b', fontWeight: 500 }}>{q}</span>
                     <button
                       type="button"
                       onClick={() => handleDeleteSecurityQuestion(idx)}
@@ -393,14 +393,14 @@ function SettingsContent() {
           {activeTab === 'commitment' && (
             <div>
               {/* Inner Sub-Tabs: Collection Month | Notification Settings | Saving Commitment | Commitment Amount */}
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', backgroundColor: '#f1f5f9', padding: '6px', borderRadius: '10px', width: 'fit-content' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px', backgroundColor: '#f1f5f9', padding: '6px', borderRadius: '10px', width: '100%' }}>
                 <button
                   onClick={() => setCommitmentTab('collection_month')}
                   style={{
-                    padding: '8px 18px',
+                    padding: '8px 14px',
                     borderRadius: '8px',
                     fontWeight: 600,
-                    fontSize: '0.875rem',
+                    fontSize: '0.825rem',
                     border: 'none',
                     cursor: 'pointer',
                     backgroundColor: commitmentTab === 'collection_month' ? '#2e3a4e' : 'transparent',
@@ -412,10 +412,10 @@ function SettingsContent() {
                 <button
                   onClick={() => setCommitmentTab('notifications')}
                   style={{
-                    padding: '8px 18px',
+                    padding: '8px 14px',
                     borderRadius: '8px',
                     fontWeight: 600,
-                    fontSize: '0.875rem',
+                    fontSize: '0.825rem',
                     border: 'none',
                     cursor: 'pointer',
                     backgroundColor: commitmentTab === 'notifications' ? '#2e3a4e' : 'transparent',
@@ -427,10 +427,10 @@ function SettingsContent() {
                 <button
                   onClick={() => setCommitmentTab('saving_goals')}
                   style={{
-                    padding: '8px 18px',
+                    padding: '8px 14px',
                     borderRadius: '8px',
                     fontWeight: 600,
-                    fontSize: '0.875rem',
+                    fontSize: '0.825rem',
                     border: 'none',
                     cursor: 'pointer',
                     backgroundColor: commitmentTab === 'saving_goals' ? '#2e3a4e' : 'transparent',
@@ -442,10 +442,10 @@ function SettingsContent() {
                 <button
                   onClick={() => setCommitmentTab('commitment_amounts')}
                   style={{
-                    padding: '8px 18px',
+                    padding: '8px 14px',
                     borderRadius: '8px',
                     fontWeight: 600,
-                    fontSize: '0.875rem',
+                    fontSize: '0.825rem',
                     border: 'none',
                     cursor: 'pointer',
                     backgroundColor: commitmentTab === 'commitment_amounts' ? '#2e3a4e' : 'transparent',
@@ -458,14 +458,14 @@ function SettingsContent() {
 
               {/* Inner Tab 1: Collection Month Configuration per Amount */}
               {commitmentTab === 'collection_month' && (
-                <div className="glass-panel" style={{ padding: '28px', maxWidth: '700px', backgroundColor: '#ffffff', borderRadius: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                    <div style={{ minWidth: '220px' }}>
+                <div className="glass-panel" style={{ padding: '20px', maxWidth: '700px', backgroundColor: '#ffffff', borderRadius: '16px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                    <div style={{ flex: '1 1 180px', maxWidth: '100%' }}>
                       <select
                         value={selectedCollectionAmount}
                         onChange={(e) => setSelectedCollectionAmount(e.target.value)}
                         className="form-input"
-                        style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '10px 14px', fontWeight: 700, fontSize: '1rem', color: '#1e293b' }}
+                        style={{ width: '100%', backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '10px 14px', fontWeight: 700, fontSize: '0.95rem', color: '#1e293b' }}
                       >
                         <option value="100.00">100.00</option>
                         <option value="250.00">250.00</option>
@@ -478,13 +478,13 @@ function SettingsContent() {
                       </select>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <div>
                       <button
                         type="button"
                         onClick={handleSaveCollectionMonths}
                         disabled={saving}
                         className="btn btn-primary"
-                        style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}
+                        style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 20px', fontWeight: 600 }}
                       >
                         <Save size={16} />
                         <span>{saving ? 'Saving...' : 'Save'}</span>

@@ -632,7 +632,7 @@ export default function SavingsCommitmentsPage() {
           <span style={{ color: 'var(--text-muted)' }}>Loading Commitments...</span>
         </div>
       ) : (
-        <div className="table-container" style={{ overflow: 'visible' }}>
+        <div className="table-container">
           <table className="custom-table">
             <thead>
               <tr>

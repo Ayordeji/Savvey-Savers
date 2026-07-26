@@ -220,10 +220,15 @@
   .mainContent {
     margin-left: 0 !important;
     width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
   }
 
   .dashboardContainer {
     flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
   }
 
   /* Compact layout spacing for mobile */
@@ -234,5 +239,9 @@
 
   .pageBody {
     padding: 12px;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
 }

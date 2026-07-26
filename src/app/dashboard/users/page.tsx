@@ -831,7 +831,7 @@ export default function ManageUsersPage() {
           <span style={{ color: 'var(--text-muted)' }}>Loading Members...</span>
         </div>
       ) : (
-        <div className="table-container" style={{ overflow: 'visible' }}>
+        <div className="table-container">
           <table className="custom-table">
             <thead>
               <tr>
