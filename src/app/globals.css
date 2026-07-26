@@ -454,6 +454,39 @@ button {
   }
 }
 
+/* Tablet (641px to 1023px) 3-column card grid */
+@media (max-width: 1023px) and (min-width: 641px) {
+  .dashboard-cards-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+}
+
+/* Mobile (<= 640px) 2-column card grid */
+@media (max-width: 640px) {
+  .dashboard-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .dashboard-cards-grid > div {
+    padding: 14px 12px !important;
+    min-height: 120px !important;
+  }
+  .dashboard-cards-grid h3 {
+    font-size: 1.2rem !important;
+  }
+  .dashboard-cards-grid span {
+    font-size: 0.68rem !important;
+  }
+}
+
+/* Extra small screen (<= 400px) 1-column card grid */
+@media (max-width: 400px) {
+  .dashboard-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 .table-container {
   overflow: visible !important;
 }
@@ -464,35 +497,73 @@ button {
 
 /* Responsive adjustments for mobile and tablets */
 @media (max-width: 768px) {
+  .global-header-bar {
+    padding: 12px 14px !important;
+    flex-direction: column-reverse !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .global-header-left {
+    display: flex !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    padding-bottom: 4px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .global-header-left button,
+  .global-header-left a {
+    padding: 6px 12px !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+    text-align: center;
+  }
+
+  .global-header-right {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+
   .table-container {
     overflow-x: auto !important;
   }
+
   .hidden-mobile {
     display: none !important;
   }
+
   header {
     padding: 0 16px !important;
   }
+
   main {
-    padding: 20px 14px !important;
+    padding: 16px 12px !important;
     gap: 16px !important;
   }
+
   h1 {
-    font-size: 1.6rem !important;
+    font-size: 1.5rem !important;
   }
+
   .glass-panel {
-    padding: 16px !important;
+    padding: 14px !important;
   }
+
   .modal-content {
     max-width: 95vw !important;
     width: 95vw !important;
-    padding: 20px !important;
+    padding: 16px !important;
   }
+
   .custom-table th,
   .custom-table td {
     padding: 8px 10px !important;
     font-size: 0.8rem !important;
-    white-space: nowrap;
   }
 }
 

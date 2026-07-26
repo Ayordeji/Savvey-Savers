@@ -846,14 +846,14 @@ export default function ManageUsersPage() {
                     style={{ accentColor: 'var(--secondary)', cursor: 'pointer' }}
                   />
                 </th>
-                <th>Invitation ID</th>
+                <th className="hidden-mobile">Invitation ID</th>
                 <th>Name</th>
-                <th>Email</th>
-                <th>Phone Number</th>
+                <th className="hidden-mobile">Email</th>
+                <th className="hidden-mobile">Phone Number</th>
                 <th>Role</th>
-                <th>Created On</th>
+                <th className="hidden-mobile">Created On</th>
                 <th>Is Active</th>
-                <th>Membership</th>
+                <th className="hidden-mobile">Membership</th>
                 <th style={{ textAlign: 'right' }}>Action</th>
               </tr>
             </thead>
@@ -880,13 +880,13 @@ export default function ManageUsersPage() {
                         />
                       )}
                     </td>
-                    <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    <td className="hidden-mobile" style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                       {u.displayId || u.id}
                     </td>
                     <td style={{ fontWeight: 600 }}>{u.name}</td>
 
-                    <td>{u.email}</td>
-                    <td>{u.phone}</td>
+                    <td className="hidden-mobile">{u.email}</td>
+                    <td className="hidden-mobile">{u.phone}</td>
                     <td>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
                         <span className={`status-pill ${u.role === 'ADMIN' ? 'completed' : 'active'}`} style={{ fontSize: '0.7rem' }}>
@@ -899,7 +899,7 @@ export default function ManageUsersPage() {
                         )}
                       </div>
                     </td>
-                    <td>{new Date(u.createdAt).toLocaleDateString('en-GB')}</td>
+                    <td className="hidden-mobile">{new Date(u.createdAt).toLocaleDateString('en-GB')}</td>
                     <td>
                       <label className={styles.switch}>
                         <input
@@ -910,7 +910,7 @@ export default function ManageUsersPage() {
                         <span className={styles.slider}></span>
                       </label>
                     </td>
-                    <td>
+                    <td className="hidden-mobile">
                       <button
                         onClick={() => handleOpenViewModal(u)}
                         style={{

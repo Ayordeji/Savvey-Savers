@@ -195,9 +195,9 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
 
   return (
     <>
-      <header className={styles.headerBar} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb', position: 'relative', zIndex: 1000 }}>
+      <header className={`global-header-bar ${styles.headerBar}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb', position: 'relative', zIndex: 1000 }}>
         {/* Left Action Buttons */}
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="global-header-left" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={() => { setActiveModal('AGREEMENT'); setIsEditingContent(false); }}
             style={{ backgroundColor: '#2e3a4e', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
@@ -221,7 +221,7 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
         </div>
 
         {/* Right User & Notification Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div className="global-header-right" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <Link href="/dashboard/notifications" style={{ position: 'relative', color: '#4b5563', display: 'flex', alignItems: 'center' }}>
             <Bell size={20} />
             {unreadCount > 0 && (

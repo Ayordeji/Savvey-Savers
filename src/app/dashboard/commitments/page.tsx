@@ -605,11 +605,11 @@ export default function SavingsCommitmentsPage() {
                   </th>
                 )}
                 <th style={{ width: '40px' }}></th>
-                <th>Record ID</th>
+                <th className="hidden-mobile">Record ID</th>
                 <th>Member Name</th>
                 <th>Savings Amount</th>
-                <th>Savings Goal</th>
-                <th>Collection Month</th>
+                <th className="hidden-mobile">Savings Goal</th>
+                <th className="hidden-mobile">Collection Month</th>
                 <th>Status</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
@@ -641,13 +641,13 @@ export default function SavingsCommitmentsPage() {
                         <td onClick={() => handleRowClick(c.id)} style={{ paddingRight: 0 }}>
                           {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                         </td>
-                        <td onClick={() => handleRowClick(c.id)} style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        <td className="hidden-mobile" onClick={() => handleRowClick(c.id)} style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                           {c.id}
                         </td>
                         <td onClick={() => handleRowClick(c.id)} style={{ fontWeight: 600 }}>{c.memberName}</td>
                         <td onClick={() => handleRowClick(c.id)}>£{c.amount}</td>
-                        <td onClick={() => handleRowClick(c.id)}>{c.goal}</td>
-                        <td onClick={() => handleRowClick(c.id)}>{c.collectionMonth} {c.collectionYear}</td>
+                        <td className="hidden-mobile" onClick={() => handleRowClick(c.id)}>{c.goal}</td>
+                        <td className="hidden-mobile" onClick={() => handleRowClick(c.id)}>{c.collectionMonth} {c.collectionYear}</td>
                         <td onClick={() => handleRowClick(c.id)}>
                           <span className={`status-pill ${c.status.toLowerCase()}`}>
                             {c.status}
