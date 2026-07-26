@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle, Download, Upload } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import styles from './users.module.css';
 
@@ -59,6 +59,78 @@ export default function ManageUsersPage() {
   const [editBaseFee, setEditBaseFee] = useState<string>('200');
   const [editAdminFee, setEditAdminFee] = useState<string>('30');
   const [editYear, setEditYear] = useState<string>('2028');
+
+  // Migration Modal State
+  const [migrationModalOpen, setMigrationModalOpen] = useState(false);
+  const [migrationMode, setMigrationMode] = useState<'CSV' | 'JSON'>('CSV');
+  const [migrationCsvText, setMigrationCsvText] = useState('');
+  const [migrationJson, setMigrationJson] = useState('');
+  const [migrationOverwrite, setMigrationOverwrite] = useState(true);
+  const [migrationRunning, setMigrationRunning] = useState(false);
+  const [migrationReport, setMigrationReport] = useState<any>(null);
+  const [migrationError, setMigrationError] = useState('');
+
+  const parseCsvToPayload = (rawText: string) => {
+    const lines = rawText.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length === 0) return { users: [], commitments: [] };
+
+    const firstLine = lines[0];
+    const delimiter = firstLine.includes('\t') ? '\t' : (firstLine.includes(';') ? ';' : ',');
+    const headers = lines[0].split(delimiter).map(h => h.trim().toLowerCase().replace(/^["']|["']$/g, ''));
+
+    const getIdx = (keywords: string[]) => headers.findIndex(h => keywords.some(k => h.includes(k)));
+
+    const idxMemberId = getIdx(['member id', 'memberid', 'invitation id', 'invitationid', 'display id', 'code']);
+    const idxName = getIdx(['name', 'full name', 'fullname', 'member name']);
+    const idxEmail = getIdx(['email', 'mail']);
+    const idxPhone = getIdx(['phone', 'mobile', 'tel', 'contact']);
+    const idxRole = getIdx(['role']);
+    const idxAmount = getIdx(['amount', 'savings', 'commitment']);
+    const idxMonth = getIdx(['month', 'collection month']);
+    const idxYear = getIdx(['year', 'collection year']);
+
+    const usersList: any[] = [];
+    const commitmentsList: any[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
+      if (cols.length === 0 || !cols.some(c => c.length > 0)) continue;
+
+      const email = idxEmail !== -1 && cols[idxEmail] ? cols[idxEmail] : '';
+      const memberId = idxMemberId !== -1 && cols[idxMemberId] ? cols[idxMemberId] : '';
+      const name = idxName !== -1 && cols[idxName] ? cols[idxName] : '';
+      const phone = idxPhone !== -1 && cols[idxPhone] ? cols[idxPhone] : '';
+      const role = idxRole !== -1 && cols[idxRole] ? cols[idxRole] : 'MEMBER';
+      const amount = idxAmount !== -1 ? parseFloat(cols[idxAmount]) || 0 : 0;
+      const month = idxMonth !== -1 && cols[idxMonth] ? cols[idxMonth] : 'February';
+      const year = idxYear !== -1 ? parseInt(cols[idxYear], 10) || 2026 : 2026;
+
+      if (email || memberId || name) {
+        usersList.push({
+          invitationId: memberId || undefined,
+          name: name || (email ? email.split('@')[0] : 'Member'),
+          email: email,
+          phone: phone,
+          role: role.toUpperCase().includes('ADMIN') ? 'ADMIN' : 'MEMBER',
+          isActive: true
+        });
+
+        if (amount > 0) {
+          commitmentsList.push({
+            memberEmail: email,
+            memberId: memberId,
+            amount: amount,
+            goal: 'Savings Goal',
+            collectionMonth: month,
+            collectionYear: year,
+            status: 'ACTIVE'
+          });
+        }
+      }
+    }
+
+    return { users: usersList, commitments: commitmentsList };
+  };
 
   const validateUkPhoneNumber = (phoneStr: string) => {
     if (!phoneStr) return false;
@@ -782,9 +854,53 @@ export default function ManageUsersPage() {
           </h2>
         </div>
         
-        {/* Top action button */}
-        <div className={styles.topButtonsGroup}>
-          <button onClick={handleOpenAddModal} className="btn btn-primary btn-sm" style={{ backgroundColor: 'var(--secondary)', color: 'white' }}>
+        {/* Top action buttons */}
+        <div className={styles.topButtonsGroup} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => {
+              if (users.length === 0) return;
+              const headers = ['Member ID', 'Name', 'Email', 'Phone', 'Role', 'Is Active', 'Joined Date'];
+              const rows = users.map(u => [
+                `"${u.displayId || u.invitationId || u.id}"`,
+                `"${u.name.replace(/"/g, '""')}"`,
+                `"${u.email}"`,
+                `"${u.phone || ''}"`,
+                `"${u.role}"`,
+                `"${u.isActive ? 'Active' : 'Inactive'}"`,
+                `"${new Date(u.createdAt || Date.now()).toLocaleDateString('en-GB')}"`
+              ]);
+              const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+              const encodedUri = encodeURI(csvContent);
+              const link = document.createElement('a');
+              link.setAttribute('href', encodedUri);
+              link.setAttribute('download', `savvey_savers_members_${new Date().toISOString().split('T')[0]}.csv`);
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
+            className="btn btn-secondary btn-sm"
+            style={{ borderRadius: '8px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 600 }}
+          >
+            <Download size={15} />
+            <span>Export Users (CSV)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMigrationError('');
+              setMigrationReport(null);
+              setMigrationModalOpen(true);
+            }}
+            className="btn btn-secondary btn-sm"
+            style={{ borderRadius: '8px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 600, backgroundColor: '#0284c7', color: '#ffffff', borderColor: '#0284c7' }}
+          >
+            <Upload size={15} />
+            <span>Import / Migrate Data</span>
+          </button>
+
+          <button onClick={handleOpenAddModal} className="btn btn-primary btn-sm" style={{ backgroundColor: 'var(--secondary)', color: 'white', borderRadius: '8px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 600 }}>
             <Plus size={16} />
             <span>Add Member</span>
           </button>
@@ -2021,6 +2137,293 @@ export default function ManageUsersPage() {
                 {isBulkDeleting ? 'Deleting...' : 'Delete Selected'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* --- DATA MIGRATION MODAL --- */}
+      {migrationModalOpen && (
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setMigrationModalOpen(false); }}>
+          <div className="modal-content" style={{ maxWidth: '680px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '28px', position: 'relative' }}>
+            <button onClick={() => setMigrationModalOpen(false)} style={{ position: 'absolute', right: '18px', top: '18px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>
+              Bulk Data Import & Migration Center
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '20px' }}>
+              Migrate members and savings commitments from your old platform table or CSV spreadsheet file without needing backend access.
+            </p>
+
+            {/* Mode Selector */}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+              <button
+                type="button"
+                onClick={() => setMigrationMode('CSV')}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  border: '1px solid #cbd5e1',
+                  backgroundColor: migrationMode === 'CSV' ? '#2e3a4e' : '#ffffff',
+                  color: migrationMode === 'CSV' ? '#ffffff' : '#475569',
+                  cursor: 'pointer'
+                }}
+              >
+                📊 CSV / Table Copy-Paste
+              </button>
+              <button
+                type="button"
+                onClick={() => setMigrationMode('JSON')}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  border: '1px solid #cbd5e1',
+                  backgroundColor: migrationMode === 'JSON' ? '#2e3a4e' : '#ffffff',
+                  color: migrationMode === 'JSON' ? '#ffffff' : '#475569',
+                  cursor: 'pointer'
+                }}
+              >
+                💻 Raw JSON Payload
+              </button>
+            </div>
+
+            {/* CSV MODE */}
+            {migrationMode === 'CSV' && (
+              <div>
+                <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
+                      Instructions for Frontend Admin Data Copy
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const sampleCsv = `Member ID, Name, Email, Phone, Role, Commitment Amount, Collection Month\nM-000374, Iyore Ed, iypearlie@gmail.com, 07449311040, MEMBER, 1000, February\nM-000375, Jane Smith, jane@example.com, 07700900011, MEMBER, 500, March`;
+                        setMigrationCsvText(sampleCsv);
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      Load Sample CSV
+                    </button>
+                  </div>
+                  <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 8px 0' }}>
+                    1. Copy the rows from your old admin website table.<br />
+                    2. Paste them below or upload a <strong>.csv</strong> spreadsheet file. Headers recognized: <code>Member ID</code>, <code>Name</code>, <code>Email</code>, <code>Phone</code>, <code>Role</code>, <code>Amount</code>, <code>Month</code>.
+                  </p>
+                  <input
+                    type="file"
+                    accept=".csv,.txt,.tsv"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (evt) => setMigrationCsvText(evt.target?.result as string || '');
+                        reader.readAsText(file);
+                      }
+                    }}
+                    style={{ fontSize: '0.8rem' }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>
+                    Paste CSV / TSV Rows:
+                  </label>
+                  <textarea
+                    rows={8}
+                    placeholder={`Member ID, Name, Email, Phone, Role, Commitment Amount, Collection Month\nM-000374, Iyore Ed, iypearlie@gmail.com, 07449311040, MEMBER, 1000, February`}
+                    value={migrationCsvText}
+                    onChange={(e) => setMigrationCsvText(e.target.value)}
+                    style={{
+                      width: '100%',
+                      fontFamily: 'monospace',
+                      fontSize: '0.8rem',
+                      padding: '10px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      backgroundColor: '#ffffff',
+                      color: '#0f172a',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* JSON MODE */}
+            {migrationMode === 'JSON' && (
+              <div>
+                <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
+                      JSON Format
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const sample = {
+                          users: [
+                            {
+                              invitationId: "M-000374",
+                              name: "Iyore Ed",
+                              email: "iypearlie@gmail.com",
+                              phone: "07449311040",
+                              role: "MEMBER",
+                              isActive: true
+                            }
+                          ],
+                          commitments: [
+                            {
+                              id: "SC-00222",
+                              memberEmail: "iypearlie@gmail.com",
+                              amount: 1000,
+                              goal: "Savings Goal",
+                              collectionMonth: "February",
+                              collectionYear: 2027,
+                              status: "ACTIVE"
+                            }
+                          ]
+                        };
+                        setMigrationJson(JSON.stringify(sample, null, 2));
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      Load Sample JSON
+                    </button>
+                  </div>
+                  <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
+                    Member IDs (<code style={{ color: '#0284c7' }}>invitationId</code>) and Record IDs (<code style={{ color: '#0284c7' }}>id</code>) will be strictly preserved.
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <textarea
+                    rows={8}
+                    placeholder={`{\n  "users": [\n    {\n      "invitationId": "M-000374",\n      "name": "Iyore Ed",\n      "email": "iypearlie@gmail.com",\n      "phone": "07449311040",\n      "role": "MEMBER",\n      "isActive": true\n    }\n  ]\n}`}
+                    value={migrationJson}
+                    onChange={(e) => setMigrationJson(e.target.value)}
+                    style={{
+                      width: '100%',
+                      fontFamily: 'monospace',
+                      fontSize: '0.8rem',
+                      padding: '10px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      backgroundColor: '#ffffff',
+                      color: '#0f172a',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Overwrite Option */}
+            <div style={{ marginBottom: '18px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#1e293b', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={migrationOverwrite}
+                  onChange={(e) => setMigrationOverwrite(e.target.checked)}
+                  style={{ accentColor: '#2e3a4e' }}
+                />
+                <span>Overwrite / Update existing records matching Email or Member ID</span>
+              </label>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
+              <button
+                type="button"
+                disabled={migrationRunning || (migrationMode === 'CSV' ? !migrationCsvText.trim() : !migrationJson.trim())}
+                onClick={async () => {
+                  setMigrationRunning(true);
+                  setMigrationError('');
+                  setMigrationReport(null);
+                  try {
+                    const payload = migrationMode === 'CSV' ? parseCsvToPayload(migrationCsvText) : JSON.parse(migrationJson);
+                    const res = await fetch('/api/admin/migrate', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ ...payload, dryRun: true, overwrite: migrationOverwrite })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                      setMigrationReport(data.report);
+                    } else {
+                      setMigrationError(data.error || 'Validation failed');
+                    }
+                  } catch (err: any) {
+                    setMigrationError('Parsing error: ' + err.message);
+                  } finally {
+                    setMigrationRunning(false);
+                  }
+                }}
+                className="btn btn-secondary"
+                style={{ padding: '8px 16px', fontWeight: 600, borderRadius: '8px', fontSize: '0.85rem' }}
+              >
+                {migrationRunning ? 'Validating...' : 'Validate (Dry Run)'}
+              </button>
+
+              <button
+                type="button"
+                disabled={migrationRunning || (migrationMode === 'CSV' ? !migrationCsvText.trim() : !migrationJson.trim())}
+                onClick={async () => {
+                  if (!(await dialog.confirm('Confirm Migration', 'Import these records into the live database?'))) return;
+                  setMigrationRunning(true);
+                  setMigrationError('');
+                  setMigrationReport(null);
+                  try {
+                    const payload = migrationMode === 'CSV' ? parseCsvToPayload(migrationCsvText) : JSON.parse(migrationJson);
+                    const res = await fetch('/api/admin/migrate', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ ...payload, dryRun: false, overwrite: migrationOverwrite })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                      setMigrationReport(data.report);
+                      fetchUsers(); // Refresh Users table instantly!
+                    } else {
+                      setMigrationError(data.error || 'Migration failed');
+                    }
+                  } catch (err: any) {
+                    setMigrationError('Parsing error: ' + err.message);
+                  } finally {
+                    setMigrationRunning(false);
+                  }
+                }}
+                className="btn btn-primary"
+                style={{ backgroundColor: '#2e3a4e', color: '#ffffff', padding: '8px 20px', fontWeight: 600, borderRadius: '8px', fontSize: '0.85rem' }}
+              >
+                {migrationRunning ? 'Importing...' : 'Execute Data Migration'}
+              </button>
+            </div>
+
+            {/* Errors */}
+            {migrationError && (
+              <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', padding: '12px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
+                {migrationError}
+              </div>
+            )}
+
+            {/* Report */}
+            {migrationReport && (
+              <div style={{ backgroundColor: migrationReport.dryRun ? '#f0fdf4' : '#eff6ff', border: `1px solid ${migrationReport.dryRun ? '#bbf7d0' : '#bfdbfe'}`, borderRadius: '10px', padding: '16px' }}>
+                <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: migrationReport.dryRun ? '#166534' : '#1e40af', marginBottom: '8px' }}>
+                  {migrationReport.dryRun ? '🔍 Dry-Run Validation Summary (No Changes Saved)' : '🎉 Migration Complete!'}
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', fontSize: '0.8rem' }}>
+                  <div>Users: <strong>{migrationReport.usersProcessed}</strong> (+{migrationReport.usersCreated} new)</div>
+                  <div>Commitments: <strong>{migrationReport.commitmentsProcessed}</strong> (+{migrationReport.commitmentsCreated} new)</div>
+                  <div>Payments: <strong>{migrationReport.paymentsCreated}</strong></div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
