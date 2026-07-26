@@ -189,41 +189,39 @@ export async function DELETE(request: Request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const idParam = searchParams.get('id') || searchParams.get('ids');
 
-    if (!id) {
-      return NextResponse.json({ error: 'ID is required.' }, { status: 400 });
+    if (!idParam) {
+      return NextResponse.json({ error: 'Commitment ID(s) are required.' }, { status: 400 });
     }
 
-    const cmt = await db.commitments.findUnique({ where: { id } });
-    if (!cmt) {
-      return NextResponse.json({ error: 'Commitment not found.' }, { status: 404 });
+    const ids = idParam.split(',').map((id) => id.trim()).filter(Boolean);
+
+    for (const id of ids) {
+      const cmt = await db.commitments.findUnique({ where: { id } });
+      if (!cmt) continue;
+
+      const archivedData = {
+        ...cmt,
+        status: 'CANCELLED'
+      };
+
+      await db.deletedRecords.create({
+        type: 'COMMITMENT',
+        originalData: archivedData,
+        deletedAt: new Date().toISOString()
+      });
+
+      await db.commitments.delete({ where: { id } });
+
+      await db.auditLogs.create({
+        action: 'ADMIN_COMMITMENT_CANCEL',
+        details: `Admin deleted and archived savings commitment ${id} for member ${cmt.memberId}.`,
+        userId: session.id || 'usr_admin'
+      });
     }
 
-    // Update status to CANCELLED in archive
-    const archivedData = {
-      ...cmt,
-      status: 'CANCELLED'
-    };
-
-    // Move to archived
-    await db.deletedRecords.create({
-      type: 'COMMITMENT',
-      originalData: archivedData,
-      deletedAt: new Date().toISOString()
-    });
-
-    // Delete
-    await db.commitments.delete({ where: { id } });
-
-    // Audit log
-    await db.auditLogs.create({
-      action: 'ADMIN_COMMITMENT_CANCEL',
-      details: `Admin cancelled and archived savings commitment ${id} for member ${cmt.memberId}.`,
-      userId: 'usr_admin'
-    });
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, count: ids.length });
 
   } catch (err: any) {
     console.error('Delete commitment error:', err);

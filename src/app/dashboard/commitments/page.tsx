@@ -42,6 +42,10 @@ export default function SavingsCommitmentsPage() {
   const [paymentsMap, setPaymentsMap] = useState<Record<string, Payment[]>>({});
   const [users, setUsers] = useState<User[]>([]);
 
+  // Selection & Bulk Delete states
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [yearFilter, setYearFilter] = useState(String(new Date().getFullYear()));
@@ -447,6 +451,52 @@ export default function SavingsCommitmentsPage() {
     }
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredCommitments.map((c) => c.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectCommitment = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds([...selectedIds, id]);
+    } else {
+      setSelectedIds(selectedIds.filter((item) => item !== id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    const confirmDelete = await dialog.confirm(
+      'Delete Selected Commitments',
+      `Are you sure you want to delete ${selectedIds.length} selected savings commitments? They will be safely archived under Deleted Records.`
+    );
+    if (!confirmDelete) return;
+
+    setIsBulkDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/commitments?ids=${selectedIds.join(',')}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setSelectedIds([]);
+        const res2 = await fetch('/api/admin/commitments');
+        if (res2.ok) {
+          setCommitments(await res2.json());
+        }
+      } else {
+        const data = await res.json();
+        await dialog.alert('Bulk Delete Failed', data.error || 'Failed to delete commitments.');
+      }
+    } catch (err) {
+      await dialog.alert('Error', 'A network error occurred while deleting commitments.');
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   const toggleDropdown = (cmtId: string) => {
     setOpenDropdownId(openDropdownId === cmtId ? null : cmtId);
   };
@@ -494,7 +544,7 @@ export default function SavingsCommitmentsPage() {
       </div>
 
       {/* Filter bar */}
-      <div className={styles.filterContainer} style={{ marginBottom: '16px' }}>
+      <div className={styles.filterContainer} style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className={styles.filtersLeft}>
           <div className={styles.searchWrapper}>
             <Search size={16} className={styles.searchIcon} />
@@ -519,6 +569,18 @@ export default function SavingsCommitmentsPage() {
             <option value="2028">2028</option>
           </select>
         </div>
+
+        {selectedIds.length > 0 && currentUser?.role === 'ADMIN' && (
+          <button
+            onClick={handleBulkDelete}
+            disabled={isBulkDeleting}
+            className="btn btn-danger btn-sm"
+            style={{ backgroundColor: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Trash2 size={15} />
+            <span>{isBulkDeleting ? 'Deleting...' : `Delete Selected (${selectedIds.length})`}</span>
+          </button>
+        )}
       </div>
 
       {/* Commitments Table */}
@@ -528,10 +590,20 @@ export default function SavingsCommitmentsPage() {
           <span style={{ color: 'var(--text-muted)' }}>Loading Commitments...</span>
         </div>
       ) : (
-        <div className="table-container">
+        <div className="table-container" style={{ overflow: 'visible' }}>
           <table className="custom-table">
             <thead>
               <tr>
+                {currentUser?.role === 'ADMIN' && (
+                  <th style={{ width: '36px', textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.length > 0 && selectedIds.length === filteredCommitments.length}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      style={{ width: '16px', height: '16px', accentColor: '#2e3a4e', cursor: 'pointer' }}
+                    />
+                  </th>
+                )}
                 <th style={{ width: '40px' }}></th>
                 <th>Record ID</th>
                 <th>Member Name</th>
@@ -545,17 +617,27 @@ export default function SavingsCommitmentsPage() {
             <tbody>
               {filteredCommitments.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                  <td colSpan={currentUser?.role === 'ADMIN' ? 9 : 8} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                     No savings commitments found.
                   </td>
                 </tr>
               ) : (
                 filteredCommitments.map((c, idx) => {
                   const isExpanded = expandedCmtId === c.id;
-                  const isBottomRow = idx >= filteredCommitments.length - 2;
+                  const isBottomRow = idx > 0 && idx >= filteredCommitments.length - 2;
                   return (
                     <Fragment key={c.id}>
                       <tr className={isExpanded ? styles.expandedRow : ''} style={{ cursor: 'pointer' }}>
+                        {currentUser?.role === 'ADMIN' && (
+                          <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.includes(c.id)}
+                              onChange={(e) => handleSelectCommitment(c.id, e.target.checked)}
+                              style={{ width: '16px', height: '16px', accentColor: '#2e3a4e', cursor: 'pointer' }}
+                            />
+                          </td>
+                        )}
                         <td onClick={() => handleRowClick(c.id)} style={{ paddingRight: 0 }}>
                           {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                         </td>
@@ -611,7 +693,7 @@ export default function SavingsCommitmentsPage() {
                       {/* Row Expanded payment details */}
                       {isExpanded && (
                         <tr className={styles.expandedRow}>
-                          <td colSpan={8}>
+                          <td colSpan={currentUser?.role === 'ADMIN' ? 9 : 8}>
                             <div className={styles.expandedContainer}>
                               <div className={styles.expandedHeader}>
                                 <span className={styles.expandedTitle}>Contribution Log History</span>
