@@ -1168,48 +1168,48 @@ export default function ManageUsersPage() {
               </div>
 
               <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Select Role *</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label className="form-label" style={{ margin: 0, fontWeight: 600, color: '#334155' }}>Select Role *</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormRole('SUPER_ADMIN' as any);
+                      setFormIsSuperAdmin(true);
+                    }}
+                    style={{
+                      border: '1px solid #cbd5e1',
+                      backgroundColor: '#f8fafc',
+                      color: '#1e293b',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      borderRadius: '6px',
+                      padding: '4px 10px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ⚡ Request Super Admin Access
+                  </button>
+                </div>
                 <select
-                  value={formRole}
-                  onChange={(e) => setFormRole(e.target.value as 'ADMIN' | 'MEMBER')}
-                  disabled={selectedUser.isSuperAdmin || selectedUser.id === currentUser?.id}
+                  value={formIsSuperAdmin ? 'SUPER_ADMIN' : formRole}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === 'SUPER_ADMIN') {
+                      setFormRole('ADMIN');
+                      setFormIsSuperAdmin(true);
+                    } else {
+                      setFormRole(val as 'ADMIN' | 'MEMBER');
+                      setFormIsSuperAdmin(false);
+                    }
+                  }}
                   className="form-select"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
                 >
-                  <option value="MEMBER">Member (Saver)</option>
-                  <option value="ADMIN">Admin (Coordinator)</option>
+                  <option value="MEMBER">Savers</option>
+                  <option value="ADMIN">Admin</option>
+                  <option value="SUPER_ADMIN">Super Admin</option>
                 </select>
               </div>
-
-              {formRole === 'ADMIN' && !selectedUser?.isSuperAdmin && selectedUser.id !== currentUser?.id && (
-                <div className="form-group" style={{ margin: '12px 0 0 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <input
-                    type="checkbox"
-                    id="promoteSuperAdmin"
-                    checked={formIsSuperAdmin}
-                    onChange={async (e) => {
-                      if (e.target.checked) {
-                        const confirmPromote = await dialog.confirm(
-                          "Promote to Super Admin",
-                          "Are you sure you want to promote this user to Super Admin? This will transfer Super Admin status to this user, and you will lose Super Admin control."
-                        );
-                        if (confirmPromote) {
-                          setFormIsSuperAdmin(true);
-                        } else {
-                          // Uncheck it if cancelled
-                          e.target.checked = false;
-                          setFormIsSuperAdmin(false);
-                        }
-                      } else {
-                        setFormIsSuperAdmin(false);
-                      }
-                    }}
-                    style={{ width: '16px', height: '16px', accentColor: 'var(--secondary)', cursor: 'pointer' }}
-                  />
-                  <label htmlFor="promoteSuperAdmin" style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-normal)', cursor: 'pointer' }}>
-                    Promote to Super Admin (Transfers Control)
-                  </label>
-                </div>
-              )}
 
               {/* Permissions Checkboxes Section matching Savvey Savers */}
               <div className={styles.permissionSection}>
