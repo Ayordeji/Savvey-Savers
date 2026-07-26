@@ -58,19 +58,19 @@ export default function DashboardTransitionLoader() {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '20px',
+      gap: '16px',
       color: 'white',
     }}>
       <div className="loading-spinner" style={{
         width: '36px',
         height: '36px',
         border: '3px solid rgba(255, 255, 255, 0.1)',
-        borderTop: '3px solid var(--primary, #3b82f6)',
+        borderTop: '3px solid #2563eb',
         borderRadius: '50%',
         animation: 'spin 1s linear infinite'
       }}></div>
-      <p style={{ color: '#9ca3af', fontSize: '0.9rem', fontWeight: 500, letterSpacing: '0.05em' }}>
-        Loading page...
+      <p style={{ color: '#e2e8f0', fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+        Loading...
       </p>
 
       <style jsx global>{`
