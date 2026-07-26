@@ -368,6 +368,7 @@ button {
   border-radius: var(--radius-md);
   background-color: var(--bg-surface);
   margin-bottom: 20px;
+  min-height: 380px;
 }
 
 .custom-table {

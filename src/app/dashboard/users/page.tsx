@@ -745,7 +745,9 @@ export default function ManageUsersPage() {
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((u) => (
+                filteredUsers.map((u, idx) => {
+                  const isBottomRow = filteredUsers.length > 2 && idx >= filteredUsers.length - 3;
+                  return (
                   <tr key={u.id} style={selectedUserIds.includes(u.id) ? { backgroundColor: 'rgba(255, 255, 255, 0.02)' } : undefined}>
                     <td style={{ paddingLeft: '16px' }}>
                       {!u.isSuperAdmin && u.id !== currentUser?.id && (
@@ -809,7 +811,7 @@ export default function ManageUsersPage() {
                           <MoreVertical size={16} />
                         </button>
                         {openDropdownId === u.id && (
-                          <div className={styles.dropdownMenu}>
+                          <div className={`${styles.dropdownMenu} ${isBottomRow ? styles.dropdownMenuUp : ''}`}>
                             <button onClick={() => handleOpenViewModal(u)} className={styles.dropdownItem}>
                               <Eye size={14} />
                               <span>View Details</span>
@@ -852,7 +854,8 @@ export default function ManageUsersPage() {
                       </div>
                     </td>
                   </tr>
-                ))
+                );
+              })
               )}
             </tbody>
           </table>
