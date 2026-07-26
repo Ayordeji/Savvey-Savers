@@ -121,17 +121,15 @@ export async function POST(req: Request) {
           }
 
           const newUser = await db.users.create({
-            data: {
-              id: firebaseUid,
-              name: u.name || email.split('@')[0],
-              email: email,
-              phone: u.phone || '',
-              role: u.role || 'MEMBER',
-              isActive: u.isActive !== undefined ? u.isActive : true,
-              membershipFeeConfirmed: u.membershipFeeConfirmed !== undefined ? u.membershipFeeConfirmed : true,
-              invitationId: memberId || `M-${String(report.usersCreated + 1).padStart(6, '0')}`,
-              createdAt: u.createdAt || new Date().toISOString()
-            }
+            id: firebaseUid,
+            name: u.name || email.split('@')[0],
+            email: email,
+            phone: u.phone || '',
+            role: u.role || 'MEMBER',
+            isActive: u.isActive !== undefined ? u.isActive : true,
+            membershipFeeConfirmed: u.membershipFeeConfirmed !== undefined ? u.membershipFeeConfirmed : true,
+            invitationId: memberId || `M-${String(report.usersCreated + 1).padStart(6, '0')}`,
+            createdAt: u.createdAt || new Date().toISOString()
           });
 
           userByEmailMap.set(email, newUser);
@@ -193,7 +191,7 @@ export async function POST(req: Request) {
             report.warnings.push(`Commitment ${recordId} already exists. Skipped.`);
           }
         } else {
-          await db.commitments.create({ data: commitmentData });
+          await db.commitments.create(commitmentData);
           report.commitmentsCreated++;
         }
       } else {
@@ -213,17 +211,15 @@ export async function POST(req: Request) {
       if (!dryRun) {
         const paymentId = p.id || `pay_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
         await db.payments.create({
-          data: {
-            id: paymentId,
-            commitmentId: cmtId,
-            amount: parseFloat(p.amount) || 0,
-            month: p.month || 'January',
-            year: parseInt(p.year || '2026', 10),
-            status: p.status || 'CONFIRMED',
-            confirmedAt: p.confirmedAt || new Date().toISOString(),
-            receiptUrl: p.receiptUrl || null,
-            createdAt: p.createdAt || new Date().toISOString()
-          }
+          id: paymentId,
+          commitmentId: cmtId,
+          amount: parseFloat(p.amount) || 0,
+          month: p.month || 'January',
+          year: parseInt(p.year || '2026', 10),
+          status: p.status || 'CONFIRMED',
+          confirmedAt: p.confirmedAt || new Date().toISOString(),
+          receiptUrl: p.receiptUrl || null,
+          createdAt: p.createdAt || new Date().toISOString()
         });
         report.paymentsCreated++;
       } else {
@@ -237,16 +233,14 @@ export async function POST(req: Request) {
       if (!dryRun) {
         const wId = w.id || `WL-${String(Date.now()).slice(-5)}`;
         await db.waitingList.create({
-          data: {
-            id: wId,
-            name: w.name || `${w.firstName || ''} ${w.lastName || ''}`.trim(),
-            email: (w.email || '').toLowerCase().trim(),
-            phone: w.phone || '',
-            monthlySavingsCommitment: parseFloat(w.monthlySavingsCommitment || w.savingsCommitment) || 250,
-            isReferred: Boolean(w.isReferred || w.referredBy),
-            referredBy: w.referredBy || '',
-            createdAt: w.createdAt || new Date().toISOString()
-          }
+          id: wId,
+          name: w.name || `${w.firstName || ''} ${w.lastName || ''}`.trim(),
+          email: (w.email || '').toLowerCase().trim(),
+          phone: w.phone || '',
+          monthlySavingsCommitment: parseFloat(w.monthlySavingsCommitment || w.savingsCommitment) || 250,
+          isReferred: Boolean(w.isReferred || w.referredBy),
+          referredBy: w.referredBy || '',
+          createdAt: w.createdAt || new Date().toISOString()
         });
         report.waitingListCreated++;
       } else {
