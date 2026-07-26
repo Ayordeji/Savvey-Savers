@@ -77,28 +77,120 @@ const DEFAULT_AGREEMENT = `<h4 style="font-size: 1.1rem; font-weight: 700; margi
 <p style="margin-bottom: 8px;"><strong>9.1. Amendments:</strong> The Platform reserves the right to amend these terms at any time. Members will be notified of any changes.</p>
 <p style="margin-bottom: 16px;"><strong>9.2. Entire Agreement:</strong> This Agreement constitutes the entire understanding between the parties and supersedes all prior agreements, whether written or oral.</p>`;
 
-const DEFAULT_FEE_SCHEDULE = `<h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: #1e293b;">
-  Network Membership and Administrative Fee Schedule
+const DEFAULT_FEE_SCHEDULE = `<h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; color: #1e293b;">
+  SAVVEY SAVERS COLLECTIVE
 </h4>
+<h5 style="font-size: 1rem; font-weight: 700; margin-bottom: 4px; color: #0f172a;">
+  MEMBERSHIP &amp; FEE SCHEDULE
+</h5>
+<p style="font-size: 0.85rem; color: #64748b; margin-bottom: 16px;">
+  <strong>Version 2.0: Updated July 2026</strong>
+</p>
+<p style="margin-bottom: 16px;">
+  This Membership &amp; Fee Schedule forms part of the Savvey Savers Collective Membership Agreement and should be read alongside it.
+</p>
 
-<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">Membership Fees</h5>
-<p style="margin-bottom: 8px;">To participate in our peer-to-peer savings platform, members are required to pay an annual membership fee of <strong>£35.99</strong>, as specified during the registration process. This fee contributes to the operational costs associated with maintaining the web platform and coordinating administrative tasks within and outside the platform.</p>
-<p style="margin-bottom: 16px;">Members can currently save in increments of <strong>£250</strong>, and up to a maximum of <strong>£1,000 per slot</strong> for savings harvest and a maximum of <strong>£4,000 per year</strong>. The membership fee covers the maximum monthly contribution of <strong>£1,000 per slot</strong>; savings more than £1,000 per month will attract additional administrative fees as detailed in the next section.</p>
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 20px; margin-bottom: 8px; color: #0f172a;">
+  Annual Membership Fee
+</h5>
+<p style="margin-bottom: 8px;">To participate in the Savvey Savers Collective, Members are required to pay an Annual Membership Fee of <strong>£35.99</strong>.</p>
+<p style="margin-bottom: 8px;">The Annual Membership Fee is payable before Membership becomes active and contributes towards the operational costs of administering the Collective, maintaining the Member Portal and supporting the day-to-day management of the savings programme.</p>
+<p style="margin-bottom: 8px;">The Annual Membership Fee covers Monthly Savings Payments of up to <strong>£1,000</strong>.</p>
+<p style="margin-bottom: 16px;">Unless otherwise required by law, the Annual Membership Fee is <strong>non-refundable</strong>.</p>
 
-<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">Administrative Fees</h5>
-<p style="margin-bottom: 8px;">In addition to the membership fee, there are various administrative fees associated with specific services or transactions. These fees cover the administrative overhead involved in processing and facilitating various activities within the platform.</p>
-<p style="margin-bottom: 8px;">One of such fees is an additional <strong>£10 payable for every extra £1 to £999 saved</strong> in addition to the first £1,000 covered by the £35.99 annual membership fee.</p>
-<p style="margin-bottom: 16px; background-color: #f1f5f9; padding: 12px; borderRadius: 8px;"><em>Example:</em> If you are saving a total of <strong>£1,000 monthly</strong>, this will be covered by your flat rate annual membership fee of <strong>£35.99</strong>. However, if you decide to save an additional £200 to make your monthly savings <strong>£1,200</strong>, a one-off administrative fee of <strong>£10</strong> is chargeable in addition to your annual membership fee; and if you decide to save <strong>£2,500 monthly</strong>, then the fee is <strong>£20 plus your annual membership fee</strong>.</p>
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 20px; margin-bottom: 8px; color: #0f172a;">
+  Monthly Savings Payments
+</h5>
+<p style="margin-bottom: 8px;">Members may currently save between <strong>£250 and £4,000 per month</strong>, in increments of £250.</p>
+<p style="margin-bottom: 8px;">Your selected Monthly Savings Payment remains payable throughout the Membership Year, which runs from <strong>1 January to 31 December</strong>.</p>
+<p style="margin-bottom: 16px;">Receiving your Savings Harvest does not end your obligation to continue making your Monthly Savings Payments until the end of the Membership Year.</p>
 
-<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">Late Fees</h5>
-<p style="margin-bottom: 16px;">As a Platform, our aim is to support our members to achieve their financial goals quicker, and we do this by ensuring they can access their savings harvest on time. Monthly contribution payments are due on the <strong>28th day of each month</strong>, and Members who pay their monthly contribution later than this date may incur an added <strong>£50 late fee charge</strong>.</p>
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 20px; margin-bottom: 8px; color: #0f172a;">
+  Additional Administration Fees
+</h5>
+<p style="margin-bottom: 8px;">Members saving more than £1,000 per month are required to pay an additional one-off Administration Fee.</p>
+<p style="margin-bottom: 12px;">An additional Administration Fee of <strong>£10</strong> is payable for each additional band of up to £1,000 in Monthly Savings Payments above the first £1,000 covered by the Annual Membership Fee.</p>
 
-<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">Penalties</h5>
-<p style="margin-bottom: 8px;">Savvey Savers Network Limited reserves the right to terminate a defaulting Member’s membership. Where a membership termination is due to the Member defaulting on payments, any contributions already made by the member will be released to them by the end of the cycle, with a <strong>20% penalty</strong> charged on their total contribution if they have not already harvested their savings.</p>
-<p style="margin-bottom: 16px;">Where the Member defaults after harvesting their savings and before the end of their cycle, and their collection month is not December, the Platform reserves the right to retrieve the monies owed by the Member, including taking legal action against the Member where it deems appropriate; and the member will be liable to pay all legal expenses incurred by Savvey Savers Limited.</p>
+<h5 style="font-weight: 700; font-size: 0.9rem; margin-top: 14px; margin-bottom: 8px; color: #0f172a;">
+  Administration Fee Bands
+</h5>
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 0.875rem;">
+  <thead>
+    <tr style="background-color: #f1f5f9; text-align: left;">
+      <th style="padding: 10px; border: 1px solid #cbd5e1; font-weight: 700;">Total Monthly Savings Payments</th>
+      <th style="padding: 10px; border: 1px solid #cbd5e1; font-weight: 700;">Additional Administration Fee</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">Up to £1,000</td><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£0</td></tr>
+    <tr><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£1,001 – £2,000</td><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£10</td></tr>
+    <tr><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£2,001 – £3,000</td><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£20</td></tr>
+    <tr><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£3,001 – £4,000</td><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£30</td></tr>
+  </tbody>
+</table>
 
-<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">Important Notice</h5>
-<p style="margin-bottom: 8px;">It is essential for members to review this information regularly, as fees may be subject to change, and any updates will be communicated in advance. We are committed to maintaining transparency in our fee structure, and we encourage members to reach out to their Relationship Manager / Contact for any clarifications or further assistance about fees and charges.</p>`;
+<h5 style="font-weight: 700; font-size: 0.9rem; margin-top: 14px; margin-bottom: 8px; color: #0f172a;">
+  Examples
+</h5>
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 0.875rem;">
+  <thead>
+    <tr style="background-color: #f1f5f9; text-align: left;">
+      <th style="padding: 10px; border: 1px solid #cbd5e1; font-weight: 700;">Monthly Savings Payment</th>
+      <th style="padding: 10px; border: 1px solid #cbd5e1; font-weight: 700;">Annual Membership Fee</th>
+      <th style="padding: 10px; border: 1px solid #cbd5e1; font-weight: 700;">Additional Administration Fee</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£1,000</td><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£35.99</td><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£0</td></tr>
+    <tr><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£1,200</td><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£35.99</td><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£10</td></tr>
+    <tr><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£2,500</td><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£35.99</td><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£20</td></tr>
+    <tr><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£4,000</td><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£35.99</td><td style="padding: 8px 10px; border: 1px solid #cbd5e1;">£30</td></tr>
+  </tbody>
+</table>
+
+<p style="margin-bottom: 16px;">The applicable Administration Fee is payable when joining the Collective or whenever a Member increases their Monthly Savings Payment into a higher fee band.</p>
+
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 20px; margin-bottom: 8px; color: #0f172a;">
+  Payment Due Date
+</h5>
+<p style="margin-bottom: 8px;">Monthly Savings Payments are due on the <strong>last day of each calendar month</strong>.</p>
+<p style="margin-bottom: 8px;">A grace period is provided until the end of the <strong>3rd day of the following month</strong> to allow for banking or payment processing delays.</p>
+<p style="margin-bottom: 8px;">Payments not received by the end of the grace period will be treated as late and the applicable Late Payment Fee will apply.</p>
+<p style="margin-bottom: 16px;">Members should always aim to make payment by the last day of the month, rather than relying on the grace period.</p>
+
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 20px; margin-bottom: 8px; color: #0f172a;">
+  Late Payment Fee
+</h5>
+<p style="margin-bottom: 8px;">A Late Payment Fee of <strong>£50</strong> will apply where a Monthly Savings Payment has not been received by the end of the grace period.</p>
+<p style="margin-bottom: 8px;">Members who anticipate difficulty making a payment should contact their Dedicated Relationship Manager before the payment becomes overdue.</p>
+<p style="margin-bottom: 8px;">Repeated late payments may result in the Member’s Collection Month being moved to a later month, including December, in accordance with the Membership Agreement.</p>
+<p style="margin-bottom: 16px;">Outstanding Late Payment Fees may also be deducted from a Member’s Savings Harvest where permitted under the Membership Agreement.</p>
+
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 20px; margin-bottom: 8px; color: #0f172a;">
+  Savings Harvest
+</h5>
+<p style="margin-bottom: 12px;">Your Savings Harvest will normally be released during your allocated Collection Month, provided you have complied with the Membership Agreement and all applicable fees and Monthly Savings Payments have been paid.</p>
+
+<div style="background-color: #f8fafc; padding: 12px 16px; border-left: 4px solid #3b82f6; border-radius: 6px; margin-bottom: 12px;">
+  <strong style="display: block; margin-bottom: 4px; color: #1e293b;">Example 1</strong>
+  <p style="margin: 0; font-size: 0.875rem;">You make a Monthly Savings Payment of £500. Your Collection Month is June. You receive your Savings Harvest in June and continue making your Monthly Savings Payments until 31 December.</p>
+</div>
+
+<div style="background-color: #f8fafc; padding: 12px 16px; border-left: 4px solid #3b82f6; border-radius: 6px; margin-bottom: 16px;">
+  <strong style="display: block; margin-bottom: 4px; color: #1e293b;">Example 2</strong>
+  <p style="margin: 0; font-size: 0.875rem;">Your Collection Month is December. You make your Monthly Savings Payments throughout the Membership Year before receiving your Savings Harvest in December.</p>
+</div>
+
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 20px; margin-bottom: 8px; color: #0f172a;">
+  Important Notes
+</h5>
+<ul style="padding-left: 20px; line-height: 1.7; margin-bottom: 16px; font-size: 0.875rem;">
+  <li>The Membership Year runs from <strong>1 January to 31 December</strong>.</li>
+  <li>Monthly Savings Payments are due on the <strong>last day of each month</strong>.</li>
+  <li>The <strong>3rd day of the following month</strong> is a grace period, not the payment due date.</li>
+  <li>Receiving your Savings Harvest does not end your Membership or your remaining Monthly Savings Payment obligations.</li>
+  <li>This Membership &amp; Fee Schedule should be read together with the Membership Agreement, which contains the full terms and conditions governing your Membership.</li>
+</ul>`;
 
 export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
   const router = useRouter();
