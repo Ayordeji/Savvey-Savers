@@ -52,6 +52,10 @@ export default function ManageUsersPage() {
   const [feePaidDate, setFeePaidDate] = useState(new Date().toISOString().split('T')[0]);
   const [userFeeRecords, setUserFeeRecords] = useState<any[]>([]);
   const [userSavingsByYear, setUserSavingsByYear] = useState<Record<number, number>>({});
+  const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
+  const [editBaseFee, setEditBaseFee] = useState<string>('200');
+  const [editAdminFee, setEditAdminFee] = useState<string>('30');
+  const [editYear, setEditYear] = useState<string>('2028');
 
   const validateUkPhoneNumber = (phoneStr: string) => {
     if (!phoneStr) return false;
@@ -280,6 +284,47 @@ export default function ManageUsersPage() {
     setOpenDropdownId(null);
   };
 
+  const handleStartEditRecord = (rec: any) => {
+    setEditingRecordId(rec.id);
+    setEditBaseFee(String(rec.baseFee || 200));
+    setEditAdminFee(String(rec.adminFee || 30));
+    setEditYear(String(rec.year || 2028));
+  };
+
+  const handleSaveInlineFeeEdit = async (recordId: string) => {
+    if (!selectedUser) return;
+    setFormSubmitting(true);
+    try {
+      const res = await fetch('/api/admin/users/membership-fee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'EDIT',
+          userId: selectedUser.id,
+          recordId,
+          baseFee: parseFloat(editBaseFee) || 0,
+          adminFee: parseFloat(editAdminFee) || 0,
+          year: editYear
+        })
+      });
+      if (res.ok) {
+        setEditingRecordId(null);
+        const res2 = await fetch(`/api/admin/users/membership-fee?userId=${selectedUser.id}`);
+        if (res2.ok) {
+          setUserFeeRecords(await res2.json());
+        }
+        await dialog.alert('Record Updated', 'Membership fee record updated successfully.');
+      } else {
+        const data = await res.json();
+        await dialog.alert('Error', data.error || 'Failed to update record.');
+      }
+    } catch (err) {
+      console.error('Save fee edit error:', err);
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
   const handleRequestFeeSubmit = async () => {
     if (!selectedUser) return;
     setFormSubmitting(true);
@@ -321,6 +366,7 @@ export default function ManageUsersPage() {
         body: JSON.stringify({
           action: 'RECORD_PAYMENT',
           userId: selectedUser.id,
+          year: feeYear,
           amountPaid: totalAmount,
           paidAt: feePaidDate
         })
@@ -1196,7 +1242,7 @@ export default function ManageUsersPage() {
         </div>
       )}
 
-      {/* --- CONSOLIDATED VIEW MEMBERSHIP & PROFILE MODAL --- */}
+      {/* --- VIEW MEMBERSHIP FEE MODAL --- */}
       {(activeModal === 'VIEW' || activeModal === 'MEMBERSHIP_DETAILS') && selectedUser && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '780px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -1206,7 +1252,7 @@ export default function ManageUsersPage() {
 
             <div style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '16px', marginBottom: '24px' }}>
               <h3 style={{ fontSize: '1.35rem', fontWeight: 700, margin: 0, fontFamily: 'var(--font-family-title)', color: '#111827' }}>
-                Member Profile & Membership Details
+                Membership Fee & Annual Savings History
               </h3>
               <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.875rem', color: '#4b5563', fontWeight: 600 }}>
@@ -1218,12 +1264,8 @@ export default function ManageUsersPage() {
               </div>
             </div>
 
-            {/* SECTION 1: MEMBERSHIP FEE & SAVINGS HISTORY TABLE (5 Columns) */}
-            <div style={{ marginBottom: '28px' }}>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '12px', color: '#1e293b', borderLeft: '4px solid var(--primary)', paddingLeft: '8px' }}>
-                1. Membership Fee & Annual Savings History
-              </h4>
-
+            {/* MEMBERSHIP FEE & SAVINGS HISTORY TABLE (5 Columns + Actions) */}
+            <div style={{ marginBottom: '16px' }}>
               <table className="custom-table" style={{ fontSize: '0.85rem' }}>
                 <thead>
                   <tr>
@@ -1232,6 +1274,7 @@ export default function ManageUsersPage() {
                     <th>Total Membership Fee</th>
                     <th>Payment Received Date</th>
                     <th>Status</th>
+                    <th style={{ textAlign: 'center' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1261,13 +1304,81 @@ export default function ManageUsersPage() {
                               {selectedUser.membershipFeeConfirmed ? 'Completed' : 'Pending'}
                             </span>
                           </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>-</span>
+                          </td>
                         </tr>
                       );
                     }
 
                     return records.map((rec: any, idx: number) => {
+                      const isEditing = editingRecordId === rec.id;
                       const isPaid = rec.status === 'PAID' || rec.status === 'COMPLETED';
                       const datePaid = rec.paidAt ? new Date(rec.paidAt).toLocaleDateString('en-GB') : 'N/A';
+
+                      if (isEditing) {
+                        return (
+                          <tr key={rec.id || idx} style={{ backgroundColor: '#f0fdf4' }}>
+                            <td style={{ fontWeight: 600 }}>{idx + 1}</td>
+                            <td>
+                              <input
+                                type="number"
+                                value={editYear}
+                                onChange={(e) => setEditYear(e.target.value)}
+                                className="form-input"
+                                style={{ width: '80px', padding: '4px 8px', fontSize: '0.8rem' }}
+                              />
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Base:</span>
+                                <input
+                                  type="number"
+                                  value={editBaseFee}
+                                  onChange={(e) => setEditBaseFee(e.target.value)}
+                                  className="form-input"
+                                  style={{ width: '70px', padding: '4px 6px', fontSize: '0.8rem' }}
+                                />
+                                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Admin:</span>
+                                <input
+                                  type="number"
+                                  value={editAdminFee}
+                                  onChange={(e) => setEditAdminFee(e.target.value)}
+                                  className="form-input"
+                                  style={{ width: '60px', padding: '4px 6px', fontSize: '0.8rem' }}
+                                />
+                              </div>
+                            </td>
+                            <td>{isPaid ? datePaid : 'N/A'}</td>
+                            <td>
+                              <span className={`status-pill ${isPaid ? 'completed' : 'pending'}`}>
+                                {isPaid ? 'Completed' : 'Pending'}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveInlineFeeEdit(rec.id)}
+                                  disabled={formSubmitting}
+                                  className="btn btn-primary btn-sm"
+                                  style={{ padding: '3px 8px', fontSize: '0.75rem' }}
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingRecordId(null)}
+                                  className="btn btn-secondary btn-sm"
+                                  style={{ padding: '3px 8px', fontSize: '0.75rem' }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      }
 
                       return (
                         <tr key={rec.id || idx}>
@@ -1280,76 +1391,23 @@ export default function ManageUsersPage() {
                               {isPaid ? 'Completed' : 'Pending'}
                             </span>
                           </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleStartEditRecord(rec)}
+                              className="btn btn-secondary btn-sm"
+                              style={{ padding: '4px 10px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                            >
+                              <Edit size={12} />
+                              <span>Edit</span>
+                            </button>
+                          </td>
                         </tr>
                       );
                     });
                   })()}
                 </tbody>
               </table>
-            </div>
-
-            {/* SECTION 2: MEMBER PERSONAL PROFILE DETAILS */}
-            <div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '14px', color: '#1e293b', borderLeft: '4px solid var(--primary)', paddingLeft: '8px' }}>
-                2. Member Profile Details
-              </h4>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', backgroundColor: '#f9fafb', padding: '18px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>First Name</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.firstName || selectedUser.name.split(' ')[0] || '-'}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Last Name</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.lastName || selectedUser.name.split(' ').slice(1).join(' ') || '-'}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Email</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827', wordBreak: 'break-all' }}>{selectedUser.email}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Phone Number</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.phone || '-'}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Address 1</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.addressLine1 || '-'}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Address 2</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.addressLine2 || '-'}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>City</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.city || '-'}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Post Code</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.postCode || '-'}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Country</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.country || 'United Kingdom'}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Terms & Conditions</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#059669' }}>✓ Accepted</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Invitation Status</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: selectedUser.isActive ? '#059669' : '#d97706' }}>
-                    {selectedUser.isActive ? 'Active' : 'Pending'}
-                  </p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Role</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.role}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Member ID</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 600, color: '#111827' }}>{selectedUser.displayId || selectedUser.id}</p>
-                </div>
-              </div>
             </div>
 
             <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
@@ -1497,6 +1555,36 @@ export default function ManageUsersPage() {
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '16px', fontFamily: 'var(--font-family-title)', color: '#111827' }}>
               Confirm For Membership Fee
             </h3>
+
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label className="form-label" style={{ fontWeight: 600, color: '#374151', fontSize: '0.85rem' }}>Select Membership Year to Confirm *</label>
+              <select
+                value={feeYear}
+                onChange={(e) => {
+                  const selectedYr = e.target.value;
+                  setFeeYear(selectedYr);
+                  const matched = userFeeRecords.find((r: any) => String(r.year) === selectedYr);
+                  if (matched) {
+                    setFeeBase(String(matched.baseFee || 200));
+                    setFeeAdmin(String(matched.adminFee || 30));
+                  }
+                }}
+                className="form-input"
+                style={{ backgroundColor: '#ffffff', borderColor: '#d1d5db', borderRadius: '8px', padding: '10px 14px' }}
+              >
+                {userFeeRecords.length > 0 ? (
+                  userFeeRecords.map((r: any) => (
+                    <option key={r.id || r.year} value={r.year}>
+                      Year {r.year} — £{(r.totalFee || 230).toFixed(2)} ({r.status || 'PENDING'})
+                    </option>
+                  ))
+                ) : (
+                  ['2026', '2027', '2028', '2029'].map((yr) => (
+                    <option key={yr} value={yr}>Year {yr}</option>
+                  ))
+                )}
+              </select>
+            </div>
 
             <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '18px', marginBottom: '20px' }}>
               <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#064e3b', marginBottom: '12px' }}>

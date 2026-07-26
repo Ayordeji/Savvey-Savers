@@ -54,32 +54,21 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Valid membership year and positive fee amounts are required.' }, { status: 400 });
       }
 
-      // Check if record exists for this year
+      // Flag if record already exists for this year
       const existingRecords = await db.membershipFeeRecords.findMany((r) => r.userId === userId && Number(r.year) === parsedYear);
-      let record;
-
       if (existingRecords.length > 0) {
-        record = await db.membershipFeeRecords.update({
-          where: { id: existingRecords[0].id },
-          data: {
-            baseFee: parsedBase,
-            adminFee: parsedAdmin,
-            totalFee: totalFee,
-            status: 'PENDING',
-            requestedAt: new Date().toISOString()
-          }
-        });
-      } else {
-        record = await db.membershipFeeRecords.create({
-          userId,
-          year: parsedYear,
-          baseFee: parsedBase,
-          adminFee: parsedAdmin,
-          totalFee: totalFee,
-          status: 'PENDING',
-          requestedAt: new Date().toISOString()
-        });
+        return NextResponse.json({ error: `A membership fee request has already been created for the year ${parsedYear}.` }, { status: 400 });
       }
+
+      const record = await db.membershipFeeRecords.create({
+        userId,
+        year: parsedYear,
+        baseFee: parsedBase,
+        adminFee: parsedAdmin,
+        totalFee: totalFee,
+        status: 'PENDING',
+        requestedAt: new Date().toISOString()
+      });
 
       // Update user fee status flag
       await db.users.update({
@@ -107,6 +96,41 @@ export async function POST(request: Request) {
 
       return NextResponse.json({ success: true, record });
 
+    } else if (action === 'EDIT') {
+      const parsedBase = baseFee !== undefined ? Number(baseFee) : undefined;
+      const parsedAdmin = adminFee !== undefined ? Number(adminFee) : undefined;
+      const parsedYear = year !== undefined ? Number(year) : undefined;
+
+      let recordToEdit;
+      if (recordId) {
+        recordToEdit = await db.membershipFeeRecords.findUnique({ where: { id: recordId } });
+      } else if (year) {
+        const userRecords = await db.membershipFeeRecords.findMany((r) => r.userId === userId && Number(r.year) === Number(year));
+        recordToEdit = userRecords[0];
+      }
+
+      if (!recordToEdit) {
+        return NextResponse.json({ error: 'Membership fee record not found.' }, { status: 404 });
+      }
+
+      const newBase = parsedBase !== undefined ? parsedBase : recordToEdit.baseFee;
+      const newAdmin = parsedAdmin !== undefined ? parsedAdmin : recordToEdit.adminFee;
+      const newYear = parsedYear !== undefined ? parsedYear : recordToEdit.year;
+      const newTotal = newBase + newAdmin;
+
+      const record = await db.membershipFeeRecords.update({
+        where: { id: recordToEdit.id },
+        data: {
+          baseFee: newBase,
+          adminFee: newAdmin,
+          year: newYear,
+          totalFee: newTotal,
+          updatedAt: new Date().toISOString()
+        }
+      });
+
+      return NextResponse.json({ success: true, record });
+
     } else if (action === 'RECORD_PAYMENT' || action === 'CONFIRM_PAYMENT') {
       const parsedAmount = Number(amountPaid);
       const paymentDate = paidAt ? new Date(paidAt).toISOString() : new Date().toISOString();
@@ -114,6 +138,9 @@ export async function POST(request: Request) {
       let recordToUpdate;
       if (recordId) {
         recordToUpdate = await db.membershipFeeRecords.findUnique({ where: { id: recordId } });
+      } else if (year) {
+        const userRecords = await db.membershipFeeRecords.findMany((r) => r.userId === userId && Number(r.year) === Number(year));
+        recordToUpdate = userRecords.find((r) => r.status === 'PENDING') || userRecords[0];
       } else {
         const userRecords = await db.membershipFeeRecords.findMany((r) => r.userId === userId);
         const pendingRecord = userRecords.find((r) => r.status === 'PENDING') || userRecords[0];
