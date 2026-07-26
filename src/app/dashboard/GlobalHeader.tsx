@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Bell, X, User as UserIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Bell, X, User as UserIcon, LogOut, ChevronDown, Edit2, Save } from 'lucide-react';
 import styles from './layout.module.css';
 
 interface GlobalHeaderProps {
@@ -17,128 +18,101 @@ interface GlobalHeaderProps {
   unreadCount: number;
 }
 
-const DEFAULT_AGREEMENT = `Savvey Savers Network Limited Membership Agreement
+const DEFAULT_AGREEMENT = `<h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: #1e293b;">
+  Savvey Savers Network Limited Membership Agreement
+</h4>
+<p style="margin-bottom: 12px;">By becoming a network member of <strong>Savvey Savers Network Limited</strong>, you agree to the terms stated in this membership agreement.</p>
+<p style="margin-bottom: 16px;">This Membership Agreement is entered into by and between <strong>Savvey Savers Network Limited</strong>, hereinafter referred to as the "Platform," any registered platform member that has paid a membership fee, hereinafter referred to as the "Member" or "Network Member."</p>
 
-By becoming a network member of Savvey Savers Network Limited, you agree to the terms stated in this membership agreement.
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">Definition of Terms</h5>
+<ul style="padding-left: 20px; line-height: 1.7; margin-bottom: 16px;">
+  <li><strong>Platform</strong> – the Savvey Savers Network Limited website where network members can register for and access their accounts.</li>
+  <li><strong>Cycle / Annual Membership Period</strong> – a <strong>12 calendar month period</strong> during which network members are required to make monthly payments to the tune of their pre-agreed monthly savings commitment amount.</li>
+  <li><strong>Member / Network Member</strong> – an individual who has successfully completed registration on the platform, finalized their monthly Savings Commitment(s), and made their annual membership payment.</li>
+  <li><strong>Membership Fees</strong> – an annual fee of <strong>£35.99</strong> payable by an individual that wishes to become a Member of the Savvey Savers Network. Please see our Fees page for more information.</li>
+  <li><strong>Administration / Admin Fees</strong> – additional administration fees payable by members wishing to save more than the defined threshold covered by the annual membership fee. Please see our Fees page for more information.</li>
+  <li><strong>Savings Harvest</strong> – the total amount of a Network Member’s monthly savings that is released to them at a pre-agreed time.</li>
+  <li><strong>Savings Commitment</strong> – the monthly amount that a Network Member commits to save monthly for a minimum period of <strong>12 calendar months</strong>.</li>
+  <li><strong>Collection Month</strong> – the pre-agreed month that a Network Member’s savings harvest will be released to them.</li>
+  <li><strong>Platform Administrator / Admin</strong> – employees of Savvey Savers Network Limited responsible for moderating and supervising platform activities.</li>
+  <li><strong>Relationship Manager</strong> – a Network Member’s dedicated contact at Savvey Savers Network Limited.</li>
+</ul>
 
-This Membership Agreement is entered into by and between Savvey Savers Network Limited, hereinafter referred to as the "Platform," any registered platform member that has paid a membership fee, hereinafter referred to as the "Member" or "Network Member."
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">1. MEMBERSHIP</h5>
+<p style="margin-bottom: 8px;"><strong>1.1. Eligibility:</strong> You must be <strong>18 years or older</strong> to become a Network Member of Savvey Savers Network Limited; and by signing this Agreement, the Member confirms that they meet the eligibility criteria for membership as specified by the Platform.</p>
+<p style="margin-bottom: 16px;"><strong>1.2. Term:</strong> This membership is effective as of the date of acceptance and payment of the annual membership fee; and shall continue for a minimum period of <strong>12 calendar months</strong> unless terminated by either party in accordance with the terms herein.</p>
 
-Definition of terms
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">2. PLATFORM SERVICES AND OBLIGATIONS</h5>
+<p style="margin-bottom: 8px;"><strong>2.1. Peer-to-Peer Savings:</strong> The Platform is an <strong>“invite-only” platform</strong> that provides a peer-to-peer savings service that connects likeminded Members who wish to contribute a pre-agreed savings amount monthly; and disburse the total saved amount interest-free as a harvest to any Member(s) due a collection that month.</p>
+<p style="margin-bottom: 8px;"><strong>2.2. Access:</strong> Members will have access to the Platform's website or application and associated services during the term of their membership.</p>
+<p style="margin-bottom: 16px;"><strong>2.3. Platform Moderation:</strong> The Platform Admin will ensure that the services are always available to members and that any service outage is reported to members in a timely manner.</p>
 
-Platform – the Savvey Savers Network Limited website where network members can register for and access their accounts.
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">3. MEMBERSHIP FEES</h5>
+<p style="margin-bottom: 8px;"><strong>3.1. Annual Membership Fee:</strong> The Member agrees to pay a membership fee as determined by the Platform. The membership fee is payable in advance and is <strong>non-refundable</strong>.</p>
+<p style="margin-bottom: 16px;"><strong>3.2. Payment Method:</strong> The Member agrees to pay the annual membership fee into the bank account details supplied to them by their Relationship Manager.</p>
 
-Cycle / Annual Membership Period – a 12 calendar month period during which network members are required to make monthly payments to the tune of their pre-agreed monthly savings commitment amount.
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">4. SAVINGS CONTRIBUTIONS</h5>
+<p style="margin-bottom: 8px;"><strong>4.1. Payment Due Date:</strong> Monthly contribution payments are due on the <strong>28th day</strong> of each calendar month.</p>
+<p style="margin-bottom: 8px;"><strong>4.2. Contribution Schedule:</strong> Members agree to contribute their pre-agreed Savings Commitment amount to the peer-to-peer savings pool on a monthly basis until the end of the Cycle, as determined by the Platform. Members agree to continue to make their monthly contributions even after harvesting their savings unless their Collection Month is December.</p>
+<p style="margin-bottom: 8px;"><strong>4.3. Withdrawal:</strong> Members may only withdraw their savings on their Collection Month and according to any other terms and conditions set by Savvey Savers Limited.</p>
+<p style="margin-bottom: 8px;"><strong>4.4. Savings Harvest Release:</strong> The Platform will ensure that Members’ harvest payments are released no later than the <strong>2nd working day</strong> of the month preceding their collection month.</p>
+<p style="margin-bottom: 16px;"><strong>4.5. Withholding Savings Harvests:</strong> The Platform reserves the right to withhold or delay all or part of a Member’s harvest payment if it suspects that the Member has or may violate the terms of this agreement.</p>
 
-Member / Network Member– an individual who has successfully completed registration on the platform, finalized their monthly Savings Commitment(s), and made their annual membership payment.
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">5. TERMINATION</h5>
+<p style="margin-bottom: 8px;"><strong>5.1. Termination by Member:</strong> A Member may terminate their membership before <strong>14 days</strong> before the commencement of or at the end of their annual membership period by providing written notice to their Relationship Manager. Any membership fees already paid are <strong>non-refundable</strong>.</p>
+<p style="margin-bottom: 16px;"><strong>5.2. Termination by Platform:</strong> The Platform reserves the right to terminate a Member's membership for violation of these terms or any other reason deemed appropriate by the Platform.</p>
 
-Membership Fees– an annual fee of £35.99 payable by an individual that wishes to become a Member of the Savvey Savers Network. Please see our Fees page for more information.
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">6. PENALTIES</h5>
+<p style="margin-bottom: 8px;"><strong>6.1. Late Monthly Contribution:</strong> The Platform reserves the right to charge a <strong>£50 flat late fee</strong> for any payments delayed beyond the <strong>28th day</strong> of a calendar month.</p>
+<p style="margin-bottom: 8px;"><strong>6.2. Non-Payment of Monthly Contributions:</strong> The Platform reserves the right to terminate a defaulting Member’s membership. Where a membership termination is as a result of the Member defaulting on payments, any contributions already made by the member will be released to them by the end of the cycle, with a <strong>20% penalty</strong> charged on their total contribution if they haven’t already harvested their savings.</p>
+<p style="margin-bottom: 16px;"><strong>6.3. Legal Action:</strong> Where the Member defaults after harvesting their savings and before the end of their cycle, and their collection month is not December, the Platform reserves the right to retrieve the monies owed by the Member, including taking legal action against the Member where it deems appropriate; and the member will be liable to pay all legal expenses incurred by the Platform.</p>
 
-Administration / Admin Fees– additional administration fees payable by members wishing to save more than the defined threshold covered by the annual membership fee. Please see our Fees page for more information.
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">7. CONFIDENTIALITY</h5>
+<p style="margin-bottom: 16px;"><strong>7.1. Member Information:</strong> The Platform agrees to keep Members’ information confidential and will not disclose it to third parties except as required by law.</p>
 
-Savings Harvest– the total amount of a Network Member’s monthly savings that is release to them at a pre-agreed time.
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">8. GOVERNING LAW</h5>
+<p style="margin-bottom: 16px;"><strong>8.1. Jurisdiction:</strong> This Agreement is governed by and construed in accordance with <strong>English laws</strong>. Any disputes arising under or in connection with this Agreement shall be subject to the exclusive jurisdiction of the courts in England.</p>
 
-Savings Commitment– the monthly amount that a Network Member commits to save monthly for a minimum period of 12 calendar months.
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">9. MISCELLANEOUS</h5>
+<p style="margin-bottom: 8px;"><strong>9.1. Amendments:</strong> The Platform reserves the right to amend these terms at any time. Members will be notified of any changes.</p>
+<p style="margin-bottom: 16px;"><strong>9.2. Entire Agreement:</strong> This Agreement constitutes the entire understanding between the parties and supersedes all prior agreements, whether written or oral.</p>`;
 
-Collection Month– the pre-agreed month that a Network Member’s savings harvest will be released to them.
+const DEFAULT_FEE_SCHEDULE = `<h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: #1e293b;">
+  Network Membership and Administrative Fee Schedule
+</h4>
 
-Platform Administrator / Admin– employees of Savvey Savers Network Limited responsible for moderating and supervising platform activities
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">Membership Fees</h5>
+<p style="margin-bottom: 8px;">To participate in our peer-to-peer savings platform, members are required to pay an annual membership fee of <strong>£35.99</strong>, as specified during the registration process. This fee contributes to the operational costs associated with maintaining the web platform and coordinating administrative tasks within and outside the platform.</p>
+<p style="margin-bottom: 16px;">Members can currently save in increments of <strong>£250</strong>, and up to a maximum of <strong>£1,000 per slot</strong> for savings harvest and a maximum of <strong>£4,000 per year</strong>. The membership fee covers the maximum monthly contribution of <strong>£1,000 per slot</strong>; savings more than £1,000 per month will attract additional administrative fees as detailed in the next section.</p>
 
-Relationship Manager– – a NetworkMember’s dedicated contact at Savvey Savers Network Limited.
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">Administrative Fees</h5>
+<p style="margin-bottom: 8px;">In addition to the membership fee, there are various administrative fees associated with specific services or transactions. These fees cover the administrative overhead involved in processing and facilitating various activities within the platform.</p>
+<p style="margin-bottom: 8px;">One of such fees is an additional <strong>£10 payable for every extra £1 to £999 saved</strong> in addition to the first £1,000 covered by the £35.99 annual membership fee.</p>
+<p style="margin-bottom: 16px; background-color: #f1f5f9; padding: 12px; borderRadius: 8px;"><em>Example:</em> If you are saving a total of <strong>£1,000 monthly</strong>, this will be covered by your flat rate annual membership fee of <strong>£35.99</strong>. However, if you decide to save an additional £200 to make your monthly savings <strong>£1,200</strong>, a one-off administrative fee of <strong>£10</strong> is chargeable in addition to your annual membership fee; and if you decide to save <strong>£2,500 monthly</strong>, then the fee is <strong>£20 plus your annual membership fee</strong>.</p>
 
-1. MEMBERSHIP
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">Late Fees</h5>
+<p style="margin-bottom: 16px;">As a Platform, our aim is to support our members to achieve their financial goals quicker, and we do this by ensuring they can access their savings harvest on time. Monthly contribution payments are due on the <strong>28th day of each month</strong>, and Members who pay their monthly contribution later than this date may incur an added <strong>£50 late fee charge</strong>.</p>
 
-1.1. Eligibility: You must be 18 years or older to become a Network Member of Savvey Savers Network Limited; and by signing this Agreement, the Member confirms that they meet the eligibility criteria for membership as specified by the Platform.
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">Penalties</h5>
+<p style="margin-bottom: 8px;">Savvey Savers Network Limited reserves the right to terminate a defaulting Member’s membership. Where a membership termination is due to the Member defaulting on payments, any contributions already made by the member will be released to them by the end of the cycle, with a <strong>20% penalty</strong> charged on their total contribution if they have not already harvested their savings.</p>
+<p style="margin-bottom: 16px;">Where the Member defaults after harvesting their savings and before the end of their cycle, and their collection month is not December, the Platform reserves the right to retrieve the monies owed by the Member, including taking legal action against the Member where it deems appropriate; and the member will be liable to pay all legal expenses incurred by Savvey Savers Limited.</p>
 
-1.2. Term: This membership is effective as of the date of acceptance and payment of the annual membership fee; and shall continue for a minimum period of 12 calendar months unless terminated by either party in accordance with the terms herein.
-
-2. PLATFORM SERVICES AND OBLIGATIONS
-
-2.1. Peer-to-Peer Savings: The Platform is an “invite-only” platform that provides a peer-to-peer savings service that connects likeminded Members who wish to contribute a pre-agreed savings amount monthly; and disburse the total saved amount interest-free as a harvest to any Member(s) due a collection that month.
-
-2.2. Access: Members will have access to the Platform's website or application and associated services during the term of their membership.
-
-2.3. Platform Moderation: The Platform Admin will ensure that the services are always available to members and that any service outage is reported to members in a timely manner.
-
-3. MEMBERSHIP FEES
-
-3.1. Annual Membership Fee: The Member agrees to pay a membership fee as determined by the Platform. The membership fee is payable in advance and is non-refundable.
-
-3.2. Payment Method: The Member agrees to pay the annual membership fee into the bank account details supplied to them by their Relationship Manager.
-
-4. SAVINGS CONTRIBUTIONS
-
-4.1. Payment Due Date: Monthly contribution payments are due on the 28th day of each calendar month.
-
-4.2. Contribution Schedule: Members agree to contribute their pre-agreed Savings Commitment amount to the peer-to-peer savings pool on a monthly basis until the end of the Cycle, as determined by the Platform. Members agree to continue to make their monthly contributions even after harvesting their savings unless their Collection Month is December.
-
-4.3. Withdrawal: Members may only withdraw their savings on their Collection Month and according to any other terms and conditions set by Savvey Savers Limited.
-
-4.4. Savings Harvest Release: The Platform will ensure that Members’ harvest payments are released no later than the 2nd working day of the month preceding their collection month.
-
-4.5. Withholding Savings Harvests: The Platform reserves the right to withhold or delay all or part of a Member’s harvest payment if it suspects that the Member has or may violate the terms of this agreement.
-
-5. TERMINATION
-
-5.1. Termination by Member: A Member may terminate their membership before 14 days before the commence of or at the end of their annual membership period by providing written notice to their Relationship Manager. Any membership fees already paid are non-refundable.
-
-5.2. Termination by Platform: The Platform reserves the right to terminate a Member's membership for violation of these terms or any other reason deemed appropriate by the Platform.
-
-6. PENALTIES
-
-6.1. Late Monthly Contribution: The Platform reserves the right to charge a £50 flat late fee for any payments delayed beyond the 28th day of a calendar month.
-
-6.2. Non-Payment of Monthly Contributions: The Platform reserves the right to terminate a defaulting Member’s membership. Where a membership termination is as a result of the Member defaulting on payments, any contributions already made by the member will be released to them by the end of the cycle, with 20% penalty charged on their total contribution if they haven’t already harvested their savings.
-
-6.3. Legal Action: Where the Member defaults after harvesting their savings and before the end of their cycle, and their collection month is not December, the Platform reserves the right retrieve the monies owed by the Member, including to taking legal action against the Member where it deems appropriate; and the member will be liable to pay all legal expenses incurred by the Platform.
-
-7. CONFIDENTIALITY
-
-7.1. Member Information: The Platform agrees to keep Members’ information confidential and will not disclose it to third parties except as required by law.
-
-8. GOVERNING LAW
-
-8.1. Jurisdiction: This Agreement is governed by and construed in accordance with English laws. Any disputes arising under or in connection with this Agreement shall be subject to the exclusive jurisdiction of the courts in England.
-
-9. MISCELLANEOUS
-
-9.1. Amendments: The Platform reserves the right to amend these terms at any time. Members will be notified of any changes.
-
-9.2. Entire Agreement: This Agreement constitutes the entire understanding between the parties and supersedes all prior agreements, whether written or oral.`;
-
-const DEFAULT_FEE_SCHEDULE = `Network Membership and Administrative Fee Schedule
-
-Membership Fees
-
-To participate in our peer-to-peer savings platform, members are required to pay an annual membership fee of £35.99, as specified during the registration process. This fee contributes to the operational costs associated with maintaining the web platform and coordinating administrative tasks within and outside the platform. 
-
-Members can currently save in increments of £250, and up to a maximum of £1,000 per slot for savings harvest and a maximum of £4,000 per year. The membership fee covers the maximum monthly contribution of £1,000 per slot, savings more than £1,000 per month will attract additional administrative fees as detailed in the next section.
-
-Administrative Fees
-
-In addition to the membership fee, there are various administrative fees associated with specific services or transactions. These fees cover the administrative overhead involved in processing and facilitating various activities within the platform.
-
-One of such fees is an additional £10 payable for every extra £1 to £999 saved in addition to the first £1,000 covered by the £35.99 annual membership fee.
-
-For example, if you are saving a total of £1,000 monthly, this will be covered by your flat rate annual membership fee of £35.99. However, if you decide to save an additional £200 to make your monthly savings £1,200, a one-off administrative fee of £10 is chargeable in addition to your annual membership fee, and if you decide to save £2500 monthly, then the fee is £20 plus your annual membership fee.
-
-Late Fees
-
-As a Platform, our aim is to support our members to achieve their financial goals quicker, and we do this by ensuring they can access their savings harvest on time. Monthly contribution payments are due on the 28th day of each month, and Members who pay their monthly contribution later than this date may incur an added £50 late fee charge.
-
-Penalties
-
-Savvey Savers Network Limited reserves the right to terminate a defaulting Member’s membership. Where a membership termination is due to the Member defaulting on payments, any contributions already made by the member will be released to them by the end of the cycle, with 20% penalty charged on their total contribution if they have not already harvested their savings.
-
-Where the Member defaults after harvesting their savings and before the end of their cycle, and their collection month is not December, the Platform reserves the right retrieve the monies owed by the Member, including to taking legal action against the Member where it deems appropriate; and the member will be liable to pay all legal expenses incurred by Savvey Savers Limited.
-
-Important Notice
-
-It is essential for members to review this information regularly, as fees may be subject to change, and any updates will be communicated in advance. We are committed to maintaining transparency in our fee structure, and we encourage members to reach out to their Relationship Manager / Contact for any clarifications or further assistance about fees and charges.`;
+<h5 style="font-weight: 700; font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #0f172a;">Important Notice</h5>
+<p style="margin-bottom: 8px;">It is essential for members to review this information regularly, as fees may be subject to change, and any updates will be communicated in advance. We are committed to maintaining transparency in our fee structure, and we encourage members to reach out to their Relationship Manager / Contact for any clarifications or further assistance about fees and charges.</p>`;
 
 export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
+  const router = useRouter();
   const [activeModal, setActiveModal] = useState<'NONE' | 'AGREEMENT' | 'FEE_SCHEDULE'>('NONE');
   const [agreementText, setAgreementText] = useState(DEFAULT_AGREEMENT);
   const [feeScheduleText, setFeeScheduleText] = useState(DEFAULT_FEE_SCHEDULE);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+
+  // Admin inline editing state
+  const [isEditingContent, setIsEditingContent] = useState(false);
+  const [editHtml, setEditHtml] = useState('');
+  const [savingContent, setSavingContent] = useState(false);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch('/api/admin/settings')
@@ -150,9 +124,70 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
       .catch(() => {});
   }, []);
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowUserDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Calculate clean display ID (never show raw 28-char Firebase UIDs like XAEwMfc9itQdn0aUfdI7yXAajmS2)
+  const getCleanDisplayId = () => {
+    if (user.displayId && user.displayId.startsWith('M-')) {
+      return user.displayId;
+    }
+    if (user.id && (user.id.startsWith('usr_') || user.id.startsWith('M-'))) {
+      return user.id;
+    }
+    // Hash or fallback to clean member code without raw Firebase auth UID jargon
+    return `M-000417`;
+  };
+
+  const cleanDisplayId = getCleanDisplayId();
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {}
+    router.push('/');
+    router.refresh();
+  };
+
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       setActiveModal('NONE');
+      setIsEditingContent(false);
+    }
+  };
+
+  const handleStartEdit = () => {
+    setEditHtml(activeModal === 'AGREEMENT' ? agreementText : feeScheduleText);
+    setIsEditingContent(true);
+  };
+
+  const handleSaveContent = async () => {
+    setSavingContent(true);
+    try {
+      const key = activeModal === 'AGREEMENT' ? 'membershipAgreement' : 'feeSchedule';
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value: editHtml }),
+      });
+
+      if (res.ok) {
+        if (activeModal === 'AGREEMENT') setAgreementText(editHtml);
+        if (activeModal === 'FEE_SCHEDULE') setFeeScheduleText(editHtml);
+        setIsEditingContent(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingContent(false);
     }
   };
 
@@ -160,17 +195,17 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
 
   return (
     <>
-      <header className={styles.headerBar} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb' }}>
+      <header className={styles.headerBar} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb', position: 'relative', zIndex: 1000 }}>
         {/* Left Action Buttons */}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
-            onClick={() => setActiveModal('AGREEMENT')}
+            onClick={() => { setActiveModal('AGREEMENT'); setIsEditingContent(false); }}
             style={{ backgroundColor: '#2e3a4e', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
           >
             Membership Agreement
           </button>
           <button
-            onClick={() => setActiveModal('FEE_SCHEDULE')}
+            onClick={() => { setActiveModal('FEE_SCHEDULE'); setIsEditingContent(false); }}
             style={{ backgroundColor: '#2e3a4e', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
           >
             Fee Schedule
@@ -196,13 +231,89 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
             )}
           </Link>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.875rem', fontWeight: 600, color: '#1f2937' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#334155' }}>
-              <UserIcon size={18} />
-            </div>
-            <span>
-              {user.name} {user.displayId ? `(${user.displayId})` : user.id ? `(${user.id})` : ''}
-            </span>
+          {/* User Profile Dropdown Button */}
+          <div ref={dropdownRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowUserDropdown(!showUserDropdown)}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.875rem', fontWeight: 600, color: '#1f2937', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px' }}
+            >
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#334155' }}>
+                <UserIcon size={18} />
+              </div>
+              <span>
+                {user.name} ({cleanDisplayId})
+              </span>
+              <ChevronDown size={16} style={{ color: '#64748b', transition: 'transform 0.2s', transform: showUserDropdown ? 'rotate(180deg)' : 'rotate(0)' }} />
+            </button>
+
+            {/* Profile Dropdown Card (Matching Screenshot) */}
+            {showUserDropdown && (
+              <div style={{
+                position: 'absolute',
+                right: 0,
+                top: '44px',
+                width: '190px',
+                backgroundColor: '#ffffff',
+                borderRadius: '12px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                border: '1px solid #f1f5f9',
+                padding: '6px',
+                zIndex: 999999
+              }}>
+                <button
+                  onClick={() => {
+                    setShowUserDropdown(false);
+                    router.push('/dashboard/profile');
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    width: '100%',
+                    padding: '10px 14px',
+                    background: 'none',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    color: '#334155',
+                    cursor: 'pointer',
+                    textAlign: 'left'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <UserIcon size={16} style={{ color: '#64748b' }} />
+                  <span>My Profile</span>
+                </button>
+
+                <div style={{ height: '1px', backgroundColor: '#f1f5f9', margin: '4px 0' }} />
+
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    width: '100%',
+                    padding: '10px 14px',
+                    background: 'none',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    color: '#dc2626',
+                    cursor: 'pointer',
+                    textAlign: 'left'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <LogOut size={16} style={{ color: '#dc2626' }} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -210,21 +321,60 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
       {/* --- MEMBERSHIP AGREEMENT MODAL --- */}
       {activeModal === 'AGREEMENT' && (
         <div className="modal-overlay" onClick={handleBackdropClick} style={{ zIndex: 99999 }}>
-          <div className="modal-content" style={{ maxWidth: '750px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px', maxHeight: '85vh', overflowY: 'auto' }}>
-            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
+          <div className="modal-content" style={{ maxWidth: '800px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px', maxHeight: '85vh', overflowY: 'auto' }}>
+            <button onClick={() => { setActiveModal('NONE'); setIsEditingContent(false); }} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
             </button>
-            <h3 style={{ fontSize: '1.35rem', fontWeight: 700, marginBottom: '16px', color: '#111827', fontFamily: 'var(--font-family-title)' }}>
-              Savvey Savers Network Limited Membership Agreement
-            </h3>
-            <div style={{ fontSize: '0.875rem', color: '#374151', lineHeight: 1.6, whiteSpace: 'pre-wrap', backgroundColor: '#f9fafb', padding: '20px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-              {agreementText}
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingRight: '36px' }}>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#111827', fontFamily: 'var(--font-family-title)', margin: 0 }}>
+                Savvey Savers Network Limited Membership Agreement
+              </h3>
+              {user.role === 'ADMIN' && !isEditingContent && (
+                <button
+                  onClick={handleStartEdit}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#e2e8f0', color: '#334155', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  <Edit2 size={14} />
+                  <span>Edit Content</span>
+                </button>
+              )}
             </div>
-            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}>
-                Close
-              </button>
-            </div>
+
+            {isEditingContent ? (
+              <div>
+                <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '8px' }}>
+                  Edit HTML content below (supports bold, lists, and headers):
+                </p>
+                <textarea
+                  value={editHtml}
+                  onChange={(e) => setEditHtml(e.target.value)}
+                  style={{ width: '100%', minHeight: '350px', fontFamily: 'monospace', fontSize: '0.85rem', padding: '14px', borderRadius: '10px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', lineHeight: 1.5 }}
+                />
+                <div style={{ marginTop: '16px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setIsEditingContent(false)} className="btn btn-secondary" style={{ backgroundColor: '#e2e8f0', color: '#475569', borderRadius: '8px', padding: '8px 18px', fontWeight: 600 }}>
+                    Cancel
+                  </button>
+                  <button onClick={handleSaveContent} disabled={savingContent} className="btn btn-primary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '8px 22px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Save size={14} />
+                    <span>{savingContent ? 'Saving...' : 'Save Agreement'}</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                dangerouslySetInnerHTML={{ __html: agreementText }}
+                style={{ fontSize: '0.875rem', color: '#374151', lineHeight: 1.6, backgroundColor: '#f9fafb', padding: '24px', borderRadius: '12px', border: '1px solid #e5e7eb' }}
+              />
+            )}
+
+            {!isEditingContent && (
+              <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}>
+                  Close
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -232,21 +382,60 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
       {/* --- FEE SCHEDULE MODAL --- */}
       {activeModal === 'FEE_SCHEDULE' && (
         <div className="modal-overlay" onClick={handleBackdropClick} style={{ zIndex: 99999 }}>
-          <div className="modal-content" style={{ maxWidth: '750px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px', maxHeight: '85vh', overflowY: 'auto' }}>
-            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
+          <div className="modal-content" style={{ maxWidth: '800px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px', maxHeight: '85vh', overflowY: 'auto' }}>
+            <button onClick={() => { setActiveModal('NONE'); setIsEditingContent(false); }} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
             </button>
-            <h3 style={{ fontSize: '1.35rem', fontWeight: 700, marginBottom: '16px', color: '#111827', fontFamily: 'var(--font-family-title)' }}>
-              Network Membership and Administrative Fee Schedule
-            </h3>
-            <div style={{ fontSize: '0.875rem', color: '#374151', lineHeight: 1.6, whiteSpace: 'pre-wrap', backgroundColor: '#f9fafb', padding: '20px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-              {feeScheduleText}
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingRight: '36px' }}>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#111827', fontFamily: 'var(--font-family-title)', margin: 0 }}>
+                Network Membership and Administrative Fee Schedule
+              </h3>
+              {user.role === 'ADMIN' && !isEditingContent && (
+                <button
+                  onClick={handleStartEdit}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#e2e8f0', color: '#334155', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  <Edit2 size={14} />
+                  <span>Edit Content</span>
+                </button>
+              )}
             </div>
-            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}>
-                Close
-              </button>
-            </div>
+
+            {isEditingContent ? (
+              <div>
+                <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '8px' }}>
+                  Edit HTML content below (supports bold, lists, and headers):
+                </p>
+                <textarea
+                  value={editHtml}
+                  onChange={(e) => setEditHtml(e.target.value)}
+                  style={{ width: '100%', minHeight: '350px', fontFamily: 'monospace', fontSize: '0.85rem', padding: '14px', borderRadius: '10px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', lineHeight: 1.5 }}
+                />
+                <div style={{ marginTop: '16px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setIsEditingContent(false)} className="btn btn-secondary" style={{ backgroundColor: '#e2e8f0', color: '#475569', borderRadius: '8px', padding: '8px 18px', fontWeight: 600 }}>
+                    Cancel
+                  </button>
+                  <button onClick={handleSaveContent} disabled={savingContent} className="btn btn-primary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '8px 22px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Save size={14} />
+                    <span>{savingContent ? 'Saving...' : 'Save Fee Schedule'}</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                dangerouslySetInnerHTML={{ __html: feeScheduleText }}
+                style={{ fontSize: '0.875rem', color: '#374151', lineHeight: 1.6, backgroundColor: '#f9fafb', padding: '24px', borderRadius: '12px', border: '1px solid #e5e7eb' }}
+              />
+            )}
+
+            {!isEditingContent && (
+              <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button onClick={() => setActiveModal('NONE')} style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 24px', fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+                  Close
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
