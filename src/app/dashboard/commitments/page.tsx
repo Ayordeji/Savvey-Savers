@@ -624,7 +624,7 @@ export default function SavingsCommitmentsPage() {
               ) : (
                 filteredCommitments.map((c, idx) => {
                   const isExpanded = expandedCmtId === c.id;
-                  const isBottomRow = idx > 0 && idx >= filteredCommitments.length - 2;
+                  const isBottomRow = idx >= 2 && filteredCommitments.length >= 4 && idx >= filteredCommitments.length - 2;
                   return (
                     <Fragment key={c.id}>
                       <tr className={isExpanded ? styles.expandedRow : ''} style={{ cursor: 'pointer' }}>

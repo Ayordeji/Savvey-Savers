@@ -834,7 +834,7 @@ export default function ManageUsersPage() {
           <span style={{ color: 'var(--text-muted)' }}>Loading Members...</span>
         </div>
       ) : (
-        <div className="table-container">
+        <div className="table-container" style={{ overflow: 'visible' }}>
           <table className="custom-table">
             <thead>
               <tr>
@@ -867,7 +867,7 @@ export default function ManageUsersPage() {
                 </tr>
               ) : (
                 filteredUsers.map((u, idx) => {
-                  const isBottomRow = filteredUsers.length > 2 && idx >= filteredUsers.length - 3;
+                  const isBottomRow = idx >= 2 && filteredUsers.length >= 4 && idx >= filteredUsers.length - 2;
                   return (
                   <tr key={u.id} style={selectedUserIds.includes(u.id) ? { backgroundColor: 'rgba(255, 255, 255, 0.02)' } : undefined}>
                     <td style={{ paddingLeft: '16px' }}>

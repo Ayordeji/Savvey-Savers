@@ -454,8 +454,19 @@ button {
   }
 }
 
+.table-container {
+  overflow: visible !important;
+}
+
+.custom-table {
+  overflow: visible !important;
+}
+
 /* Responsive adjustments for mobile and tablets */
 @media (max-width: 768px) {
+  .table-container {
+    overflow-x: auto !important;
+  }
   .hidden-mobile {
     display: none !important;
   }
