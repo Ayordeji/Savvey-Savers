@@ -41,7 +41,7 @@ export default function ManageUsersPage() {
 
 
   // Modal States
-  const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'VIEW' | 'DELETE_CONFIRM' | 'BULK_DELETE_CONFIRM' | 'MEMBERSHIP_DETAILS' | 'AGREEMENT' | 'SCHEDULE' | 'REVIEWS' | 'REQUEST_FEE' | 'CONFIRM_REQUEST_FEE' | 'RECORD_FEE_PAYMENT'>('NONE');
+  const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'VIEW' | 'DELETE_CONFIRM' | 'BULK_DELETE_CONFIRM' | 'MEMBERSHIP_DETAILS' | 'AGREEMENT' | 'SCHEDULE' | 'REVIEWS' | 'REQUEST_FEE' | 'CONFIRM_REQUEST_FEE' | 'CONFIRM_FEE_FORM' | 'CONFIRM_FEE_POPUP' | 'REMIND_FEE_POPUP'>('NONE');
   const [membershipAgreement, setMembershipAgreement] = useState('');
   const [feeSchedule, setFeeSchedule] = useState('');
 
@@ -241,16 +241,42 @@ export default function ManageUsersPage() {
     setSelectedUser(user);
     setFeeBase('200');
     setFeeAdmin('30');
-    setFeeYear(String(new Date().getFullYear() + 1));
+    setFeeYear(String(new Date().getFullYear() + 2));
     setActiveModal('REQUEST_FEE');
     setOpenDropdownId(null);
   };
 
-  const handleOpenRecordPaymentModal = (user: User) => {
+  const handleOpenConfirmFeeModal = async (user: User) => {
     setSelectedUser(user);
-    setFeePaidAmount('230.00');
+    setOpenDropdownId(null);
     setFeePaidDate(new Date().toISOString().split('T')[0]);
-    setActiveModal('RECORD_FEE_PAYMENT');
+
+    try {
+      const res = await fetch(`/api/admin/users/membership-fee?userId=${user.id}`);
+      if (res.ok) {
+        const records = await res.json();
+        const pending = records.find((r: any) => r.status === 'PENDING') || records[0];
+        if (pending) {
+          setFeeBase(String(pending.baseFee || 200));
+          setFeeAdmin(String(pending.adminFee || 30));
+          setFeeYear(String(pending.year || 2028));
+        } else {
+          setFeeBase('200');
+          setFeeAdmin('30');
+          setFeeYear('2028');
+        }
+      }
+    } catch (err) {
+      setFeeBase('200');
+      setFeeAdmin('30');
+      setFeeYear('2028');
+    }
+    setActiveModal('CONFIRM_FEE_FORM');
+  };
+
+  const handleOpenReminderPopup = (user: User) => {
+    setSelectedUser(user);
+    setActiveModal('REMIND_FEE_POPUP');
     setOpenDropdownId(null);
   };
 
@@ -284,9 +310,10 @@ export default function ManageUsersPage() {
     }
   };
 
-  const handleRecordFeePaymentSubmit = async () => {
+  const handleConfirmFeeSubmit = async () => {
     if (!selectedUser) return;
     setFormSubmitting(true);
+    const totalAmount = (parseFloat(feeBase) || 0) + (parseFloat(feeAdmin) || 0);
     try {
       const res = await fetch('/api/admin/users/membership-fee', {
         method: 'POST',
@@ -294,17 +321,17 @@ export default function ManageUsersPage() {
         body: JSON.stringify({
           action: 'RECORD_PAYMENT',
           userId: selectedUser.id,
-          amountPaid: parseFloat(feePaidAmount) || 0,
+          amountPaid: totalAmount,
           paidAt: feePaidDate
         })
       });
       if (res.ok) {
         fetchUsers();
         setActiveModal('NONE');
-        await dialog.alert('Payment Recorded', `Membership fee payment of £${(parseFloat(feePaidAmount) || 0).toFixed(2)} for ${selectedUser.name} has been recorded successfully.`);
+        await dialog.alert('Fee Confirmed', `Membership fee payment of £${totalAmount.toFixed(2)} for ${selectedUser.name} has been confirmed and receipt email sent.`);
       } else {
         const data = await res.json();
-        setErrorMsg(data.error || 'Failed to record fee payment.');
+        setErrorMsg(data.error || 'Failed to confirm fee payment.');
       }
     } catch (err) {
       setErrorMsg('A network error occurred.');
@@ -313,24 +340,28 @@ export default function ManageUsersPage() {
     }
   };
 
-  const handleSendFeeReminder = async (user: User) => {
-    setOpenDropdownId(null);
+  const handleSendFeeReminderSubmit = async () => {
+    if (!selectedUser) return;
+    setFormSubmitting(true);
     try {
       const res = await fetch('/api/admin/users/membership-fee', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'REMIND',
-          userId: user.id
+          userId: selectedUser.id
         })
       });
       if (res.ok) {
-        await dialog.alert('Reminder Sent', `Membership fee payment reminder email sent to ${user.email}.`);
+        setActiveModal('NONE');
+        await dialog.alert('Reminder Sent', `Membership fee payment reminder email sent to ${selectedUser.email}.`);
       } else {
         await dialog.alert('Error', 'Failed to send payment reminder.');
       }
     } catch (err) {
       console.error('Reminder error:', err);
+    } finally {
+      setFormSubmitting(false);
     }
   };
 
@@ -824,11 +855,11 @@ export default function ManageUsersPage() {
                               <FileText size={14} />
                               <span>Request Membership Fee</span>
                             </button>
-                            <button onClick={() => handleOpenRecordPaymentModal(u)} className={styles.dropdownItem}>
+                            <button onClick={() => handleOpenConfirmFeeModal(u)} className={styles.dropdownItem}>
                               <CheckCircle size={14} />
-                              <span>Record Membership Payment</span>
+                              <span>Confirm Membership Fee</span>
                             </button>
-                            <button onClick={() => handleSendFeeReminder(u)} className={styles.dropdownItem}>
+                            <button onClick={() => handleOpenReminderPopup(u)} className={styles.dropdownItem}>
                               <Mail size={14} />
                               <span>Request Member To Pay Up</span>
                             </button>
@@ -927,13 +958,14 @@ export default function ManageUsersPage() {
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Country</label>
-                  <select value={formCountry} onChange={(e) => setFormCountry(e.target.value)} className="form-select">
-                    <option value="United Kingdom">United Kingdom</option>
-                    <option value="Nigeria">Nigeria</option>
-                    <option value="Ghana">Ghana</option>
-                    <option value="United States">United States</option>
-                    <option value="Canada">Canada</option>
-                  </select>
+                  <input
+                    type="text"
+                    value="United Kingdom"
+                    disabled
+                    readOnly
+                    className="form-input"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.05)', color: 'var(--text-muted)', cursor: 'not-allowed' }}
+                  />
                 </div>
               </div>
 
@@ -1041,13 +1073,14 @@ export default function ManageUsersPage() {
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Country</label>
-                  <select value={formCountry} onChange={(e) => setFormCountry(e.target.value)} className="form-select">
-                    <option value="United Kingdom">United Kingdom</option>
-                    <option value="Nigeria">Nigeria</option>
-                    <option value="Ghana">Ghana</option>
-                    <option value="United States">United States</option>
-                    <option value="Canada">Canada</option>
-                  </select>
+                  <input
+                    type="text"
+                    value="United Kingdom"
+                    disabled
+                    readOnly
+                    className="form-input"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.05)', color: 'var(--text-muted)', cursor: 'not-allowed' }}
+                  />
                 </div>
               </div>
 
@@ -1206,63 +1239,152 @@ export default function ManageUsersPage() {
         </div>
       )}
 
-      {/* --- RECORD MEMBERSHIP FEE PAYMENT MODAL --- */}
-      {activeModal === 'RECORD_FEE_PAYMENT' && selectedUser && (
+      {/* --- CONFIRM FOR MEMBERSHIP FEE FORM MODAL --- */}
+      {activeModal === 'CONFIRM_FEE_FORM' && selectedUser && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '480px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
             </button>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)', color: '#111827' }}>
-              Record Membership Fee Payment
+
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '16px', fontFamily: 'var(--font-family-title)', color: '#111827' }}>
+              Confirm For Membership Fee
             </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
-              Record confirmed membership fee payment for {selectedUser.name}.
+
+            <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '18px', marginBottom: '20px' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#064e3b', marginBottom: '12px' }}>
+                £ {((parseFloat(feeBase) || 0) + (parseFloat(feeAdmin) || 0)).toFixed(2)}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.9rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#4b5563', fontWeight: 600 }}>Base Membership Fee :</span>
+                  <span style={{ fontWeight: 700, color: '#111827' }}>£ {(parseFloat(feeBase) || 0).toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#4b5563', fontWeight: 600 }}>Admin Fee :</span>
+                  <span style={{ fontWeight: 700, color: '#111827' }}>£ {(parseFloat(feeAdmin) || 0).toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#4b5563', fontWeight: 600 }}>Payment Year :</span>
+                  <span style={{ fontWeight: 700, color: '#111827' }}>{feeYear}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '24px' }}>
+              <label className="form-label" style={{ fontWeight: 600, color: '#374151', fontSize: '0.85rem' }}>Payment Received Date *</label>
+              <input
+                type="date"
+                value={feePaidDate}
+                onChange={(e) => setFeePaidDate(e.target.value)}
+                placeholder="Enter payment received date"
+                className="form-input"
+                style={{ backgroundColor: '#ffffff', borderColor: '#d1d5db', borderRadius: '8px', padding: '10px 14px' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setActiveModal('CONFIRM_FEE_POPUP')}
+                className="btn btn-primary"
+                style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 32px', fontWeight: 600 }}
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModal('NONE')}
+                className="btn btn-secondary"
+                style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 32px', fontWeight: 600 }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- CONFIRM MEMBERSHIP FEE POPUP MODAL --- */}
+      {activeModal === 'CONFIRM_FEE_POPUP' && selectedUser && (
+        <div className="modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="modal-content" style={{ maxWidth: '420px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '36px 28px', textAlign: 'center', position: 'relative' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid #fed7aa', backgroundColor: '#fff7ed', color: '#f97316', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
+              <span style={{ fontSize: '2.2rem', fontWeight: 300, lineHeight: 1 }}>!</span>
+            </div>
+
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 700, marginBottom: '12px', color: '#1f2937', fontFamily: 'var(--font-family-title)' }}>
+              Confirm Membership Fee
+            </h3>
+            <p style={{ color: '#4b5563', fontSize: '0.925rem', marginBottom: '24px', lineHeight: 1.5 }}>
+              Are you sure you want to confirm membership fee payment of £{((parseFloat(feeBase) || 0) + (parseFloat(feeAdmin) || 0)).toFixed(2)} for {selectedUser.name} and send receipt email?
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ fontWeight: 600, color: '#374151' }}>Amount Paid (£) *</label>
-                <input
-                  type="number"
-                  value={feePaidAmount}
-                  onChange={(e) => setFeePaidAmount(e.target.value)}
-                  placeholder="230.00"
-                  className="form-input"
-                  style={{ backgroundColor: '#ffffff', borderColor: '#d1d5db', borderRadius: '8px' }}
-                />
-              </div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={handleConfirmFeeSubmit}
+                disabled={formSubmitting}
+                className="btn btn-primary"
+                style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 28px', fontWeight: 600 }}
+              >
+                {formSubmitting ? 'Submitting...' : 'Submit'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModal('CONFIRM_FEE_FORM')}
+                className="btn btn-secondary"
+                style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 28px', fontWeight: 600 }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ fontWeight: 600, color: '#374151' }}>Payment Received Date *</label>
-                <input
-                  type="date"
-                  value={feePaidDate}
-                  onChange={(e) => setFeePaidDate(e.target.value)}
-                  className="form-input"
-                  style={{ backgroundColor: '#ffffff', borderColor: '#d1d5db', borderRadius: '8px' }}
-                />
-              </div>
+      {/* --- PAYMENT REMINDER CONFIRMATION POPUP MODAL --- */}
+      {activeModal === 'REMIND_FEE_POPUP' && selectedUser && (
+        <div className="modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="modal-content" style={{ maxWidth: '420px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '36px 28px', textAlign: 'center', position: 'relative' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
 
-              <div style={{ marginTop: '12px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  onClick={handleRecordFeePaymentSubmit}
-                  disabled={formSubmitting}
-                  className="btn btn-primary"
-                  style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 24px' }}
-                >
-                  {formSubmitting ? 'Recording...' : 'Save Payment Record'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveModal('NONE')}
-                  className="btn btn-secondary"
-                  style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 24px' }}
-                >
-                  Cancel
-                </button>
-              </div>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid #fed7aa', backgroundColor: '#fff7ed', color: '#f97316', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
+              <span style={{ fontSize: '2.2rem', fontWeight: 300, lineHeight: 1 }}>!</span>
+            </div>
+
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 700, marginBottom: '12px', color: '#1f2937', fontFamily: 'var(--font-family-title)' }}>
+              Request Member To Pay Up
+            </h3>
+            <p style={{ color: '#4b5563', fontSize: '0.925rem', marginBottom: '24px', lineHeight: 1.5 }}>
+              Are you sure you want to send a membership fee payment reminder email to {selectedUser.name}?
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={handleSendFeeReminderSubmit}
+                disabled={formSubmitting}
+                className="btn btn-primary"
+                style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 28px', fontWeight: 600 }}
+              >
+                {formSubmitting ? 'Sending...' : 'Submit'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModal('NONE')}
+                className="btn btn-secondary"
+                style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 28px', fontWeight: 600 }}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
