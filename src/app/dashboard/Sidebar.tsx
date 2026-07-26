@@ -15,7 +15,8 @@ import {
   UserCheck,
   Bell,
   Menu,
-  ChevronUp
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import styles from './layout.module.css';
 import { auth } from '@/lib/firebase';
@@ -36,20 +37,28 @@ export default function Sidebar({ user }: SidebarProps) {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isMobileCollapsed, setIsMobileCollapsed] = useState(true);
+  const [isSettingsExpanded, setIsSettingsExpanded] = useState(pathname.startsWith('/dashboard/settings'));
+
+  interface NavLink {
+    name: string;
+    href: string;
+    icon: any;
+    isAccordion?: boolean;
+  }
 
   // Navigation Links based on User Role
-  const adminLinks = [
+  const adminLinks: NavLink[] = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Manage Users', href: '/dashboard/users', icon: Users },
     { name: 'Savings Commitments', href: '/dashboard/commitments', icon: PiggyBank },
     { name: 'Submitted Requests', href: '/dashboard/requests', icon: FileSpreadsheet },
     { name: 'Waiting List', href: '/dashboard/waiting-list', icon: UserCheck },
     { name: 'Deleted Records', href: '/dashboard/deleted-records', icon: Trash2 },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings, isAccordion: true },
     { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
   ];
 
-  const memberLinks = [
+  const memberLinks: NavLink[] = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Savings Commitments', href: '/dashboard/commitments', icon: PiggyBank },
     { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
@@ -60,32 +69,18 @@ export default function Sidebar({ user }: SidebarProps) {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      // Clear Firebase Client Auth session
       await signOut(auth);
-
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
+      const response = await fetch('/api/auth/logout', { method: 'POST' });
       if (response.ok) {
         router.push('/');
         router.refresh();
       } else {
-        console.error('Logout failed');
         setIsLoggingOut(false);
       }
     } catch (err) {
       console.error('Logout error:', err);
       setIsLoggingOut(false);
     }
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
   };
 
   return (
@@ -150,7 +145,53 @@ export default function Sidebar({ user }: SidebarProps) {
       <nav className={styles.navSection}>
         {links.map((link) => {
           const Icon = link.icon;
-          const isActive = pathname === link.href;
+          const isActive = pathname === link.href || (link.isAccordion && pathname.startsWith(link.href));
+
+          if (link.isAccordion) {
+            return (
+              <div key={link.name} style={{ display: 'flex', flexDirection: 'column' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsExpanded(!isSettingsExpanded)}
+                  className={`${styles.navItem} ${isActive ? styles.activeNavItem : ''}`}
+                  style={{ width: '100%', justifyContent: 'space-between', border: 'none', cursor: 'pointer', background: isActive ? undefined : 'transparent' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Icon size={18} />
+                    <span>Setting</span>
+                  </div>
+                  {isSettingsExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+
+                {isSettingsExpanded && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '36px', marginTop: '4px', marginBottom: '4px' }}>
+                    <Link
+                      href="/dashboard/settings?tab=security"
+                      className={`${styles.navItem}`}
+                      style={{ fontSize: '0.85rem', padding: '6px 12px', minHeight: 'auto', color: 'rgba(255, 255, 255, 0.75)' }}
+                    >
+                      <span>Security Question</span>
+                    </Link>
+                    <Link
+                      href="/dashboard/settings?tab=commitment"
+                      className={`${styles.navItem}`}
+                      style={{ fontSize: '0.85rem', padding: '6px 12px', minHeight: 'auto', color: 'rgba(255, 255, 255, 0.75)' }}
+                    >
+                      <span>Manage Commitment</span>
+                    </Link>
+                    <Link
+                      href="/dashboard/settings?tab=email-templates"
+                      className={`${styles.navItem}`}
+                      style={{ fontSize: '0.85rem', padding: '6px 12px', minHeight: 'auto', color: 'rgba(255, 255, 255, 0.75)' }}
+                    >
+                      <span>Email Template</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           return (
             <Link
               key={link.href}
