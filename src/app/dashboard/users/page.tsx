@@ -1320,173 +1320,184 @@ export default function ManageUsersPage() {
       {/* --- VIEW MEMBERSHIP FEE MODAL --- */}
       {(activeModal === 'VIEW' || activeModal === 'MEMBERSHIP_DETAILS') && selectedUser && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
-          <div className="modal-content" style={{ maxWidth: '780px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
-              <X size={20} />
+          <div className="modal-content" style={{ maxWidth: '640px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '24px', position: 'relative' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '18px', top: '18px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={18} />
             </button>
 
-            <div style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '16px', marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, margin: 0, fontFamily: 'var(--font-family-title)', color: '#111827' }}>
-                Membership Fee & Annual Savings History
-              </h3>
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.875rem', color: '#4b5563', fontWeight: 600 }}>
-                  {selectedUser.name} ({selectedUser.displayId || selectedUser.id})
-                </span>
-                <span style={{ fontSize: '0.8rem', backgroundColor: 'rgba(6, 78, 59, 0.08)', color: '#064e3b', padding: '3px 12px', borderRadius: '12px', fontWeight: 600 }}>
-                  Member Since: {new Date(selectedUser.createdAt || Date.now()).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
-                </span>
+            {/* Header Badge */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '20px' }}>
+              <div style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '50%',
+                backgroundColor: '#f1f5f9',
+                color: '#1e293b',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                fontSize: '1.1rem',
+                border: '1px solid #cbd5e1'
+              }}>
+                {selectedUser.name.charAt(0).toUpperCase()}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, fontFamily: 'var(--font-family-title)', color: '#0f172a' }}>
+                    {selectedUser.name}
+                  </h3>
+                  <span style={{ fontSize: '0.78rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: '6px', fontWeight: 700, fontFamily: 'monospace' }}>
+                    {selectedUser.displayId || selectedUser.invitationId || selectedUser.id}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem', color: '#64748b', marginTop: '2px', flexWrap: 'wrap' }}>
+                  <span>{selectedUser.email}</span>
+                  {selectedUser.phone && <span>• {selectedUser.phone}</span>}
+                  <span>• Joined: {new Date(selectedUser.createdAt || Date.now()).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}</span>
+                </div>
               </div>
             </div>
 
-            {/* MEMBERSHIP FEE & SAVINGS HISTORY TABLE (5 Columns + Actions) */}
-            <div style={{ marginBottom: '16px' }}>
-              <table className="custom-table" style={{ fontSize: '0.85rem' }}>
-                <thead>
-                  <tr>
-                    <th>Sr.No.</th>
-                    <th>Payment Year</th>
-                    <th>Total Membership Fee</th>
-                    <th>Payment Received Date</th>
-                    <th>Status</th>
-                    <th style={{ textAlign: 'center' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(() => {
-                    const currentYear = new Date().getFullYear();
-                    const records = [...userFeeRecords].sort((a: any, b: any) => b.year - a.year);
+            {/* Membership Fee & Annual History */}
+            <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '16px', marginBottom: '16px' }}>
+              <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1e293b', marginBottom: '12px' }}>
+                Annual Membership Fee Schedule
+              </h4>
 
-                    if (records.length === 0) {
-                      return (
-                        <tr>
-                          <td style={{ fontWeight: 600 }}>1</td>
-                          <td style={{ fontWeight: 600 }}>{currentYear}</td>
-                          <td style={{ fontWeight: 700, color: '#064e3b' }}>£ {getMembershipFee(selectedUser.membership)}</td>
-                          <td>
-                            {selectedUser.membershipFeeConfirmed ? (
-                              selectedUser.membershipFeeConfirmedAt ? (
-                                new Date(selectedUser.membershipFeeConfirmedAt).toLocaleDateString('en-GB')
-                              ) : (
-                                new Date(selectedUser.createdAt || Date.now()).toLocaleDateString('en-GB')
-                              )
-                            ) : (
-                              'N/A'
-                            )}
-                          </td>
-                          <td>
-                            <span className={`status-pill ${selectedUser.membershipFeeConfirmed ? 'completed' : 'pending'}`}>
-                              {selectedUser.membershipFeeConfirmed ? 'Completed' : 'Pending'}
-                            </span>
-                          </td>
-                          <td style={{ textAlign: 'center' }}>
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>-</span>
-                          </td>
-                        </tr>
-                      );
-                    }
+              <div className="table-container" style={{ borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <table className="custom-table" style={{ fontSize: '0.825rem' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f8fafc' }}>
+                      <th style={{ padding: '8px 12px' }}>Year</th>
+                      <th style={{ padding: '8px 12px' }}>Annual Fee</th>
+                      <th style={{ padding: '8px 12px' }}>Payment Date</th>
+                      <th style={{ padding: '8px 12px' }}>Status</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'center' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const currentYear = new Date().getFullYear();
+                      const records = [...userFeeRecords].sort((a: any, b: any) => b.year - a.year);
 
-                    return records.map((rec: any, idx: number) => {
-                      const isEditing = editingRecordId === rec.id;
-                      const isPaid = rec.status === 'PAID' || rec.status === 'COMPLETED';
-                      const datePaid = rec.paidAt ? new Date(rec.paidAt).toLocaleDateString('en-GB') : 'N/A';
-
-                      if (isEditing) {
+                      if (records.length === 0) {
                         return (
-                          <tr key={rec.id || idx} style={{ backgroundColor: '#f0fdf4' }}>
-                            <td style={{ fontWeight: 600 }}>{idx + 1}</td>
-                            <td>
-                              <input
-                                type="number"
-                                value={editYear}
-                                onChange={(e) => setEditYear(e.target.value)}
-                                className="form-input"
-                                style={{ width: '80px', padding: '4px 8px', fontSize: '0.8rem' }}
-                              />
+                          <tr>
+                            <td style={{ fontWeight: 600, padding: '8px 12px' }}>{currentYear}</td>
+                            <td style={{ fontWeight: 700, color: '#064e3b', padding: '8px 12px' }}>£35.99</td>
+                            <td style={{ padding: '8px 12px' }}>
+                              {selectedUser.membershipFeeConfirmed ? (
+                                selectedUser.membershipFeeConfirmedAt ? (
+                                  new Date(selectedUser.membershipFeeConfirmedAt).toLocaleDateString('en-GB')
+                                ) : (
+                                  new Date(selectedUser.createdAt || Date.now()).toLocaleDateString('en-GB')
+                                )
+                              ) : (
+                                'N/A'
+                              )}
                             </td>
-                            <td>
-                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Base:</span>
-                                <input
-                                  type="number"
-                                  value={editBaseFee}
-                                  onChange={(e) => setEditBaseFee(e.target.value)}
-                                  className="form-input"
-                                  style={{ width: '70px', padding: '4px 6px', fontSize: '0.8rem' }}
-                                />
-                                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Admin:</span>
-                                <input
-                                  type="number"
-                                  value={editAdminFee}
-                                  onChange={(e) => setEditAdminFee(e.target.value)}
-                                  className="form-input"
-                                  style={{ width: '60px', padding: '4px 6px', fontSize: '0.8rem' }}
-                                />
-                              </div>
-                            </td>
-                            <td>{isPaid ? datePaid : 'N/A'}</td>
-                            <td>
-                              <span className={`status-pill ${isPaid ? 'completed' : 'pending'}`}>
-                                {isPaid ? 'Completed' : 'Pending'}
+                            <td style={{ padding: '8px 12px' }}>
+                              <span className={`status-pill ${selectedUser.membershipFeeConfirmed ? 'completed' : 'pending'}`} style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
+                                {selectedUser.membershipFeeConfirmed ? 'Completed' : 'Pending'}
                               </span>
                             </td>
-                            <td style={{ textAlign: 'center' }}>
-                              <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                                <button
-                                  type="button"
-                                  onClick={() => handleSaveInlineFeeEdit(rec.id)}
-                                  disabled={formSubmitting}
-                                  className="btn btn-primary btn-sm"
-                                  style={{ padding: '3px 8px', fontSize: '0.75rem' }}
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setEditingRecordId(null)}
-                                  className="btn btn-secondary btn-sm"
-                                  style={{ padding: '3px 8px', fontSize: '0.75rem' }}
-                                >
-                                  Cancel
-                                </button>
-                              </div>
+                            <td style={{ textAlign: 'center', padding: '8px 12px' }}>
+                              <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>-</span>
                             </td>
                           </tr>
                         );
                       }
 
-                      return (
-                        <tr key={rec.id || idx}>
-                          <td style={{ fontWeight: 600 }}>{idx + 1}</td>
-                          <td style={{ fontWeight: 600 }}>{rec.year}</td>
-                          <td style={{ fontWeight: 700, color: '#064e3b' }}>£ {(rec.totalFee || 230).toFixed(2)}</td>
-                          <td>{isPaid ? datePaid : 'N/A'}</td>
-                          <td>
-                            <span className={`status-pill ${isPaid ? 'completed' : 'pending'}`}>
-                              {isPaid ? 'Completed' : 'Pending'}
-                            </span>
-                          </td>
-                          <td style={{ textAlign: 'center' }}>
-                            <button
-                              type="button"
-                              onClick={() => handleStartEditRecord(rec)}
-                              className="btn btn-secondary btn-sm"
-                              style={{ padding: '4px 10px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                            >
-                              <Edit size={12} />
-                              <span>Edit</span>
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    });
-                  })()}
-                </tbody>
-              </table>
+                      return records.map((rec: any, idx: number) => {
+                        const isEditing = editingRecordId === rec.id;
+                        const isPaid = rec.status === 'PAID' || rec.status === 'COMPLETED';
+                        const datePaid = rec.paidAt ? new Date(rec.paidAt).toLocaleDateString('en-GB') : 'N/A';
+
+                        if (isEditing) {
+                          return (
+                            <tr key={rec.id || idx} style={{ backgroundColor: '#f0fdf4' }}>
+                              <td style={{ padding: '6px 10px' }}>
+                                <input
+                                  type="number"
+                                  value={editYear}
+                                  onChange={(e) => setEditYear(e.target.value)}
+                                  className="form-input"
+                                  style={{ width: '70px', padding: '4px 6px', fontSize: '0.8rem' }}
+                                />
+                              </td>
+                              <td style={{ padding: '6px 10px' }}>
+                                <input
+                                  type="number"
+                                  value={editBaseFee}
+                                  onChange={(e) => setEditBaseFee(e.target.value)}
+                                  className="form-input"
+                                  style={{ width: '75px', padding: '4px 6px', fontSize: '0.8rem' }}
+                                />
+                              </td>
+                              <td style={{ padding: '6px 10px' }}>{isPaid ? datePaid : 'N/A'}</td>
+                              <td style={{ padding: '6px 10px' }}>
+                                <span className={`status-pill ${isPaid ? 'completed' : 'pending'}`} style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
+                                  {isPaid ? 'Completed' : 'Pending'}
+                                </span>
+                              </td>
+                              <td style={{ textAlign: 'center', padding: '6px 10px' }}>
+                                <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSaveInlineFeeEdit(rec.id)}
+                                    disabled={formSubmitting}
+                                    className="btn btn-primary btn-sm"
+                                    style={{ padding: '2px 6px', fontSize: '0.75rem' }}
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingRecordId(null)}
+                                    className="btn btn-secondary btn-sm"
+                                    style={{ padding: '2px 6px', fontSize: '0.75rem' }}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        }
+
+                        return (
+                          <tr key={rec.id || idx}>
+                            <td style={{ fontWeight: 600, padding: '8px 12px' }}>{rec.year}</td>
+                            <td style={{ fontWeight: 700, color: '#064e3b', padding: '8px 12px' }}>£{(rec.totalFee || 35.99).toFixed(2)}</td>
+                            <td style={{ padding: '8px 12px' }}>{isPaid ? datePaid : 'N/A'}</td>
+                            <td style={{ padding: '8px 12px' }}>
+                              <span className={`status-pill ${isPaid ? 'completed' : 'pending'}`} style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
+                                {isPaid ? 'Completed' : 'Pending'}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: 'center', padding: '8px 12px' }}>
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditRecord(rec)}
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '3px 8px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                              >
+                                <Edit size={12} />
+                                <span>Edit</span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+              <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary" style={{ borderRadius: '8px', padding: '8px 20px', fontWeight: 600 }}>
                 Close
               </button>
             </div>
