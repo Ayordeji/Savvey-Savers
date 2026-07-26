@@ -454,36 +454,26 @@ button {
   }
 }
 
-/* Tablet (641px to 1023px) 3-column card grid */
-@media (max-width: 1023px) and (min-width: 641px) {
+/* Tablet (769px to 1023px) 3-column card grid */
+@media (max-width: 1023px) and (min-width: 769px) {
   .dashboard-cards-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 12px !important;
+    gap: 14px !important;
   }
 }
 
-/* Mobile (<= 640px) 2-column card grid */
-@media (max-width: 640px) {
-  .dashboard-cards-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 10px !important;
-  }
-  .dashboard-cards-grid > div {
-    padding: 14px 12px !important;
-    min-height: 120px !important;
-  }
-  .dashboard-cards-grid h3 {
-    font-size: 1.2rem !important;
-  }
-  .dashboard-cards-grid span {
-    font-size: 0.68rem !important;
-  }
-}
-
-/* Extra small screen (<= 400px) 1-column card grid */
-@media (max-width: 400px) {
+/* Mobile (<= 768px) 1-column full-width card layout matching user screenshot */
+@media (max-width: 768px) {
   .dashboard-cards-grid {
     grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .dashboard-cards-grid > div {
+    padding: 20px 24px !important;
+    border-radius: 16px !important;
+  }
+  .dashboard-cards-grid h3 {
+    font-size: 1.75rem !important;
   }
 }
 
@@ -495,10 +485,10 @@ button {
   overflow: visible !important;
 }
 
-/* Responsive adjustments for mobile and tablets */
+/* Responsive adjustments for mobile header and tables */
 @media (max-width: 768px) {
   .global-header-bar {
-    padding: 12px 14px !important;
+    padding: 12px 16px !important;
     flex-direction: column-reverse !important;
     align-items: stretch !important;
     gap: 12px !important;
@@ -516,8 +506,9 @@ button {
 
   .global-header-left button,
   .global-header-left a {
-    padding: 6px 12px !important;
-    font-size: 0.75rem !important;
+    padding: 8px 14px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
     white-space: nowrap !important;
     flex-shrink: 0;
     text-align: center;
@@ -526,6 +517,7 @@ button {
   .global-header-right {
     display: flex !important;
     justify-content: space-between !important;
+    align-items: center !important;
     width: 100% !important;
   }
 
