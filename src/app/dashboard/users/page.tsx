@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import styles from './users.module.css';
@@ -32,6 +33,8 @@ interface User {
 
 export default function ManageUsersPage() {
   const dialog = useDialog();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -153,6 +156,44 @@ export default function ManageUsersPage() {
       })
       .catch(err => console.error('Error fetching settings:', err));
   }, []);
+
+  useEffect(() => {
+    const approveId = searchParams.get('approveSuperAdmin');
+    if (approveId && users.length > 0) {
+      const targetUser = users.find((u) => u.id === approveId);
+      const userName = targetUser ? targetUser.name : 'this user';
+      (async () => {
+        const confirmApprove = await dialog.confirm(
+          'Approve Super Admin Request',
+          `An administrator requested Super Admin promotion for ${userName}. Do you want to accept and grant Super Admin privileges to ${userName}?`
+        );
+        if (confirmApprove) {
+          try {
+            const res = await fetch('/api/admin/users', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: approveId,
+                isSuperAdmin: true,
+                role: 'ADMIN',
+                approveRequest: true
+              })
+            });
+            if (res.ok) {
+              await dialog.alert('Promotion Approved', `Super Admin privileges have been successfully granted to ${userName}!`);
+              fetchUsers();
+              router.replace('/dashboard/users');
+            } else {
+              const data = await res.json();
+              await dialog.alert('Error', data.error || 'Failed to approve Super Admin promotion.');
+            }
+          } catch (err) {
+            console.error('Approve error:', err);
+          }
+        }
+      })();
+    }
+  }, [searchParams, users]);
 
   const handleOpenAddModal = () => {
     setErrorMsg('');

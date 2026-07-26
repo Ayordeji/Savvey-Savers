@@ -342,7 +342,8 @@ export async function PUT(request: Request) {
         city,
         postCode,
         country,
-        permissions
+        permissions,
+        approveRequest
       } = body;
 
       isRoleChanging = role && role !== user.role;
@@ -380,30 +381,33 @@ export async function PUT(request: Request) {
         const reqUser = await checkAdmin();
         const isReqSuperAdmin = reqUser && (reqUser.isSuperAdmin === true || reqUser.id === 'usr_admin');
 
-        if (!isReqSuperAdmin) {
+        if (!isReqSuperAdmin && !approveRequest) {
           // If non-super admin requests to make user a Super Admin:
           // Send request email to Super Admin for confirmation
           const allUsers = await db.users.findMany();
           const superAdminUser = allUsers.find(u => u.isSuperAdmin === true || u.id === 'usr_admin');
           const superAdminEmail = superAdminUser?.email || 'savveysaverscollective@gmail.com';
+          const approvalLink = `https://savvey-savers.vercel.app/dashboard/users?approveSuperAdmin=${user.id}`;
 
           await sendEmail({
             to: superAdminEmail,
             subject: 'Super Admin Access Request - Confirmation Required',
-            body: `Hello Super Admin,\n\nAn administrator (${reqUser?.name || 'Admin'}) has requested to promote user ${user.name} (${user.email}) to Super Admin role.\n\nPlease log in to your dashboard to confirm or decline this request.\n\nBest regards,\nSavvey Savers Platform`
+            body: `Hello Super Admin,\n\nAn administrator (${reqUser?.name || 'Admin'}) has requested to promote user ${user.name} (${user.email}) to Super Admin role.\n\nPlease click the link below to accept and approve this request:\n${approvalLink}\n\nBest regards,\nSavvey Savers Platform`
           });
 
           await db.notifications.create({
             userId: superAdminUser?.id || 'usr_admin',
             message: `Admin ${reqUser?.name || 'Admin'} requested Super Admin promotion for ${user.name}.`,
             type: 'SUPER_ADMIN_REQUEST',
+            targetUserId: user.id,
+            link: approvalLink,
             isRead: false
           });
 
           return NextResponse.json({
             success: true,
             pendingSuperAdmin: true,
-            message: `Super Admin request submitted! An email confirmation has been sent to the Super Admin (${superAdminEmail}) for approval.`
+            message: `Super Admin request submitted! An email confirmation with an approval link has been sent to the Super Admin (${superAdminEmail}).`
           });
         }
 

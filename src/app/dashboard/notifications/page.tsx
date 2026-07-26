@@ -11,6 +11,8 @@ interface Notification {
   type: string;
   isRead: boolean;
   createdAt: string;
+  targetUserId?: string;
+  link?: string;
 }
 
 export default function NotificationsPage() {
@@ -181,6 +183,67 @@ export default function NotificationsPage() {
                     <Calendar size={12} />
                     <span>{formatTime(n.createdAt)}</span>
                   </span>
+
+                  {(n.type === 'SUPER_ADMIN_REQUEST' || n.message.toLowerCase().includes('requested super admin promotion')) && (
+                    <div style={{ marginTop: '10px' }}>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          let targetId = n.targetUserId;
+                          if (!targetId && n.link) {
+                            try {
+                              targetId = new URL(n.link).searchParams.get('approveSuperAdmin') || undefined;
+                            } catch (err) {}
+                          }
+                          const confirmApprove = await dialog.confirm(
+                            'Approve Super Admin Request',
+                            'Are you sure you want to accept and approve this Super Admin promotion? This will grant full Super Admin control to the user.'
+                          );
+                          if (!confirmApprove) return;
+
+                          try {
+                            const res = await fetch('/api/admin/users', {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                id: targetId || 'usr_admin',
+                                isSuperAdmin: true,
+                                role: 'ADMIN',
+                                approveRequest: true
+                              })
+                            });
+                            if (res.ok) {
+                              await dialog.alert('Promotion Approved', 'Super Admin privileges have been successfully granted and transferred!');
+                              fetchNotifications();
+                              router.refresh();
+                            } else {
+                              const data = await res.json();
+                              await dialog.alert('Approval Failed', data.error || 'Failed to approve request.');
+                            }
+                          } catch (err) {
+                            console.error('Approve promotion error:', err);
+                            await dialog.alert('Error', 'A network error occurred while approving request.');
+                          }
+                        }}
+                        style={{
+                          backgroundColor: '#059669',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '6px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          boxShadow: '0 2px 4px rgba(5, 150, 105, 0.2)'
+                        }}
+                      >
+                        ⚡ Accept & Approve Promotion
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
                   {!n.isRead && (
