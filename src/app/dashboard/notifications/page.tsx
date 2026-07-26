@@ -109,15 +109,15 @@ export default function NotificationsPage() {
   return (
     <div>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div className="filterContainer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 700, fontFamily: 'var(--font-family-title)' }}>
             Notifications
           </h2>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
           {unreadCount > 0 && (
-            <button onClick={handleMarkAllRead} className="btn btn-secondary btn-sm" style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}>
+            <button onClick={handleMarkAllRead} className="btn btn-secondary btn-sm" style={{ borderColor: 'var(--primary)', color: 'var(--primary)', whiteSpace: 'nowrap' }}>
               <CheckSquare size={14} />
               <span>Mark all as Read</span>
             </button>
@@ -126,7 +126,7 @@ export default function NotificationsPage() {
             <button
               onClick={handleClearAll}
               className="btn btn-secondary btn-sm"
-              style={{ borderColor: 'var(--status-cancelled)', color: 'var(--status-cancelled)' }}
+              style={{ borderColor: 'var(--status-cancelled)', color: 'var(--status-cancelled)', whiteSpace: 'nowrap' }}
             >
               <Trash2 size={14} />
               <span>Clear All</span>
