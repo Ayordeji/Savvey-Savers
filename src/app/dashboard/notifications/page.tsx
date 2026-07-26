@@ -112,11 +112,8 @@ export default function NotificationsPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 700, fontFamily: 'var(--font-family-title)' }}>
-            System Notifications
+            Notifications
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Live record messages relating to your rotating savings commitments.
-          </p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           {unreadCount > 0 && (

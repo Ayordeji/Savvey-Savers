@@ -768,9 +768,6 @@ export default function ManageUsersPage() {
           <h2 style={{ fontSize: '1.75rem', fontWeight: 700, fontFamily: 'var(--font-family-title)' }}>
             Users
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Invite members, assign permissions, and control rotating group profiles.
-          </p>
         </div>
         
         {/* Top auxiliary buttons group to match Savvey Savers */}

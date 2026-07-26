@@ -497,11 +497,20 @@ export default function SavingsCommitmentsPage() {
     }
   };
 
+  const [statusFilter, setStatusFilter] = useState('');
+  const [monthFilter, setMonthFilter] = useState('');
+
+  const currentYearNum = new Date().getFullYear();
+
   const toggleDropdown = (cmtId: string) => {
     setOpenDropdownId(openDropdownId === cmtId ? null : cmtId);
   };
 
-  const filteredCommitments = commitments.filter((c) => {
+  const filteredCommitments = commitments.map((c) => {
+    // Status driven by cycle length: past year (< currentYear) = COMPLETED, current/future = ACTIVE
+    const computedStatus: Commitment['status'] = c.collectionYear < currentYearNum ? 'COMPLETED' : (c.status === 'COMPLETED' ? 'ACTIVE' : c.status);
+    return { ...c, status: computedStatus };
+  }).filter((c) => {
     const q = searchQuery.toLowerCase().trim();
     const matchesSearch = !q ||
       c.memberName.toLowerCase().includes(q) ||
@@ -509,8 +518,10 @@ export default function SavingsCommitmentsPage() {
       c.id.toLowerCase().includes(q);
 
     const matchesYear = !yearFilter || c.collectionYear.toString() === yearFilter;
+    const matchesMonth = !monthFilter || c.collectionMonth === monthFilter;
+    const matchesStatus = !statusFilter || c.status === statusFilter;
 
-    return matchesSearch && matchesYear;
+    return matchesSearch && matchesYear && matchesMonth && matchesStatus;
   });
 
   const getActiveCommitmentsForMember = (memberId: string) => {
@@ -525,9 +536,6 @@ export default function SavingsCommitmentsPage() {
           <h2 style={{ fontSize: '1.75rem', fontWeight: 700, fontFamily: 'var(--font-family-title)' }}>
             Savings Commitments
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Savings agreements, payout schedules, collection month approvals, and payment logs.
-          </p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
           {currentUser?.role === 'ADMIN' && (
@@ -543,14 +551,14 @@ export default function SavingsCommitmentsPage() {
         </div>
       </div>
 
-      {/* Filter bar */}
-      <div className={styles.filterContainer} style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className={styles.filtersLeft}>
+      {/* Filter bar with individual filter criteria dropdowns */}
+      <div className={styles.filterContainer} style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div className={styles.filtersLeft} style={{ flexWrap: 'wrap', gap: '10px' }}>
           <div className={styles.searchWrapper}>
             <Search size={16} className={styles.searchIcon} />
             <input
               type="text"
-              placeholder="Search by member name, goal..."
+              placeholder="Search by Record ID, member name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={styles.searchInput}
@@ -558,12 +566,46 @@ export default function SavingsCommitmentsPage() {
           </div>
 
           <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="form-select"
+            style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-main)' }}
+          >
+            <option value="">All Statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="PENDING">Pending</option>
+          </select>
+
+          <select
+            value={monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value)}
+            className="form-select"
+            style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-main)' }}
+          >
+            <option value="">All Months</option>
+            <option value="January">January</option>
+            <option value="February">February</option>
+            <option value="March">March</option>
+            <option value="April">April</option>
+            <option value="May">May</option>
+            <option value="June">June</option>
+            <option value="July">July</option>
+            <option value="August">August</option>
+            <option value="September">September</option>
+            <option value="October">October</option>
+            <option value="November">November</option>
+            <option value="December">December</option>
+          </select>
+
+          <select
             value={yearFilter}
             onChange={(e) => setYearFilter(e.target.value)}
-            className={`${styles.yearSelect} form-select`}
-            style={{ width: '130px' }}
+            className="form-select"
+            style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-main)' }}
           >
             <option value="">All Years</option>
+            <option value="2025">2025</option>
             <option value="2026">2026</option>
             <option value="2027">2027</option>
             <option value="2028">2028</option>

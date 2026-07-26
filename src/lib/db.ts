@@ -250,7 +250,7 @@ class TableWrapper<T extends { id?: string; key?: string }> {
       let id = data.id || data.key;
       if (!id) {
         let prefix = 'rec_';
-        if (this.collectionName === 'commitments') prefix = 'cmt_';
+        if (this.collectionName === 'commitments') prefix = 'SCC-';
         else if (this.collectionName === 'payments') prefix = 'pay_';
         else if (this.collectionName === 'notifications') prefix = 'ntf_';
         else if (this.collectionName === 'submittedRequests') prefix = 'req_';

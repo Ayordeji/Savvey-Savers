@@ -27,11 +27,30 @@ export async function GET() {
     commitments = await db.commitments.findMany((c) => c.memberId === session.id);
   }
 
-  // Join member name
+  const currentYear = new Date().getFullYear();
+
+  // Join member name & evaluate status based on cycle length
   const formatted = commitments.map((c) => {
     const member = allUsers.find((u) => u.id === c.memberId);
+    
+    // Auto-prefix ID with SCC- if old format
+    let id = c.id;
+    if (id.startsWith('cmt_')) {
+      id = `SCC-${id.substring(4)}`;
+    }
+
+    // Status driven by cycle length: past year (< currentYear) = COMPLETED, current/future = ACTIVE
+    let status = c.status;
+    if (c.collectionYear < currentYear) {
+      status = 'COMPLETED';
+    } else if (c.collectionYear >= currentYear && c.status === 'COMPLETED') {
+      status = 'ACTIVE';
+    }
+
     return {
       ...c,
+      id,
+      status,
       memberName: member ? member.name : 'Unknown Member'
     };
   });
@@ -65,7 +84,7 @@ export async function POST(request: Request) {
     const startYear = parseInt(collectionYear) || new Date().getFullYear();
 
     const currentYear = new Date().getFullYear();
-    const status = startYear > currentYear ? 'NOT_YET_STARTED' : (requestCollection ? 'PENDING' : 'ACTIVE');
+    const status = startYear < currentYear ? 'COMPLETED' : (requestCollection ? 'PENDING' : 'ACTIVE');
     const newCommitment = await db.commitments.create({
       memberId: targetMemberId,
       amount: parseFloat(amount),

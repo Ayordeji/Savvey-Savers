@@ -75,11 +75,8 @@ export default function DeletedRecordsPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 700, fontFamily: 'var(--font-family-title)' }}>
-            Deleted Records & Audit Archive
+            Deleted Records
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Non-destructive archive of deleted members and cancelled commitments for auditing, compliance, and dispute resolution.
-          </p>
         </div>
         {records.length > 0 && (
           <button

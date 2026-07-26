@@ -118,9 +118,6 @@ export default function WaitingListPage() {
         <h2 style={{ fontSize: '1.75rem', fontWeight: 700, fontFamily: 'var(--font-family-title)' }}>
           Prospect Waiting List
         </h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-          Review applications from interested individuals. Convert them to active savers with automatic commitment setups.
-        </p>
       </div>
 
       {loading ? (
