@@ -21,6 +21,7 @@ interface EmailTemplate {
   reminderHours: string;
   subject: string;
   body: string;
+  enabled?: boolean;
 }
 
 function SettingsContent() {
@@ -83,6 +84,7 @@ function SettingsContent() {
   const [editSubject, setEditSubject] = useState('');
   const [editBody, setEditBody] = useState('');
   const [editReminderHours, setEditReminderHours] = useState('');
+  const [editEnabled, setEditEnabled] = useState(true);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const fetchSettings = async () => {
@@ -236,6 +238,7 @@ function SettingsContent() {
     setEditSubject(tpl.subject);
     setEditBody(tpl.body);
     setEditReminderHours(tpl.reminderHours || 'N/A');
+    setEditEnabled(tpl.enabled !== false);
     setActiveEmailModal('EDIT');
     setOpenDropdownId(null);
   };
@@ -248,7 +251,8 @@ function SettingsContent() {
           ...t,
           subject: editSubject,
           body: editBody,
-          reminderHours: editReminderHours
+          reminderHours: editReminderHours,
+          enabled: editEnabled
         };
       }
       return t;
@@ -709,17 +713,33 @@ function SettingsContent() {
                     <tr>
                       <th style={{ width: '120px' }}>TEMPLATE ID</th>
                       <th>TITLE</th>
-                      <th style={{ width: '220px' }}>REMINDER TIME (HOURS)</th>
+                      <th style={{ width: '200px' }}>REMINDER TIME (HOURS)</th>
+                      <th style={{ width: '120px' }}>STATUS</th>
                       <th style={{ width: '100px', textAlign: 'right' }}>ACTION</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredTemplates.map((tpl) => (
-                      <tr key={tpl.id}>
-                        <td style={{ fontWeight: 600, color: '#64748b' }}>{tpl.id}</td>
-                        <td style={{ fontWeight: 600, color: '#1e293b' }}>{tpl.title}</td>
-                        <td style={{ color: '#475569', fontWeight: 500 }}>{tpl.reminderHours}</td>
-                        <td style={{ textAlign: 'right', position: 'relative' }}>
+                    {filteredTemplates.map((tpl) => {
+                      const isEnabled = tpl.enabled !== false;
+                      return (
+                        <tr key={tpl.id}>
+                          <td style={{ fontWeight: 600, color: '#64748b' }}>{tpl.id}</td>
+                          <td style={{ fontWeight: 600, color: '#1e293b' }}>{tpl.title}</td>
+                          <td style={{ color: '#475569', fontWeight: 500 }}>{tpl.reminderHours}</td>
+                          <td>
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '3px 10px',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              backgroundColor: isEnabled ? '#dcfce7' : '#fef3c7',
+                              color: isEnabled ? '#15803d' : '#b45309'
+                            }}>
+                              {isEnabled ? 'Enabled' : 'Disabled'}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'right', position: 'relative' }}>
                           <div style={{ display: 'inline-block', position: 'relative' }}>
                             <button
                               onClick={() => setOpenDropdownId(openDropdownId === tpl.id ? null : tpl.id)}
@@ -749,7 +769,8 @@ function SettingsContent() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    );
+                  })}
                   </tbody>
                 </table>
               </div>
@@ -923,15 +944,31 @@ function SettingsContent() {
                 />
               </div>
 
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem' }}>Reminder Time (Hours)</label>
-                <input
-                  type="text"
-                  value={editReminderHours}
-                  onChange={(e) => setEditReminderHours(e.target.value)}
-                  className="form-input"
-                  style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '10px 14px' }}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem' }}>Reminder Time (Hours)</label>
+                  <input
+                    type="text"
+                    value={editReminderHours}
+                    onChange={(e) => setEditReminderHours(e.target.value)}
+                    placeholder="e.g. 24 or N/A"
+                    className="form-input"
+                    style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '10px 14px' }}
+                  />
+                </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem' }}>Template Status *</label>
+                  <select
+                    value={editEnabled ? 'enabled' : 'disabled'}
+                    onChange={(e) => setEditEnabled(e.target.value === 'enabled')}
+                    className="form-input"
+                    style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '10px 14px', fontWeight: 600 }}
+                  >
+                    <option value="enabled">Enabled</option>
+                    <option value="disabled">Disabled</option>
+                  </select>
+                </div>
               </div>
 
               <div className="form-group" style={{ margin: 0 }}>

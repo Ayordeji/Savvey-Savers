@@ -145,52 +145,7 @@ export default function Sidebar({ user }: SidebarProps) {
       <nav className={styles.navSection}>
         {links.map((link) => {
           const Icon = link.icon;
-          const isActive = pathname === link.href || (link.isAccordion && pathname.startsWith(link.href));
-
-          if (link.isAccordion) {
-            return (
-              <div key={link.name} style={{ display: 'flex', flexDirection: 'column' }}>
-                <button
-                  type="button"
-                  onClick={() => setIsSettingsExpanded(!isSettingsExpanded)}
-                  className={`${styles.navItem} ${isActive ? styles.activeNavItem : ''}`}
-                  style={{ width: '100%', justifyContent: 'space-between', border: 'none', cursor: 'pointer', background: isActive ? undefined : 'transparent' }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Icon size={18} />
-                    <span>Setting</span>
-                  </div>
-                  {isSettingsExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
-
-                {isSettingsExpanded && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '36px', marginTop: '4px', marginBottom: '4px' }}>
-                    <Link
-                      href="/dashboard/settings?tab=security"
-                      className={`${styles.navItem}`}
-                      style={{ fontSize: '0.85rem', padding: '6px 12px', minHeight: 'auto', color: 'rgba(255, 255, 255, 0.75)' }}
-                    >
-                      <span>Security Question</span>
-                    </Link>
-                    <Link
-                      href="/dashboard/settings?tab=commitment"
-                      className={`${styles.navItem}`}
-                      style={{ fontSize: '0.85rem', padding: '6px 12px', minHeight: 'auto', color: 'rgba(255, 255, 255, 0.75)' }}
-                    >
-                      <span>Manage Commitment</span>
-                    </Link>
-                    <Link
-                      href="/dashboard/settings?tab=email-templates"
-                      className={`${styles.navItem}`}
-                      style={{ fontSize: '0.85rem', padding: '6px 12px', minHeight: 'auto', color: 'rgba(255, 255, 255, 0.75)' }}
-                    >
-                      <span>Email Template</span>
-                    </Link>
-                  </div>
-                )}
-              </div>
-            );
-          }
+          const isActive = pathname === link.href || pathname.startsWith(link.href);
 
           return (
             <Link
