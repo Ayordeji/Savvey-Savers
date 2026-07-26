@@ -640,6 +640,19 @@ export default function Home() {
                 </div>
               ) : (
                 <form onSubmit={handleWaitingList} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {waitError && (
+                    <div style={{
+                      backgroundColor: 'var(--status-error-bg)',
+                      color: 'var(--status-error)',
+                      border: '1px solid rgba(153, 27, 27, 0.2)',
+                      padding: '12px',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      marginBottom: '8px'
+                    }}>
+                      ⚠️ {waitError}
+                    </div>
+                  )}
                   <div className="form-group" style={{ margin: 0 }}>
                     <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Full Name</label>
                     <div style={{ position: 'relative' }}>

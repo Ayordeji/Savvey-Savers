@@ -78,34 +78,36 @@ export async function POST(request: Request) {
       referredBy: referredBy || undefined,
     });
 
-    // Create notifications for all admins
-    const admins = await db.users.findMany((u) => u.role === 'ADMIN');
-    for (const admin of admins) {
-      await db.notifications.create({
-        userId: admin.id,
-        message: `New prospect ${name} signed up on the waiting list. Intended amount: £${commitmentVal}.`,
-        type: 'WAITING_LIST_SIGNUP',
-        isRead: false,
-      });
+    // Create notifications for all admins and audit log (non-blocking side-effects)
+    try {
+      const admins = await db.users.findMany((u) => u.role === 'ADMIN');
+      for (const admin of admins) {
+        try {
+          await db.notifications.create({
+            userId: admin.id,
+            message: `New prospect ${name} signed up on the waiting list. Intended amount: £${commitmentVal}.`,
+            type: 'WAITING_LIST_SIGNUP',
+            isRead: false,
+          });
 
-      // Send email notification to administrators
-      try {
-        await sendEmail({
-          to: admin.email,
-          subject: 'Savvey Savers - New Waiting List Signup',
-          body: `Hello ${admin.name},\n\nA new prospect has registered on the Savvey Savers waiting list.\n\nDetails:\n- Name: ${name}\n- Email: ${email}\n- Phone: ${phone}\n- Intended Monthly Savings: £${commitmentVal}\n${referredBy ? `- Referred By: ${referredBy}\n` : ''}\nYou can review and approve this signup inside your coordinator dashboard.\n\nBest regards,\nSavvey Savers Team`
-        });
-      } catch (mailErr) {
-        console.warn(`Admin notification email failed for ${admin.email}:`, mailErr);
+          await sendEmail({
+            to: admin.email,
+            subject: 'Savvey Savers - New Waiting List Signup',
+            body: `Hello ${admin.name},\n\nA new prospect has registered on the Savvey Savers waiting list.\n\nDetails:\n- Name: ${name}\n- Email: ${email}\n- Phone: ${phone}\n- Intended Monthly Savings: £${commitmentVal}\n${referredBy ? `- Referred By: ${referredBy}\n` : ''}\nYou can review and approve this signup inside your coordinator dashboard.\n\nBest regards,\nSavvey Savers Team`
+          });
+        } catch (adminErr) {
+          console.warn(`Failed notification for admin ${admin.email}:`, adminErr);
+        }
       }
-    }
 
-    // Audit Log
-    await db.auditLogs.create({
-      action: 'WAITING_LIST_ADD',
-      details: `Prospect ${name} (${email}) added to waiting list.`,
-      userId: 'system',
-    });
+      await db.auditLogs.create({
+        action: 'WAITING_LIST_ADD',
+        details: `Prospect ${name} (${email}) added to waiting list.`,
+        userId: 'system',
+      });
+    } catch (sideEffectErr) {
+      console.warn('Waiting list side-effects warning:', sideEffectErr);
+    }
 
     return NextResponse.json({
       success: true,
