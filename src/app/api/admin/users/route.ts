@@ -497,6 +497,15 @@ export async function DELETE(request: Request) {
         continue;
       }
 
+      // Check if user has ANY savings commitment - disallow deletion
+      const userCommitments = await db.commitments.findMany((c) => c.memberId === id);
+      if (userCommitments.length > 0) {
+        return NextResponse.json(
+          { error: "This user have a already a saving commitment" },
+          { status: 400 }
+        );
+      }
+
       // Archive / Move to deleted records
       await db.deletedRecords.create({
         type: 'USER',

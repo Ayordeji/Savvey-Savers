@@ -659,15 +659,21 @@ export default function ManageUsersPage() {
         method: 'DELETE',
       });
 
+      const data = await res.json();
+
       if (res.ok) {
         fetchUsers();
         setActiveModal('NONE');
       } else {
-        const data = await res.json();
-        setErrorMsg(data.error || 'Failed to delete user.');
+        setActiveModal('NONE');
+        await dialog.alert(
+          'Oops...',
+          data.error || 'This user have a already a saving commitment'
+        );
       }
     } catch (err) {
-      setErrorMsg('A network error occurred.');
+      setActiveModal('NONE');
+      await dialog.alert('Oops...', 'This user have a already a saving commitment');
     } finally {
       setFormSubmitting(false);
     }
@@ -702,16 +708,22 @@ export default function ManageUsersPage() {
         method: 'DELETE',
       });
 
+      const data = await res.json();
+
       if (res.ok) {
         setSelectedUserIds([]);
         fetchUsers();
         setActiveModal('NONE');
       } else {
-        const data = await res.json();
-        setErrorMsg(data.error || 'Failed to delete selected users.');
+        setActiveModal('NONE');
+        await dialog.alert(
+          'Oops...',
+          data.error || 'This user have a already a saving commitment'
+        );
       }
     } catch (err) {
-      setErrorMsg('A network error occurred.');
+      setActiveModal('NONE');
+      await dialog.alert('Oops...', 'This user have a already a saving commitment');
     } finally {
       setIsBulkDeleting(false);
     }

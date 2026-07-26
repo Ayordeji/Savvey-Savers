@@ -357,18 +357,10 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
         </div>
       </header>
 
-      {/* TABLET & MOBILE NAVIGATION CARD (Matching Screenshot exactly, visible on screens < 1024px) */}
+      {/* TABLET & MOBILE NAVIGATION CARD (Matching Screenshot, visible on screens < 1024px) */}
       <div className="mobile-header-navigation-card">
-        {/* Row 1: Hamburger Menu, Site Title, Notifications Bell + Profile Icon */}
+        {/* Row 1: Site Title, Notifications Bell + Profile Icon */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '14px' }}>
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
-            style={{ background: 'none', border: 'none', color: '#1e293b', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
-            aria-label="Toggle navigation menu"
-          >
-            <Menu size={26} />
-          </button>
-
           <span style={{ fontSize: '1.15rem', fontWeight: 700, color: '#1e293b', fontFamily: 'var(--font-family-title)', letterSpacing: '-0.01em' }}>
             Savvey Savers Networks
           </span>
