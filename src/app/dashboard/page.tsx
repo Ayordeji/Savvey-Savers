@@ -146,205 +146,196 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-      {/* Summary Cards Grid (6 items on 1 row for desktop) */}
+      {/* Summary Cards Grid */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-        gap: '12px',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: '16px',
         width: '100%'
       }} className="dashboard-cards-grid">
-        {/* Card 1: Pending Payments */}
+        {/* Card: Revenue to date / Total Revenue */}
         <div style={{
-          backgroundColor: '#ffffff',
-          border: '1px solid #f3f4f6',
+          backgroundColor: '#000000',
+          border: '1px solid #1f2937',
           borderRadius: '16px',
-          padding: '24px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)',
+          padding: '24px 28px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
           display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '140px'
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: '20px',
+          minHeight: '130px',
+          color: '#ffffff'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              PENDING PAYMENTS
-            </span>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '50%',
-              backgroundColor: 'rgba(245, 158, 11, 0.08)', color: '#d97706',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
-              <Clock size={16} />
-            </div>
+          <div style={{
+            width: '52px', height: '52px', borderRadius: '12px',
+            backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+          }}>
+            <TrendingUp size={28} />
           </div>
-          <div style={{ marginTop: '12px' }}>
-            <h3 style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#111827', margin: 0 }}>
-              £{pendingPaymentsAmount.toFixed(2)}
-            </h3>
-            <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, display: 'block', marginTop: '4px' }}>
-              Awaiting Confirmation ({selectedYear})
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+              Revenue to date
             </span>
+            <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+              £{totalRevenue.toFixed(2)}
+            </h3>
           </div>
         </div>
 
-        {/* Card: Unconfirmed Payments */}
+        {/* Card: Unconfirmed Payments / Payments not yet Confirmed */}
         <div style={{
-          backgroundColor: '#ffffff',
-          border: '1px solid #f3f4f6',
+          backgroundColor: '#000000',
+          border: '1px solid #1f2937',
           borderRadius: '16px',
-          padding: '24px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)',
+          padding: '24px 28px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
           display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '140px'
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: '20px',
+          minHeight: '130px',
+          color: '#ffffff'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              UNCONFIRMED PAYMENTS
-            </span>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '50%',
-              backgroundColor: 'rgba(239, 68, 68, 0.08)', color: '#dc2626',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
-              <AlertCircle size={16} />
-            </div>
+          <div style={{
+            width: '52px', height: '52px', borderRadius: '12px',
+            backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+          }}>
+            <Users size={28} />
           </div>
-          <div style={{ marginTop: '12px' }}>
-            <h3 style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#111827', margin: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+              Payments not yet Confirmed
+            </span>
+            <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
               {totalPaymentsCount - confirmedPaymentsCount} / {totalPaymentsCount}
             </h3>
-            <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, display: 'block', marginTop: '4px' }}>
-              Pending Admin Verification ({selectedYear})
-            </span>
           </div>
         </div>
 
-        {/* Card 2: Payments Confirmed */}
+        {/* Card: Pending Payments */}
         <div style={{
-          backgroundColor: '#ffffff',
-          border: '1px solid #f3f4f6',
+          backgroundColor: '#000000',
+          border: '1px solid #1f2937',
           borderRadius: '16px',
-          padding: '24px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)',
+          padding: '24px 28px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
           display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '140px'
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: '20px',
+          minHeight: '130px',
+          color: '#ffffff'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              PAYMENTS CONFIRMED
-            </span>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '50%',
-              backgroundColor: 'rgba(221, 107, 32, 0.08)', color: '#c2410c',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
-              <CheckCircle size={16} />
-            </div>
+          <div style={{
+            width: '52px', height: '52px', borderRadius: '12px',
+            backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+          }}>
+            <Clock size={28} />
           </div>
-          <div style={{ marginTop: '12px' }}>
-            <h3 style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#111827', margin: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+              Pending Payments
+            </span>
+            <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+              £{pendingPaymentsAmount.toFixed(2)}
+            </h3>
+          </div>
+        </div>
+
+        {/* Card: Payments Confirmed */}
+        <div style={{
+          backgroundColor: '#000000',
+          border: '1px solid #1f2937',
+          borderRadius: '16px',
+          padding: '24px 28px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: '20px',
+          minHeight: '130px',
+          color: '#ffffff'
+        }}>
+          <div style={{
+            width: '52px', height: '52px', borderRadius: '12px',
+            backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+          }}>
+            <CheckCircle size={28} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+              Payments Confirmed
+            </span>
+            <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
               {confirmedPaymentsCount} / {totalPaymentsCount}
             </h3>
           </div>
         </div>
 
-        {/* Card 3: Harvests Released */}
+        {/* Card: Harvests Released */}
         <div style={{
-          backgroundColor: '#ffffff',
-          border: '1px solid #f3f4f6',
+          backgroundColor: '#000000',
+          border: '1px solid #1f2937',
           borderRadius: '16px',
-          padding: '24px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)',
+          padding: '24px 28px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
           display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '140px'
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: '20px',
+          minHeight: '130px',
+          color: '#ffffff'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              HARVESTS RELEASED
-            </span>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '50%',
-              backgroundColor: 'rgba(221, 107, 32, 0.08)', color: '#c2410c',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
-              <Gift size={16} />
-            </div>
+          <div style={{
+            width: '52px', height: '52px', borderRadius: '12px',
+            backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+          }}>
+            <Gift size={28} />
           </div>
-          <div style={{ marginTop: '12px' }}>
-            <h3 style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#111827', margin: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+              Harvests Released
+            </span>
+            <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
               {completedCommitmentsCount} of {totalCommitmentsCount}
             </h3>
           </div>
         </div>
 
-        {/* Card 4: Active vs Invited */}
+        {/* Card: Active vs Invited */}
         <div style={{
-          backgroundColor: '#ffffff',
-          border: '1px solid #f3f4f6',
+          backgroundColor: '#000000',
+          border: '1px solid #1f2937',
           borderRadius: '16px',
-          padding: '24px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)',
+          padding: '24px 28px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
           display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '140px'
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: '20px',
+          minHeight: '130px',
+          color: '#ffffff'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              ACTIVE VS INVITED
-            </span>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '50%',
-              backgroundColor: 'rgba(221, 107, 32, 0.08)', color: '#c2410c',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
-              <Users size={16} />
-            </div>
+          <div style={{
+            width: '52px', height: '52px', borderRadius: '12px',
+            backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+          }}>
+            <Users size={28} />
           </div>
-          <div style={{ marginTop: '12px' }}>
-            <h3 style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#111827', margin: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+              Active vs Invited
+            </span>
+            <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
               {isAdmin ? `${activeUsersCount} / ${invitedUsersCount}` : '2 / 2'}
             </h3>
-          </div>
-        </div>
-
-        {/* Card 5: Total Revenue */}
-        <div style={{
-          backgroundColor: '#ffffff',
-          border: '1px solid #f3f4f6',
-          borderRadius: '16px',
-          padding: '24px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '140px'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              TOTAL REVENUE
-            </span>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '50%',
-              backgroundColor: 'rgba(221, 107, 32, 0.08)', color: '#c2410c',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
-              <TrendingUp size={16} />
-            </div>
-          </div>
-          <div style={{ marginTop: '12px' }}>
-            <h3 style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#111827', margin: 0 }}>
-              £{totalRevenue.toFixed(2)}
-            </h3>
-            <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, display: 'block', marginTop: '4px' }}>
-              All time
-            </span>
           </div>
         </div>
       </div>

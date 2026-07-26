@@ -240,7 +240,7 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#334155' }}>
                 <UserIcon size={18} />
               </div>
-              <span>
+              <span className="hidden-mobile">
                 {user.name} ({cleanDisplayId})
               </span>
               <ChevronDown size={16} style={{ color: '#64748b', transition: 'transform 0.2s', transform: showUserDropdown ? 'rotate(180deg)' : 'rotate(0)' }} />
