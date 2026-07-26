@@ -269,178 +269,209 @@ function ActivationContent() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', backgroundColor: '#ffffff', fontFamily: 'sans-serif' }}>
-      {/* Left side hero graph banner matching screenshot */}
-      <div style={{
-        flex: 1.1,
-        backgroundImage: 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4)), url("https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=1200&auto=format&fit=crop")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-end',
-        padding: '60px',
-        color: '#ffffff'
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'var(--bg-main)',
+      padding: '32px 16px',
+      fontFamily: 'var(--font-family-body)',
+      color: 'var(--text-main)'
+    }}>
+      <div className="glass-panel" style={{
+        maxWidth: '560px',
+        width: '100%',
+        padding: '36px 32px',
+        borderRadius: '24px',
+        backgroundColor: 'var(--bg-surface)',
+        boxShadow: 'var(--shadow-lg)'
       }}>
-        <h2 style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '12px', lineHeight: 1.2 }}>
-          Savvey Savers Collective Member Portal
-        </h2>
-        <p style={{ fontSize: '1.05rem', opacity: 0.9, maxWidth: '500px', lineHeight: 1.5 }}>
-          Build wealth through a trusted peer-to-peer savings community.
-        </p>
-      </div>
+        {/* Logo Header */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px', textAlign: 'center' }}>
+          <img
+            src="/logo_new-removebg-preview.png"
+            alt="Savvey Savers"
+            style={{ width: '54px', height: '54px', objectFit: 'contain', marginBottom: '12px' }}
+          />
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: 'var(--text-main)', margin: 0 }}>
+            {step === 1 ? 'Create Your Account' : 'Setup Password & Security'}
+          </h2>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+            Step {step} of 2 • Savvey Savers Invitation Activation
+          </span>
+        </div>
 
-      {/* Right side form container */}
-      <div style={{ flex: 1, padding: '40px 60px', overflowY: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <div style={{ maxWidth: '440px', margin: '0 auto', width: '100%' }}>
-          {/* Logo Header */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '28px' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px', boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)' }}>
-              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-3.5c1-.5 1.5-1 2.5-2.5 1.5-2.5.5-6-1.5-6.5z" />
-                <path d="M16 10h.01" />
-              </svg>
-            </div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b' }}>
-              {step === 1 ? 'Register Your Account' : 'Setup Password'}
-            </h2>
+        {error && (
+          <div style={{ backgroundColor: 'var(--status-error-bg)', color: 'var(--status-error)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '12px 16px', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '20px', fontWeight: 500 }}>
+            {error}
           </div>
+        )}
 
-          {error && (
-            <div style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', padding: '12px 16px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '20px', fontWeight: 500 }}>
-              {error}
+        {success ? (
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <CheckCircle2 size={56} style={{ color: 'var(--status-completed)', margin: '0 auto 16px' }} />
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px' }}>
+              Account Setup Complete!
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              Redirecting to your Savings Commitments dashboard...
+            </p>
+          </div>
+        ) : step === 1 ? (
+          /* STEP 1: ACCOUNT REGISTRATION FORM */
+          <form onSubmit={handleStep1Submit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+              <div>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>First Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="First Name"
+                  className="form-input"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', backgroundColor: 'var(--bg-main)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }}
+                />
+              </div>
+
+              <div>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Last Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Last Name"
+                  className="form-input"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', backgroundColor: 'var(--bg-main)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }}
+                />
+              </div>
             </div>
-          )}
 
-          {success ? (
-            <div style={{ textAlign: 'center', padding: '30px 0' }}>
-              <CheckCircle2 size={56} style={{ color: '#10b981', margin: '0 auto 16px' }} />
-              <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>
-                Account Setup Complete!
-              </h3>
-              <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
-                Redirecting to your Savings Commitments dashboard...
-              </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+              <div>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Phone Number *</label>
+                <input
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+44 7700 900022"
+                  className="form-input"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', backgroundColor: 'var(--bg-main)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }}
+                />
+              </div>
+
+              <div>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Email Address</label>
+                <input
+                  type="email"
+                  disabled
+                  value={email}
+                  className="form-input"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', backgroundColor: 'var(--bg-main)', borderColor: 'var(--border-color)', color: 'var(--text-muted)', cursor: 'not-allowed' }}
+                />
+              </div>
             </div>
-          ) : step === 1 ? (
-            /* STEP 1: ACCOUNT REGISTRATION FORM (Matching Screenshot 1 & 3) */
-            <form onSubmit={handleStep1Submit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <input
-                type="text"
-                required
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="First Name *"
-                className="form-input"
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontSize: '0.9rem' }}
-              />
 
-              <input
-                type="text"
-                required
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="Last Name *"
-                className="form-input"
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontSize: '0.9rem' }}
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+              <div>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Address Line 1</label>
+                <input
+                  type="text"
+                  value={addressLine1}
+                  onChange={(e) => setAddressLine1(e.target.value)}
+                  placeholder="Address Line 1"
+                  className="form-input"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', backgroundColor: 'var(--bg-main)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }}
+                />
+              </div>
 
-              <input
-                type="tel"
-                required
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Phone Number *"
-                className="form-input"
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontSize: '0.9rem' }}
-              />
+              <div>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Address Line 2</label>
+                <input
+                  type="text"
+                  value={addressLine2}
+                  onChange={(e) => setAddressLine2(e.target.value)}
+                  placeholder="Address Line 2"
+                  className="form-input"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', backgroundColor: 'var(--bg-main)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }}
+                />
+              </div>
+            </div>
 
-              <input
-                type="email"
-                disabled
-                value={email}
-                placeholder="Email Address"
-                className="form-input"
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#f1f5f9', color: '#64748b', fontSize: '0.9rem', cursor: 'not-allowed' }}
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+              <div>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>City</label>
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="City"
+                  className="form-input"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', backgroundColor: 'var(--bg-main)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }}
+                />
+              </div>
 
-              <input
-                type="text"
-                value={addressLine1}
-                onChange={(e) => setAddressLine1(e.target.value)}
-                placeholder="Address Line 1"
-                className="form-input"
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontSize: '0.9rem' }}
-              />
+              <div>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Post Code *</label>
+                <input
+                  type="text"
+                  required
+                  value={postCode}
+                  onChange={(e) => setPostCode(e.target.value)}
+                  placeholder="Post Code"
+                  className="form-input"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', backgroundColor: 'var(--bg-main)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }}
+                />
+              </div>
+            </div>
 
-              <input
-                type="text"
-                value={addressLine2}
-                onChange={(e) => setAddressLine2(e.target.value)}
-                placeholder="Address Line 2"
-                className="form-input"
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontSize: '0.9rem' }}
-              />
-
-              <input
-                type="text"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="City"
-                className="form-input"
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontSize: '0.9rem' }}
-              />
-
-              <input
-                type="text"
-                required
-                value={postCode}
-                onChange={(e) => setPostCode(e.target.value)}
-                placeholder="Post Code *"
-                className="form-input"
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontSize: '0.9rem' }}
-              />
-
+            <div>
+              <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Country</label>
               <input
                 type="text"
                 disabled
                 value="UNITED KINGDOM"
                 className="form-input"
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#f1f5f9', color: '#64748b', fontSize: '0.9rem', fontWeight: 600, cursor: 'not-allowed' }}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', backgroundColor: 'var(--bg-main)', borderColor: 'var(--border-color)', color: 'var(--text-muted)', fontWeight: 600, cursor: 'not-allowed' }}
               />
+            </div>
 
-              {/* Terms & Conditions Checkbox (Mandatory) */}
-              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginTop: '6px', cursor: 'pointer', fontSize: '0.8rem', color: '#475569', lineHeight: 1.4 }}>
-                <input
-                  type="checkbox"
-                  checked={acceptedTerms}
-                  onChange={(e) => setAcceptedTerms(e.target.checked)}
-                  style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: '#10b981', cursor: 'pointer' }}
-                />
-                <span>
-                  By clicking this button, You accept the{' '}
-                  <span
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setShowAgreementModal(true);
-                    }}
-                    style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 600, cursor: 'pointer' }}
-                  >
-                    Terms & Conditions
-                  </span>{' '}
-                  of this website
-                </span>
-              </label>
+            {/* Terms & Conditions Checkbox */}
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginTop: '6px', cursor: 'pointer', fontSize: '0.82rem', color: 'var(--text-main)', lineHeight: 1.4 }}>
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+              />
+              <span>
+                I accept the{' '}
+                <span
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowAgreementModal(true);
+                  }}
+                  style={{ color: 'var(--primary)', textDecoration: 'underline', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Membership Terms & Conditions
+                </span>{' '}
+                of Savvey Savers Network Limited
+              </span>
+            </label>
 
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{ width: '100%', backgroundColor: '#1e293b', color: '#ffffff', padding: '12px', borderRadius: '8px', fontWeight: 600, fontSize: '0.95rem', marginTop: '10px', border: 'none', cursor: 'pointer' }}
-              >
-                Create My Account
-              </button>
-            </form>
-          ) : (
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', fontWeight: 600, fontSize: '0.95rem', marginTop: '8px', cursor: 'pointer' }}
+            >
+              Proceed to Security Setup
+            </button>
+          </form>
+        ) : (
             /* STEP 2: SETUP PASSWORD & SECURITY QUESTIONS FORM (Matching Screenshot 2) */
             <form onSubmit={handleStep2Submit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div className="form-group" style={{ margin: 0 }}>
@@ -560,7 +591,6 @@ function ActivationContent() {
             </form>
           )}
         </div>
-      </div>
 
       {/* --- TERMS & CONDITIONS MODAL OVERLAY --- */}
       {showAgreementModal && (
