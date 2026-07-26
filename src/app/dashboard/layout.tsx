@@ -7,7 +7,7 @@ import HeaderTitle from './HeaderTitle';
 import DashboardTransitionLoader from './TransitionLoader';
 import styles from './layout.module.css';
 import Link from 'next/link';
-import { Bell } from 'lucide-react';
+import GlobalHeader from './GlobalHeader';
 
 export default async function DashboardLayout({
   children,
@@ -49,22 +49,17 @@ export default async function DashboardLayout({
       }} />
 
       <main className={styles.mainContent}>
-        <header className={styles.headerBar}>
-          <HeaderTitle />
-          <div className={styles.headerActions}>
-            <Link
-              href="/dashboard/notifications"
-              className={styles.notificationBell}
-            >
-              <Bell size={20} />
-              {unreadCount > 0 && (
-                <span className={styles.notificationBadge}>
-                  {unreadCount}
-                </span>
-              )}
-            </Link>
-          </div>
-        </header>
+        <GlobalHeader
+          user={{
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            membership: user.membership,
+            displayId: (user as any).displayId || user.id
+          }}
+          unreadCount={unreadCount}
+        />
 
         <div className={styles.pageBody}>
           {children}

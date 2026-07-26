@@ -738,14 +738,11 @@ export default function Home() {
                   </div>
 
                   <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Target Monthly Savings (£)</label>
-                    <input
-                      type="number"
+                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>What is your monthly savings goal?</label>
+                    <select
                       required
-                      min="1"
                       value={waitAmount}
                       onChange={(e) => setWaitAmount(e.target.value)}
-                      placeholder="300"
                       className="form-input"
                       style={{
                         paddingLeft: '14px',
@@ -754,7 +751,14 @@ export default function Home() {
                         color: 'var(--text-main)',
                         borderRadius: 'var(--radius-md)'
                       }}
-                    />
+                    >
+                      <option value="">Select target amount...</option>
+                      <option value="250">£250</option>
+                      <option value="500">£500</option>
+                      <option value="750">£750</option>
+                      <option value="1000">£1000</option>
+                      <option value="1000+">£1000+</option>
+                    </select>
                   </div>
 
                   <div className="form-group" style={{ margin: 0 }}>

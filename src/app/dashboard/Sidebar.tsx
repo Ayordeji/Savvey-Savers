@@ -145,7 +145,9 @@ export default function Sidebar({ user }: SidebarProps) {
       <nav className={styles.navSection}>
         {links.map((link) => {
           const Icon = link.icon;
-          const isActive = pathname === link.href || pathname.startsWith(link.href);
+          const isActive = link.href === '/dashboard' 
+            ? pathname === '/dashboard' 
+            : pathname === link.href || pathname.startsWith(link.href + '/');
 
           return (
             <Link

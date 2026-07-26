@@ -682,7 +682,7 @@ export default function SavingsCommitmentsPage() {
 
       {/* --- ADD COMMITMENT MODAL --- */}
       {activeModal === 'ADD' && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content">
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
               <X size={20} />
@@ -755,24 +755,14 @@ export default function SavingsCommitmentsPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-                {currentUser?.role === 'ADMIN' && (
-                  <button
-                    onClick={() => handleAddSubmit(false)}
-                    disabled={formSubmitting}
-                    className="btn btn-secondary"
-                    style={{ flex: 1 }}
-                  >
-                    Save Record
-                  </button>
-                )}
+              <div style={{ marginTop: '12px' }}>
                 <button
                   onClick={() => handleAddSubmit(true)}
                   disabled={formSubmitting}
                   className="btn btn-primary"
-                  style={{ flex: 1.2 }}
+                  style={{ width: '100%', padding: '12px 24px', fontWeight: 600 }}
                 >
-                  Request Collection Month
+                  {formSubmitting ? 'Submitting...' : 'Request Collection Month'}
                 </button>
               </div>
             </div>
@@ -780,9 +770,9 @@ export default function SavingsCommitmentsPage() {
         </div>
       )}
 
-      {/* --- SEND REMINDER MODAL --- */}
+      {/* --- DISPATCH REMINDER MODAL --- */}
       {activeModal === 'REMINDER' && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content">
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
               <X size={20} />
@@ -853,7 +843,7 @@ export default function SavingsCommitmentsPage() {
 
       {/* --- RECORD PAST PAYMENT MODAL --- */}
       {activeModal === 'PAST_PAYMENT' && selectedCmt && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content">
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
               <X size={20} />
@@ -936,7 +926,7 @@ export default function SavingsCommitmentsPage() {
 
       {/* --- EDIT COMMITMENT MODAL --- */}
       {activeModal === 'EDIT' && selectedCmt && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content">
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
               <X size={20} />

@@ -941,7 +941,7 @@ export default function ManageUsersPage() {
 
       {/* --- ADD MEMBER MODAL --- */}
       {activeModal === 'ADD' && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content" style={{ maxWidth: '540px' }}>
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
               <X size={20} />
@@ -1056,7 +1056,7 @@ export default function ManageUsersPage() {
 
       {/* --- EDIT MEMBER MODAL --- */}
       {activeModal === 'EDIT' && selectedUser && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content" style={{ maxWidth: '540px' }}>
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
               <X size={20} />
@@ -1244,7 +1244,7 @@ export default function ManageUsersPage() {
 
       {/* --- VIEW MEMBERSHIP FEE MODAL --- */}
       {(activeModal === 'VIEW' || activeModal === 'MEMBERSHIP_DETAILS') && selectedUser && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content" style={{ maxWidth: '780px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px', maxHeight: '90vh', overflowY: 'auto' }}>
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
@@ -1421,7 +1421,7 @@ export default function ManageUsersPage() {
 
       {/* --- REQUEST FOR MEMBERSHIP FEE MODAL --- */}
       {activeModal === 'REQUEST_FEE' && selectedUser && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content" style={{ maxWidth: '500px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
@@ -1546,7 +1546,7 @@ export default function ManageUsersPage() {
 
       {/* --- CONFIRM FOR MEMBERSHIP FEE FORM MODAL --- */}
       {activeModal === 'CONFIRM_FEE_FORM' && selectedUser && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content" style={{ maxWidth: '480px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
@@ -1727,7 +1727,7 @@ export default function ManageUsersPage() {
 
       {/* --- MEMBERSHIP AGREEMENT MODAL --- */}
       {activeModal === 'AGREEMENT' && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content" style={{ maxWidth: '600px' }}>
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
               <X size={20} />
@@ -1769,7 +1769,7 @@ export default function ManageUsersPage() {
 
       {/* --- FEE SCHEDULE MODAL --- */}
       {activeModal === 'SCHEDULE' && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content" style={{ maxWidth: '540px' }}>
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
               <X size={20} />
@@ -1825,7 +1825,7 @@ export default function ManageUsersPage() {
 
       {/* --- REVIEWS MODAL --- */}
       {activeModal === 'REVIEWS' && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content" style={{ maxWidth: '500px' }}>
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
               <X size={20} />
