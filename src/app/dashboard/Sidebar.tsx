@@ -51,7 +51,6 @@ export default function Sidebar({ user }: SidebarProps) {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Manage Users', href: '/dashboard/users', icon: Users },
     { name: 'Savings Commitments', href: '/dashboard/commitments', icon: PiggyBank },
-    { name: 'Submitted Requests', href: '/dashboard/requests', icon: FileSpreadsheet },
     { name: 'Waiting List', href: '/dashboard/waiting-list', icon: UserCheck },
     { name: 'Deleted Records', href: '/dashboard/deleted-records', icon: Trash2 },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings, isAccordion: true },

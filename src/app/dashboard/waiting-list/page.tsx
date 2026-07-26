@@ -193,7 +193,7 @@ export default function WaitingListPage() {
 
       {/* --- CONVERT MODAL --- */}
       {convertModalOpen && selectedEntry && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setConvertModalOpen(false); }}>
           <div className="modal-content">
             <button onClick={() => setConvertModalOpen(false)} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
               <X size={20} />

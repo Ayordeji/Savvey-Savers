@@ -1643,7 +1643,7 @@ export default function ManageUsersPage() {
 
       {/* --- CONFIRM MEMBERSHIP FEE POPUP MODAL --- */}
       {activeModal === 'CONFIRM_FEE_POPUP' && selectedUser && (
-        <div className="modal-overlay" style={{ zIndex: 10000 }}>
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }} style={{ zIndex: 10000 }}>
           <div className="modal-content" style={{ maxWidth: '420px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '36px 28px', textAlign: 'center', position: 'relative' }}>
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
@@ -1685,7 +1685,7 @@ export default function ManageUsersPage() {
 
       {/* --- PAYMENT REMINDER CONFIRMATION POPUP MODAL --- */}
       {activeModal === 'REMIND_FEE_POPUP' && selectedUser && (
-        <div className="modal-overlay" style={{ zIndex: 10000 }}>
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }} style={{ zIndex: 10000 }}>
           <div className="modal-content" style={{ maxWidth: '420px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '36px 28px', textAlign: 'center', position: 'relative' }}>
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />

@@ -781,7 +781,7 @@ function SettingsContent() {
 
       {/* --- TOP BANNER MODALS --- */}
       {activeTopModal === 'AGREEMENT' && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveTopModal('NONE'); }}>
           <div className="modal-content" style={{ maxWidth: '650px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
             <button onClick={() => setActiveTopModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
@@ -818,7 +818,7 @@ function SettingsContent() {
       )}
 
       {activeTopModal === 'FEE_SCHEDULE' && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveTopModal('NONE'); }}>
           <div className="modal-content" style={{ maxWidth: '650px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
             <button onClick={() => setActiveTopModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
@@ -855,7 +855,7 @@ function SettingsContent() {
       )}
 
       {activeTopModal === 'REVIEWS' && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveTopModal('NONE'); }}>
           <div className="modal-content" style={{ maxWidth: '550px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
             <button onClick={() => setActiveTopModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
@@ -881,7 +881,7 @@ function SettingsContent() {
 
       {/* --- EMAIL TEMPLATE MODALS --- */}
       {activeEmailModal === 'VIEW' && selectedTemplate && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveEmailModal('NONE'); }}>
           <div className="modal-content" style={{ maxWidth: '600px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
             <button onClick={() => setActiveEmailModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
@@ -920,7 +920,7 @@ function SettingsContent() {
       )}
 
       {activeEmailModal === 'EDIT' && selectedTemplate && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveEmailModal('NONE'); }}>
           <div className="modal-content" style={{ maxWidth: '650px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
             <button onClick={() => setActiveEmailModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />

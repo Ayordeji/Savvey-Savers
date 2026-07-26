@@ -221,7 +221,7 @@ export default function NotificationsPage() {
 
       {/* --- NOTIFICATION DETAIL MODAL --- */}
       {selectedNotification && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setSelectedNotification(null); }}>
           <div className="modal-content" style={{ maxWidth: '500px' }}>
             <button onClick={() => setSelectedNotification(null)} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
               <X size={20} />

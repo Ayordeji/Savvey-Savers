@@ -134,11 +134,11 @@ export default function DeletedRecordsPage() {
                       <button
                         onClick={() => setSelectedRecord(r)}
                         className="btn btn-secondary btn-sm"
-                        style={{ padding: '6px 10px' }}
-                        title="View Full Metadata"
+                        style={{ padding: '6px 14px', gap: '6px', fontWeight: 600 }}
+                        title="View Deleted Record Entry"
                       >
                         <Eye size={14} />
-                        <span>Inspect Raw JSON</span>
+                        <span>View</span>
                       </button>
                     </td>
                   </tr>
@@ -149,60 +149,65 @@ export default function DeletedRecordsPage() {
         </div>
       )}
 
-      {/* Inspect Modal */}
+      {/* View Record Modal */}
       {selectedRecord && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '600px' }}>
-            <button onClick={() => setSelectedRecord(null)} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setSelectedRecord(null); }}>
+          <div className="modal-content" style={{ maxWidth: '600px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
+            <button onClick={() => setSelectedRecord(null)} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
             </button>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShieldAlert size={20} style={{ color: 'var(--status-pending)' }} />
-              <span>Inspect Archived Metadata</span>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)', display: 'flex', alignItems: 'center', gap: '8px', color: '#1e293b' }}>
+              <ShieldAlert size={20} style={{ color: '#f59e0b' }} />
+              <span>View Deleted Record Entry</span>
             </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
-              Read-only metadata captured at deletion time for record {selectedRecord.id}.
+            <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '20px' }}>
+              Details of the entry deleted from the system.
             </p>
 
             <div style={{ marginBottom: '16px' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>
-                Archive Properties
+              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
+                Archive Information
               </div>
-              <table style={{ width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse' }}>
+              <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
                 <tbody>
-                  <tr style={{ borderBottom: '1px solid var(--border-color)' }}><td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Archive ID</td><td style={{ fontFamily: 'monospace' }}>{selectedRecord.id}</td></tr>
-                  <tr style={{ borderBottom: '1px solid var(--border-color)' }}><td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Record Type</td><td>{selectedRecord.type}</td></tr>
-                  <tr style={{ borderBottom: '1px solid var(--border-color)' }}><td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Archived At</td><td>{formatDate(selectedRecord.deletedAt)}</td></tr>
+                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}><td style={{ padding: '8px 0', color: '#64748b', fontWeight: 600 }}>Record Type</td><td style={{ fontWeight: 600, color: '#1e293b' }}>{selectedRecord.type}</td></tr>
+                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}><td style={{ padding: '8px 0', color: '#64748b', fontWeight: 600 }}>Deleted At</td><td style={{ color: '#1e293b' }}>{formatDate(selectedRecord.deletedAt)}</td></tr>
                 </tbody>
               </table>
             </div>
 
             <div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '6px' }}>
-                Original Record Data
+              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
+                Record Details
               </div>
-              <pre style={{
-                maxHeight: '220px',
-                overflow: 'auto',
+              <div style={{
+                maxHeight: '260px',
+                overflowY: 'auto',
                 padding: '16px',
-                borderRadius: '6px',
-                backgroundColor: 'rgba(0,0,0,0.2)',
-                border: '1px solid var(--border-color)',
-                fontFamily: 'monospace',
-                fontSize: '0.8rem',
-                color: 'var(--text-main)',
-                lineHeight: 1.4
+                borderRadius: '8px',
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                fontSize: '0.875rem',
+                color: '#1e293b'
               }}>
-                {JSON.stringify(selectedRecord.originalData, null, 2)}
-              </pre>
+                {selectedRecord.originalData && typeof selectedRecord.originalData === 'object' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {Object.entries(selectedRecord.originalData).map(([key, val]) => (
+                      <div key={key} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #cbd5e1', paddingBottom: '4px' }}>
+                        <span style={{ fontWeight: 600, color: '#475569', textTransform: 'capitalize' }}>{key.replace(/([A-Z])/g, ' $1')}</span>
+                        <span style={{ color: '#0f172a', fontWeight: 500 }}>{typeof val === 'object' ? JSON.stringify(val) : String(val ?? 'N/A')}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span>{String(selectedRecord.originalData)}</span>
+                )}
+              </div>
             </div>
 
-            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', alignSelf: 'center' }}>
-                Purging or Restoring is locked in v1.0
-              </span>
-              <button onClick={() => setSelectedRecord(null)} className="btn btn-secondary btn-sm">
-                Close Inspector
+            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setSelectedRecord(null)} className="btn btn-secondary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}>
+                Close
               </button>
             </div>
           </div>

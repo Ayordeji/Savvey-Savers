@@ -757,12 +757,12 @@ export default function SavingsCommitmentsPage() {
 
               <div style={{ marginTop: '12px' }}>
                 <button
-                  onClick={() => handleAddSubmit(true)}
+                  onClick={() => handleAddSubmit(false)}
                   disabled={formSubmitting}
                   className="btn btn-primary"
                   style={{ width: '100%', padding: '12px 24px', fontWeight: 600 }}
                 >
-                  {formSubmitting ? 'Submitting...' : 'Request Collection Month'}
+                  {formSubmitting ? 'Saving...' : 'Save Record'}
                 </button>
               </div>
             </div>
