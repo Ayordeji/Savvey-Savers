@@ -216,12 +216,35 @@ export async function DELETE(request: Request) {
 
     const ids = idParam.split(',').map((id) => id.trim()).filter(Boolean);
 
-    for (const id of ids) {
-      const cmt = await db.commitments.findUnique({ where: { id } });
-      if (!cmt) continue;
+    for (const rawId of ids) {
+      // The GET endpoint transforms "cmt_XXXXXX" → "SCC-XXXXXX" for display.
+      // Reverse that so we always find the real Firestore document.
+      let resolvedId = rawId;
+      if (rawId.startsWith('SCC-')) {
+        const numPart = rawId.substring(4); // strip "SCC-"
+        // Try cmt_ prefix first (legacy format)
+        const legacyId = `cmt_${numPart}`;
+        const legacyDoc = await db.commitments.findUnique({ where: { id: legacyId } });
+        if (legacyDoc) {
+          resolvedId = legacyId;
+        }
+        // else keep as SCC- (native format from our migration import)
+      }
+
+      const cmt = await db.commitments.findUnique({ where: { id: resolvedId } });
+      if (!cmt) {
+        // Last-ditch: scan by querying all to find by the display id field or stored id
+        const all = await db.commitments.findMany();
+        const found = all.find((c: any) => c.id === rawId || c.id === resolvedId);
+        if (!found) continue;
+        resolvedId = found.id;
+      }
+
+      const finalCmt = await db.commitments.findUnique({ where: { id: resolvedId } });
+      if (!finalCmt) continue;
 
       const archivedData = {
-        ...cmt,
+        ...finalCmt,
         status: 'CANCELLED'
       };
 
@@ -231,11 +254,11 @@ export async function DELETE(request: Request) {
         deletedAt: new Date().toISOString()
       });
 
-      await db.commitments.delete({ where: { id } });
+      await db.commitments.delete({ where: { id: resolvedId } });
 
       await db.auditLogs.create({
         action: 'ADMIN_COMMITMENT_CANCEL',
-        details: `Admin deleted and archived savings commitment ${id} for member ${cmt.memberId}.`,
+        details: `Admin deleted and archived savings commitment ${resolvedId} for member ${finalCmt.memberId}.`,
         userId: session.id || 'usr_admin'
       });
     }
