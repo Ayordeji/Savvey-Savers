@@ -838,10 +838,10 @@ export default function ManageUsersPage() {
   });
 
   // Pagination
-  const USERS_PER_PAGE = 10;
+  const [usersPerPage, setUsersPerPage] = useState(10);
   const [usersPage, setUsersPage] = useState(1);
-  const totalUsersPages = Math.max(1, Math.ceil(filteredUsers.length / USERS_PER_PAGE));
-  const paginatedUsers = filteredUsers.slice((usersPage - 1) * USERS_PER_PAGE, usersPage * USERS_PER_PAGE);
+  const totalUsersPages = Math.max(1, Math.ceil(filteredUsers.length / usersPerPage));
+  const paginatedUsers = filteredUsers.slice((usersPage - 1) * usersPerPage, usersPage * usersPerPage);
 
   // Reset to page 1 when search changes
   const handleSearchChange = (val: string) => {
@@ -1123,10 +1123,32 @@ export default function ManageUsersPage() {
 
         {/* Pagination */}
         {filteredUsers.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px', padding: '0 4px', flexWrap: 'wrap', gap: '8px' }}>
-            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-              Showing {Math.min((usersPage - 1) * 10 + 1, filteredUsers.length)}–{Math.min(usersPage * 10, filteredUsers.length)} of {filteredUsers.length} member{filteredUsers.length !== 1 ? 's' : ''}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px', padding: '0 4px', flexWrap: 'wrap', gap: '12px' }}>
+            {/* Left: count + per-page selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                Showing {Math.min((usersPage - 1) * usersPerPage + 1, filteredUsers.length)}–{Math.min(usersPage * usersPerPage, filteredUsers.length)} of {filteredUsers.length} member{filteredUsers.length !== 1 ? 's' : ''}
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Per page:</span>
+                <select
+                  value={usersPerPage}
+                  onChange={(e) => { setUsersPerPage(Number(e.target.value)); setUsersPage(1); }}
+                  style={{
+                    padding: '4px 8px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600,
+                    border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)',
+                    color: 'var(--text-primary)', cursor: 'pointer', outline: 'none',
+                    appearance: 'auto'
+                  }}
+                >
+                  {[10, 20, 30, 40, 50].map(n => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Right: page navigation */}
             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
               <button
                 onClick={() => setUsersPage(p => Math.max(1, p - 1))}
