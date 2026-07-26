@@ -58,26 +58,40 @@ export async function POST(request: Request) {
     // Check if the user document exists in Firestore (primary lookup by UID)
     let user = await db.users.findUnique({ where: { id: uid } });
 
-    // Fallback: If not found by UID, lookup by email (e.g., if pre-seeded or invited)
+    // Fallback: If not found by UID, lookup by email (e.g., if pre-seeded, invited, or super admin)
     if (!user) {
-      user = await db.users.findFirst((u) => u.email.toLowerCase() === normalizedEmail);
-      if (user) {
-        // If found by email, update their document to use the Firebase UID as the document ID
-        await db.users.delete({ where: { id: user.id } });
-        user = await db.users.create({
-          ...user,
-          id: uid,
-          isActive: true
+      // 1. Try indexed email lookup
+      user = await db.users.findFirst({ where: { email: normalizedEmail } });
+
+      // 2. Try case-insensitive / trimmed email fallback scan
+      if (!user) {
+        user = await db.users.findFirst((u: any) => {
+          if (!u || !u.email || typeof u.email !== 'string') return false;
+          return u.email.toLowerCase().trim() === normalizedEmail;
         });
+      }
+
+      if (user) {
+        // If found by email but doc key differs from Firebase UID, migrate the doc to match Firebase Auth UID
+        if (user.id !== uid) {
+          await db.users.delete({ where: { id: user.id } });
+          user = await db.users.create({
+            ...user,
+            id: uid,
+            isActive: true
+          });
+        }
       }
     }
 
     let isNewUser = false;
  
-    // Auto-registration check: only allow pre-invited users or the default admin@savveysavers.com initializer
+    // Auto-registration check: allow super admin and default admin initializers
     if (!user) {
+      const isSuperAdminEmail = normalizedEmail === 'praisetechy001@gmail.com';
       const isDefaultAdmin = normalizedEmail === 'admin@savveysavers.com';
-      if (!isDefaultAdmin) {
+
+      if (!isSuperAdminEmail && !isDefaultAdmin) {
         return NextResponse.json(
           { error: 'Your email address is not registered on the platform. Please join the waiting list to request access.' },
           { status: 403 }
@@ -87,11 +101,23 @@ export async function POST(request: Request) {
       isNewUser = true;
       user = await db.users.create({
         id: uid,
-        name: reqName || tokenName || email.split('@')[0],
+        name: reqName || tokenName || (isSuperAdminEmail ? 'Praise' : 'Admin User'),
         email: normalizedEmail,
-        phone: reqPhone || '',
+        phone: reqPhone || (isSuperAdminEmail ? '+447000000000' : ''),
         role: 'ADMIN',
+        isSuperAdmin: isSuperAdminEmail,
         isActive: true,
+        membershipFeeConfirmed: true,
+        permissions: [
+          'DELETE_USER',
+          'EDIT_USER',
+          'VIEW_USER',
+          'MANAGE_COMMITMENTS',
+          'MANAGE_PAYMENTS',
+          'MANAGE_SETTINGS',
+          'VIEW_AUDIT_LOGS',
+          'SEND_NOTIFICATIONS',
+        ]
       });
  
       // System notification

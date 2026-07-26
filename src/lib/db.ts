@@ -161,6 +161,33 @@ class TableWrapper<T extends { id?: string; key?: string }> {
   // Emulates prisma.model.findMany()
   async findMany(arg?: ((item: T) => boolean) | { where?: any }): Promise<T[]> {
     try {
+      if (arg && typeof arg === 'object' && arg.where) {
+        const whereObj = arg.where;
+        const entries = Object.entries(whereObj);
+        if (entries.length > 0) {
+          let query: any = this.getRef();
+          let canUseIndexedQuery = true;
+
+          for (const [k, v] of entries) {
+            if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+              query = query.where(k, '==', v);
+            } else {
+              canUseIndexedQuery = false;
+              break;
+            }
+          }
+
+          if (canUseIndexedQuery) {
+            const querySnap = await query.get();
+            const items: T[] = [];
+            querySnap.forEach((doc: any) => {
+              items.push({ id: doc.id, ...doc.data() } as unknown as T);
+            });
+            return items;
+          }
+        }
+      }
+
       const snapshot = await this.getRef().get();
       const items: T[] = [];
       
