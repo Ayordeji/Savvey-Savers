@@ -1016,11 +1016,45 @@ export default function ManageUsersPage() {
               </div>
 
               <div className="form-group" style={{ margin: '0 0 16px 0' }}>
-                <label className="form-label">Select Role *</label>
-                <select value={formRole} onChange={(e) => setFormRole(e.target.value as 'ADMIN' | 'MEMBER')} className="form-select">
-                  <option value="MEMBER">Member (Saver)</option>
-                  <option value="ADMIN">Admin (Coordinator)</option>
+                <label className="form-label" style={{ fontWeight: 600, color: '#334155' }}>Select Role *</label>
+                <select value={formRole} onChange={(e) => setFormRole(e.target.value as any)} className="form-select" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                  <option value="MEMBER">Savers</option>
+                  <option value="ADMIN">Admin</option>
+                  <option value="SUPER_ADMIN">Super Admin</option>
                 </select>
+              </div>
+
+              {/* Permission Checklist (Matching User Screenshot) */}
+              <div style={{ marginTop: '12px', marginBottom: '16px' }}>
+                <label className="form-label" style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.95rem', marginBottom: '8px', display: 'block' }}>
+                  Permission
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#475569', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={formPermissions.includes('SETUP_ADMIN')} onChange={(e) => handlePermissionChange('SETUP_ADMIN', e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#1e293b' }} />
+                    <span>Setup Admin</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#475569', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={formPermissions.includes('INVITE_USER')} onChange={(e) => handlePermissionChange('INVITE_USER', e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#1e293b' }} />
+                    <span>Invite User</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#475569', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={formPermissions.includes('ASSIGN_UNAVAILABLE_MONTH')} onChange={(e) => handlePermissionChange('ASSIGN_UNAVAILABLE_MONTH', e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#1e293b' }} />
+                    <span>Assign Unavailable month to users</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#475569', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={formPermissions.includes('RECEIVE_UNAVAILABLE_APPROVAL')} onChange={(e) => handlePermissionChange('RECEIVE_UNAVAILABLE_APPROVAL', e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#1e293b' }} />
+                    <span>Receive Unavailable Month Approval Requests</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#475569', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={formPermissions.includes('SUSPEND_USER')} onChange={(e) => handlePermissionChange('SUSPEND_USER', e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#1e293b' }} />
+                    <span>Suspend User</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#475569', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={formPermissions.includes('DELETE_USER')} onChange={(e) => handlePermissionChange('DELETE_USER', e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#1e293b' }} />
+                    <span>Delete User</span>
+                  </label>
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
@@ -1028,7 +1062,7 @@ export default function ManageUsersPage() {
                   type="button"
                   onClick={() => setActiveModal('NONE')}
                   className="btn btn-secondary"
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px', fontWeight: 600 }}
                 >
                   Cancel
                 </button>
@@ -1036,15 +1070,15 @@ export default function ManageUsersPage() {
                   onClick={() => handleAddSubmit('SAVE')}
                   disabled={formSubmitting}
                   className="btn btn-secondary"
-                  style={{ flex: 1.2, borderColor: 'var(--border-color)' }}
+                  style={{ flex: 1.2, backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px', fontWeight: 600 }}
                 >
-                  Save Record
+                  Save
                 </button>
                 <button
                   onClick={() => handleAddSubmit('SAVE_INVITE')}
                   disabled={formSubmitting}
                   className="btn btn-primary"
-                  style={{ flex: 1.5, backgroundColor: 'var(--secondary)', color: 'white' }}
+                  style={{ flex: 1.5, backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px', fontWeight: 600 }}
                 >
                   Save & Invite
                 </button>
@@ -1870,6 +1904,98 @@ export default function ManageUsersPage() {
             <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
               <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary">
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- DELETE CONFIRMATION MODAL --- */}
+      {activeModal === 'DELETE_CONFIRM' && selectedUser && (
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
+          <div className="modal-content" style={{ maxWidth: '440px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px', textAlign: 'center', position: 'relative' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#fef2f2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <Trash2 size={28} />
+            </div>
+
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '8px', color: '#1e293b' }}>
+              Delete User Account
+            </h3>
+            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '20px', lineHeight: 1.5 }}>
+              Are you sure you want to delete <strong>{selectedUser.name}</strong> ({selectedUser.email})? This action will archive all user records.
+            </p>
+
+            {errorMsg && (
+              <div style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px', textAlign: 'left', fontWeight: 500 }}>
+                ⚠️ <strong>Deletion Restricted:</strong> {errorMsg}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={() => setActiveModal('NONE')}
+                className="btn btn-secondary"
+                style={{ flex: 1, backgroundColor: '#e2e8f0', color: '#475569', borderRadius: '8px', padding: '10px 20px', fontWeight: 600 }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteSubmit}
+                disabled={formSubmitting}
+                className="btn btn-primary"
+                style={{ flex: 1, backgroundColor: '#ef4444', color: '#ffffff', borderRadius: '8px', padding: '10px 20px', fontWeight: 600, border: 'none' }}
+              >
+                {formSubmitting ? 'Deleting...' : 'Delete User'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- BULK DELETE CONFIRMATION MODAL --- */}
+      {activeModal === 'BULK_DELETE_CONFIRM' && (
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
+          <div className="modal-content" style={{ maxWidth: '440px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px', textAlign: 'center', position: 'relative' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#fef2f2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <Trash2 size={28} />
+            </div>
+
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '8px', color: '#1e293b' }}>
+              Delete Selected Users ({selectedUserIds.length})
+            </h3>
+            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '20px', lineHeight: 1.5 }}>
+              Are you sure you want to delete {selectedUserIds.length} selected user accounts?
+            </p>
+
+            {errorMsg && (
+              <div style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px', textAlign: 'left', fontWeight: 500 }}>
+                ⚠️ <strong>Deletion Restricted:</strong> {errorMsg}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={() => setActiveModal('NONE')}
+                className="btn btn-secondary"
+                style={{ flex: 1, backgroundColor: '#e2e8f0', color: '#475569', borderRadius: '8px', padding: '10px 20px', fontWeight: 600 }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={isBulkDeleting}
+                className="btn btn-primary"
+                style={{ flex: 1, backgroundColor: '#ef4444', color: '#ffffff', borderRadius: '8px', padding: '10px 20px', fontWeight: 600, border: 'none' }}
+              >
+                {isBulkDeleting ? 'Deleting...' : 'Delete Selected'}
               </button>
             </div>
           </div>

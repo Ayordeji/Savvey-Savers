@@ -6,12 +6,19 @@ import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { adminAuth } from '@/lib/firebase-admin';
 
 
-async function checkAdmin() {
+async function checkAdminUser() {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return false;
+  if (!token) return null;
   const payload = await verifyToken(token);
-  return payload?.role === 'ADMIN';
+  if (!payload || payload.role !== 'ADMIN') return null;
+  const user = await db.users.findUnique({ where: { id: payload.id } });
+  return user;
+}
+
+async function checkAdmin() {
+  const user = await checkAdminUser();
+  return user;
 }
 
 export async function GET() {
@@ -369,10 +376,35 @@ export async function PUT(request: Request) {
       };
 
       // If promoting to Super Admin, handle the transfer safely
-      if (isSuperAdmin === true) {
-        const targetRole = role || user.role;
-        if (targetRole !== 'ADMIN') {
-          return NextResponse.json({ error: 'Only administrators can be promoted to Super Admin.' }, { status: 400 });
+      if (isSuperAdmin === true || role === 'SUPER_ADMIN') {
+        const reqUser = await checkAdmin();
+        const isReqSuperAdmin = reqUser && (reqUser.isSuperAdmin === true || reqUser.id === 'usr_admin');
+
+        if (!isReqSuperAdmin) {
+          // If non-super admin requests to make user a Super Admin:
+          // Send request email to Super Admin for confirmation
+          const allUsers = await db.users.findMany();
+          const superAdminUser = allUsers.find(u => u.isSuperAdmin === true || u.id === 'usr_admin');
+          const superAdminEmail = superAdminUser?.email || 'savveysaverscollective@gmail.com';
+
+          await sendEmail({
+            to: superAdminEmail,
+            subject: 'Super Admin Access Request - Confirmation Required',
+            body: `Hello Super Admin,\n\nAn administrator (${reqUser?.name || 'Admin'}) has requested to promote user ${user.name} (${user.email}) to Super Admin role.\n\nPlease log in to your dashboard to confirm or decline this request.\n\nBest regards,\nSavvey Savers Platform`
+          });
+
+          await db.notifications.create({
+            userId: superAdminUser?.id || 'usr_admin',
+            message: `Admin ${reqUser?.name || 'Admin'} requested Super Admin promotion for ${user.name}.`,
+            type: 'SUPER_ADMIN_REQUEST',
+            isRead: false
+          });
+
+          return NextResponse.json({
+            success: true,
+            pendingSuperAdmin: true,
+            message: `Super Admin request submitted! An email confirmation has been sent to the Super Admin (${superAdminEmail}) for approval.`
+          });
         }
 
         const allUsers = await db.users.findMany();
@@ -385,6 +417,7 @@ export async function PUT(request: Request) {
           console.log(`Transferred Super Admin role from ${currentSuperAdmin.id} to ${id}.`);
         }
         updateData.isSuperAdmin = true;
+        updateData.role = 'ADMIN';
       }
     }
 
@@ -418,8 +451,20 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!(await checkAdmin())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  const reqUser = await checkAdmin();
+  if (!reqUser) {
+    return NextResponse.json({ error: 'Unauthorized: Admin access required.' }, { status: 403 });
+  }
+
+  // Check if requesting user has DELETE_USER permission or is Super Admin
+  const isReqSuperAdmin = reqUser.isSuperAdmin === true || reqUser.id === 'usr_admin';
+  const hasDeletePerm = isReqSuperAdmin || (reqUser.permissions && reqUser.permissions.includes('DELETE_USER'));
+
+  if (!hasDeletePerm) {
+    return NextResponse.json(
+      { error: 'Permission Denied: You do not have the Delete User permission enabled on your administrator account.' },
+      { status: 403 }
+    );
   }
 
   try {
@@ -441,7 +486,7 @@ export async function DELETE(request: Request) {
         continue;
       }
 
-      // Check if the user is the current super admin
+      // Check if the user is a super admin
       const isSuperAdmin = user.isSuperAdmin === true || (user.id === 'usr_admin' && user.isSuperAdmin !== false);
       if (isSuperAdmin) {
         errors.push(`The Super Admin account (${user.name}) cannot be deleted.`);

@@ -269,30 +269,6 @@ function SettingsContent() {
 
   return (
     <div>
-      {/* TOP BANNER ACTION BUTTONS */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-        <button
-          onClick={() => setActiveTopModal('AGREEMENT')}
-          className="btn btn-primary"
-          style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 20px', fontWeight: 600, fontSize: '0.9rem' }}
-        >
-          Membership Agreement
-        </button>
-        <button
-          onClick={() => setActiveTopModal('FEE_SCHEDULE')}
-          className="btn btn-primary"
-          style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 20px', fontWeight: 600, fontSize: '0.9rem' }}
-        >
-          Fee Schedule
-        </button>
-        <button
-          onClick={() => setActiveTopModal('REVIEWS')}
-          className="btn btn-primary"
-          style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 20px', fontWeight: 600, fontSize: '0.9rem' }}
-        >
-          Reviews
-        </button>
-      </div>
 
       {successMsg && (
         <div style={{
