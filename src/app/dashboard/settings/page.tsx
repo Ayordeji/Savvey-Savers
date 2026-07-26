@@ -33,11 +33,76 @@ function SettingsContent() {
   const [activeTab, setActiveTab] = useState<'security' | 'commitment' | 'email-templates' | 'migration'>('security');
 
   // Migration Panel State
+  const [migrationMode, setMigrationMode] = useState<'CSV' | 'JSON'>('CSV');
+  const [migrationCsvText, setMigrationCsvText] = useState('');
   const [migrationJson, setMigrationJson] = useState('');
   const [migrationOverwrite, setMigrationOverwrite] = useState(true);
   const [migrationRunning, setMigrationRunning] = useState(false);
   const [migrationReport, setMigrationReport] = useState<any>(null);
   const [migrationError, setMigrationError] = useState('');
+
+  // Helper to parse CSV/TSV text into migration JSON payload
+  const parseCsvToPayload = (rawText: string) => {
+    const lines = rawText.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length === 0) return { users: [], commitments: [] };
+
+    const firstLine = lines[0];
+    const delimiter = firstLine.includes('\t') ? '\t' : (firstLine.includes(';') ? ';' : ',');
+    const headers = lines[0].split(delimiter).map(h => h.trim().toLowerCase().replace(/^["']|["']$/g, ''));
+
+    const getIdx = (keywords: string[]) => headers.findIndex(h => keywords.some(k => h.includes(k)));
+
+    const idxMemberId = getIdx(['member id', 'memberid', 'invitation id', 'invitationid', 'display id', 'code']);
+    const idxName = getIdx(['name', 'full name', 'fullname', 'member name']);
+    const idxEmail = getIdx(['email', 'mail']);
+    const idxPhone = getIdx(['phone', 'mobile', 'tel', 'contact']);
+    const idxRole = getIdx(['role']);
+    const idxAmount = getIdx(['amount', 'savings', 'commitment']);
+    const idxMonth = getIdx(['month', 'collection month']);
+    const idxYear = getIdx(['year', 'collection year']);
+
+    const users: any[] = [];
+    const commitments: any[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
+      if (cols.length === 0 || !cols.some(c => c.length > 0)) continue;
+
+      const email = idxEmail !== -1 && cols[idxEmail] ? cols[idxEmail] : '';
+      const memberId = idxMemberId !== -1 && cols[idxMemberId] ? cols[idxMemberId] : '';
+      const name = idxName !== -1 && cols[idxName] ? cols[idxName] : '';
+      const phone = idxPhone !== -1 && cols[idxPhone] ? cols[idxPhone] : '';
+      const role = idxRole !== -1 && cols[idxRole] ? cols[idxRole] : 'MEMBER';
+      const amount = idxAmount !== -1 ? parseFloat(cols[idxAmount]) || 0 : 0;
+      const month = idxMonth !== -1 && cols[idxMonth] ? cols[idxMonth] : 'February';
+      const year = idxYear !== -1 ? parseInt(cols[idxYear], 10) || 2026 : 2026;
+
+      if (email || memberId || name) {
+        users.push({
+          invitationId: memberId || undefined,
+          name: name || (email ? email.split('@')[0] : 'Member'),
+          email: email,
+          phone: phone,
+          role: role.toUpperCase().includes('ADMIN') ? 'ADMIN' : 'MEMBER',
+          isActive: true
+        });
+
+        if (amount > 0) {
+          commitments.push({
+            memberEmail: email,
+            memberId: memberId,
+            amount: amount,
+            goal: 'Savings Goal',
+            collectionMonth: month,
+            collectionYear: year,
+            status: 'ACTIVE'
+          });
+        }
+      }
+    }
+
+    return { users, commitments };
+  };
 
   useEffect(() => {
     if (tabParam === 'security' || tabParam === 'commitment' || tabParam === 'email-templates' || tabParam === 'migration') {
@@ -803,74 +868,174 @@ function SettingsContent() {
                 Migrate legacy Members (with exact Member IDs like <code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', color: '#0284c7' }}>M-000374</code>), Savings Commitments (<code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', color: '#0284c7' }}>SC-00222</code>), Payments, and Waiting List records from your previous website into the platform.
               </p>
 
-              {/* Sample Format Guide */}
-              <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>
-                    JSON Import Schema Format Template
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const sample = {
-                        users: [
-                          {
-                            invitationId: "M-000374",
-                            name: "Ese Efemwen",
-                            email: "efemwen7@gmail.com",
-                            phone: "+447470771629",
-                            role: "MEMBER",
-                            isActive: true,
-                            createdAt: "2024-01-30T11:02:54.000Z"
-                          }
-                        ],
-                        commitments: [
-                          {
-                            id: "SC-00222",
-                            memberEmail: "efemwen7@gmail.com",
-                            amount: 1000,
-                            goal: "Savings Goal",
-                            collectionMonth: "February",
-                            collectionYear: 2027,
-                            status: "ACTIVE"
-                          }
-                        ]
-                      };
-                      setMigrationJson(JSON.stringify(sample, null, 2));
-                    }}
-                    style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
-                  >
-                    Load Sample Data
-                  </button>
-                </div>
-                <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
-                  Member IDs (<code style={{ color: '#0284c7' }}>invitationId</code>) and Commitment Record IDs (<code style={{ color: '#0284c7' }}>id</code>) will be preserved exactly as specified so members can continue using them as payment references.
-                </p>
+              {/* Mode Switcher */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                <button
+                  type="button"
+                  onClick={() => setMigrationMode('CSV')}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    border: '1px solid #cbd5e1',
+                    backgroundColor: migrationMode === 'CSV' ? '#2e3a4e' : '#ffffff',
+                    color: migrationMode === 'CSV' ? '#ffffff' : '#475569',
+                    cursor: 'pointer'
+                  }}
+                >
+                  📊 CSV / Spreadsheet Copy-Paste (Recommended)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMigrationMode('JSON')}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    border: '1px solid #cbd5e1',
+                    backgroundColor: migrationMode === 'JSON' ? '#2e3a4e' : '#ffffff',
+                    color: migrationMode === 'JSON' ? '#ffffff' : '#475569',
+                    cursor: 'pointer'
+                  }}
+                >
+                  💻 Raw JSON Payload
+                </button>
               </div>
 
-              {/* Input Area */}
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>
-                  Paste Migration Payload (JSON Format):
-                </label>
-                <textarea
-                  rows={10}
-                  placeholder={`{\n  "users": [\n    {\n      "invitationId": "M-000374",\n      "name": "Ese Efemwen",\n      "email": "efemwen7@gmail.com",\n      "phone": "+447470771629",\n      "role": "MEMBER",\n      "isActive": true\n    }\n  ],\n  "commitments": [\n    {\n      "id": "SC-00222",\n      "memberEmail": "efemwen7@gmail.com",\n      "amount": 1000,\n      "goal": "Savings",\n      "collectionMonth": "February",\n      "collectionYear": 2027,\n      "status": "ACTIVE"\n    }\n  ]\n}`}
-                  value={migrationJson}
-                  onChange={(e) => setMigrationJson(e.target.value)}
-                  style={{
-                    width: '100%',
-                    fontFamily: 'monospace',
-                    fontSize: '0.825rem',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    backgroundColor: '#ffffff',
-                    color: '#0f172a',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
+              {/* CSV MODE */}
+              {migrationMode === 'CSV' && (
+                <div>
+                  <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>
+                        Frontend Table / CSV Copy-Paste Guide
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const sampleCsv = `Member ID, Name, Email, Phone, Role, Commitment Amount, Collection Month\nM-000374, Iyore Ed, iypearlie@gmail.com, 07449311040, MEMBER, 1000, February\nM-000375, Jane Smith, jane@example.com, 07700900011, MEMBER, 500, March`;
+                          setMigrationCsvText(sampleCsv);
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        Load Sample CSV
+                      </button>
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 8px 0' }}>
+                      Simply select and copy the user rows from your old admin website table, or upload a <strong>.csv</strong> spreadsheet file below. Header columns recognized: <code>Member ID</code>, <code>Name</code>, <code>Email</code>, <code>Phone</code>, <code>Role</code>, <code>Amount</code>, <code>Month</code>.
+                    </p>
+                    <input
+                      type="file"
+                      accept=".csv,.txt,.tsv"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (evt) => setMigrationCsvText(evt.target?.result as string || '');
+                          reader.readAsText(file);
+                        }
+                      }}
+                      style={{ fontSize: '0.8rem' }}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>
+                      Paste CSV / TSV Table Rows Below:
+                    </label>
+                    <textarea
+                      rows={9}
+                      placeholder={`Member ID, Name, Email, Phone, Role, Commitment Amount, Collection Month\nM-000374, Iyore Ed, iypearlie@gmail.com, 07449311040, MEMBER, 1000, February`}
+                      value={migrationCsvText}
+                      onChange={(e) => setMigrationCsvText(e.target.value)}
+                      style={{
+                        width: '100%',
+                        fontFamily: 'monospace',
+                        fontSize: '0.825rem',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: '1px solid #cbd5e1',
+                        backgroundColor: '#ffffff',
+                        color: '#0f172a',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* JSON MODE */}
+              {migrationMode === 'JSON' && (
+                <div>
+                  <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>
+                        JSON Import Schema Format Template
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const sample = {
+                            users: [
+                              {
+                                invitationId: "M-000374",
+                                name: "Iyore Ed",
+                                email: "iypearlie@gmail.com",
+                                phone: "07449311040",
+                                role: "MEMBER",
+                                isActive: true
+                              }
+                            ],
+                            commitments: [
+                              {
+                                id: "SC-00222",
+                                memberEmail: "iypearlie@gmail.com",
+                                amount: 1000,
+                                goal: "Savings Goal",
+                                collectionMonth: "February",
+                                collectionYear: 2027,
+                                status: "ACTIVE"
+                              }
+                            ]
+                          };
+                          setMigrationJson(JSON.stringify(sample, null, 2));
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        Load Sample Data
+                      </button>
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
+                      Member IDs (<code style={{ color: '#0284c7' }}>invitationId</code>) and Commitment Record IDs (<code style={{ color: '#0284c7' }}>id</code>) will be preserved exactly as specified.
+                    </p>
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>
+                      Paste Migration Payload (JSON Format):
+                    </label>
+                    <textarea
+                      rows={9}
+                      placeholder={`{\n  "users": [\n    {\n      "invitationId": "M-000374",\n      "name": "Iyore Ed",\n      "email": "iypearlie@gmail.com",\n      "phone": "07449311040",\n      "role": "MEMBER",\n      "isActive": true\n    }\n  ]\n}`}
+                      value={migrationJson}
+                      onChange={(e) => setMigrationJson(e.target.value)}
+                      style={{
+                        width: '100%',
+                        fontFamily: 'monospace',
+                        fontSize: '0.825rem',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: '1px solid #cbd5e1',
+                        backgroundColor: '#ffffff',
+                        color: '#0f172a',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Options */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
@@ -889,13 +1054,13 @@ function SettingsContent() {
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
                 <button
                   type="button"
-                  disabled={migrationRunning || !migrationJson.trim()}
+                  disabled={migrationRunning || (migrationMode === 'CSV' ? !migrationCsvText.trim() : !migrationJson.trim())}
                   onClick={async () => {
                     setMigrationRunning(true);
                     setMigrationError('');
                     setMigrationReport(null);
                     try {
-                      const payload = JSON.parse(migrationJson);
+                      const payload = migrationMode === 'CSV' ? parseCsvToPayload(migrationCsvText) : JSON.parse(migrationJson);
                       const res = await fetch('/api/admin/migrate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -908,7 +1073,7 @@ function SettingsContent() {
                         setMigrationError(data.error || 'Validation failed');
                       }
                     } catch (err: any) {
-                      setMigrationError('Invalid JSON format: ' + err.message);
+                      setMigrationError('Format parsing error: ' + err.message);
                     } finally {
                       setMigrationRunning(false);
                     }
@@ -921,14 +1086,14 @@ function SettingsContent() {
 
                 <button
                   type="button"
-                  disabled={migrationRunning || !migrationJson.trim()}
+                  disabled={migrationRunning || (migrationMode === 'CSV' ? !migrationCsvText.trim() : !migrationJson.trim())}
                   onClick={async () => {
                     if (!(await dialog.confirm('Confirm Data Migration', 'Are you sure you want to execute full data migration into the live database? All records will be saved.'))) return;
                     setMigrationRunning(true);
                     setMigrationError('');
                     setMigrationReport(null);
                     try {
-                      const payload = JSON.parse(migrationJson);
+                      const payload = migrationMode === 'CSV' ? parseCsvToPayload(migrationCsvText) : JSON.parse(migrationJson);
                       const res = await fetch('/api/admin/migrate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -941,7 +1106,7 @@ function SettingsContent() {
                         setMigrationError(data.error || 'Migration failed');
                       }
                     } catch (err: any) {
-                      setMigrationError('Invalid JSON format: ' + err.message);
+                      setMigrationError('Format parsing error: ' + err.message);
                     } finally {
                       setMigrationRunning(false);
                     }

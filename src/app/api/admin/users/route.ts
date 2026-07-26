@@ -36,9 +36,20 @@ export async function GET() {
     return timeA - timeB;
   });
 
-  const users = sortedUsers.map((u, idx) => ({
-    id: u.id,
-    displayId: u.invitationId || (u as any).displayId || `M-${String(idx + 1).padStart(6, '0')}`,
+  const users = sortedUsers.map((u, idx) => {
+    const isValidMemberId = (val?: string) => {
+      if (!val) return false;
+      const lower = val.toLowerCase().trim();
+      return !lower.startsWith('invite_') && !lower.startsWith('tok_') && !lower.startsWith('usr_');
+    };
+
+    const memberId = (isValidMemberId(u.invitationId) ? u.invitationId : null) ||
+                     (isValidMemberId((u as any).displayId) ? (u as any).displayId : null) ||
+                     `M-${String(idx + 1).padStart(6, '0')}`;
+
+    return {
+      id: u.id,
+      displayId: memberId,
     isSuperAdmin: u.isSuperAdmin === true || (u.id === 'usr_admin' && u.isSuperAdmin !== false),
     name: u.name,
     email: u.email,
@@ -57,7 +68,8 @@ export async function GET() {
     postCode: u.postCode,
     country: u.country,
     permissions: u.permissions
-  }));
+  };
+});
 
   // Reverse so newest users appear at the top of the dashboard, matching the QA site layout
   const newestFirstUsers = [...users].reverse();
