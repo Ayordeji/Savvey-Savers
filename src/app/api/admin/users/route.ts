@@ -38,7 +38,7 @@ export async function GET() {
 
   const users = sortedUsers.map((u, idx) => ({
     id: u.id,
-    displayId: `M-${String(idx + 1).padStart(6, '0')}`,
+    displayId: u.invitationId || (u as any).displayId || `M-${String(idx + 1).padStart(6, '0')}`,
     isSuperAdmin: u.isSuperAdmin === true || (u.id === 'usr_admin' && u.isSuperAdmin !== false),
     name: u.name,
     email: u.email,

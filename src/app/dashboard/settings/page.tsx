@@ -28,12 +28,19 @@ function SettingsContent() {
   const dialog = useDialog();
   const searchParams = useSearchParams();
 
-  // Tab State: 'security' | 'commitment' | 'email-templates'
+  // Tab State: 'security' | 'commitment' | 'email-templates' | 'migration'
   const tabParam = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState<'security' | 'commitment' | 'email-templates'>('security');
+  const [activeTab, setActiveTab] = useState<'security' | 'commitment' | 'email-templates' | 'migration'>('security');
+
+  // Migration Panel State
+  const [migrationJson, setMigrationJson] = useState('');
+  const [migrationOverwrite, setMigrationOverwrite] = useState(true);
+  const [migrationRunning, setMigrationRunning] = useState(false);
+  const [migrationReport, setMigrationReport] = useState<any>(null);
+  const [migrationError, setMigrationError] = useState('');
 
   useEffect(() => {
-    if (tabParam === 'security' || tabParam === 'commitment' || tabParam === 'email-templates') {
+    if (tabParam === 'security' || tabParam === 'commitment' || tabParam === 'email-templates' || tabParam === 'migration') {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
@@ -337,6 +344,21 @@ function SettingsContent() {
           }}
         >
           Email Template
+        </button>
+        <button
+          onClick={() => setActiveTab('migration')}
+          style={{
+            padding: '10px 18px',
+            fontWeight: 700,
+            fontSize: '0.9rem',
+            border: 'none',
+            background: 'none',
+            cursor: 'pointer',
+            borderBottom: activeTab === 'migration' ? '3px solid #2e3a4e' : '3px solid transparent',
+            color: activeTab === 'migration' ? '#2e3a4e' : '#64748b'
+          }}
+        >
+          Data Migration
         </button>
       </div>
 
@@ -768,6 +790,230 @@ function SettingsContent() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* TAB 4: DATA MIGRATION */}
+          {activeTab === 'migration' && (
+            <div className="glass-panel" style={{ padding: '28px', backgroundColor: '#ffffff', borderRadius: '16px', maxWidth: '900px' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>
+                Bulk Data Migration & Import Center
+              </h3>
+              <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '20px' }}>
+                Migrate legacy Members (with exact Member IDs like <code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', color: '#0284c7' }}>M-000374</code>), Savings Commitments (<code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', color: '#0284c7' }}>SC-00222</code>), Payments, and Waiting List records from your previous website into the platform.
+              </p>
+
+              {/* Sample Format Guide */}
+              <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>
+                    JSON Import Schema Format Template
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const sample = {
+                        users: [
+                          {
+                            invitationId: "M-000374",
+                            name: "Ese Efemwen",
+                            email: "efemwen7@gmail.com",
+                            phone: "+447470771629",
+                            role: "MEMBER",
+                            isActive: true,
+                            createdAt: "2024-01-30T11:02:54.000Z"
+                          }
+                        ],
+                        commitments: [
+                          {
+                            id: "SC-00222",
+                            memberEmail: "efemwen7@gmail.com",
+                            amount: 1000,
+                            goal: "Savings Goal",
+                            collectionMonth: "February",
+                            collectionYear: 2027,
+                            status: "ACTIVE"
+                          }
+                        ]
+                      };
+                      setMigrationJson(JSON.stringify(sample, null, 2));
+                    }}
+                    style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    Load Sample Data
+                  </button>
+                </div>
+                <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
+                  Member IDs (<code style={{ color: '#0284c7' }}>invitationId</code>) and Commitment Record IDs (<code style={{ color: '#0284c7' }}>id</code>) will be preserved exactly as specified so members can continue using them as payment references.
+                </p>
+              </div>
+
+              {/* Input Area */}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>
+                  Paste Migration Payload (JSON Format):
+                </label>
+                <textarea
+                  rows={10}
+                  placeholder={`{\n  "users": [\n    {\n      "invitationId": "M-000374",\n      "name": "Ese Efemwen",\n      "email": "efemwen7@gmail.com",\n      "phone": "+447470771629",\n      "role": "MEMBER",\n      "isActive": true\n    }\n  ],\n  "commitments": [\n    {\n      "id": "SC-00222",\n      "memberEmail": "efemwen7@gmail.com",\n      "amount": 1000,\n      "goal": "Savings",\n      "collectionMonth": "February",\n      "collectionYear": 2027,\n      "status": "ACTIVE"\n    }\n  ]\n}`}
+                  value={migrationJson}
+                  onChange={(e) => setMigrationJson(e.target.value)}
+                  style={{
+                    width: '100%',
+                    fontFamily: 'monospace',
+                    fontSize: '0.825rem',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    backgroundColor: '#ffffff',
+                    color: '#0f172a',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* Options */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.875rem', color: '#1e293b', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={migrationOverwrite}
+                    onChange={(e) => setMigrationOverwrite(e.target.checked)}
+                    style={{ accentColor: '#2e3a4e' }}
+                  />
+                  <span>Overwrite / Update existing records matching Email or Member ID</span>
+                </label>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
+                <button
+                  type="button"
+                  disabled={migrationRunning || !migrationJson.trim()}
+                  onClick={async () => {
+                    setMigrationRunning(true);
+                    setMigrationError('');
+                    setMigrationReport(null);
+                    try {
+                      const payload = JSON.parse(migrationJson);
+                      const res = await fetch('/api/admin/migrate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...payload, dryRun: true, overwrite: migrationOverwrite })
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        setMigrationReport(data.report);
+                      } else {
+                        setMigrationError(data.error || 'Validation failed');
+                      }
+                    } catch (err: any) {
+                      setMigrationError('Invalid JSON format: ' + err.message);
+                    } finally {
+                      setMigrationRunning(false);
+                    }
+                  }}
+                  className="btn btn-secondary"
+                  style={{ padding: '10px 20px', fontWeight: 600, borderRadius: '8px' }}
+                >
+                  {migrationRunning ? 'Validating...' : 'Validate Data (Dry Run)'}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={migrationRunning || !migrationJson.trim()}
+                  onClick={async () => {
+                    if (!(await dialog.confirm('Confirm Data Migration', 'Are you sure you want to execute full data migration into the live database? All records will be saved.'))) return;
+                    setMigrationRunning(true);
+                    setMigrationError('');
+                    setMigrationReport(null);
+                    try {
+                      const payload = JSON.parse(migrationJson);
+                      const res = await fetch('/api/admin/migrate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...payload, dryRun: false, overwrite: migrationOverwrite })
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        setMigrationReport(data.report);
+                      } else {
+                        setMigrationError(data.error || 'Migration failed');
+                      }
+                    } catch (err: any) {
+                      setMigrationError('Invalid JSON format: ' + err.message);
+                    } finally {
+                      setMigrationRunning(false);
+                    }
+                  }}
+                  className="btn btn-primary"
+                  style={{ backgroundColor: '#2e3a4e', color: '#ffffff', padding: '10px 24px', fontWeight: 600, borderRadius: '8px' }}
+                >
+                  {migrationRunning ? 'Importing Data...' : 'Execute Full Data Migration'}
+                </button>
+              </div>
+
+              {/* Error Message */}
+              {migrationError && (
+                <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', padding: '14px', borderRadius: '8px', fontSize: '0.875rem', marginBottom: '20px' }}>
+                  {migrationError}
+                </div>
+              )}
+
+              {/* Migration Summary Report */}
+              {migrationReport && (
+                <div style={{ backgroundColor: migrationReport.dryRun ? '#f0fdf4' : '#eff6ff', border: `1px solid ${migrationReport.dryRun ? '#bbf7d0' : '#bfdbfe'}`, borderRadius: '12px', padding: '20px' }}>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 700, color: migrationReport.dryRun ? '#166534' : '#1e40af', marginBottom: '12px' }}>
+                    {migrationReport.dryRun ? '🔍 Dry-Run Validation Summary (No Changes Saved)' : '🎉 Migration Execution Complete Report'}
+                  </h4>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                    <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Users Processed</span>
+                      <strong style={{ fontSize: '1.1rem', color: '#0f172a' }}>{migrationReport.usersProcessed}</strong>
+                      <span style={{ fontSize: '0.75rem', color: '#16a34a', display: 'block', marginTop: '2px' }}>+{migrationReport.usersCreated} created / {migrationReport.usersUpdated} updated</span>
+                    </div>
+
+                    <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Commitments Processed</span>
+                      <strong style={{ fontSize: '1.1rem', color: '#0f172a' }}>{migrationReport.commitmentsProcessed}</strong>
+                      <span style={{ fontSize: '0.75rem', color: '#16a34a', display: 'block', marginTop: '2px' }}>+{migrationReport.commitmentsCreated} created / {migrationReport.commitmentsUpdated} updated</span>
+                    </div>
+
+                    <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Payments Logged</span>
+                      <strong style={{ fontSize: '1.1rem', color: '#0f172a' }}>{migrationReport.paymentsCreated}</strong>
+                    </div>
+
+                    <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Waiting List Entries</span>
+                      <strong style={{ fontSize: '1.1rem', color: '#0f172a' }}>{migrationReport.waitingListCreated}</strong>
+                    </div>
+                  </div>
+
+                  {migrationReport.warnings.length > 0 && (
+                    <div style={{ marginBottom: '12px' }}>
+                      <strong style={{ fontSize: '0.8rem', color: '#d97706', display: 'block', marginBottom: '4px' }}>Warnings ({migrationReport.warnings.length}):</strong>
+                      <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.8rem', color: '#92400e' }}>
+                        {migrationReport.warnings.slice(0, 5).map((w: string, i: number) => (
+                          <li key={i}>{w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {migrationReport.errors.length > 0 && (
+                    <div>
+                      <strong style={{ fontSize: '0.8rem', color: '#dc2626', display: 'block', marginBottom: '4px' }}>Errors ({migrationReport.errors.length}):</strong>
+                      <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.8rem', color: '#991b1b' }}>
+                        {migrationReport.errors.map((e: string, i: number) => (
+                          <li key={i}>{e}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
