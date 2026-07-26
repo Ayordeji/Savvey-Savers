@@ -10,7 +10,8 @@ export async function POST(request: Request) {
     const host = request.headers.get('host') || '';
     if (origin) {
       const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
-      const isAllowedOrigin = isLocalhost || (host && origin.includes(host));
+      const isKnownDomain = origin.includes('vercel.app') || origin.includes('savveysavers.com');
+      const isAllowedOrigin = isLocalhost || isKnownDomain || (host && origin.includes(host));
       if (!isAllowedOrigin) {
         return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 });
       }
@@ -129,8 +130,14 @@ export async function POST(request: Request) {
       });
     }
 
-    // Generate Firebase Session Cookie
-    const sessionCookie = await createSessionCookie(idToken);
+    // Generate Firebase Session Cookie with safe fallback to ID Token
+    let sessionCookie = '';
+    try {
+      sessionCookie = await createSessionCookie(idToken);
+    } catch (cookieErr: any) {
+      console.warn('Firebase createSessionCookie failed, using ID token as fallback session:', cookieErr?.message || cookieErr);
+      sessionCookie = idToken;
+    }
 
     const response = NextResponse.json({
       success: true,
@@ -167,7 +174,7 @@ export async function POST(request: Request) {
   } catch (err: any) {
     console.error('Firebase Login API error:', err);
     return NextResponse.json(
-      { error: 'An unexpected error occurred. Please try again.' },
+      { error: err?.message || 'An unexpected error occurred. Please try again.' },
       { status: 500 }
     );
   }

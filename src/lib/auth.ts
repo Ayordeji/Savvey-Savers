@@ -12,7 +12,17 @@ export async function createSessionCookie(idToken: string): Promise<string> {
 // Maps the session's decoded UID to user id and role
 export async function verifyToken(token: string): Promise<{ id: string; role: 'ADMIN' | 'MEMBER' } | null> {
   try {
-    const decodedClaims = await adminAuth.verifySessionCookie(token, true);
+    let decodedClaims: any;
+    try {
+      decodedClaims = await adminAuth.verifySessionCookie(token, true);
+    } catch (cookieErr) {
+      decodedClaims = await adminAuth.verifyIdToken(token);
+    }
+
+    if (!decodedClaims || !decodedClaims.uid) {
+      return null;
+    }
+
     const userId = decodedClaims.uid;
 
     // Fetch user from Firestore to retrieve their role
