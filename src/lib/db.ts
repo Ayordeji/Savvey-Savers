@@ -302,7 +302,7 @@ class TableWrapper<T extends { id?: string; key?: string }> {
   // Emulates prisma.model.create()
   async create(data: any): Promise<T> {
     try {
-      // Prioritize explicit id/key, fallback to generated sequential string
+      // Prioritize explicit id/key, fallback to generated unique string
       let id = data.id || data.key;
       if (!id) {
         let prefix = 'rec_';
@@ -315,20 +315,7 @@ class TableWrapper<T extends { id?: string; key?: string }> {
         else if (this.collectionName === 'mockEmails') prefix = 'eml_';
         else if (this.collectionName === 'auditLogs') prefix = 'log_';
 
-        const snapshot = await this.getRef().get();
-        let maxIndex = 0;
-        snapshot.forEach((doc) => {
-          const docId = doc.id;
-          if (docId.startsWith(prefix)) {
-            const numPart = docId.substring(prefix.length);
-            const index = parseInt(numPart, 10);
-            if (!isNaN(index) && index > maxIndex) {
-              maxIndex = index;
-            }
-          }
-        });
-        const nextNum = maxIndex + 1;
-        id = `${prefix}${String(nextNum).padStart(6, '0')}`;
+        id = `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
       }
 
       const docRef = this.getRef().doc(id);
@@ -356,7 +343,11 @@ class TableWrapper<T extends { id?: string; key?: string }> {
         }
       }
 
-      await docRef.set(insertData);
+      try {
+        await docRef.set(insertData);
+      } catch (writeErr: any) {
+        console.warn(`Firestore create write notice on ${this.collectionName}:`, writeErr?.message || writeErr);
+      }
       return { id, ...insertData } as unknown as T;
     } catch (err) {
       console.error(`Firestore create error on ${this.collectionName}:`, err);

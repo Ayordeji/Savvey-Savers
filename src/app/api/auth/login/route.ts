@@ -122,12 +122,16 @@ export async function POST(request: Request) {
       });
  
       // System notification
-      await db.notifications.create({
-        userId: user.id,
-        message: `Welcome to Savvey Savers! Your account has been registered successfully.`,
-        type: 'ACCOUNT_ACTIVATION',
-        isRead: false
-      });
+      try {
+        await db.notifications.create({
+          userId: user.id,
+          message: `Welcome to Savvey Savers! Your account has been registered successfully.`,
+          type: 'ACCOUNT_ACTIVATION',
+          isRead: false
+        });
+      } catch (ntfErr) {
+        console.warn('Login notification creation non-blocking notice:', ntfErr);
+      }
     }
 
     // Generate Firebase Session Cookie with safe fallback to ID Token
@@ -163,12 +167,16 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24 * 5, // 5 days
     });
 
-    // Record login audit event
-    await db.auditLogs.create({
-      action: isNewUser ? 'USER_SIGNUP_FIREBASE' : 'USER_LOGIN_FIREBASE',
-      details: `User ${user.email} logged in via Firebase Auth.`,
-      userId: user.id
-    });
+    // Record login audit event safely
+    try {
+      await db.auditLogs.create({
+        action: isNewUser ? 'USER_SIGNUP_FIREBASE' : 'USER_LOGIN_FIREBASE',
+        details: `User ${user.email} logged in via Firebase Auth.`,
+        userId: user.id
+      });
+    } catch (auditErr) {
+      console.warn('Login audit log non-blocking notice:', auditErr);
+    }
 
     return response;
   } catch (err: any) {
