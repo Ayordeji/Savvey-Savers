@@ -42,6 +42,16 @@ export default function ManageUsersPage() {
 
   // Modal States
   const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'VIEW' | 'DELETE_CONFIRM' | 'BULK_DELETE_CONFIRM' | 'MEMBERSHIP_DETAILS' | 'AGREEMENT' | 'SCHEDULE' | 'REVIEWS'>('NONE');
+  const [membershipAgreement, setMembershipAgreement] = useState('');
+  const [feeSchedule, setFeeSchedule] = useState('');
+
+  const getMembershipFee = (membership?: string) => {
+    if (!membership) return '5.00';
+    if (membership.includes('VIP')) return '25.00';
+    if (membership.includes('Premium')) return '10.00';
+    const val = parseFloat(membership);
+    return isNaN(val) ? '5.00' : val.toFixed(2);
+  };
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -113,6 +123,14 @@ export default function ManageUsersPage() {
         }
       })
       .catch(err => console.error('Error fetching session:', err));
+
+    fetch('/api/admin/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.membershipAgreement) setMembershipAgreement(data.membershipAgreement);
+        if (data.feeSchedule) setFeeSchedule(data.feeSchedule);
+      })
+      .catch(err => console.error('Error fetching settings:', err));
   }, []);
 
   const handleOpenAddModal = () => {
@@ -1169,7 +1187,7 @@ export default function ManageUsersPage() {
                 <tr>
                   <td style={{ fontWeight: 600 }}>1</td>
                   <td>{new Date(selectedUser.createdAt || Date.now()).getFullYear()}</td>
-                  <td>£ {selectedUser.membership ? parseFloat(selectedUser.membership).toFixed(2) : '0.00'}</td>
+                  <td>£ {getMembershipFee(selectedUser.membership)}</td>
                   <td>
                     {selectedUser.membershipFeeConfirmed ? (
                       selectedUser.membershipFeeConfirmedAt ? (
@@ -1213,19 +1231,23 @@ export default function ManageUsersPage() {
               Group rotating savings terms and conditions.
             </p>
 
-            <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', lineHeight: 1.6, maxHeight: '350px', overflowY: 'auto', paddingRight: '10px' }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong>1. Term of Agreement:</strong> This agreement regulates the guidelines of the Savvey Savers savings circle. By joining, members commit to a full collection rotation cycle.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong>2. Payout Rotation Schedule:</strong> The schedule is generated dynamically at the cycle start. All payout requests must be approved by the circle Coordinator.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong>3. Delinquency & Penalties:</strong> Late monthly deposits will trigger system notifications. Chronic delays will result in membership suspension and temporary payout deferral.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong>4. Off-Platform Settlements:</strong> All cash transfers occur offline. The platform is solely a record-keeping system. No funds are stored on this digital server.
-              </p>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', lineHeight: 1.6, maxHeight: '350px', overflowY: 'auto', paddingRight: '10px', whiteSpace: 'pre-wrap' }}>
+              {membershipAgreement || (
+                <>
+                  <p style={{ marginBottom: '12px' }}>
+                    <strong>1. Term of Agreement:</strong> This agreement regulates the guidelines of the Savvey Savers savings circle. By joining, members commit to a full collection rotation cycle.
+                  </p>
+                  <p style={{ marginBottom: '12px' }}>
+                    <strong>2. Payout Rotation Schedule:</strong> The schedule is generated dynamically at the cycle start. All payout requests must be approved by the circle Coordinator.
+                  </p>
+                  <p style={{ marginBottom: '12px' }}>
+                    <strong>3. Delinquency & Penalties:</strong> Late monthly deposits will trigger system notifications. Chronic delays will result in membership suspension and temporary payout deferral.
+                  </p>
+                  <p style={{ marginBottom: '12px' }}>
+                    <strong>4. Off-Platform Settlements:</strong> All cash transfers occur offline. The platform is solely a record-keeping system. No funds are stored on this digital server.
+                  </p>
+                </>
+              )}
             </div>
 
             <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
@@ -1240,7 +1262,7 @@ export default function ManageUsersPage() {
       {/* --- FEE SCHEDULE MODAL --- */}
       {activeModal === 'SCHEDULE' && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '500px' }}>
+          <div className="modal-content" style={{ maxWidth: '540px' }}>
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
               <X size={20} />
             </button>
@@ -1251,32 +1273,38 @@ export default function ManageUsersPage() {
               Associated administrative charges by membership tier.
             </p>
 
-            <table className="custom-table" style={{ fontSize: '0.85rem' }}>
-              <thead>
-                <tr>
-                  <th>Membership Tier</th>
-                  <th>Monthly Admin Fee</th>
-                  <th>Payout Processing Fee</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style={{ fontWeight: 600 }}>Standard Saver</td>
-                  <td>£5.00</td>
-                  <td>0.5%</td>
-                </tr>
-                <tr>
-                  <td style={{ fontWeight: 600 }}>Premium Gold</td>
-                  <td>£10.00</td>
-                  <td>0.2%</td>
-                </tr>
-                <tr>
-                  <td style={{ fontWeight: 600 }}>VIP Elite</td>
-                  <td>£25.00</td>
-                  <td>0%</td>
-                </tr>
-              </tbody>
-            </table>
+            {feeSchedule ? (
+              <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', lineHeight: 1.6, whiteSpace: 'pre-wrap', maxHeight: '350px', overflowY: 'auto' }}>
+                {feeSchedule}
+              </div>
+            ) : (
+              <table className="custom-table" style={{ fontSize: '0.85rem' }}>
+                <thead>
+                  <tr>
+                    <th>Membership Tier</th>
+                    <th>Monthly Admin Fee</th>
+                    <th>Payout Processing Fee</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ fontWeight: 600 }}>Standard Saver</td>
+                    <td>£5.00</td>
+                    <td>0.5%</td>
+                  </tr>
+                  <tr>
+                    <td style={{ fontWeight: 600 }}>Premium Gold</td>
+                    <td>£10.00</td>
+                    <td>0.2%</td>
+                  </tr>
+                  <tr>
+                    <td style={{ fontWeight: 600 }}>VIP Elite</td>
+                    <td>£25.00</td>
+                    <td>0%</td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
 
             <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
               <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary">

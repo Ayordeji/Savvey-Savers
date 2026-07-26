@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock, Mail, User, Phone, PiggyBank, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Lock, Mail, User, Phone, PiggyBank, ArrowRight, CheckCircle2, Eye, EyeOff, FileText, CalendarRange, Star, X } from 'lucide-react';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -26,7 +26,20 @@ export default function Home() {
         }
       })
       .catch((err) => console.error('Session verify error:', err));
+
+    fetch('/api/admin/settings')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.membershipAgreement) setMembershipAgreement(data.membershipAgreement);
+        if (data.feeSchedule) setFeeSchedule(data.feeSchedule);
+      })
+      .catch((err) => console.error('Settings fetch error:', err));
   }, [router]);
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [landingModal, setLandingModal] = useState<'NONE' | 'AGREEMENT' | 'SCHEDULE' | 'REVIEWS'>('NONE');
+  const [membershipAgreement, setMembershipAgreement] = useState('');
+  const [feeSchedule, setFeeSchedule] = useState('');
 
   // Auth Mode State
   const [isSignUp, setIsSignUp] = useState(false);
@@ -397,7 +410,7 @@ export default function Home() {
             SAVVEY SAVERS DASHBOARD PORTAL
           </span>
           <h1 style={{
-            fontSize: '2.5rem',
+            fontSize: '2.2rem',
             fontWeight: 800,
             fontFamily: 'var(--font-family-title)',
             lineHeight: 1.15,
@@ -405,11 +418,42 @@ export default function Home() {
             marginBottom: '16px',
             letterSpacing: '-0.02em'
           }}>
-            Build Wealth Through a <span style={{ fontStyle: 'italic', fontWeight: 800 }}>Trusted</span> Savings Community
+            Savvey Savers Collective Member Portal
           </h1>
           <p style={{ color: 'var(--text-muted)', lineHeight: 1.6, fontSize: '0.95rem' }}>
-            Enter your credentials below to access your personal contribution dashboard, track rotating cycles, and confirm offline payouts securely.
+            If you are already a member, enter you login credentials below to access your personal dashboard and more.
           </p>
+        </div>
+
+        {/* 3 Auxiliary Buttons: Membership Agreement, Fee Schedule, Reviews */}
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => setLandingModal('AGREEMENT')}
+            className="btn btn-secondary btn-sm"
+            style={{ backgroundColor: '#ffffff', borderColor: 'var(--border-color)', color: 'var(--text-main)', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', padding: '8px 14px', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+          >
+            <FileText size={14} />
+            <span>Membership Agreement</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setLandingModal('SCHEDULE')}
+            className="btn btn-secondary btn-sm"
+            style={{ backgroundColor: '#ffffff', borderColor: 'var(--border-color)', color: 'var(--text-main)', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', padding: '8px 14px', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+          >
+            <CalendarRange size={14} />
+            <span>Fee Schedule</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setLandingModal('REVIEWS')}
+            className="btn btn-secondary btn-sm"
+            style={{ backgroundColor: '#ffffff', borderColor: 'var(--border-color)', color: 'var(--text-main)', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', padding: '8px 14px', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+          >
+            <Star size={14} />
+            <span>Reviews</span>
+          </button>
         </div>
 
         {/* Auth Form Panel */}
@@ -515,7 +559,7 @@ export default function Home() {
                 <div style={{ position: 'relative' }}>
                   <Lock size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
@@ -523,12 +567,29 @@ export default function Home() {
                     className="form-input"
                     style={{
                       paddingLeft: '38px',
+                      paddingRight: '40px',
                       backgroundColor: 'var(--bg-main)',
                       borderColor: 'var(--border-color)',
                       color: 'var(--text-main)',
                       borderRadius: 'var(--radius-md)'
                     }}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '12px',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      padding: '2px'
+                    }}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
               </div>
 
@@ -839,29 +900,20 @@ export default function Home() {
         padding: '32px 24px',
         borderTop: '1px solid var(--border-color)',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '12px',
+        gap: '4px',
         color: 'var(--text-muted)',
         fontSize: '0.8rem',
         maxWidth: '540px',
         width: '100%',
         margin: '0 auto',
-        lineHeight: 1.5
+        lineHeight: 1.5,
+        textAlign: 'center'
       }}>
-        <div style={{
-          width: '28px',
-          height: '28px',
-          borderRadius: '50%',
-          backgroundColor: 'var(--bg-surface)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--primary)',
-          fontWeight: 700,
-          flexShrink: 0
-        }}>₦</div>
-        <span>© 2026 Savvey Savers group platform. All rights reserved. Registered savings metrics are for record-keeping purposes. Financial transactions occur offline.</span>
+        <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-main)' }}>© 2026 Savvey Savers Collective.</p>
+        <p style={{ margin: 0, opacity: 0.8, fontSize: '0.75rem' }}>We protect your personal data in accordance with GDPR and applicable data protection laws.</p>
       </footer>
 
       {/* Reset Password Modal */}
@@ -998,6 +1050,157 @@ export default function Home() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MEMBERSHIP AGREEMENT MODAL --- */}
+      {landingModal === 'AGREEMENT' && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '600px', backgroundColor: '#ffffff' }}>
+            <button onClick={() => setLandingModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)', color: 'var(--text-main)' }}>
+              Membership Agreement
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
+              Group rotating savings terms and conditions.
+            </p>
+
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', lineHeight: 1.6, maxHeight: '350px', overflowY: 'auto', paddingRight: '10px', whiteSpace: 'pre-wrap' }}>
+              {membershipAgreement || (
+                <>
+                  <p style={{ marginBottom: '12px' }}>
+                    <strong>1. Term of Agreement:</strong> This agreement regulates the guidelines of the Savvey Savers savings circle. By joining, members commit to a full collection rotation cycle.
+                  </p>
+                  <p style={{ marginBottom: '12px' }}>
+                    <strong>2. Payout Rotation Schedule:</strong> The schedule is generated dynamically at the cycle start. All payout requests must be approved by the circle Coordinator.
+                  </p>
+                  <p style={{ marginBottom: '12px' }}>
+                    <strong>3. Delinquency & Penalties:</strong> Late monthly deposits will trigger system notifications. Chronic delays will result in membership suspension and temporary payout deferral.
+                  </p>
+                  <p style={{ marginBottom: '12px' }}>
+                    <strong>4. Off-Platform Settlements:</strong> All cash transfers occur offline. The platform is solely a record-keeping system. No funds are stored on this digital server.
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setLandingModal('NONE')} className="btn btn-secondary">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- FEE SCHEDULE MODAL --- */}
+      {landingModal === 'SCHEDULE' && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '540px', backgroundColor: '#ffffff' }}>
+            <button onClick={() => setLandingModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)', color: 'var(--text-main)' }}>
+              Fee Schedule
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
+              Associated administrative charges by membership tier.
+            </p>
+
+            {feeSchedule ? (
+              <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', lineHeight: 1.6, whiteSpace: 'pre-wrap', maxHeight: '350px', overflowY: 'auto' }}>
+                {feeSchedule}
+              </div>
+            ) : (
+              <table className="custom-table" style={{ fontSize: '0.85rem' }}>
+                <thead>
+                  <tr>
+                    <th>Membership Tier</th>
+                    <th>Monthly Admin Fee</th>
+                    <th>Payout Processing Fee</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ fontWeight: 600 }}>Standard Saver</td>
+                    <td>£5.00</td>
+                    <td>0.5%</td>
+                  </tr>
+                  <tr>
+                    <td style={{ fontWeight: 600 }}>Premium Gold</td>
+                    <td>£10.00</td>
+                    <td>0.2%</td>
+                  </tr>
+                  <tr>
+                    <td style={{ fontWeight: 600 }}>VIP Elite</td>
+                    <td>£25.00</td>
+                    <td>0%</td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
+
+            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setLandingModal('NONE')} className="btn btn-secondary">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- REVIEWS MODAL --- */}
+      {landingModal === 'REVIEWS' && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '500px', backgroundColor: '#ffffff' }}>
+            <button onClick={() => setLandingModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)', color: 'var(--text-main)' }}>
+              Reviews & Feedback
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
+              Member experiences and community feedback.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '350px', overflowY: 'auto' }}>
+              <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                <div style={{ display: 'flex', gap: '4px', color: '#fbbf24', marginBottom: '4px' }}>
+                  <Star size={14} fill="#fbbf24" />
+                  <Star size={14} fill="#fbbf24" />
+                  <Star size={14} fill="#fbbf24" />
+                  <Star size={14} fill="#fbbf24" />
+                  <Star size={14} fill="#fbbf24" />
+                </div>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontStyle: 'italic' }}>
+                  "Platform makes our monthly rotations incredibly transparent. No more spreadsheet arguments!"
+                </p>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>- John D. (Premium Gold)</span>
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', gap: '4px', color: '#fbbf24', marginBottom: '4px' }}>
+                  <Star size={14} fill="#fbbf24" />
+                  <Star size={14} fill="#fbbf24" />
+                  <Star size={14} fill="#fbbf24" />
+                  <Star size={14} fill="#fbbf24" />
+                  <Star size={14} fill="#fbbf24" />
+                </div>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontStyle: 'italic' }}>
+                  "Organizing rotating payouts with friends has never been so seamless and automated."
+                </p>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>- Sarah M. (Standard Saver)</span>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setLandingModal('NONE')} className="btn btn-secondary">
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

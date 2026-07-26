@@ -11,7 +11,8 @@ import {
   Users,
   Briefcase,
   PiggyBank,
-  CheckCircle
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 
 interface PageProps {
@@ -88,10 +89,16 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     activeUsersCount = allUsers.filter((u) => u.isActive).length;
     invitedUsersCount = allUsers.length;
 
-    // Populate monthly data (filtered by year)
+    // Populate monthly data (filtered by year, past & current month only)
+    const now = new Date();
+    const currentYearNum = now.getFullYear();
+    const currentMonthIdx = now.getMonth();
+
     confirmedPaymentsYearly.forEach((p) => {
       const monthIdx = months.indexOf(p.month);
-      if (monthIdx !== -1) {
+      const pYear = Number(selectedYear);
+      const isFuture = pYear > currentYearNum || (pYear === currentYearNum && monthIdx > currentMonthIdx);
+      if (monthIdx !== -1 && !isFuture) {
         monthlyData[monthIdx] += p.amount;
       }
     });
@@ -115,10 +122,16 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     totalPaymentsCount = myPaymentsYearly.length;
     confirmedPaymentsCount = myConfirmedPaymentsYearly.length;
 
-    // Populate monthly data (filtered by year)
+    // Populate monthly data (filtered by year, past & current month only)
+    const now = new Date();
+    const currentYearNum = now.getFullYear();
+    const currentMonthIdx = now.getMonth();
+
     myConfirmedPaymentsYearly.forEach((p) => {
       const monthIdx = months.indexOf(p.month);
-      if (monthIdx !== -1) {
+      const pYear = Number(selectedYear);
+      const isFuture = pYear > currentYearNum || (pYear === currentYearNum && monthIdx > currentMonthIdx);
+      if (monthIdx !== -1 && !isFuture) {
         monthlyData[monthIdx] += p.amount;
       }
     });
@@ -170,6 +183,40 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </h3>
             <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, display: 'block', marginTop: '4px' }}>
               Awaiting Confirmation ({selectedYear})
+            </span>
+          </div>
+        </div>
+
+        {/* Card: Unconfirmed Payments */}
+        <div style={{
+          backgroundColor: '#ffffff',
+          border: '1px solid #f3f4f6',
+          borderRadius: '16px',
+          padding: '24px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          minHeight: '140px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              UNCONFIRMED PAYMENTS
+            </span>
+            <div style={{
+              width: '32px', height: '32px', borderRadius: '50%',
+              backgroundColor: 'rgba(239, 68, 68, 0.08)', color: '#dc2626',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              <AlertCircle size={16} />
+            </div>
+          </div>
+          <div style={{ marginTop: '12px' }}>
+            <h3 style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#111827', margin: 0 }}>
+              {totalPaymentsCount - confirmedPaymentsCount} / {totalPaymentsCount}
+            </h3>
+            <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, display: 'block', marginTop: '4px' }}>
+              Pending Admin Verification ({selectedYear})
             </span>
           </div>
         </div>
@@ -318,7 +365,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
         {/* Responsive SVG Chart */}
         <div style={{ width: '100%', overflowX: 'auto', padding: '10px 0' }}>
-          <MonthlyRevenueChart monthlyData={monthlyData} months={months} />
+          <MonthlyRevenueChart monthlyData={monthlyData} months={months} selectedYear={selectedYear} />
         </div>
       </div>
     </div>

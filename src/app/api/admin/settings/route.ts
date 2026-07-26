@@ -11,18 +11,17 @@ async function getUserSession() {
 }
 
 export async function GET() {
-  const session = await getUserSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-  }
-
-  // Get both savingGoals and commitmentAmounts
+  // Publicly accessible settings for landing page and dashboard
   const savingGoals = (await db.settings.findUnique({ where: { key: 'savingGoals' } }))?.value || [];
   const commitmentAmounts = (await db.settings.findUnique({ where: { key: 'commitmentAmounts' } }))?.value || [];
+  const membershipAgreement = (await db.settings.findUnique({ where: { key: 'membershipAgreement' } }))?.value || null;
+  const feeSchedule = (await db.settings.findUnique({ where: { key: 'feeSchedule' } }))?.value || null;
 
   return NextResponse.json({
     savingGoals,
-    commitmentAmounts
+    commitmentAmounts,
+    membershipAgreement,
+    feeSchedule
   });
 }
 

@@ -5,10 +5,20 @@ import { useState } from 'react';
 interface MonthlyRevenueChartProps {
   monthlyData: number[];
   months: string[];
+  selectedYear?: string;
 }
 
-export default function MonthlyRevenueChart({ monthlyData, months }: MonthlyRevenueChartProps) {
+export default function MonthlyRevenueChart({ monthlyData, months, selectedYear = '2026' }: MonthlyRevenueChartProps) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
+  const now = new Date();
+  const currentYearNum = now.getFullYear();
+  const currentMonthIdx = now.getMonth();
+
+  const isFutureMonth = (idx: number) => {
+    const pYear = Number(selectedYear);
+    return pYear > currentYearNum || (pYear === currentYearNum && idx > currentMonthIdx);
+  };
 
   const chartWidth = 720;
   const chartHeight = 240;
@@ -40,8 +50,8 @@ export default function MonthlyRevenueChart({ monthlyData, months }: MonthlyReve
           <div style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 600, marginBottom: '4px' }}>
             {months[hoveredIdx].substring(0, 3)}
           </div>
-          <div style={{ color: '#064e3b', fontSize: '0.8rem', fontWeight: 500 }}>
-            revenue : £{monthlyData[hoveredIdx].toFixed(2)}
+          <div style={{ color: isFutureMonth(hoveredIdx) ? '#9ca3af' : '#064e3b', fontSize: '0.8rem', fontWeight: 500 }}>
+            {isFutureMonth(hoveredIdx) ? 'Future Month' : `revenue : £${monthlyData[hoveredIdx].toFixed(2)}`}
           </div>
         </div>
       )}
@@ -135,8 +145,8 @@ export default function MonthlyRevenueChart({ monthlyData, months }: MonthlyReve
                 fill="transparent"
               />
 
-              {/* Bar (only rendered if val > 0) */}
-              {val > 0 && (
+              {/* Bar (only rendered if val > 0 and NOT a future month) */}
+              {val > 0 && !isFutureMonth(idx) && (
                 <rect
                   x={x}
                   y={y}
