@@ -509,13 +509,11 @@ export async function DELETE(request: Request) {
         continue;
       }
 
-      // Check if user has ANY savings commitment - disallow deletion
-      const userCommitments = await db.commitments.findMany((c) => c.memberId === id);
+      // Check if user has ANY savings commitment - skip (don't block the whole batch)
+      const userCommitments = await db.commitments.findMany((c: any) => c.memberId === id);
       if (userCommitments.length > 0) {
-        return NextResponse.json(
-          { error: "This user have a already a saving commitment" },
-          { status: 400 }
-        );
+        errors.push(`${user.name} (${user.email}) has an active savings commitment and was skipped.`);
+        continue;
       }
 
       // Archive / Move to deleted records

@@ -753,12 +753,15 @@ export default function ManageUsersPage() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const deletableIds = filteredUsers
+      const deletableIds = paginatedUsers
         .filter(u => !u.isSuperAdmin && u.id !== currentUser?.id)
         .map(u => u.id);
-      setSelectedUserIds(deletableIds);
+      // Add page selections to existing selections (don't clear other pages)
+      setSelectedUserIds(prev => Array.from(new Set([...prev, ...deletableIds])));
     } else {
-      setSelectedUserIds([]);
+      // Remove only current page users from selection
+      const pageIds = new Set(paginatedUsers.map(u => u.id));
+      setSelectedUserIds(prev => prev.filter(id => !pageIds.has(id)));
     }
   };
 
@@ -786,16 +789,26 @@ export default function ManageUsersPage() {
         setSelectedUserIds([]);
         fetchUsers();
         setActiveModal('NONE');
+        // Show partial result info if some were skipped
+        if (data.errors && data.errors.length > 0) {
+          await dialog.alert(
+            `Deleted ${data.deletedIds?.length || 0} user(s)`,
+            `The following could not be deleted (they have savings commitments):\n\n${data.errors.join('\n')}`
+          );
+        }
       } else {
         setActiveModal('NONE');
+        // Even on 400, partial deletes may have happened — refresh
+        fetchUsers();
+        setSelectedUserIds([]);
         await dialog.alert(
-          'Oops...',
-          data.error || 'This user have a already a saving commitment'
+          'Some users could not be deleted',
+          data.error || 'One or more users have an active savings commitment and were skipped.'
         );
       }
     } catch (err) {
       setActiveModal('NONE');
-      await dialog.alert('Oops...', 'This user have a already a saving commitment');
+      await dialog.alert('Error', 'A network error occurred while deleting users.');
     } finally {
       setIsBulkDeleting(false);
     }
@@ -823,6 +836,18 @@ export default function ManageUsersPage() {
       (u.id && u.id.toLowerCase().includes(q))
     );
   });
+
+  // Pagination
+  const USERS_PER_PAGE = 10;
+  const [usersPage, setUsersPage] = useState(1);
+  const totalUsersPages = Math.max(1, Math.ceil(filteredUsers.length / USERS_PER_PAGE));
+  const paginatedUsers = filteredUsers.slice((usersPage - 1) * USERS_PER_PAGE, usersPage * USERS_PER_PAGE);
+
+  // Reset to page 1 when search changes
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    setUsersPage(1);
+  };
 
   return (
     <div>
@@ -916,7 +941,7 @@ export default function ManageUsersPage() {
               type="text"
               placeholder="Search"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className={styles.searchInput}
             />
           </div>
@@ -947,6 +972,7 @@ export default function ManageUsersPage() {
           <span style={{ color: 'var(--text-muted)' }}>Loading Members...</span>
         </div>
       ) : (
+        <>
         <div className="table-container">
           <table className="custom-table">
             <thead>
@@ -954,7 +980,7 @@ export default function ManageUsersPage() {
                 <th style={{ width: '40px', paddingLeft: '16px' }}>
                   <input
                     type="checkbox"
-                    checked={filteredUsers.length > 0 && filteredUsers.filter(u => !u.isSuperAdmin && u.id !== currentUser?.id).every(u => selectedUserIds.includes(u.id))}
+                    checked={paginatedUsers.length > 0 && paginatedUsers.filter(u => !u.isSuperAdmin && u.id !== currentUser?.id).every(u => selectedUserIds.includes(u.id))}
                     onChange={(e) => handleSelectAll(e.target.checked)}
                     style={{ accentColor: 'var(--secondary)', cursor: 'pointer' }}
                   />
@@ -972,15 +998,15 @@ export default function ManageUsersPage() {
             </thead>
 
             <tbody>
-              {filteredUsers.length === 0 ? (
+              {paginatedUsers.length === 0 ? (
                 <tr>
                   <td colSpan={10} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                     No members found matching your search.
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((u, idx) => {
-                  const isBottomRow = idx >= 2 && filteredUsers.length >= 4 && idx >= filteredUsers.length - 2;
+                paginatedUsers.map((u, idx) => {
+                  const isBottomRow = idx >= 2 && paginatedUsers.length >= 4 && idx >= paginatedUsers.length - 2;
                   return (
                   <tr key={u.id} style={selectedUserIds.includes(u.id) ? { backgroundColor: 'rgba(255, 255, 255, 0.02)' } : undefined}>
                     <td style={{ paddingLeft: '16px' }}>
@@ -1094,6 +1120,67 @@ export default function ManageUsersPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {filteredUsers.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px', padding: '0 4px', flexWrap: 'wrap', gap: '8px' }}>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+              Showing {Math.min((usersPage - 1) * 10 + 1, filteredUsers.length)}–{Math.min(usersPage * 10, filteredUsers.length)} of {filteredUsers.length} member{filteredUsers.length !== 1 ? 's' : ''}
+            </span>
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <button
+                onClick={() => setUsersPage(p => Math.max(1, p - 1))}
+                disabled={usersPage === 1}
+                style={{
+                  padding: '6px 12px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600,
+                  border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)',
+                  color: usersPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)',
+                  cursor: usersPage === 1 ? 'not-allowed' : 'pointer', opacity: usersPage === 1 ? 0.5 : 1,
+                  transition: 'all 0.15s'
+                }}
+              >← Prev</button>
+
+              {Array.from({ length: totalUsersPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalUsersPages || Math.abs(p - usersPage) <= 1)
+                .reduce<(number | '...')[]>((acc, p, idx, arr) => {
+                  if (idx > 0 && typeof arr[idx - 1] === 'number' && (p as number) - (arr[idx - 1] as number) > 1) acc.push('...');
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((item, idx) =>
+                  item === '...' ? (
+                    <span key={`ellipsis-${idx}`} style={{ padding: '6px 4px', color: 'var(--text-muted)', fontSize: '0.82rem' }}>…</span>
+                  ) : (
+                    <button
+                      key={item}
+                      onClick={() => setUsersPage(item as number)}
+                      style={{
+                        padding: '6px 11px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600,
+                        border: '1px solid', transition: 'all 0.15s', cursor: 'pointer',
+                        borderColor: usersPage === item ? 'var(--secondary)' : 'var(--border-color)',
+                        backgroundColor: usersPage === item ? 'var(--secondary)' : 'var(--card-bg)',
+                        color: usersPage === item ? '#fff' : 'var(--text-primary)',
+                      }}
+                    >{item}</button>
+                  )
+                )
+              }
+
+              <button
+                onClick={() => setUsersPage(p => Math.min(totalUsersPages, p + 1))}
+                disabled={usersPage === totalUsersPages}
+                style={{
+                  padding: '6px 12px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600,
+                  border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)',
+                  color: usersPage === totalUsersPages ? 'var(--text-muted)' : 'var(--text-primary)',
+                  cursor: usersPage === totalUsersPages ? 'not-allowed' : 'pointer',
+                  opacity: usersPage === totalUsersPages ? 0.5 : 1, transition: 'all 0.15s'
+                }}
+              >Next →</button>
+            </div>
+          </div>
+        )}
+        </>
       )}
 
       {/* --- ADD MEMBER MODAL --- */}
