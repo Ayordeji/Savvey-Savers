@@ -137,6 +137,13 @@
   overflow: hidden;
 }
 
+.dropdownMenuUp {
+  top: auto !important;
+  bottom: 100% !important;
+  margin-top: 0 !important;
+  margin-bottom: 4px !important;
+}
+
 .dropdownItem {
   width: 100%;
   padding: 10px 14px;

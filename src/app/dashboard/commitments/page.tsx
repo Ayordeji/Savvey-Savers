@@ -546,8 +546,9 @@ export default function SavingsCommitmentsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredCommitments.map((c) => {
+                filteredCommitments.map((c, idx) => {
                   const isExpanded = expandedCmtId === c.id;
+                  const isBottomRow = idx >= filteredCommitments.length - 2;
                   return (
                     <Fragment key={c.id}>
                       <tr className={isExpanded ? styles.expandedRow : ''} style={{ cursor: 'pointer' }}>
@@ -573,7 +574,7 @@ export default function SavingsCommitmentsPage() {
                                 <MoreVertical size={16} />
                               </button>
                               {openDropdownId === c.id && (
-                                <div className={styles.dropdownMenu}>
+                                <div className={`${styles.dropdownMenu} ${isBottomRow ? styles.dropdownMenuUp : ''}`}>
                                   <button onClick={() => handleOpenEditModal(c)} className={styles.dropdownItem}>
                                     <Edit size={14} />
                                     <span>Edit Commitment</span>
