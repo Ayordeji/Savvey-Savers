@@ -447,17 +447,18 @@ button {
   }
 }
 
-/* Desktop 6-card grid alignment */
+/* Desktop 3-column card grid alignment */
 @media (min-width: 1024px) {
   .dashboard-cards-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 16px !important;
   }
 }
 
-/* Tablet (769px to 1023px) 3-column card grid */
+/* Tablet (769px to 1023px) 2-column card grid */
 @media (max-width: 1023px) and (min-width: 769px) {
   .dashboard-cards-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 14px !important;
   }
 }
