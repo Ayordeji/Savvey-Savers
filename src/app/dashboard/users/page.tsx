@@ -782,20 +782,8 @@ export default function ManageUsersPage() {
           </h2>
         </div>
         
-        {/* Top auxiliary buttons group to match Savvey Savers */}
+        {/* Top action button */}
         <div className={styles.topButtonsGroup}>
-          <button onClick={() => setActiveModal('AGREEMENT')} className="btn btn-secondary btn-sm">
-            <FileText size={14} />
-            <span>Membership Agreement</span>
-          </button>
-          <button onClick={() => setActiveModal('SCHEDULE')} className="btn btn-secondary btn-sm">
-            <CalendarRange size={14} />
-            <span>Fee Schedule</span>
-          </button>
-          <button onClick={() => setActiveModal('REVIEWS')} className="btn btn-secondary btn-sm">
-            <Star size={14} />
-            <span>Reviews</span>
-          </button>
           <button onClick={handleOpenAddModal} className="btn btn-primary btn-sm" style={{ backgroundColor: 'var(--secondary)', color: 'white' }}>
             <Plus size={16} />
             <span>Add Member</span>
@@ -855,14 +843,14 @@ export default function ManageUsersPage() {
                     style={{ accentColor: 'var(--secondary)', cursor: 'pointer' }}
                   />
                 </th>
-                <th className="hidden-mobile">Invitation ID</th>
+                <th>Invitation ID</th>
                 <th>Name</th>
-                <th className="hidden-mobile">Email</th>
-                <th className="hidden-mobile">Phone Number</th>
+                <th>Email</th>
+                <th>Phone Number</th>
                 <th>Role</th>
-                <th className="hidden-mobile">Created On</th>
+                <th>Created On</th>
                 <th>Is Active</th>
-                <th className="hidden-mobile">Membership</th>
+                <th>Membership</th>
                 <th style={{ textAlign: 'right' }}>Action</th>
               </tr>
             </thead>
@@ -889,13 +877,13 @@ export default function ManageUsersPage() {
                         />
                       )}
                     </td>
-                    <td className="hidden-mobile" style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                       {u.displayId || u.id}
                     </td>
                     <td style={{ fontWeight: 600 }}>{u.name}</td>
 
-                    <td className="hidden-mobile">{u.email}</td>
-                    <td className="hidden-mobile">{u.phone}</td>
+                    <td>{u.email}</td>
+                    <td>{u.phone}</td>
                     <td>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
                         <span className={`status-pill ${u.role === 'ADMIN' ? 'completed' : 'active'}`} style={{ fontSize: '0.7rem' }}>
@@ -908,7 +896,7 @@ export default function ManageUsersPage() {
                         )}
                       </div>
                     </td>
-                    <td className="hidden-mobile">{new Date(u.createdAt).toLocaleDateString('en-GB')}</td>
+                    <td>{new Date(u.createdAt).toLocaleDateString('en-GB')}</td>
                     <td>
                       <label className={styles.switch}>
                         <input
@@ -919,7 +907,7 @@ export default function ManageUsersPage() {
                         <span className={styles.slider}></span>
                       </label>
                     </td>
-                    <td className="hidden-mobile">
+                    <td>
                       <button
                         onClick={() => handleOpenViewModal(u)}
                         style={{

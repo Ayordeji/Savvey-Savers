@@ -39,7 +39,7 @@ export async function GET() {
     emailOnReminder: true
   };
 
-  const emailTemplates = (await db.settings.findUnique({ where: { key: 'emailTemplates' } }))?.value || [
+  const defaultEmailTemplates = [
     { id: "1", title: "Forgot Password", reminderHours: "24", enabled: true, subject: "Savvey Savers Forgot Password", body: "Dear <b>{name}</b>,\n\nYou have requested a password reset on the Savvey Savers peer-to-peer lending Platform.\n\nPlease use this link <a href=\"{reacturl}\">{reacturl}</a> to reset your password.\n\nIf you require any support, please contact your Admin.\n\nKind Regards,\nSavvey Savers Network Support." },
     { id: "2", title: "Savvey Savers Account Registration", reminderHours: "N/A", enabled: true, subject: "Savvey Savers Account Registration", body: "Dear <b>{name}</b>,\n\nYou have been invited by your Account Admin to register your account on the Savvey Savers peer-to-peer lending Platform.\n\nPlease use this link <a href=\"{reacturl}\">{reacturl}</a> to complete your account registration.\n\nIf you require any support, please contact your Admin.\n\nKind Regards,\nSavvey Savers Network Support" },
     { id: "3", title: "Admin Notice of Member Invitation", reminderHours: "N/A", enabled: true, subject: "Notice To Admin of Member Invitation", body: "Hi <b>Admin</b>,\n\nThis to inform you that <b>{invitedUser}</b> has invited <b>{invite_user}</b> to join the Savvey Savers Club.\nPlease log into the platform to see more details.\n\nKind Regards,\nSavvey Savers Network Support" },
@@ -72,6 +72,13 @@ export async function GET() {
     { id: "30", title: "Member Removal after Breach", reminderHours: "N/A", enabled: true, subject: "Notice of Membership Termination", body: "Dear {{MemberName}},\n\nFollowing a breach of one or more terms of the Savvey Savers Collective Membership Agreement, we have made the difficult decision to terminate your membership of Savvey Savers Network Limited.\n\nAs a result, your access to the Members’ Portal has now been deactivated, and you will no longer be able to sign in using your existing login credentials.\n\nThis decision was not made lightly. We sincerely thank you for your time as a member and hope you continue to make saving a priority in the future.\n\nIf you have any questions regarding this decision, please contact your Dedicated Relationship Manager.\n\nKind regards,\nMembership Compliance Team\nSavvey Savers Collective" },
     { id: "31", title: "Leaving Member", reminderHours: "N/A", enabled: true, subject: "Confirmation of Membership Closure", body: "Dear {{MemberName}},\n\nFollowing your request to leave Savvey Savers Collective, your membership has now been closed and your access to the Members’ Portal has been deactivated.\n\nYou are always welcome to rejoin the Network in the future. In the meantime, you can continue to visit our website to stay up to date with the latest news and activities.\n\nThank you for being part of the Savvey Savers Network. We wish you every success in your savings journey and hope to welcome you back in the future.\n\nKind regards,\nPlatform Support\nSavvey Savers Collective" },
     { id: "32", title: "Inactive Member", reminderHours: "N/A", enabled: true, subject: "Your Membership Has Been Deactivated", body: "Dear {{MemberName}},\n\nDue to an extended period of inactivity, your access to the Members’ Portal has been deactivated.\n\nYou’re always welcome to return to Savvey Savers Collective in the future. If you would like to rejoin, please contact your Dedicated Relationship Manager, who will be happy to assist you. You can also continue to visit our website to stay up to date with the latest news and activities.\n\nWe wish you every success in your savings journey and hope to welcome you back in the future.\n\nKind regards,\nPlatform Support\nSavvey Savers Collective" }
+  ];
+
+  const dbEmailTemplates = (await db.settings.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
+  const existingIds = new Set((dbEmailTemplates as any[]).map((t: any) => t.id));
+  const emailTemplates = [
+    ...dbEmailTemplates,
+    ...defaultEmailTemplates.filter((t) => !existingIds.has(t.id))
   ];
 
   return NextResponse.json({

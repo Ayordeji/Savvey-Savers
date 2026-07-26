@@ -452,6 +452,12 @@ button {
   .desktop-sidebar {
     display: flex !important;
   }
+  .desktop-global-header-bar {
+    display: flex !important;
+  }
+  .mobile-header-navigation-card {
+    display: none !important;
+  }
   .mobile-drawer-close-btn {
     display: none !important;
   }
@@ -518,15 +524,17 @@ button {
 }
 
 .table-container {
-  overflow: visible !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
 .custom-table {
-  overflow: visible !important;
+  min-width: 750px;
 }
 
-/* Responsive adjustments for mobile header and tables */
-@media (max-width: 768px) {
+/* Responsive adjustments for mobile header and layout */
+@media (max-width: 1023px) {
   .global-header-bar {
     padding: 12px 14px !important;
     flex-direction: column-reverse !important;
@@ -534,39 +542,14 @@ button {
     gap: 12px !important;
   }
 
-  .global-header-left {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    justify-content: flex-start !important;
-    width: 100% !important;
-    gap: 8px !important;
-    overflow-x: visible !important;
-    padding-bottom: 0 !important;
-  }
-
-  .global-header-left button,
-  .global-header-left a {
-    padding: 6px 10px !important;
-    font-size: 0.75rem !important;
-    font-weight: 600 !important;
-    white-space: normal !important;
-    text-align: center;
-    border-radius: 8px !important;
-  }
-
-  .global-header-right {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    width: 100% !important;
-  }
-
   .table-container {
     overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
   }
 
   .hidden-mobile {
-    display: none !important;
+    display: table-cell !important;
   }
 
   header {
