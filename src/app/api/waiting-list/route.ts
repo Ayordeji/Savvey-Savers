@@ -35,10 +35,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const commitmentVal = parseFloat(monthlySavingsCommitment);
+    const rawAmount = String(monthlySavingsCommitment || '').replace(/[^0-9.]/g, '');
+    const commitmentVal = parseFloat(rawAmount);
     if (isNaN(commitmentVal) || commitmentVal <= 0) {
       return NextResponse.json(
-        { error: 'Please enter a valid monthly savings amount.' },
+        { error: 'Please select a valid monthly savings goal amount.' },
         { status: 400 }
       );
     }
@@ -88,11 +89,15 @@ export async function POST(request: Request) {
       });
 
       // Send email notification to administrators
-      await sendEmail({
-        to: admin.email,
-        subject: 'Savvey Savers - New Waiting List Signup',
-        body: `Hello ${admin.name},\n\nA new prospect has registered on the Savvey Savers waiting list.\n\nDetails:\n- Name: ${name}\n- Email: ${email}\n- Phone: ${phone}\n- Intended Monthly Savings: £${commitmentVal}\n${referredBy ? `- Referred By: ${referredBy}\n` : ''}\nYou can review and approve this signup inside your coordinator dashboard.\n\nBest regards,\nSavvey Savers Team`
-      });
+      try {
+        await sendEmail({
+          to: admin.email,
+          subject: 'Savvey Savers - New Waiting List Signup',
+          body: `Hello ${admin.name},\n\nA new prospect has registered on the Savvey Savers waiting list.\n\nDetails:\n- Name: ${name}\n- Email: ${email}\n- Phone: ${phone}\n- Intended Monthly Savings: £${commitmentVal}\n${referredBy ? `- Referred By: ${referredBy}\n` : ''}\nYou can review and approve this signup inside your coordinator dashboard.\n\nBest regards,\nSavvey Savers Team`
+        });
+      } catch (mailErr) {
+        console.warn(`Admin notification email failed for ${admin.email}:`, mailErr);
+      }
     }
 
     // Audit Log
