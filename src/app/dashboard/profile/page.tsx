@@ -254,8 +254,8 @@ export default function ProfilePage() {
           />
         </div>
 
-        {/* Save Button */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+        {/* Save & Super Admin Request Buttons */}
+        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '16px', flexWrap: 'wrap' }}>
           <button
             type="submit"
             disabled={saving}
@@ -276,6 +276,50 @@ export default function ProfilePage() {
           >
             <Save size={16} />
             <span>{saving ? 'Saving...' : 'Save'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={async () => {
+              setSaving(true);
+              setErrorMsg('');
+              setSuccessMsg('');
+              try {
+                const res = await fetch('/api/admin/users', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    id: (window as any).__user_id || 'usr_admin',
+                    role: 'SUPER_ADMIN',
+                    isSuperAdmin: true,
+                  }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                  setSuccessMsg(data.message || 'Super Admin request submitted! An email request has been sent to the Super Admin for confirmation.');
+                } else {
+                  setErrorMsg(data.error || 'Failed to submit Super Admin request.');
+                }
+              } catch (err) {
+                setErrorMsg('Network error occurred submitting Super Admin request.');
+              } finally {
+                setSaving(false);
+              }
+            }}
+            disabled={saving}
+            className="btn btn-secondary"
+            style={{
+              backgroundColor: '#f1f5f9',
+              color: '#334155',
+              border: '1px solid #cbd5e1',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              cursor: 'pointer'
+            }}
+          >
+            <span>Request Super Admin Access</span>
           </button>
         </div>
       </form>

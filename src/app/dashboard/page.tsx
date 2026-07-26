@@ -146,13 +146,13 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-      {/* Summary Cards Grid */}
+      {/* Summary Cards Grid (6 items on 1 row for desktop) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '16px',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gap: '12px',
         width: '100%'
-      }}>
+      }} className="dashboard-cards-grid">
         {/* Card 1: Pending Payments */}
         <div style={{
           backgroundColor: '#ffffff',

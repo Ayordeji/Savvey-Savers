@@ -500,6 +500,9 @@ export default function ManageUsersPage() {
       if (res.ok) {
         fetchUsers();
         setActiveModal('NONE');
+        if (data.pendingSuperAdmin) {
+          await dialog.alert('Super Admin Request Submitted', data.message || 'Super Admin request submitted! An email confirmation has been sent to the Super Admin for approval.');
+        }
       } else {
         setErrorMsg(data.error || 'Failed to update user.');
       }

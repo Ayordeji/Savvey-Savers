@@ -447,6 +447,13 @@ button {
   }
 }
 
+/* Desktop 6-card grid alignment */
+@media (min-width: 1024px) {
+  .dashboard-cards-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+}
+
 /* Responsive adjustments for mobile and tablets */
 @media (max-width: 768px) {
   .hidden-mobile {
@@ -456,14 +463,33 @@ button {
     padding: 0 16px !important;
   }
   main {
-    padding: 30px 16px !important;
-    gap: 24px !important;
+    padding: 20px 14px !important;
+    gap: 16px !important;
   }
   h1 {
-    font-size: 1.85rem !important;
+    font-size: 1.6rem !important;
   }
   .glass-panel {
+    padding: 16px !important;
+  }
+  .modal-content {
+    max-width: 95vw !important;
+    width: 95vw !important;
     padding: 20px !important;
+  }
+  .custom-table th,
+  .custom-table td {
+    padding: 8px 10px !important;
+    font-size: 0.8rem !important;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Stack 2-column form grids vertically on mobile screens */
+  form div[style*="gridTemplateColumns"],
+  div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
   }
 }
 

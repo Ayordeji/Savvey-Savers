@@ -214,6 +214,13 @@ function SettingsContent() {
     const updated = [...amounts];
     updated[index].enabled = !updated[index].enabled;
     setAmounts(updated);
+    handleSaveSettingKey('commitmentAmounts', updated, 'Commitment Amounts');
+  };
+
+  const handleDeleteAmount = (index: number) => {
+    const updated = amounts.filter((_, i) => i !== index);
+    setAmounts(updated);
+    handleSaveSettingKey('commitmentAmounts', updated, 'Commitment Amounts');
   };
 
   const handleAddAmount = (e: React.FormEvent) => {
@@ -651,17 +658,28 @@ function SettingsContent() {
                     </button>
                   </form>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px' }}>
                     {amounts.map((a, idx) => (
-                      <label key={a.amount} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: a.enabled ? '#f0fdf4' : '#ffffff', cursor: 'pointer' }}>
-                        <span style={{ fontWeight: 700, color: '#064e3b' }}>£{a.amount}</span>
-                        <input
-                          type="checkbox"
-                          checked={a.enabled}
-                          onChange={() => handleToggleAmount(idx)}
-                          style={{ width: '16px', height: '16px', accentColor: '#2e3a4e' }}
-                        />
-                      </label>
+                      <div key={a.amount} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: a.enabled ? '#f0fdf4' : '#ffffff' }}>
+                        <span style={{ fontWeight: 700, color: '#064e3b', fontSize: '0.9rem' }}>£{a.amount}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <input
+                            type="checkbox"
+                            checked={a.enabled}
+                            onChange={() => handleToggleAmount(idx)}
+                            style={{ width: '16px', height: '16px', accentColor: '#2e3a4e', cursor: 'pointer' }}
+                            title="Enable/Disable Tier"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAmount(idx)}
+                            style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
+                            title="Delete Tier"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
