@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import styles from './users.module.css';
 
@@ -41,9 +41,26 @@ export default function ManageUsersPage() {
 
 
   // Modal States
-  const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'VIEW' | 'DELETE_CONFIRM' | 'BULK_DELETE_CONFIRM' | 'MEMBERSHIP_DETAILS' | 'AGREEMENT' | 'SCHEDULE' | 'REVIEWS'>('NONE');
+  const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'VIEW' | 'DELETE_CONFIRM' | 'BULK_DELETE_CONFIRM' | 'MEMBERSHIP_DETAILS' | 'AGREEMENT' | 'SCHEDULE' | 'REVIEWS' | 'REQUEST_FEE' | 'CONFIRM_REQUEST_FEE' | 'RECORD_FEE_PAYMENT'>('NONE');
   const [membershipAgreement, setMembershipAgreement] = useState('');
   const [feeSchedule, setFeeSchedule] = useState('');
+
+  const [feeBase, setFeeBase] = useState('200');
+  const [feeAdmin, setFeeAdmin] = useState('30');
+  const [feeYear, setFeeYear] = useState('2027');
+  const [feePaidAmount, setFeePaidAmount] = useState('230');
+  const [feePaidDate, setFeePaidDate] = useState(new Date().toISOString().split('T')[0]);
+  const [userFeeRecords, setUserFeeRecords] = useState<any[]>([]);
+  const [userSavingsByYear, setUserSavingsByYear] = useState<Record<number, number>>({});
+
+  const validateUkPhoneNumber = (phoneStr: string) => {
+    if (!phoneStr) return false;
+    const cleaned = phoneStr.replace(/[\s\-\(\)]/g, '');
+    if (/^\+44\d{10}$/.test(cleaned)) return true;
+    if (/^0\d{10}$/.test(cleaned)) return true;
+    if (/^44\d{10}$/.test(cleaned)) return true;
+    return false;
+  };
 
   const getMembershipFee = (membership?: string) => {
     if (!membership) return '5.00';
@@ -175,10 +192,38 @@ export default function ManageUsersPage() {
     setOpenDropdownId(null);
   };
 
-  const handleOpenViewModal = (user: User) => {
+  const handleOpenViewModal = async (user: User) => {
     setSelectedUser(user);
     setActiveModal('VIEW');
     setOpenDropdownId(null);
+    setUserFeeRecords([]);
+    setUserSavingsByYear({});
+
+    try {
+      const feeRes = await fetch(`/api/admin/users/membership-fee?userId=${user.id}`);
+      if (feeRes.ok) {
+        const records = await feeRes.json();
+        setUserFeeRecords(records);
+      }
+
+      const commRes = await fetch('/api/admin/commitments');
+      if (commRes.ok) {
+        const data = await commRes.json();
+        const allCommitments = data || [];
+        const userCommitments = Array.isArray(allCommitments) ? allCommitments.filter((c: any) => c.memberId === user.id) : [];
+
+        const savingsMap: Record<number, number> = {};
+        userCommitments.forEach((c: any) => {
+          const yr = Number(c.collectionYear) || new Date().getFullYear();
+          if (c.status === 'COMPLETED' || c.status === 'ACTIVE') {
+            savingsMap[yr] = (savingsMap[yr] || 0) + (Number(c.amount) || 0);
+          }
+        });
+        setUserSavingsByYear(savingsMap);
+      }
+    } catch (err) {
+      console.error('Error fetching view membership data:', err);
+    }
   };
 
   const handleOpenDeleteModal = (user: User) => {
@@ -192,10 +237,112 @@ export default function ManageUsersPage() {
     setActiveModal('MEMBERSHIP_DETAILS');
   };
 
+  const handleOpenRequestFeeModal = (user: User) => {
+    setSelectedUser(user);
+    setFeeBase('200');
+    setFeeAdmin('30');
+    setFeeYear(String(new Date().getFullYear() + 1));
+    setActiveModal('REQUEST_FEE');
+    setOpenDropdownId(null);
+  };
+
+  const handleOpenRecordPaymentModal = (user: User) => {
+    setSelectedUser(user);
+    setFeePaidAmount('230.00');
+    setFeePaidDate(new Date().toISOString().split('T')[0]);
+    setActiveModal('RECORD_FEE_PAYMENT');
+    setOpenDropdownId(null);
+  };
+
+  const handleRequestFeeSubmit = async () => {
+    if (!selectedUser) return;
+    setFormSubmitting(true);
+    try {
+      const res = await fetch('/api/admin/users/membership-fee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'REQUEST',
+          userId: selectedUser.id,
+          year: feeYear,
+          baseFee: parseFloat(feeBase) || 0,
+          adminFee: parseFloat(feeAdmin) || 0
+        })
+      });
+      if (res.ok) {
+        fetchUsers();
+        setActiveModal('NONE');
+        await dialog.alert('Fee Request Sent', `Membership fee request of £${((parseFloat(feeBase) || 0) + (parseFloat(feeAdmin) || 0)).toFixed(2)} for ${feeYear} has been created and sent to ${selectedUser.name}.`);
+      } else {
+        const data = await res.json();
+        setErrorMsg(data.error || 'Failed to send fee request.');
+      }
+    } catch (err) {
+      setErrorMsg('A network error occurred.');
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
+  const handleRecordFeePaymentSubmit = async () => {
+    if (!selectedUser) return;
+    setFormSubmitting(true);
+    try {
+      const res = await fetch('/api/admin/users/membership-fee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'RECORD_PAYMENT',
+          userId: selectedUser.id,
+          amountPaid: parseFloat(feePaidAmount) || 0,
+          paidAt: feePaidDate
+        })
+      });
+      if (res.ok) {
+        fetchUsers();
+        setActiveModal('NONE');
+        await dialog.alert('Payment Recorded', `Membership fee payment of £${(parseFloat(feePaidAmount) || 0).toFixed(2)} for ${selectedUser.name} has been recorded successfully.`);
+      } else {
+        const data = await res.json();
+        setErrorMsg(data.error || 'Failed to record fee payment.');
+      }
+    } catch (err) {
+      setErrorMsg('A network error occurred.');
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
+  const handleSendFeeReminder = async (user: User) => {
+    setOpenDropdownId(null);
+    try {
+      const res = await fetch('/api/admin/users/membership-fee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'REMIND',
+          userId: user.id
+        })
+      });
+      if (res.ok) {
+        await dialog.alert('Reminder Sent', `Membership fee payment reminder email sent to ${user.email}.`);
+      } else {
+        await dialog.alert('Error', 'Failed to send payment reminder.');
+      }
+    } catch (err) {
+      console.error('Reminder error:', err);
+    }
+  };
+
   const handleAddSubmit = async (inviteMode: 'SAVE' | 'SAVE_INVITE') => {
     setErrorMsg('');
     if (!formFirstName || !formEmail || !formPhone || !formRole) {
       setErrorMsg('First Name, Email, Phone, and Access Role are required.');
+      return;
+    }
+
+    if (!validateUkPhoneNumber(formPhone)) {
+      setErrorMsg('Phone Number must be a valid number. (UK eg.+447975556677)');
       return;
     }
 
@@ -242,6 +389,11 @@ export default function ManageUsersPage() {
     setErrorMsg('');
 
     if (!selectedUser) return;
+
+    if (!validateUkPhoneNumber(formPhone)) {
+      setErrorMsg('Phone Number must be a valid number. (UK eg.+447975556677)');
+      return;
+    }
     setFormSubmitting(true);
 
     try {
@@ -666,12 +818,18 @@ export default function ManageUsersPage() {
                               <Edit size={14} />
                               <span>Edit Details</span>
                             </button>
-                            {!u.membershipFeeConfirmed && u.role === 'MEMBER' && (
-                              <button onClick={() => handleConfirmFee(u.id)} className={styles.dropdownItem}>
-                                <CheckCircle size={14} />
-                                <span>Confirm Fee</span>
-                              </button>
-                            )}
+                            <button onClick={() => handleOpenRequestFeeModal(u)} className={styles.dropdownItem}>
+                              <FileText size={14} />
+                              <span>Request Membership Fee</span>
+                            </button>
+                            <button onClick={() => handleOpenRecordPaymentModal(u)} className={styles.dropdownItem}>
+                              <CheckCircle size={14} />
+                              <span>Record Membership Payment</span>
+                            </button>
+                            <button onClick={() => handleSendFeeReminder(u)} className={styles.dropdownItem}>
+                              <Mail size={14} />
+                              <span>Request Member To Pay Up</span>
+                            </button>
                              {!u.isActive ? (
                               <button onClick={() => handleResendInvite(u.id)} className={styles.dropdownItem}>
                                 <Mail size={14} />
@@ -1002,216 +1160,106 @@ export default function ManageUsersPage() {
         </div>
       )}
 
-      {/* --- VIEW DETAILS MODAL --- */}
-      {activeModal === 'VIEW' && selectedUser && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '520px' }}>
-            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
+      {/* --- CONFIRMATION POPUP MODAL (Screenshot Image 2) --- */}
+      {activeModal === 'CONFIRM_REQUEST_FEE' && selectedUser && (
+        <div className="modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="modal-content" style={{ maxWidth: '420px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '36px 28px', textAlign: 'center', position: 'relative' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
             </button>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)' }}>
-              View Details
+
+            {/* Exclamation Circle Icon matching Screenshot Image 2 */}
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid #fed7aa', backgroundColor: '#fff7ed', color: '#f97316', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
+              <span style={{ fontSize: '2.2rem', fontWeight: 300, lineHeight: 1 }}>!</span>
+            </div>
+
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 700, marginBottom: '12px', color: '#1f2937', fontFamily: 'var(--font-family-title)' }}>
+              Request For Membership Fee
             </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
-              Read-only member record configuration.
+            <p style={{ color: '#4b5563', fontSize: '0.925rem', marginBottom: '24px', lineHeight: 1.5 }}>
+              Are you sure you want to request membership fee payment?
             </p>
 
-            <div className={styles.detailGrid} style={{ gap: '16px' }}>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>First Name :</span>
-                <span className={styles.detailValue}>{selectedUser.firstName || selectedUser.name.split(' ')[0] || '-'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Last Name :</span>
-                <span className={styles.detailValue}>{selectedUser.lastName || selectedUser.name.split(' ').slice(1).join(' ') || '-'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Email :</span>
-                <span className={styles.detailValue}>{selectedUser.email}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Phone :</span>
-                <span className={styles.detailValue}>{selectedUser.phone}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Address 1 :</span>
-                <span className={styles.detailValue}>{selectedUser.addressLine1 || '-'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Address 2:</span>
-                <span className={styles.detailValue}>{selectedUser.addressLine2 || '-'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>City :</span>
-                <span className={styles.detailValue}>{selectedUser.city || '-'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Post Code :</span>
-                <span className={styles.detailValue}>{selectedUser.postCode || '-'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Country :</span>
-                <span className={styles.detailValue}>{selectedUser.country || '-'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Terms & Conditions :</span>
-                <span className={styles.detailValue} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <CheckCircle size={14} style={{ color: 'var(--status-success)' }} />
-                  <span>Accepted</span>
-                </span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Invitation Status :</span>
-                <span className={styles.detailValue}>
-                  {selectedUser.isActive ? 'Active' : 'Pending'}
-                </span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Role :</span>
-                <span className={styles.detailValue}>{selectedUser.role === 'ADMIN' ? 'Admin' : 'Member'}</span>
-              </div>
-              <div className={styles.detailItem} style={{ gridColumn: 'span 2' }}>
-                <span className={styles.detailLabel}>Member Id :</span>
-                <span className={styles.detailValue} style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{selectedUser.displayId || selectedUser.id}</span>
-              </div>
-            </div>
-
-            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary">
-                Close Detail
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={handleRequestFeeSubmit}
+                disabled={formSubmitting}
+                className="btn btn-primary"
+                style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 28px', fontWeight: 600 }}
+              >
+                {formSubmitting ? 'Submitting...' : 'Submit'}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- CUSTOM DELETE CONFIRMATION MODAL --- */}
-      {activeModal === 'DELETE_CONFIRM' && selectedUser && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '440px' }}>
-            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
-              <X size={20} />
-            </button>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center', marginTop: '12px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--status-error-bg)', color: 'var(--status-error)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <ShieldAlert size={28} />
-              </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-family-title)' }}>
-                Delete Item
-              </h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-                Are you sure you want to delete this User? This will archive their records, commitments, and cancel active cycles.
-              </p>
-            </div>
-
-            {errorMsg && (
-              <div style={{ backgroundColor: 'var(--status-error-bg)', color: 'var(--status-error)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '10px', borderRadius: '6px', fontSize: '0.85rem', marginTop: '16px', textAlign: 'center' }}>
-                {errorMsg}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-              <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary" style={{ flex: 1 }}>
+              <button
+                type="button"
+                onClick={() => setActiveModal('REQUEST_FEE')}
+                className="btn btn-secondary"
+                style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 28px', fontWeight: 600 }}
+              >
                 Cancel
               </button>
-              <button onClick={handleDeleteSubmit} disabled={formSubmitting} className="btn btn-danger" style={{ flex: 1 }}>
-                {formSubmitting ? 'Deleting...' : 'Delete'}
-              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* --- CUSTOM BULK DELETE CONFIRMATION MODAL --- */}
-      {activeModal === 'BULK_DELETE_CONFIRM' && selectedUserIds.length > 0 && (
+      {/* --- RECORD MEMBERSHIP FEE PAYMENT MODAL --- */}
+      {activeModal === 'RECORD_FEE_PAYMENT' && selectedUser && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '440px' }}>
-            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
+          <div className="modal-content" style={{ maxWidth: '480px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
             </button>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center', marginTop: '12px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--status-error-bg)', color: 'var(--status-error)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <ShieldAlert size={28} />
-              </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-family-title)' }}>
-                Delete Selected Users
-              </h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-                Are you sure you want to delete the {selectedUserIds.length} selected user(s)? This will archive their profiles, commitments, and cancel active cycles.
-              </p>
-            </div>
-
-            {errorMsg && (
-              <div style={{ backgroundColor: 'var(--status-error-bg)', color: 'var(--status-error)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '10px', borderRadius: '6px', fontSize: '0.85rem', marginTop: '16px', textAlign: 'center' }}>
-                {errorMsg}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-              <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary" style={{ flex: 1 }}>
-                Cancel
-              </button>
-              <button onClick={handleBulkDelete} disabled={isBulkDeleting} className="btn btn-danger" style={{ flex: 1 }}>
-                {isBulkDeleting ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- MEMBERSHIP DETAILS MODAL --- */}
-      {activeModal === 'MEMBERSHIP_DETAILS' && selectedUser && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '600px' }}>
-            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
-              <X size={20} />
-            </button>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)' }}>
-              Memberships Details
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)', color: '#111827' }}>
+              Record Membership Fee Payment
             </h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
-              Membership payments log for {selectedUser.name}.
+              Record confirmed membership fee payment for {selectedUser.name}.
             </p>
 
-            <table className="custom-table" style={{ fontSize: '0.85rem' }}>
-              <thead>
-                <tr>
-                  <th>SR.NO.</th>
-                  <th>PAYMENT YEAR</th>
-                  <th>TOTAL MEMBERSHIP FEE</th>
-                  <th>PAYMENT RECEIVED DATE</th>
-                  <th>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style={{ fontWeight: 600 }}>1</td>
-                  <td>{new Date(selectedUser.createdAt || Date.now()).getFullYear()}</td>
-                  <td>£ {getMembershipFee(selectedUser.membership)}</td>
-                  <td>
-                    {selectedUser.membershipFeeConfirmed ? (
-                      selectedUser.membershipFeeConfirmedAt ? (
-                        new Date(selectedUser.membershipFeeConfirmedAt).toLocaleDateString('en-GB')
-                      ) : (
-                        new Date(selectedUser.createdAt || Date.now()).toLocaleDateString('en-GB')
-                      )
-                    ) : (
-                      'N/A'
-                    )}
-                  </td>
-                  <td>
-                    <span className={`status-pill ${selectedUser.membershipFeeConfirmed ? 'completed' : 'pending'}`}>
-                      {selectedUser.membershipFeeConfirmed ? 'Paid' : 'Pending'}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600, color: '#374151' }}>Amount Paid (£) *</label>
+                <input
+                  type="number"
+                  value={feePaidAmount}
+                  onChange={(e) => setFeePaidAmount(e.target.value)}
+                  placeholder="230.00"
+                  className="form-input"
+                  style={{ backgroundColor: '#ffffff', borderColor: '#d1d5db', borderRadius: '8px' }}
+                />
+              </div>
 
-            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary">
-                Close
-              </button>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600, color: '#374151' }}>Payment Received Date *</label>
+                <input
+                  type="date"
+                  value={feePaidDate}
+                  onChange={(e) => setFeePaidDate(e.target.value)}
+                  className="form-input"
+                  style={{ backgroundColor: '#ffffff', borderColor: '#d1d5db', borderRadius: '8px' }}
+                />
+              </div>
+
+              <div style={{ marginTop: '12px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={handleRecordFeePaymentSubmit}
+                  disabled={formSubmitting}
+                  className="btn btn-primary"
+                  style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 24px' }}
+                >
+                  {formSubmitting ? 'Recording...' : 'Save Payment Record'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveModal('NONE')}
+                  className="btn btn-secondary"
+                  style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 24px' }}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

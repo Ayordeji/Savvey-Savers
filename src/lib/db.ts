@@ -378,6 +378,18 @@ class TableWrapper<T extends { id?: string; key?: string }> {
   }
 }
 
+export interface MembershipFeeRecord {
+  id: string;
+  userId: string;
+  year: number;
+  baseFee: number;
+  adminFee: number;
+  totalFee: number;
+  status: 'PENDING' | 'PAID';
+  requestedAt: string;
+  paidAt?: string | null;
+}
+
 // Unified Database Provider
 export const db = {
   users: new TableWrapper<User>('users'),
@@ -389,5 +401,6 @@ export const db = {
   settings: new TableWrapper<Setting>('settings'),
   mockEmails: new TableWrapper<MockEmail>('mockEmails'),
   auditLogs: new TableWrapper<AuditLog>('auditLogs'),
-  deletedRecords: new TableWrapper<DeletedRecord>('deletedRecords')
+  deletedRecords: new TableWrapper<DeletedRecord>('deletedRecords'),
+  membershipFeeRecords: new TableWrapper<MembershipFeeRecord>('membershipFeeRecords')
 };
