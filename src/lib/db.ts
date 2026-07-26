@@ -149,6 +149,8 @@ const DEFAULT_COMMITMENT_AMOUNTS = [
 // Firebase Firestore Client Wrapper emulating Prisma API
 class TableWrapper<T extends { id?: string; key?: string }> {
   private collectionName: string;
+  private memoryCache: { data: T[]; timestamp: number } | null = null;
+  private cacheTTL = 15000; // 15-second TTL in-memory cache
 
   constructor(collectionName: string) {
     this.collectionName = collectionName;
@@ -158,46 +160,58 @@ class TableWrapper<T extends { id?: string; key?: string }> {
     return adminDb.collection(this.collectionName);
   }
 
+  invalidateCache() {
+    this.memoryCache = null;
+  }
+
   // Emulates prisma.model.findMany()
   async findMany(arg?: ((item: T) => boolean) | { where?: any }): Promise<T[]> {
     try {
-      if (arg && typeof arg === 'object' && arg.where) {
-        const whereObj = arg.where;
-        const entries = Object.entries(whereObj);
-        if (entries.length > 0) {
-          let query: any = this.getRef();
-          let canUseIndexedQuery = true;
+      let items: T[] = [];
+      const now = Date.now();
 
-          for (const [k, v] of entries) {
-            if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
-              query = query.where(k, '==', v);
-            } else {
-              canUseIndexedQuery = false;
-              break;
+      // Serve from memory cache if fresh
+      if (this.memoryCache && (now - this.memoryCache.timestamp < this.cacheTTL) && typeof arg !== 'object') {
+        items = this.memoryCache.data;
+      } else {
+        if (arg && typeof arg === 'object' && arg.where) {
+          const whereObj = arg.where;
+          const entries = Object.entries(whereObj);
+          if (entries.length > 0) {
+            let query: any = this.getRef();
+            let canUseIndexedQuery = true;
+
+            for (const [k, v] of entries) {
+              if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+                query = query.where(k, '==', v);
+              } else {
+                canUseIndexedQuery = false;
+                break;
+              }
+            }
+
+            if (canUseIndexedQuery) {
+              const querySnap = await query.get();
+              const resultItems: T[] = [];
+              querySnap.forEach((doc: any) => {
+                resultItems.push({ id: doc.id, ...doc.data() } as unknown as T);
+              });
+              return resultItems;
             }
           }
-
-          if (canUseIndexedQuery) {
-            const querySnap = await query.get();
-            const items: T[] = [];
-            querySnap.forEach((doc: any) => {
-              items.push({ id: doc.id, ...doc.data() } as unknown as T);
-            });
-            return items;
-          }
         }
-      }
 
-      const snapshot = await this.getRef().get();
-      const items: T[] = [];
-      
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        items.push({
-          id: doc.id,
-          ...data,
-        } as unknown as T);
-      });
+        const snapshot = await this.getRef().get();
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          items.push({
+            id: doc.id,
+            ...data,
+          } as unknown as T);
+        });
+
+        this.memoryCache = { data: items, timestamp: now };
+      }
 
       if (typeof arg === 'function') {
         return items.filter(arg);
@@ -212,6 +226,9 @@ class TableWrapper<T extends { id?: string; key?: string }> {
       return items;
     } catch (err) {
       console.error(`Firestore findMany error on ${this.collectionName}:`, err);
+      if (this.memoryCache?.data) {
+        return this.memoryCache.data;
+      }
       return [];
     }
   }
@@ -230,9 +247,12 @@ class TableWrapper<T extends { id?: string; key?: string }> {
       const keyName = where.key;
 
       if (docId) {
-        if (this.collectionName === 'users' && (docId === '3MMvFU6ucAXqmPhalkQOoMsbMMu1' || docId === 'SUPER_ADMIN')) {
-          // Fast-path for Super Admin to save quota
+        // Fast lookup from memory cache if populated
+        if (this.memoryCache?.data) {
+          const cached = this.memoryCache.data.find(item => item.id === docId);
+          if (cached) return cached;
         }
+
         const doc = await this.getRef().doc(docId).get();
         if (doc.exists) {
           return { id: doc.id, ...doc.data() } as unknown as T;
@@ -241,6 +261,11 @@ class TableWrapper<T extends { id?: string; key?: string }> {
       }
 
       if (keyName) {
+        if (this.memoryCache?.data) {
+          const cached = this.memoryCache.data.find(item => (item as any).key === keyName);
+          if (cached) return cached;
+        }
+
         const snapshot = await this.getRef().where('key', '==', keyName).limit(1).get();
         if (!snapshot.empty) {
           const doc = snapshot.docs[0];
@@ -302,6 +327,7 @@ class TableWrapper<T extends { id?: string; key?: string }> {
   // Emulates prisma.model.create()
   async create(data: any): Promise<T> {
     try {
+      this.invalidateCache();
       // Prioritize explicit id/key, fallback to generated unique string
       let id = data.id || data.key;
       if (!id) {
@@ -358,6 +384,7 @@ class TableWrapper<T extends { id?: string; key?: string }> {
   // Emulates prisma.model.update()
   async update(params: { where: any; data: any }): Promise<T | null> {
     try {
+      this.invalidateCache();
       const keyField = 'id' in params.where ? 'id' : 'key';
       const keyValue = params.where[keyField];
 
@@ -397,6 +424,7 @@ class TableWrapper<T extends { id?: string; key?: string }> {
   // Emulates prisma.model.delete()
   async delete(params: { where: any }): Promise<T | null> {
     try {
+      this.invalidateCache();
       const keyField = 'id' in params.where ? 'id' : 'key';
       const keyValue = params.where[keyField];
 
