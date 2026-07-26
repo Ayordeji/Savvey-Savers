@@ -422,9 +422,9 @@ export default function SavingsCommitmentsPage() {
     }
   };
 
-  const handleCancelCommitment = async (cmtId: string) => {
+  const handleDeleteCommitment = async (cmtId: string) => {
     setOpenDropdownId(null);
-    if (!(await dialog.confirm('Cancel Commitment', 'Are you sure you want to cancel this savings commitment? The record will be archived in Deleted Records.'))) return;
+    if (!(await dialog.confirm('Delete Savings Commitment', 'Are you sure you want to delete this savings commitment? The record will be safely archived under Deleted Records.'))) return;
 
     try {
       const res = await fetch(`/api/admin/commitments?id=${cmtId}`, {
@@ -437,9 +437,13 @@ export default function SavingsCommitmentsPage() {
         if (res2.ok) {
           setCommitments(await res2.json());
         }
+      } else {
+        const data = await res.json();
+        await dialog.alert('Delete Failed', data.error || 'Failed to delete commitment.');
       }
     } catch (err) {
       console.error('Error deleting commitment:', err);
+      await dialog.alert('Error', 'A network error occurred while deleting commitment.');
     }
   };
 
@@ -591,12 +595,10 @@ export default function SavingsCommitmentsPage() {
                                       <span>Release Harvest</span>
                                     </button>
                                   )}
-                                  {c.status !== 'CANCELLED' && c.status !== 'COMPLETED' && (
-                                    <button onClick={() => handleCancelCommitment(c.id)} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
-                                      <Trash2 size={14} />
-                                      <span>Cancel Commitment</span>
-                                    </button>
-                                  )}
+                                  <button onClick={() => handleDeleteCommitment(c.id)} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
+                                    <Trash2 size={14} />
+                                    <span>Delete Commitment</span>
+                                  </button>
                                 </div>
                               )}
                             </div>
