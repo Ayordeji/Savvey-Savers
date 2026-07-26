@@ -149,21 +149,45 @@ export async function POST(request: Request) {
       termsAccepted: true
     });
 
-    // Handle email triggering
+    // Handle email triggering using template settings
     const host = request.headers.get('host') || 'savvey-savers.vercel.app';
     const protocol = request.headers.get('x-forwarded-proto') || 'https';
     const origin = `${protocol}://${host}`;
     const activationLink = `${origin}/activate?invite=${invitationId}`;
-    let emailSubject = '';
-    let emailBody = '';
 
-    if (inviteMode === 'SAVE_INVITE') {
-      emailSubject = 'Welcome to Savvey Savers - Invitation to Join';
-      emailBody = `Hello ${name},\n\nYou have been invited to join the Savvey Savers Platform.\n\nClick the link below to set your password and access your dashboard:\n${activationLink}\n\nThis link is active for 72 hours.\n\nBest regards,\nSavvey Savers Team`;
-    } else {
-      // SAVE only mode
-      emailSubject = 'Welcome to Savvey Savers - Account Registered';
-      emailBody = `Hello ${name},\n\nYour account has been registered by the administrator. We will contact you when your dashboard access is ready.\n\nBest regards,\nSavvey Savers Team`;
+    const templates = (await db.settings.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
+    
+    // Find Template 2 ("Savvey Savers Account Registration") or Template 7
+    const templateId = inviteMode === 'SAVE_INVITE' ? '7' : '2';
+    const foundTpl = templates.find((t: any) => t.id === templateId || (inviteMode === 'SAVE_INVITE' ? t.title.includes('Join') : t.title.includes('Registration')));
+
+    let emailSubject = inviteMode === 'SAVE_INVITE' ? 'Welcome to Savvey Savers - Invitation to Join' : 'Welcome to Savvey Savers - Account Registered';
+    let emailBody = inviteMode === 'SAVE_INVITE'
+      ? `Hello ${name},\n\nYou have been invited to join the Savvey Savers Platform.\n\nClick the link below to set your password and access your dashboard:\n${activationLink}\n\nBest regards,\nSavvey Savers Team`
+      : `Hello ${name},\n\nYour account has been registered by the administrator. We will contact you when your dashboard access is ready.\n\nBest regards,\nSavvey Savers Team`;
+
+    if (foundTpl && foundTpl.enabled !== false) {
+      emailSubject = foundTpl.subject || emailSubject;
+      emailBody = foundTpl.body || emailBody;
+
+      // Replace template variables
+      const replacements: Record<string, string> = {
+        name,
+        memberName: name,
+        invitedUser: name,
+        first_name: firstName || name.split(' ')[0] || '',
+        last_name: lastName || name.split(' ').slice(1).join(' ') || '',
+        email: normalizedEmail,
+        reacturl: activationLink,
+        url: activationLink,
+        loginUrl: activationLink,
+      };
+
+      Object.entries(replacements).forEach(([key, val]) => {
+        const reg = new RegExp(`\\{${key}\\}`, 'g');
+        emailBody = emailBody.replace(reg, val);
+        emailSubject = emailSubject.replace(reg, val);
+      });
     }
 
     await sendEmail({

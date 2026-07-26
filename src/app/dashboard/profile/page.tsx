@@ -247,11 +247,10 @@ export default function ProfilePage() {
           </label>
           <input
             type="text"
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            placeholder="United Kingdom"
+            disabled
+            value="UNITED KINGDOM"
             className="form-input"
-            style={{ width: '100%', padding: '12px 16px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '0.95rem', color: '#1e293b' }}
+            style={{ width: '100%', padding: '12px 16px', backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '0.95rem', color: '#64748b', cursor: 'not-allowed', fontWeight: 600 }}
           />
         </div>
 

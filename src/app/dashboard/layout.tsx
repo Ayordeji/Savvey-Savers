@@ -8,6 +8,7 @@ import DashboardTransitionLoader from './TransitionLoader';
 import styles from './layout.module.css';
 import Link from 'next/link';
 import GlobalHeader from './GlobalHeader';
+import SessionTimeout from './SessionTimeout';
 
 export default async function DashboardLayout({
   children,
@@ -39,6 +40,7 @@ export default async function DashboardLayout({
 
   return (
     <div className={styles.dashboardContainer}>
+      <SessionTimeout />
       <DashboardTransitionLoader />
       <Sidebar user={{
         id: user.id,

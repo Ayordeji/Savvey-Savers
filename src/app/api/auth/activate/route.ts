@@ -4,7 +4,20 @@ import { adminAuth } from '@/lib/firebase-admin';
 
 export async function POST(request: Request) {
   try {
-    const { invitationId, password } = await request.json();
+    const {
+      invitationId,
+      password,
+      firstName,
+      lastName,
+      phone,
+      addressLine1,
+      addressLine2,
+      city,
+      postCode,
+      country,
+      termsAccepted,
+      securityQuestions,
+    } = await request.json();
 
     if (!invitationId || !password) {
       return NextResponse.json(
@@ -40,44 +53,59 @@ export async function POST(request: Request) {
       );
     }
 
+    const updatedFirstName = (firstName || user.firstName || '').trim();
+    const updatedLastName = (lastName || user.lastName || '').trim();
+    const fullName = `${updatedFirstName} ${updatedLastName}`.trim() || user.name;
+
     // Create user in Firebase Auth using the email address and password
     let uid = '';
     try {
       const fbUser = await adminAuth.createUser({
         email: user.email,
         password: password,
-        displayName: user.name,
+        displayName: fullName,
       });
       uid = fbUser.uid;
     } catch (fbErr: any) {
       if (fbErr.code === 'auth/email-already-exists') {
         const existingFbUser = await adminAuth.getUserByEmail(user.email);
         uid = existingFbUser.uid;
-        await adminAuth.updateUser(uid, { password });
+        await adminAuth.updateUser(uid, { password, displayName: fullName });
       } else {
         throw fbErr;
       }
     }
 
+    const updatedData = {
+      isActive: true,
+      invitationId: null,
+      invitationExpiresAt: null,
+      firstName: updatedFirstName,
+      lastName: updatedLastName,
+      name: fullName,
+      phone: (phone || user.phone || '').trim(),
+      addressLine1: (addressLine1 || user.addressLine1 || '').trim(),
+      addressLine2: (addressLine2 || user.addressLine2 || '').trim(),
+      city: (city || user.city || '').trim(),
+      postCode: (postCode || user.postCode || '').trim(),
+      country: 'UNITED KINGDOM',
+      termsAccepted: termsAccepted !== false,
+      securityQuestions: securityQuestions || [],
+    };
+
     // Activate the user in Firestore
     if (user.id === uid) {
       await db.users.update({
         where: { id: user.id },
-        data: {
-          isActive: true,
-          invitationId: null,
-          invitationExpiresAt: null
-        }
+        data: updatedData,
       });
     } else {
       // Legacy user compatibility: delete temporary doc and create matching doc ID
       await db.users.delete({ where: { id: user.id } });
       await db.users.create({
         ...user,
+        ...updatedData,
         id: uid,
-        isActive: true,
-        invitationId: null,
-        invitationExpiresAt: null
       });
     }
 
