@@ -71,6 +71,7 @@ export default function Home() {
   const [waitEmail, setWaitEmail] = useState('');
   const [waitPhone, setWaitPhone] = useState('');
   const [waitAmount, setWaitAmount] = useState('');
+  const [hasReferrer, setHasReferrer] = useState(false);
   const [waitReferrer, setWaitReferrer] = useState('');
   const [waitLoading, setWaitLoading] = useState(false);
   const [waitSuccess, setWaitSuccess] = useState(false);
@@ -276,6 +277,16 @@ export default function Home() {
     setWaitError('');
     setWaitSuccess(false);
 
+    // Strict UK Phone Number check (+44 or 07...)
+    const cleanedPhone = waitPhone.trim().replace(/[\s\-\(\)]/g, '');
+    const isUkPhone = /^(\+44|0)[1-9]\d{8,9}$/.test(cleanedPhone);
+
+    if (!isUkPhone) {
+      setWaitError('Only valid UK phone numbers (e.g. +44 7700 900022 or 07700900022) are accepted.');
+      setWaitLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/waiting-list', {
         method: 'POST',
@@ -285,7 +296,7 @@ export default function Home() {
           email: waitEmail,
           phone: waitPhone,
           monthlySavingsCommitment: waitAmount,
-          referredBy: waitReferrer,
+          referredBy: hasReferrer ? waitReferrer : '',
         }),
       });
 
@@ -298,6 +309,7 @@ export default function Home() {
         setWaitPhone('');
         setWaitAmount('');
         setWaitReferrer('');
+        setHasReferrer(false);
       } else {
         setWaitError(data.error || 'Failed to submit. Please try again.');
       }
@@ -720,7 +732,7 @@ export default function Home() {
                   </div>
 
                   <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>What is your monthly savings goal?</label>
+                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Target Monthly Savings (£)</label>
                     <select
                       required
                       value={waitAmount}
@@ -744,24 +756,39 @@ export default function Home() {
                   </div>
 
                   <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Referred by a Member? Enter their name below</label>
-                    <div style={{ position: 'relative' }}>
-                      <User size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', fontWeight: 500, fontSize: '0.9rem' }}>
                       <input
-                        type="text"
-                        value={waitReferrer}
-                        onChange={(e) => setWaitReferrer(e.target.value)}
-                        placeholder="John Doe"
-                        className="form-input"
-                        style={{
-                          paddingLeft: '38px',
-                          backgroundColor: 'var(--bg-main)',
-                          borderColor: 'var(--border-color)',
-                          color: 'var(--text-main)',
-                          borderRadius: 'var(--radius-md)'
+                        type="checkbox"
+                        checked={hasReferrer}
+                        onChange={(e) => {
+                          setHasReferrer(e.target.checked);
+                          if (!e.target.checked) setWaitReferrer('');
                         }}
+                        style={{ width: '16px', height: '16px', accentColor: 'var(--primary)', cursor: 'pointer' }}
                       />
-                    </div>
+                      <span>Referred by a Member? Enter their name below.</span>
+                    </label>
+
+                    {hasReferrer && (
+                      <div style={{ position: 'relative', marginTop: '10px' }}>
+                        <User size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
+                        <input
+                          type="text"
+                          required
+                          value={waitReferrer}
+                          onChange={(e) => setWaitReferrer(e.target.value)}
+                          placeholder="Enter member's name"
+                          className="form-input"
+                          style={{
+                            paddingLeft: '38px',
+                            backgroundColor: 'var(--bg-main)',
+                            borderColor: 'var(--border-color)',
+                            color: 'var(--text-main)',
+                            borderRadius: 'var(--radius-md)'
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <button

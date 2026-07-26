@@ -35,6 +35,16 @@ export async function POST(request: Request) {
       );
     }
 
+    // Input format validation: Strict UK Phone number check (+44 or 07...)
+    const cleanedPhone = String(phone || '').trim().replace(/[\s\-\(\)]/g, '');
+    const isUkPhone = /^(\+44|0)[1-9]\d{8,9}$/.test(cleanedPhone);
+    if (!isUkPhone) {
+      return NextResponse.json(
+        { error: 'Only valid UK phone numbers starting with +44 or 07... are accepted.' },
+        { status: 400 }
+      );
+    }
+
     const rawAmount = String(monthlySavingsCommitment || '').replace(/[^0-9.]/g, '');
     const commitmentVal = parseFloat(rawAmount);
     if (isNaN(commitmentVal) || commitmentVal <= 0) {
