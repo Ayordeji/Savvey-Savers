@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -38,6 +38,12 @@ export default function Sidebar({ user }: SidebarProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isMobileCollapsed, setIsMobileCollapsed] = useState(true);
   const [isSettingsExpanded, setIsSettingsExpanded] = useState(pathname.startsWith('/dashboard/settings'));
+
+  useEffect(() => {
+    const handleToggle = () => setIsMobileCollapsed((prev) => !prev);
+    window.addEventListener('toggle-mobile-sidebar', handleToggle);
+    return () => window.removeEventListener('toggle-mobile-sidebar', handleToggle);
+  }, []);
 
   interface NavLink {
     name: string;

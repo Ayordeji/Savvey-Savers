@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Bell, X, User as UserIcon, LogOut, ChevronDown, Edit2, Save } from 'lucide-react';
+import { Bell, X, User as UserIcon, LogOut, ChevronDown, Edit2, Save, Menu } from 'lucide-react';
 import styles from './layout.module.css';
 
 interface GlobalHeaderProps {
@@ -135,7 +135,7 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Calculate clean display ID (never show raw 28-char Firebase UIDs like XAEwMfc9itQdn0aUfdI7yXAajmS2)
+  // Calculate clean display ID
   const getCleanDisplayId = () => {
     if (user.displayId && user.displayId.startsWith('M-')) {
       return user.displayId;
@@ -143,7 +143,6 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
     if (user.id && (user.id.startsWith('usr_') || user.id.startsWith('M-'))) {
       return user.id;
     }
-    // Hash or fallback to clean member code without raw Firebase auth UID jargon
     return `M-000417`;
   };
 
@@ -195,7 +194,8 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
 
   return (
     <>
-      <header className={`global-header-bar ${styles.headerBar}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb', position: 'relative', zIndex: 1000 }}>
+      {/* DESKTOP HEADER BAR (Visible on screens >= 1024px) */}
+      <header className={`desktop-global-header-bar ${styles.headerBar}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb', position: 'relative', zIndex: 1000 }}>
         {/* Left Action Buttons */}
         <div className="global-header-left" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
@@ -240,83 +240,108 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#334155' }}>
                 <UserIcon size={18} />
               </div>
-              <span className="hidden-mobile">
+              <span>
                 {user.name} ({cleanDisplayId})
               </span>
               <ChevronDown size={16} style={{ color: '#64748b', transition: 'transform 0.2s', transform: showUserDropdown ? 'rotate(180deg)' : 'rotate(0)' }} />
             </button>
 
-            {/* Profile Dropdown Card (Matching Screenshot) */}
             {showUserDropdown && (
-              <div style={{
-                position: 'absolute',
-                right: 0,
-                top: '44px',
-                width: '190px',
-                backgroundColor: '#ffffff',
-                borderRadius: '12px',
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-                border: '1px solid #f1f5f9',
-                padding: '6px',
-                zIndex: 999999
-              }}>
-                <button
-                  onClick={() => {
-                    setShowUserDropdown(false);
-                    router.push('/dashboard/profile');
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    width: '100%',
-                    padding: '10px 14px',
-                    background: 'none',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    color: '#334155',
-                    cursor: 'pointer',
-                    textAlign: 'left'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <UserIcon size={16} style={{ color: '#64748b' }} />
-                  <span>My Profile</span>
-                </button>
-
-                <div style={{ height: '1px', backgroundColor: '#f1f5f9', margin: '4px 0' }} />
-
+              <div style={{ position: 'absolute', right: 0, top: '42px', width: '220px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', padding: '12px', zIndex: 10001 }}>
+                <div style={{ paddingBottom: '8px', borderBottom: '1px solid #f1f5f9', marginBottom: '8px' }}>
+                  <p style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a', margin: 0 }}>{user.name}</p>
+                  <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '2px 0 0 0' }}>{cleanDisplayId} • {user.role}</p>
+                </div>
                 <button
                   onClick={handleLogout}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    width: '100%',
-                    padding: '10px 14px',
-                    background: 'none',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    color: '#dc2626',
-                    cursor: 'pointer',
-                    textAlign: 'left'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', color: '#ef4444', backgroundColor: 'transparent', border: 'none', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
                 >
-                  <LogOut size={16} style={{ color: '#dc2626' }} />
-                  <span>Logout</span>
+                  <LogOut size={16} />
+                  <span>Sign out</span>
                 </button>
               </div>
             )}
           </div>
         </div>
       </header>
+
+      {/* TABLET & MOBILE NAVIGATION CARD (Matching Screenshot exactly, visible on screens < 1024px) */}
+      <div className="mobile-header-navigation-card">
+        {/* Row 1: Hamburger Menu, Site Title, Notifications Bell + Profile Icon */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '14px' }}>
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
+            style={{ background: 'none', border: 'none', color: '#1e293b', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+            aria-label="Toggle navigation menu"
+          >
+            <Menu size={26} />
+          </button>
+
+          <span style={{ fontSize: '1.15rem', fontWeight: 700, color: '#1e293b', fontFamily: 'var(--font-family-title)', letterSpacing: '-0.01em' }}>
+            Savvey Savers Networks
+          </span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <Link href="/dashboard/notifications" style={{ position: 'relative', color: '#1e293b', display: 'flex', alignItems: 'center' }}>
+              <Bell size={22} />
+              {unreadCount > 0 && (
+                <span style={{ position: 'absolute', top: '-6px', right: '-8px', backgroundColor: '#ef4444', color: '#ffffff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {unreadCount}
+                </span>
+              )}
+            </Link>
+
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowUserDropdown(!showUserDropdown)}
+                style={{ width: '34px', height: '34px', borderRadius: '50%', border: '2px solid #1e293b', backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1e293b', cursor: 'pointer', padding: 0 }}
+              >
+                <UserIcon size={20} />
+              </button>
+
+              {showUserDropdown && (
+                <div style={{ position: 'absolute', right: 0, top: '42px', width: '220px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', padding: '12px', zIndex: 10001 }}>
+                  <div style={{ paddingBottom: '8px', borderBottom: '1px solid #f1f5f9', marginBottom: '8px' }}>
+                    <p style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a', margin: 0 }}>{user.name}</p>
+                    <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '2px 0 0 0' }}>{cleanDisplayId} • {user.role}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', color: '#ef4444', backgroundColor: 'transparent', border: 'none', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    <LogOut size={16} />
+                    <span>Sign out</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: Auxiliary Pill Buttons */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+          <button
+            onClick={() => { setActiveModal('AGREEMENT'); setIsEditingContent(false); }}
+            style={{ backgroundColor: '#1e293b', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '7px 14px', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}
+          >
+            Membership Agreement
+          </button>
+          <button
+            onClick={() => { setActiveModal('FEE_SCHEDULE'); setIsEditingContent(false); }}
+            style={{ backgroundColor: '#1e293b', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '7px 14px', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}
+          >
+            Fee Schedule
+          </button>
+          <a
+            href={REVIEWS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ backgroundColor: '#1e293b', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '7px 14px', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'none', display: 'inline-block' }}
+          >
+            Reviews
+          </a>
+        </div>
+      </div>
 
       {/* --- MEMBERSHIP AGREEMENT MODAL --- */}
       {activeModal === 'AGREEMENT' && (

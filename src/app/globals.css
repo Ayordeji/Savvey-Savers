@@ -453,6 +453,34 @@ button {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 16px !important;
   }
+  .desktop-global-header-bar {
+    display: flex !important;
+  }
+  .mobile-header-navigation-card {
+    display: none !important;
+  }
+}
+
+/* Tablet & Mobile navigation header card matching user screenshot */
+.mobile-header-navigation-card {
+  display: none;
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+@media (max-width: 1023px) {
+  .desktop-global-header-bar {
+    display: none !important;
+  }
+  .mobile-header-navigation-card {
+    display: flex !important;
+    flex-direction: column !important;
+  }
 }
 
 /* Tablet (769px to 1023px) 2-column card grid */

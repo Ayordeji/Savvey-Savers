@@ -341,26 +341,13 @@ export default function Home() {
         backgroundColor: 'var(--bg-card)',
         boxShadow: 'var(--shadow-sm)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <a href="https://savveysavers.crevianstudios.com/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} title="Savvey Savers Main Site">
           <img
             src="/logo_new-removebg-preview.png"
-            alt="Savvey Savers Collective"
-            style={{ height: '44px', objectFit: 'contain' }}
+            alt="Savvey Savers"
+            style={{ height: '48px', objectFit: 'contain', cursor: 'pointer' }}
           />
-          <span style={{
-            fontSize: '1.25rem',
-            fontWeight: 800,
-            fontFamily: 'var(--font-family-title)',
-            color: 'var(--primary)',
-            letterSpacing: '-0.02em',
-            lineHeight: 1.1
-          }}>
-            SAVVEY SAVERS
-            <span style={{ display: 'block', fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.12em', color: 'var(--text-muted)' }}>
-              COLLECTIVE
-            </span>
-          </span>
-        </div>
+        </a>
 
         {/* Navigation Links linking back to main site */}
         <nav style={{ display: 'flex', gap: '24px', alignItems: 'center' }} className="hidden-mobile">
