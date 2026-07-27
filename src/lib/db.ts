@@ -171,53 +171,32 @@ class TableWrapper<T extends { id?: string; key?: string }> {
       const now = Date.now();
 
       // Serve from memory cache if fresh
-      if (this.memoryCache && (now - this.memoryCache.timestamp < this.cacheTTL) && typeof arg !== 'object') {
+      if (this.memoryCache && (now - this.memoryCache.timestamp < this.cacheTTL)) {
         items = this.memoryCache.data;
       } else {
-        if (arg && typeof arg === 'object' && arg.where) {
-          const whereObj = arg.where;
-          const entries = Object.entries(whereObj);
-          if (entries.length > 0) {
-            let query: any = this.getRef();
-            let canUseIndexedQuery = true;
-
-            for (const [k, v] of entries) {
-              if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
-                query = query.where(k, '==', v);
-              } else {
-                canUseIndexedQuery = false;
-                break;
-              }
-            }
-
-            if (canUseIndexedQuery) {
-              const querySnap = await query.get();
-              const resultItems: T[] = [];
-              querySnap.forEach((doc: any) => {
-                resultItems.push({ id: doc.id, ...doc.data() } as unknown as T);
-              });
-              return resultItems;
-            }
+        try {
+          const snapshot = await this.getRef().get();
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            items.push({
+              id: doc.id,
+              ...data,
+            } as unknown as T);
+          });
+          this.memoryCache = { data: items, timestamp: now };
+        } catch (fetchErr: any) {
+          console.warn(`Firestore collection fetch notice on ${this.collectionName}:`, fetchErr?.message || fetchErr);
+          if (this.memoryCache?.data) {
+            items = this.memoryCache.data;
           }
         }
-
-        const snapshot = await this.getRef().get();
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          items.push({
-            id: doc.id,
-            ...data,
-          } as unknown as T);
-        });
-
-        this.memoryCache = { data: items, timestamp: now };
       }
 
       if (typeof arg === 'function') {
         return items.filter(arg);
       }
 
-      if (arg && arg.where) {
+      if (arg && typeof arg === 'object' && arg.where) {
         return items.filter((item: any) => {
           return Object.entries(arg.where).every(([k, v]) => item[k] === v);
         });
@@ -226,10 +205,7 @@ class TableWrapper<T extends { id?: string; key?: string }> {
       return items;
     } catch (err) {
       console.error(`Firestore findMany error on ${this.collectionName}:`, err);
-      if (this.memoryCache?.data) {
-        return this.memoryCache.data;
-      }
-      return [];
+      return this.memoryCache?.data || [];
     }
   }
 
