@@ -979,43 +979,7 @@ export default function ManageUsersPage() {
               const headers = ['Member ID', 'Name', 'Email', 'Phone', 'Role', 'Is Active', 'Joined Date'];
               const rows = users.map(u => [
                 `"${u.displayId || u.invitationId || u.id}"`,
-                `"${u.name.replace(/"/g, '""')}"`,
-                `"${u.email}"`,
-                `"${u.phone || ''}"`,
-                `"${u.role}"`,
-                `"${u.isActive ? 'Active' : 'Inactive'}"`,
-                `"${new Date(u.createdAt || Date.now()).toLocaleDateString('en-GB')}"`
-              ]);
-              const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-              const encodedUri = encodeURI(csvContent);
-              const link = document.createElement('a');
-              link.setAttribute('href', encodedUri);
-              link.setAttribute('download', `savvey_savers_members_${new Date().toISOString().split('T')[0]}.csv`);
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-            }}
-            className="btn btn-secondary btn-sm"
-            style={{ borderRadius: '8px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 600 }}
-          >
-            <Download size={15} />
-            <span>Export Users (CSV)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setMigrationError('');
-              setMigrationReport(null);
-              setMigrationModalOpen(true);
-            }}
-            className="btn btn-secondary btn-sm"
-            style={{ borderRadius: '8px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 600, backgroundColor: '#0284c7', color: '#ffffff', borderColor: '#0284c7' }}
-          >
-            <Upload size={15} />
-            <span>Import / Migrate Data</span>
-          </button>
-
+        <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={handleOpenAddModal} className="btn btn-primary btn-sm" style={{ backgroundColor: 'var(--secondary)', color: 'white', borderRadius: '8px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 600 }}>
             <Plus size={16} />
             <span>Add Member</span>
