@@ -45,7 +45,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const isAdmin = user.role === 'ADMIN';
 
   // --- QUERY & METRICS COMPUTATION ---
-  let totalRevenue = 0;
+  let allTimeRevenue = 0;
+  let revenueForYear = 0;
   let activeCommitmentsCount = 0;
   let pendingCommitmentsCount = 0;
   let notStartedCommitmentsCount = 0;
@@ -60,6 +61,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
   const monthlyData = Array(12).fill(0);
+
+  const currentRealYear = 2026; // System base year
 
   if (isAdmin) {
     // Admin: Dynamic aggregation from live imported database records
@@ -78,43 +81,42 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     activeUsersCount = memberUsers.filter((u) => u.isActive).length;
     invitedUsersCount = memberUsers.filter((u) => !u.isActive).length;
 
-    // 2. Filter commitments by selected collection year
-    const selectedYearInt = parseInt(selectedYear, 10) || 2026;
+    // 2. All-Time Revenue
+    const allTimeRevenueCmts = allCommitments.filter((c) => c.status === 'ACTIVE' || c.status === 'COMPLETED');
+    allTimeRevenue = allTimeRevenueCmts.reduce((acc, c) => acc + c.amount, 0);
+
+    // 3. Filter commitments by selected collection year
+    const selectedYearInt = parseInt(selectedYear, 10) || currentRealYear;
     const yearCommitments = allCommitments.filter((c) => Number(c.collectionYear) === selectedYearInt);
     totalCommitmentsCount = yearCommitments.length;
 
-    // 3. Status counts
+    // 4. Status counts for selected year
     activeCommitmentsCount = yearCommitments.filter((c) => c.status === 'ACTIVE').length;
     pendingCommitmentsCount = yearCommitments.filter((c) => c.status === 'PENDING').length;
     completedCommitmentsCount = yearCommitments.filter((c) => c.status === 'COMPLETED').length;
 
-    // 4. Expected Revenue: sum of all active and completed commitments in the year
+    // 5. Expected Revenue for selected year
     const revenueCommitments = yearCommitments.filter((c) => c.status === 'ACTIVE' || c.status === 'COMPLETED');
-    totalRevenue = revenueCommitments.reduce((acc, c) => acc + c.amount, 0);
+    revenueForYear = revenueCommitments.reduce((acc, c) => acc + c.amount, 0);
 
-    // 5. Monthly Distribution (Expected revenue distributed by collection month)
+    // 6. Monthly Distribution (Expected revenue distributed by collection month)
     months.forEach((m, idx) => {
       const monthCmts = revenueCommitments.filter((c) => c.collectionMonth === m);
       monthlyData[idx] = monthCmts.reduce((acc, c) => acc + c.amount, 0);
     });
   } else {
-    // Member: Personal data only
-    const myCommitments = await db.commitments.findMany((c) => c.memberId === user.id);
-    const myCommitmentsYearly = myCommitments.filter((c) => String(c.collectionYear) === String(selectedYear));
-    totalCommitmentsCount = myCommitmentsYearly.length;
-    
-    activeCommitmentsCount = myCommitmentsYearly.filter((c) => c.status === 'ACTIVE').length;
-    pendingCommitmentsCount = myCommitmentsYearly.filter((c) => c.status === 'PENDING').length;
-    completedCommitmentsCount = myCommitmentsYearly.filter((c) => c.status === 'COMPLETED').length;
-
-    const revenueCommitments = myCommitmentsYearly.filter((c) => c.status === 'ACTIVE' || c.status === 'COMPLETED');
-    totalRevenue = revenueCommitments.reduce((acc, c) => acc + c.amount, 0);
-
-    months.forEach((m, idx) => {
-      const monthCmts = revenueCommitments.filter((c) => c.collectionMonth === m);
-      monthlyData[idx] = monthCmts.reduce((acc, c) => acc + c.amount, 0);
-    });
+    // Basic fallback for non-admins if ever reached
+    allTimeRevenue = 0;
+    revenueForYear = 0;
   }
+
+  const selectedYearInt = parseInt(selectedYear, 10) || currentRealYear;
+  const isPreviousYear = selectedYearInt < currentRealYear;
+  
+  // Dynamic Card Logic for Active vs Completed based on Year
+  const dynamicCardTitle = isPreviousYear ? 'Completed Commitments' : 'Active Commitments';
+  const dynamicCardLink = isPreviousYear ? `/dashboard/commitments?status=COMPLETED&year=${selectedYear}` : `/dashboard/commitments?status=ACTIVE&year=${selectedYear}`;
+  const dynamicCardCount = isPreviousYear ? completedCommitmentsCount : activeCommitmentsCount;
 
   // --- SVG CHART PARAMETERS ---
   const chartHeight = 180;
@@ -125,14 +127,14 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-      {/* Summary Cards Grid (All 6 Cards Restored & Interactive) */}
+      {/* Summary Cards Grid (6 Cards Interactive) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: '16px',
         width: '100%'
       }} className="dashboard-cards-grid">
-        {/* Card 1: Revenue to date -> Links to Savings Commitments */}
+        {/* Card 1: Revenue to date (All-Time) */}
         <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
             backgroundColor: '#000000',
@@ -161,14 +163,49 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 Revenue to date
               </span>
               <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                £{totalRevenue.toFixed(2)}
+                £{allTimeRevenue.toFixed(2)}
               </h3>
             </div>
           </div>
         </Link>
 
-        {/* Card 2: Pending Commitments -> Links to PENDING Commitments */}
-        <Link href="/dashboard/commitments?status=PENDING" style={{ textDecoration: 'none', display: 'block' }}>
+        {/* Card 2: Revenue for Selected Year */}
+        <Link href={`/dashboard/commitments?year=${selectedYear}`} style={{ textDecoration: 'none', display: 'block' }}>
+          <div style={{
+            backgroundColor: '#000000',
+            border: '1px solid #1f2937',
+            borderRadius: '16px',
+            padding: '24px 28px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: '20px',
+            minHeight: '130px',
+            color: '#ffffff',
+            cursor: 'pointer',
+            transition: 'transform 0.15s ease, border-color 0.15s ease'
+          }} className="dashboard-interactive-card">
+            <div style={{
+              width: '52px', height: '52px', borderRadius: '12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            }}>
+              <Briefcase size={28} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+                Revenue for {selectedYear}
+              </span>
+              <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+                £{revenueForYear.toFixed(2)}
+              </h3>
+            </div>
+          </div>
+        </Link>
+
+        {/* Card 3: Pending Commitments -> Links to PENDING Commitments */}
+        <Link href={`/dashboard/commitments?status=PENDING&year=${selectedYear}`} style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
             backgroundColor: '#000000',
             border: '1px solid #1f2937',
@@ -202,8 +239,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           </div>
         </Link>
 
-        {/* Card 4: Active Commitments -> Links to ACTIVE Commitments */}
-        <Link href="/dashboard/commitments?status=ACTIVE" style={{ textDecoration: 'none', display: 'block' }}>
+        {/* Card 4: Dynamic Active/Completed Commitments */}
+        <Link href={dynamicCardLink} style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
             backgroundColor: '#000000',
             border: '1px solid #1f2937',
@@ -228,16 +265,16 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-                Active Commitments
+                {dynamicCardTitle}
               </span>
               <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                {`${activeCommitmentsCount} / ${totalCommitmentsCount}`}
+                {`${dynamicCardCount} / ${totalCommitmentsCount}`}
               </h3>
             </div>
           </div>
         </Link>
 
-        {/* Card 4: Harvests Released -> Links to COMPLETED Commitments */}
+        {/* Card 5: Harvests Released -> Links to COMPLETED Commitments */}
         <Link href="/dashboard/commitments?status=COMPLETED" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
             backgroundColor: '#000000',
