@@ -278,6 +278,14 @@ function SettingsContent() {
     const updated = [...goals];
     updated[index].enabled = !updated[index].enabled;
     setGoals(updated);
+    handleSaveSettingKey('savingGoals', updated, 'Saving Goals');
+  };
+
+  const handleDeleteGoal = async (index: number) => {
+    if (!(await dialog.confirm('Delete Goal Category', `Are you sure you want to delete the goal category "${goals[index].name}"? This cannot be undone.`))) return;
+    const updated = goals.filter((_, i) => i !== index);
+    setGoals(updated);
+    handleSaveSettingKey('savingGoals', updated, 'Saving Goals');
   };
 
   const handleAddGoal = (e: React.FormEvent) => {
@@ -289,6 +297,7 @@ function SettingsContent() {
     setNewGoal('');
     handleSaveSettingKey('savingGoals', updated, 'Saving Goals');
   };
+
 
   // --- Commitment Amounts Handlers ---
   const handleToggleAmount = (index: number) => {
@@ -712,16 +721,31 @@ function SettingsContent() {
                   </form>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {goals.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8', fontSize: '0.875rem', border: '1px dashed #e2e8f0', borderRadius: '8px' }}>
+                        No saving goal categories yet. Add one above.
+                      </div>
+                    )}
                     {goals.map((g, idx) => (
-                      <label key={g.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', cursor: 'pointer' }}>
-                        <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>{g.name}</span>
-                        <input
-                          type="checkbox"
-                          checked={g.enabled}
-                          onChange={() => handleToggleGoal(idx)}
-                          style={{ width: '18px', height: '18px', accentColor: '#2e3a4e' }}
-                        />
-                      </label>
+                      <div key={g.name + idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flex: 1 }}>
+                          <input
+                            type="checkbox"
+                            checked={g.enabled}
+                            onChange={() => handleToggleGoal(idx)}
+                            style={{ width: '18px', height: '18px', accentColor: '#2e3a4e', flexShrink: 0 }}
+                          />
+                          <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>{g.name}</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteGoal(idx)}
+                          title="Delete goal category"
+                          style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px 6px', display: 'flex', alignItems: 'center', borderRadius: '6px', flexShrink: 0 }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>

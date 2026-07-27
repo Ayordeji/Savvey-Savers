@@ -102,7 +102,7 @@ export async function POST(request: Request) {
   try {
     const { key, value } = await request.json();
 
-    if (!key || !value) {
+    if (!key || value === undefined || value === null) {
       return NextResponse.json({ error: 'Key and value are required.' }, { status: 400 });
     }
 
