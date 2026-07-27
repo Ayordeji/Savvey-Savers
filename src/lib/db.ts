@@ -2703,7 +2703,15 @@ class TableWrapper<T extends { id?: string; key?: string }> {
         });
 
         if (fetched.length > 0) {
-          items = fetched;
+          const fallback = this.getFallbackData();
+          if (this.collectionName === 'commitments' && fetched.length < fallback.length) {
+            const map = new Map<string, T>();
+            fallback.forEach((item: any) => map.set(item.id, item));
+            fetched.forEach((item: any) => map.set(item.id, item));
+            items = Array.from(map.values());
+          } else {
+            items = fetched;
+          }
           this.memoryCache = { data: items, timestamp: now };
         } else {
           items = this.getFallbackData();
