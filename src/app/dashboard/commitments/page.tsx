@@ -506,6 +506,8 @@ export default function SavingsCommitmentsPage() {
     setOpenDropdownId(openDropdownId === cmtId ? null : cmtId);
   };
 
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
   const filteredCommitments = commitments.map((c) => {
     // Status driven by cycle length: past year (< currentYear) = COMPLETED, current/future = ACTIVE
     const computedStatus: Commitment['status'] = c.collectionYear < currentYearNum ? 'COMPLETED' : (c.status === 'COMPLETED' ? 'ACTIVE' : c.status);
@@ -522,6 +524,14 @@ export default function SavingsCommitmentsPage() {
     const matchesStatus = !statusFilter || c.status === statusFilter;
 
     return matchesSearch && matchesYear && matchesMonth && matchesStatus;
+  });
+
+  const sortedCommitments = [...filteredCommitments].sort((a, b) => {
+    const idA = (a.id || '').toString();
+    const idB = (b.id || '').toString();
+    return sortOrder === 'asc'
+      ? idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' })
+      : idB.localeCompare(idA, undefined, { numeric: true, sensitivity: 'base' });
   });
 
   const getActiveCommitmentsForMember = (memberId: string) => {
@@ -647,7 +657,18 @@ export default function SavingsCommitmentsPage() {
                   </th>
                 )}
                 <th style={{ width: '40px' }}></th>
-                <th>Record ID</th>
+                <th 
+                  onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  style={{ cursor: 'pointer', userSelect: 'none' }}
+                  title="Click to toggle sorting order by Record ID (Ascending / Descending)"
+                >
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>Record ID</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortOrder === 'asc' ? '▲ Asc' : '▼ Desc'}
+                    </span>
+                  </div>
+                </th>
                 <th>Member Name</th>
                 <th>Savings Amount</th>
                 <th>Savings Goal</th>
@@ -657,16 +678,16 @@ export default function SavingsCommitmentsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredCommitments.length === 0 ? (
+              {sortedCommitments.length === 0 ? (
                 <tr>
                   <td colSpan={currentUser?.role === 'ADMIN' ? 9 : 8} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                     No savings commitments found.
                   </td>
                 </tr>
               ) : (
-                filteredCommitments.map((c, idx) => {
+                sortedCommitments.map((c, idx) => {
                   const isExpanded = expandedCmtId === c.id;
-                  const isBottomRow = idx >= 2 && filteredCommitments.length >= 4 && idx >= filteredCommitments.length - 2;
+                  const isBottomRow = idx >= 2 && sortedCommitments.length >= 4 && idx >= sortedCommitments.length - 2;
                   return (
                     <Fragment key={c.id}>
                       <tr className={isExpanded ? styles.expandedRow : ''} style={{ cursor: 'pointer' }}>

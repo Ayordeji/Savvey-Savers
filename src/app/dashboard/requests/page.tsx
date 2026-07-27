@@ -75,6 +75,16 @@ export default function SubmittedRequestsPage() {
     });
   };
 
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const sortedRequests = [...requests].sort((a, b) => {
+    const idA = (a.id || '').toString();
+    const idB = (b.id || '').toString();
+    return sortOrder === 'asc'
+      ? idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' })
+      : idB.localeCompare(idA, undefined, { numeric: true, sensitivity: 'base' });
+  });
+
   return (
     <div>
       {/* Header */}
@@ -99,7 +109,18 @@ export default function SubmittedRequestsPage() {
           <table className="custom-table">
             <thead>
               <tr>
-                <th>Request ID</th>
+                <th 
+                  onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  style={{ cursor: 'pointer', userSelect: 'none' }}
+                  title="Click to toggle sorting order by Request ID (Ascending / Descending)"
+                >
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>Request ID</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortOrder === 'asc' ? '▲ Asc' : '▼ Desc'}
+                    </span>
+                  </div>
+                </th>
                 <th>Saver Name</th>
                 <th>Savings Goal</th>
                 <th>Amount</th>
@@ -110,14 +131,14 @@ export default function SubmittedRequestsPage() {
               </tr>
             </thead>
             <tbody>
-              {requests.length === 0 ? (
+              {sortedRequests.length === 0 ? (
                 <tr>
                   <td colSpan={isAdmin ? 8 : 7} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                     No collection month requests submitted yet.
                   </td>
                 </tr>
               ) : (
-                requests.map((r) => (
+                sortedRequests.map((r) => (
                   <tr key={r.id}>
                     <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                       {r.id}

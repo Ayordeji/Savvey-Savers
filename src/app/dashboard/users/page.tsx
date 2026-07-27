@@ -826,6 +826,8 @@ export default function ManageUsersPage() {
     setOpenDropdownId(openDropdownId === userId ? null : userId);
   };
 
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
   const filteredUsers = users.filter((u) => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
@@ -833,15 +835,24 @@ export default function ManageUsersPage() {
       u.name.toLowerCase().includes(q) ||
       u.email.toLowerCase().includes(q) ||
       u.phone.includes(q) ||
-      (u.id && u.id.toLowerCase().includes(q))
+      (u.id && u.id.toLowerCase().includes(q)) ||
+      (u.displayId && u.displayId.toLowerCase().includes(q))
     );
+  });
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    const idA = (a.displayId || a.invitationId || a.id || '').toString();
+    const idB = (b.displayId || b.invitationId || b.id || '').toString();
+    return sortOrder === 'asc'
+      ? idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' })
+      : idB.localeCompare(idA, undefined, { numeric: true, sensitivity: 'base' });
   });
 
   // Pagination
   const [usersPerPage, setUsersPerPage] = useState(10);
   const [usersPage, setUsersPage] = useState(1);
-  const totalUsersPages = Math.max(1, Math.ceil(filteredUsers.length / usersPerPage));
-  const paginatedUsers = filteredUsers.slice((usersPage - 1) * usersPerPage, usersPage * usersPerPage);
+  const totalUsersPages = Math.max(1, Math.ceil(sortedUsers.length / usersPerPage));
+  const paginatedUsers = sortedUsers.slice((usersPage - 1) * usersPerPage, usersPage * usersPerPage);
 
   // Reset to page 1 when search changes
   const handleSearchChange = (val: string) => {
@@ -985,7 +996,18 @@ export default function ManageUsersPage() {
                     style={{ accentColor: 'var(--secondary)', cursor: 'pointer' }}
                   />
                 </th>
-                <th>Invitation ID</th>
+                <th 
+                  onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  style={{ cursor: 'pointer', userSelect: 'none' }}
+                  title="Click to toggle sorting order by ID (Ascending / Descending)"
+                >
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>Invitation ID</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortOrder === 'asc' ? '▲ Asc' : '▼ Desc'}
+                    </span>
+                  </div>
+                </th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Phone Number</th>

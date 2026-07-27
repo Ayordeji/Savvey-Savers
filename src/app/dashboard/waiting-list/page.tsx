@@ -111,6 +111,16 @@ export default function WaitingListPage() {
     });
   };
 
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const sortedEntries = [...entries].sort((a, b) => {
+    const idA = (a.id || '').toString();
+    const idB = (b.id || '').toString();
+    return sortOrder === 'asc'
+      ? idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' })
+      : idB.localeCompare(idA, undefined, { numeric: true, sensitivity: 'base' });
+  });
+
   return (
     <div>
       {/* Header */}
@@ -130,7 +140,18 @@ export default function WaitingListPage() {
           <table className="custom-table">
             <thead>
               <tr>
-                <th>Prospect ID</th>
+                <th 
+                  onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  style={{ cursor: 'pointer', userSelect: 'none' }}
+                  title="Click to toggle sorting order by Prospect ID (Ascending / Descending)"
+                >
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>Prospect ID</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortOrder === 'asc' ? '▲ Asc' : '▼ Desc'}
+                    </span>
+                  </div>
+                </th>
                 <th>Name</th>
                 <th>Email Address</th>
                 <th>Phone Number</th>
@@ -141,14 +162,14 @@ export default function WaitingListPage() {
               </tr>
             </thead>
             <tbody>
-              {entries.length === 0 ? (
+              {sortedEntries.length === 0 ? (
                 <tr>
                   <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                     No pending applications on the waiting list.
                   </td>
                 </tr>
               ) : (
-                entries.map((e) => (
+                sortedEntries.map((e) => (
                   <tr key={e.id}>
                     <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                       {e.id}
