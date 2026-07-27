@@ -13,7 +13,10 @@ import {
   UserCheck,
   Bell,
   X,
-  ClipboardList
+  ClipboardList,
+  PieChart,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import styles from './layout.module.css';
 import { auth } from '@/lib/firebase';
@@ -34,6 +37,11 @@ export default function Sidebar({ user }: SidebarProps) {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({});
+
+  const toggleDropdown = (name: string) => {
+    setOpenDropdowns(prev => ({ ...prev, [name]: !prev[name] }));
+  };
 
   useEffect(() => {
     const handleToggle = () => setIsMobileOpen((prev) => !prev);
@@ -48,8 +56,9 @@ export default function Sidebar({ user }: SidebarProps) {
 
   interface NavLink {
     name: string;
-    href: string;
+    href?: string;
     icon: any;
+    subLinks?: { name: string; href: string }[];
   }
 
   // Navigation Links based on User Role
@@ -59,6 +68,14 @@ export default function Sidebar({ user }: SidebarProps) {
     { name: 'Savings Commitments', href: '/dashboard/commitments', icon: PiggyBank },
     { name: 'Waiting List', href: '/dashboard/waiting-list', icon: UserCheck },
     { name: 'Deleted Records', href: '/dashboard/deleted-records', icon: Trash2 },
+    { 
+      name: 'Report', 
+      icon: PieChart, 
+      subLinks: [
+        { name: 'Member Report', href: '/dashboard/reports/members' },
+        { name: 'Saving Commitment Report', href: '/dashboard/reports/commitments' }
+      ]
+    },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
     { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
   ];
@@ -121,14 +138,53 @@ export default function Sidebar({ user }: SidebarProps) {
       <nav className={styles.navSection}>
         {links.map((link) => {
           const Icon = link.icon;
+          
+          if (link.subLinks) {
+            const isDropdownOpen = openDropdowns[link.name];
+            const isAnySubLinkActive = link.subLinks.some(sub => pathname === sub.href);
+            return (
+              <div key={link.name}>
+                <button
+                  onClick={() => toggleDropdown(link.name)}
+                  className={`${styles.navItem} ${isAnySubLinkActive ? styles.activeNavItem : ''}`}
+                  style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Icon size={18} />
+                    <span>{link.name}</span>
+                  </div>
+                  {isDropdownOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </button>
+                {isDropdownOpen && (
+                  <div style={{ paddingLeft: '24px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {link.subLinks.map(sub => {
+                      const isSubActive = pathname === sub.href;
+                      return (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          onClick={() => setIsMobileOpen(false)}
+                          className={`${styles.navItem} ${isSubActive ? styles.activeNavItem : ''}`}
+                          style={{ padding: '8px 12px', fontSize: '0.85rem' }}
+                        >
+                          <span>{sub.name}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           const isActive = link.href === '/dashboard' 
             ? pathname === '/dashboard' 
             : pathname === link.href || pathname.startsWith(link.href + '/');
 
           return (
             <Link
-              key={link.href}
-              href={link.href}
+              key={link.href!}
+              href={link.href!}
               onClick={() => setIsMobileOpen(false)}
               className={`${styles.navItem} ${isActive ? styles.activeNavItem : ''}`}
             >
