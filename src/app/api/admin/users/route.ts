@@ -196,14 +196,11 @@ export async function POST(request: Request) {
 
     const templates = (await db.settings.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
     
-    // Find Template 2 ("Savvey Savers Account Registration") or Template 7
-    const templateId = inviteMode === 'SAVE_INVITE' ? '7' : '2';
-    const foundTpl = templates.find((t: any) => t.id === templateId || (inviteMode === 'SAVE_INVITE' ? t.title.includes('Join') : t.title.includes('Registration')));
+    // Always use Template 2 ("Savvey Savers Account Registration") for invitations
+    const foundTpl = templates.find((t: any) => t.id === '2' || t.title?.includes('Registration'));
 
-    let emailSubject = inviteMode === 'SAVE_INVITE' ? 'Welcome to Savvey Savers - Invitation to Join' : 'Welcome to Savvey Savers - Account Registered';
-    let emailBody = inviteMode === 'SAVE_INVITE'
-      ? `Hello ${name},\n\nYou have been invited to join the Savvey Savers Platform.\n\nClick the link below to set your password and access your dashboard:\n${activationLink}\n\nBest regards,\nSavvey Savers Team`
-      : `Hello ${name},\n\nYour account has been registered by the administrator. We will contact you when your dashboard access is ready.\n\nBest regards,\nSavvey Savers Team`;
+    let emailSubject = 'Savvey Savers Account Registration';
+    let emailBody = `Dear ${name}\n\nYou have been invited by your Account Admin to register your account on the Savvey Savers peer-to-peer lending Platform.\n\nPlease use this link ${activationLink} to complete your account registration.\n\nIf you require any support, please contact your Admin.\n\nKind Regards,\nSavvey Savers Network Support`;
 
     if (foundTpl && foundTpl.enabled !== false) {
       emailSubject = foundTpl.subject || emailSubject;
@@ -287,8 +284,8 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'User not found.' }, { status: 404 });
     }
 
-    if (body.action === 'send_invite') {
-      const invitationId = 'invite_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    if (body.action === 'send_invite' || body.action === 'send_reset') {
+      const invitationId = (body.action === 'send_reset' ? 'reset_' : 'invite_') + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       const invitationExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
 
       await db.users.update({
@@ -299,45 +296,38 @@ export async function PUT(request: Request) {
       const host = request.headers.get('host') || 'savvey-savers.vercel.app';
       const protocol = request.headers.get('x-forwarded-proto') || 'https';
       const origin = `${protocol}://${host}`;
-      const activationLink = `${origin}/activate?invite=${invitationId}`;
+      const link = `${origin}/activate?${body.action === 'send_reset' ? 'reset' : 'invite'}=${invitationId}`;
 
-      const emailSubject = 'Welcome to Savvey Savers - Invitation to Join';
-      const emailBody = `Hello ${user.name},\n\nYou have been invited to join the Savvey Savers Platform.\n\nClick the link below to set your password and access your dashboard:\n${activationLink}\n\nThis link is active for 72 hours.\n\nBest regards,\nSavvey Savers Team`;
+      const templates = (await db.settings.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
+      const templateId = body.action === 'send_reset' ? '1' : '2';
+      const foundTpl = templates.find((t: any) => t.id === templateId);
 
-      const mailRes = await sendEmail({
-        to: user.email,
-        subject: emailSubject,
-        body: emailBody
-      });
+      let emailSubject = body.action === 'send_reset' ? 'Savvey Savers Forgot Password' : 'Savvey Savers Account Registration';
+      let emailBody = body.action === 'send_reset'
+        ? `Dear ${user.name},\n\nYou have requested a password reset on the Savvey Savers peer-to-peer lending Platform.\n\nPlease use this link ${link} to reset your password.\n\nIf you require any support, please contact your Admin.\n\nKind Regards,\nSavvey Savers Network Support.`
+        : `Dear ${user.name},\n\nYou have been invited by your Account Admin to register your account on the Savvey Savers peer-to-peer lending Platform.\n\nPlease use this link ${link} to complete your account registration.\n\nIf you require any support, please contact your Admin.\n\nKind Regards,\nSavvey Savers Network Support`;
 
-      if (!mailRes.success) {
-        return NextResponse.json({ error: `Failed to send email: ${mailRes.error}` }, { status: 500 });
-      }
+      if (foundTpl && foundTpl.enabled !== false) {
+        emailSubject = foundTpl.subject || emailSubject;
+        emailBody = foundTpl.body || emailBody;
 
-      return NextResponse.json({ success: true, message: 'Invitation email resent successfully.' });
-    }
+        const replacements: Record<string, string> = {
+          name: user.name,
+          memberName: user.name,
+          first_name: user.firstName || user.name.split(' ')[0] || '',
+          last_name: user.lastName || user.name.split(' ').slice(1).join(' ') || '',
+          email: user.email,
+          reacturl: link,
+          url: link,
+          loginUrl: link,
+        };
 
-    if (body.action === 'send_reset') {
-      let resetLink = '';
-      try {
-        const host = request.headers.get('host') || 'savvey-savers.vercel.app';
-        const protocol = request.headers.get('x-forwarded-proto') || 'https';
-        const origin = `${protocol}://${host}`;
-        
-        resetLink = await adminAuth.generatePasswordResetLink(user.email, {
-          url: `${origin}/`
+        Object.entries(replacements).forEach(([key, val]) => {
+          const reg = new RegExp(`\\{${key}\\}`, 'g');
+          emailBody = emailBody.replace(reg, val);
+          emailSubject = emailSubject.replace(reg, val);
         });
-      } catch (authErr: any) {
-        console.error('Firebase Admin generatePasswordResetLink error:', authErr);
-        let errorMsg = authErr.message || 'Unable to generate reset link.';
-        if (errorMsg.includes('Unable to create the email action link') || errorMsg.includes('INTERNAL ASSERT FAILED')) {
-          errorMsg = 'Unable to generate password reset link. Please ensure that "Email/Password" sign-in provider is enabled in your Firebase Console under Authentication > Sign-in method, and that your domain is whitelisted in "Authorized domains" under Settings.';
-        }
-        return NextResponse.json({ error: `Firebase Auth configuration issue: ${errorMsg}` }, { status: 500 });
       }
-
-      const emailSubject = 'Savvey Savers - Password Reset Request';
-      const emailBody = `Hello ${user.name},\n\nYou requested a password reset for your Savvey Savers account.\n\nClick the link below to reset your password:\n${resetLink}\n\nIf you did not request this, you can safely ignore this email.\n\nBest regards,\nSavvey Savers Team`;
 
       const mailRes = await sendEmail({
         to: user.email,
@@ -349,7 +339,10 @@ export async function PUT(request: Request) {
         return NextResponse.json({ error: `Failed to send email: ${mailRes.error}` }, { status: 500 });
       }
 
-      return NextResponse.json({ success: true, message: 'Password reset link sent.' });
+      return NextResponse.json({
+        success: true,
+        message: body.action === 'send_reset' ? 'Password reset link sent.' : 'Invitation email resent successfully.'
+      });
     }
 
     let updateData: any = {};

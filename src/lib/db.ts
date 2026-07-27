@@ -2991,17 +2991,30 @@ class TableWrapper<T extends { id?: string; key?: string }> {
   async create(data: any): Promise<T> {
     let id = data.id || data.key;
     if (!id) {
-      let prefix = 'rec_';
-      if (this.collectionName === 'commitments') prefix = 'SCC-';
-      else if (this.collectionName === 'payments') prefix = 'pay_';
-      else if (this.collectionName === 'notifications') prefix = 'ntf_';
-      else if (this.collectionName === 'submittedRequests') prefix = 'req_';
-      else if (this.collectionName === 'waitingList') prefix = 'wtl_';
-      else if (this.collectionName === 'deletedRecords') prefix = 'del_';
-      else if (this.collectionName === 'mockEmails') prefix = 'eml_';
-      else if (this.collectionName === 'auditLogs') prefix = 'log_';
+      if (this.collectionName === 'commitments') {
+        const currentItems = await this.findMany();
+        let maxNum = 222;
+        currentItems.forEach((c: any) => {
+          if (c.id && c.id.startsWith('SC-')) {
+            const numPart = parseInt(c.id.replace(/[^0-9]/g, ''), 10);
+            if (!isNaN(numPart) && numPart > maxNum) {
+              maxNum = numPart;
+            }
+          }
+        });
+        id = `SC-${String(maxNum + 1).padStart(5, '0')}`;
+      } else {
+        let prefix = 'rec_';
+        if (this.collectionName === 'payments') prefix = 'pay_';
+        else if (this.collectionName === 'notifications') prefix = 'ntf_';
+        else if (this.collectionName === 'submittedRequests') prefix = 'req_';
+        else if (this.collectionName === 'waitingList') prefix = 'wtl_';
+        else if (this.collectionName === 'deletedRecords') prefix = 'del_';
+        else if (this.collectionName === 'mockEmails') prefix = 'eml_';
+        else if (this.collectionName === 'auditLogs') prefix = 'log_';
 
-      id = `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        id = `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      }
     }
 
     const insertData = { ...data };

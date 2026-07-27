@@ -39,7 +39,7 @@ const DEFAULT_AGREEMENT = `<h4 style="font-size: 1.1rem; font-weight: 700; margi
 function ActivationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const invitationId = searchParams.get('invite');
+  const invitationId = searchParams.get('invite') || searchParams.get('reset');
 
   const [step, setStep] = useState<1 | 2>(1);
   const [verifying, setVerifying] = useState(true);

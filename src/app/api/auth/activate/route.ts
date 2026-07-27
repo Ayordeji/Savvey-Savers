@@ -33,9 +33,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Look up user by invitation ID
+    // Look up user by invitation or reset ID
     const user = await db.users.findFirst(
-      (u) => u.invitationId === invitationId && !u.isActive
+      (u) => u.invitationId === invitationId
     );
 
     if (!user) {
@@ -140,17 +140,17 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const invitationId = searchParams.get('invite');
+    const invitationId = searchParams.get('invite') || searchParams.get('reset');
 
     if (!invitationId) {
       return NextResponse.json(
-        { valid: false, error: 'Missing invitation code in the URL. Please verify your link.' },
+        { valid: false, error: 'Missing invitation or reset code in the URL. Please verify your link.' },
         { status: 400 }
       );
     }
 
     const user = await db.users.findFirst(
-      (u) => u.invitationId === invitationId && !u.isActive
+      (u) => u.invitationId === invitationId
     );
 
     if (!user) {

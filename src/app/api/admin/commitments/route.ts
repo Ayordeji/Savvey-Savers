@@ -101,7 +101,7 @@ export async function POST(request: Request) {
       goal,
       collectionMonth: startMonth,
       collectionYear: startYear,
-      endDate: endDate || `${startYear}-12-31`,
+      endDate: endDate || `December ${startYear}`,
       status,
       updatedAt: new Date().toISOString()
     });
