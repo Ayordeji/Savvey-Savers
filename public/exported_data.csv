@@ -1,0 +1,221 @@
+Record Id	Member Name	Savings Amount	Savings Goal	Collection Month	End Date	Status	Created At
+SC-001	Iyore Edomwande	£1000.00	Property Purchase	January 	31-12-2024	Completed	1/1/2024
+SC-002	Esosa Ikponmwosa	£1000.00	Investment	July 	31-12-2024	Completed	1/7/2024
+SC-003	Sandrina Ibie Osayande	£250.00	Savings	October 	31-12-2024	Completed	1/10/2024
+SC-004	Oyebola Oyeleye	£1000.00	Property Purchase	January 	31-12-2024	Completed	1/1/2024
+SC-005	Oyebola Oyeleye	£500.00	Property Purchase	February 	31-12-2024	Completed	1/2/2024
+SC-006	Joy Ugiagbe	£1000.00	Investment	December 	31-12-2024	Completed	1/12/2024
+SC-007	Mercy Aiyudubie	£1000.00	Property Purchase	July 	31-12-2024	Cancelled	1/7/2024
+SC-008	Mercy Aiyudubie	£1000.00	Property Purchase	June 	31-12-2024	Completed	1/6/2024
+SC-009	Atinuke Hassan	£1000.00	My First Home	January 	31-12-2024	Completed	1/1/2024
+SC-0010	Moyo Oluwasola	£1000.00	Savings	February 	31-12-2024	Completed	1/2/2024
+SC-0011	Moyo Oluwasola	£500.00	Savings	February 	31-12-2024	Completed	1/2/2024
+SC-0012	Moyo Oluwasola	£250.00	Savings	May 	31-12-2024	Completed	1/5/2024
+SC-0013	Jessica Gwadia	£500.00	Savings	April 	31-12-2024	Completed	1/4/2024
+SC-0014	Aminatu Momoh	£500.00	Investment	May 	31-12-2024	Completed	1/5/2024
+SC-0015	Kikelomo Agunbiade	£1000.00	Savings	July 	31-12-2024	Completed	1/7/2024
+SC-0016	Aisosa Aiyudubie	£1000.00	Investment	September 	31-12-2024	Completed	1/9/2024
+SC-0017	Ruby Aghoghovbia	£1000.00	Investment	May 	31-12-2024	Completed	1/5/2024
+SC-0018	Ruby Aghoghovbia	£500.00	Investment	September 	31-12-2024	Completed	1/9/2024
+SC-0019	Rosemary Akpomedaye	£250.00	Savings	May 	31-12-2024	Completed	1/5/2024
+SC-0020	Daniel Oronsaye	£1000.00	Property Purchase	April 	31-12-2024	Completed	1/4/2024
+SC-0021	Ivy Erhahon	£250.00	Savings	March 	31-12-2024	Completed	1/3/2024
+SC-0022	Eva Aiyudubie	£250.00	My First Home	September 	31-12-2024	Completed	1/9/2024
+SC-0023	Kings Nagus	£1000.00	Investment	November 	31-12-2024	Completed	1/11/2024
+SC-0024	Yori Gbadamosi	£1000.00	Investment	February 	31-12-2024	Completed	1/2/2024
+SC-0025	Vero Aigbomian	£250.00	Savings	March 	31-12-2024	Completed	1/3/2024
+SC-0026	Aimiosinor Momoh	£500.00	Savings	March 	31-12-2024	Completed	1/3/2024
+SC-0027	Davidson Sunday	£250.00	Savings	October 	31-12-2024	Completed	1/10/2024
+SC-0028	Jennifer Bello	£1000.00	Property Purchase	June 	31-12-2024	Completed	1/6/2024
+SC-0029	Gbolahan Lamuye	£1000.00	School Fees	July 	31-12-2024	Completed	1/7/2024
+SC-0030	Gbolahan Lamuye	£1000.00	Dream Holiday	August 	31-12-2024	Completed	1/8/2024
+SC-0031	Jermaine O	£1000.00	Savings	November 	31-12-2025	Completed	1/11/2024
+SC-0032	"	£1000.00	Property Purchase	November 	31-12-2024	Cancelled	1/11/2024
+SC-0033		£1000.00	Property Purchase	November 	31-12-2024	Cancelled	1/11/2024
+SC-0034		£1000.00	Property Purchase	July 	31-12-2024	Cancelled	1/7/2024
+SC-0036	Iyore Edomwande	£250.00	School Fees	September 	31-12-2024	Completed	1/9/2024
+SC-0040	Anthonia Asuen	£1000.00	Property Purchase	October 	31-12-2024	Completed	1/10/2024
+SC-0041	Oluwatosin Fagbenro	£250.00	Savings	September 	31-12-2024	Completed	1/9/2024
+SC-0042	Mabel Johnson	£1000.00	School Fees	August 	31-12-2024	Completed	1/8/2024
+SC-0043	Ese Efemwen	£250.00	My First Home	September 	31-12-2024	Completed	1/9/2024
+SC-0044	Andrew Nwabueze	£1000.00	Savings	March 	31-12-2024	Completed	1/3/2024
+SC-0045	Chenai Kabvura	£1000.00	Savings	April 	31-12-2024	Completed	1/4/2024
+SC-0046	Munyaradzi Moyo	£500.00	Savings	October 	31-12-2024	Completed	1/10/2024
+SC-0047	Tessy Adedoyin	£1000.00	School Fees	March 	31-12-2024	Completed	1/3/2024
+SC-0048	Bernadette Gichia	£1000.00	Savings	April 	31-12-2024	Completed	1/4/2024
+SC-0049	Bernadette Gichia	£1000.00	Savings	April 	31-12-2024	Cancelled	1/4/2024
+SC-0050	Bernadette Gichia	£1000.00	Savings	April 	31-12-2024	Cancelled	1/4/2024
+SC-0051	Bernadette Gichia	£1000.00	Investment	April 	31-12-2024	Cancelled	1/4/2024
+SC-0052	Frank Ukpedor	£500.00	Investment	August 	31-12-2024	Completed	1/8/2024
+SC-0053	Vivian Omo-Ojugo	£500.00	Savings	October 	31-12-2024	Completed	1/10/2024
+SC-0054	Monica Omigie	£1000.00	Savings	December 	31-12-2024	Completed	1/12/2024
+SC-0055	Monica Omigie	£1000.00	Savings	December 	31-12-2024	Completed	1/12/2024
+SC-0056	Monica Omigie	£500.00	Savings	September 	31-12-2024	Completed	1/9/2024
+SC-0057	Nyumbasiyo Pilipili	£1000.00	Savings	May 	31-12-2024	Completed	1/5/2024
+SC-0058	Nyumbasiyo Pilipili	£500.00	Savings	June 	31-12-2024	Completed	1/6/2024
+SC-0059	Nyumbasiyo Pilipili	£500.00	Savings	June 	31-12-2024	Completed	1/6/2024
+SC-0060	Bernadette Gichia	£1000.00	Property Purchase	May 	31-12-2025	Cancelled	1/5/2024
+SC-0061	Moyo Oluwasola	£500.00	Savings	August 	31-12-2024	Completed	1/8/2024
+SC-0062	Iyore Edomwande	£500.00	Property Purchase	October 	31-12-2024	Completed	1/10/2024
+SC-0063	Kings Nagus	£500.00	Property Purchase	November 	31-12-2024	Completed	1/11/2024
+SC-0064	Iyore Edomwande	£500.00	Property Purchase	November 	31-12-2024	Completed	1/11/2024
+SC-0065	Jennifer Ejeh	£500.00	Savings	December 	31-12-2024	Completed	1/12/2024
+SC-0066	Olajumoke Dorcas Ojewumi	£250.00	Savings	December 	31-12-2024	Completed	1/12/2024
+SC-0067	Amy Asemota	£250.00	Savings	Oct-25	31-12-2025	Completed	1/10/2025
+SC-0068	Yori Gbadamosi	£1000.00	Investment	Apr-25	31-12-2025	Completed	1/4/2025
+SC-0069	Anthonia Asuen	£1000.00	Property Purchase	Jan-25	31-12-2025	Completed	1/1/2025
+SC-0070	Anthonia Asuen	£1000.00	Property Purchase	Mar-25	31-12-2025	Completed	1/3/2025
+SC-0071	Anthonia Asuen	£1000.00	Investment	Jul-25	31-12-2025	Completed	1/7/2025
+SC-0072	Bernadette Gichia	£1000.00	Savings	Jun-25	31-12-2025	Completed	1/6/2025
+SC-0073	Chenai Kabvura	£1000.00	Savings	Apr-25	31-12-2025	Completed	1/4/2025
+SC-0074	Daniel Oronsaye	£500.00	School Fees	Jun-25	31-12-2025	Completed	1/6/2025
+SC-0075	Daniel Oronsaye	£1000.00	Investment	Aug-25	31-12-2025	Completed	1/8/2025
+SC-0076	Davidson Sunday	£250.00	Savings	Oct-25	31-12-2025	Completed	1/10/2025
+SC-0077	Ese Efemwen	£500.00	Savings	Nov-25	31-12-2025	Completed	1/11/2025
+SC-0078	Esosa Ikponmwosa	£500.00	Wedding	Aug-25	31-12-2025	Completed	1/8/2025
+SC-0079	Eva Aiyudubie	£1000.00	Investment	Oct-25	31-12-2025	Completed	1/10/2025
+SC-0080	Frank Ukpedor	£500.00	Savings	Feb-25	31-12-2025	Completed	1/2/2025
+SC-0081	Jennifer Bello	£1000.00	Wedding	Jan-25	31-12-2025	Completed	1/1/2025
+SC-0082	Jennifer Bello	£1000.00	Wedding	Feb-25	31-12-2025	Completed	1/2/2025
+SC-0083	Jermaine O	£1000.00	Savings	Nov-25	31-12-2025	Cancelled	1/11/2025
+SC-0084	Jessica Gwadia	£500.00	Savings	Jun-25	31-12-2025	Completed	1/6/2025
+SC-0085	Aimiosinor Momoh	£500.00	Savings	Jun-25	31-12-2025	Completed	1/6/2025
+SC-0086	Joy Ugiagbe	£1000.00	Property Purchase	Oct-25	31-12-2025	Completed	1/10/2025
+SC-0087	Kikelomo Agunbiade	£1000.00	Savings	Feb-25	31-12-2025	Completed	1/2/2025
+SC-0088	Nyumbasiyo Pilipili	£1000.00	Savings	Apr-25	31-12-2025	Completed	1/4/2025
+SC-0089	Nyumbasiyo Pilipili	£1000.00	Savings	May-25	31-12-2025	Completed	1/5/2025
+SC-0090	Mabel Johnson	£1000.00	Savings	Jul-25	31-12-2025	Completed	1/7/2025
+SC-0091	Mercy Aiyudubie	£500.00	Savings	Aug-25	31-12-2025	Completed	1/8/2025
+SC-0092	Moyo Oluwasola	£1000.00	Savings	Jan-25	31-12-2025	Completed	1/1/2025
+SC-0093	Moyo Oluwasola	£1000.00	Investment	Feb-25	31-12-2025	Completed	1/2/2025
+SC-0094	Moyo Oluwasola	£500.00	Investment	Mar-25	31-12-2025	Completed	1/3/2025
+SC-0095	Moyo Oluwasola	£500.00	Investment	Mar-25	31-12-2025	Completed	1/3/2025
+SC-0096	Olajumoke Dorcas Ojewumi	£500.00	Savings	Oct-25	31-12-2025	Completed	1/10/2025
+SC-0097	Oyebola Oyeleye	£500.00	Savings	Sep-25	31-12-2025	Completed	1/9/2025
+SC-0098	Ruby Aghoghovbia	£500.00	Savings	Jun-25	31-12-2025	Completed	1/6/2025
+SC-0099	Ruby Aghoghovbia	£1000.00	Savings	Sep-25	31-12-2025	Completed	1/9/2025
+SC-00100	Sandrina Ibie Osayande	£250.00	Savings	Dec-25	31-12-2025	Completed	1/12/2025
+SC-00101	Tessy Adedoyin	£1000.00	School Fees	Mar-25	31-12-2025	Completed	1/3/2025
+SC-00102	Atinuke Hassan	£1000.00	Savings	Jan-25	31-12-2025	Completed	1/1/2025
+SC-00103	Vero Aigbomian	£500.00	Savings	May-25	31-12-2025	Completed	1/5/2025
+SC-00104	Vivian Omo-Ojugo	£500.00	Savings	Nov-25	31-12-2025	Completed	1/11/2025
+SC-00105	Aisosa Aiyudubie	£500.00	Savings	Jul-25	31-12-2025	Completed	1/7/2025
+SC-00106	Oluwabusola Olowoleru	£250.00	Savings	Oct-25	31-12-2025	Completed	1/10/2025
+SC-00107	Gbolahan Lamuye	£1000.00	Savings	Jul-25	31-12-2025	Completed	1/7/2025
+SC-00108	Gbolahan Lamuye	£1000.00	Savings	Mar-25	31-12-2025	Completed	1/3/2025
+SC-00109	Akinloye Igbinyemi	£250.00	Savings	Oct-25	31-12-2025	Completed	1/10/2025
+SC-00110	Ganiat Johnson	£500.00	Savings	Apr-25	31-12-2025	Completed	1/4/2025
+SC-00111	Ganiat Johnson	£500.00	Savings	Sep-25	31-12-2025	Completed	1/9/2025
+SC-00112	Iyore Edomwande	£1000.00	Property Purchase	Dec-25	31-12-2025	Completed	1/12/2025
+SC-00113	Hellen Seru	£1000.00	Savings	Sep-25	31-12-2025	Completed	1/9/2025
+SC-00114	Simisola Adingupu	£500.00	Savings	Jun-25	31-12-2025	Completed	1/6/2025
+SC-00115	Simisola Adingupu	£500.00	Savings	Sep-25	31-12-2025	Completed	1/9/2025
+SC-00116	Erica Ifeka	£500.00	Savings	May-25	31-12-2025	Completed	1/5/2025
+SC-00117	Erica Ifeka	£500.00	Savings	Aug-25	31-12-2025	Completed	1/8/2025
+SC-00118	Arinola Fajuyitan	£250.00	Savings	Sep-25	31-12-2025	Completed	1/9/2025
+SC-00119	Feyisola Ogunsola	£500.00	Savings	Sep-25	31-12-2025	Completed	1/9/2025
+SC-00120	Augustine Kindomba	£1000.00	Savings	Jun-25	31-12-2025	Completed	1/6/2025
+SC-00121	Debbie Ologbosele	£500.00	Savings	Dec-25	31-12-2025	Completed	1/12/2025
+SC-00122	Julie Kayembe	£500.00	Savings	Jul-25	31-12-2025	Completed	1/7/2025
+SC-00123	Monica Omigie	£500.00	Savings	Dec-25	31-12-2025	Completed	1/12/2025
+SC-00124	Iyore Edomwande	£1000.00	Property Purchase	Dec-25	31-12-2025	Completed	1/12/2025
+SC-00125	Iyore Edomwande	£500.00	Debt Repayment	May-25	31-12-2025	Completed	1/5/2025
+SC-00126	Iyore Edomwande	£500.00	Property Purchase	Aug-25	31-12-2025	Completed	1/8/2025
+SC-00127	Iyore Edomwande	£1000.00	Property Purchase	May-25	31-12-2025	Completed	1/5/2025
+SC-00128	Iyore Edomwande	£250.00	Investment	Dec-25	31-12-2025	Completed	1/12/2025
+SC-00129	Iyore Edomwande	£500.00	Investment	Feb-25	31-12-2025	Completed	1/2/2025
+SC-00130	Gerald Osaosemwen Aiyudubie	£250.00	Savings	Oct-25	31-12-2025	Completed	1/10/2025
+SC-00131	Kings Nagus	£500.00	Savings	Nov-25	31-12-2025	Completed	1/11/2025
+SC-00132	Temi Olabode	£500.00	Savings	Nov-25	31-12-2025	Completed	1/11/2025
+SC-00133	Tessy Adedoyin	£250.00	School Fees	Sep-25	31-12-2025	Completed	1/9/2025
+SC-00134	Tobi Osaji	£250.00	Savings	Dec-25	31-12-2025	Completed	1/12/2025
+SC-00135	Sandrina Ibie Osayande	£250.00	My First Home	Nov-25	31-12-2025	Cancelled	1/11/2025
+SC-00136	Jamie Miudjiza Pilipili	£250.00	Savings	Oct-25	31-12-2025	Completed	1/10/2025
+SC-00137	Iyore Edomwande	£250.00	Debt Repayment	Dec-25	31-12-2025	Completed	1/12/2025
+SC-00138	Ruby Aghoghovbia	£500.00	Savings	Aug-25	31-12-2025	Completed	1/8/2025
+SC-00139	Frank Ukpedor	£500.00	Savings	Nov-25	31-12-2025	Completed	1/11/2025
+SC-00140	Gbolahan Lamuye	£500.00	Savings	Nov-25	31-12-2025	Completed	1/11/2025
+SC-00141	Tobi Osaji	£500.00	Savings	Nov-25	31-12-2025	Completed	1/11/2025
+SC-00142	Jessica Gwadia	£500.00	Property Purchase	Aug-25	31-12-2025	Completed	1/8/2025
+SC-00143	Daniel Oronsaye	£500.00	School Fees	May-25	31-12-2025	Completed	1/5/2025
+SC-00144	Aisosa Aiyudubie	£500.00	Debt Repayment	Jan-26	31-12-2026	Not Started	1/1/2026
+SC-00145	Aisosa Aiyudubie	£250.00	Savings	Jul-26	31-12-2026	Cancelled	1/7/2026
+SC-00146	Aisosa Aiyudubie	£250.00	Savings	Nov-26	31-12-2026	Not Started	1/11/2026
+SC-00147	Kikelomo Agunbiade	£1000.00	Savings	Apr-26	31-12-2026	Not Started	1/4/2026
+SC-00148	Soneni Sibanda	£1000.00	Property Purchase	Jun-26	31-12-2026	Cancelled	1/6/2026
+SC-00149	Simisola Adingupu	£1000.00	Property Purchase	Jun-26	31-12-2026	Not Started	1/6/2026
+SC-00150	Moyo Oluwasola	£1000.00	Savings	May-26	31-12-2026	Not Started	1/5/2026
+SC-00151	Moyo Oluwasola	£500.00	Savings	Feb-26	31-12-2026	Not Started	1/2/2026
+SC-00152	Chenai Kabvura	£1000.00	Savings	Apr-26	31-12-2026	Not Started	1/4/2026
+SC-00153	Arinola Fajuyitan	£250.00	Savings	Jul-26	31-12-2026	Not Started	1/7/2026
+SC-00154	Hellen Seru	£1000.00	Savings	Aug-26	31-12-2026	Not Started	1/8/2026
+SC-00155	Oyebola Oyeleye	£1000.00	Savings	Feb-26	31-12-2026	Not Started	1/2/2026
+SC-00156	Nyumbasiyo Pilipili	£1000.00	Savings	Jun-26	31-12-2026	Not Started	1/6/2026
+SC-00157	Nyumbasiyo Pilipili	£1000.00	Savings	Jul-26	31-12-2026	Not Started	1/7/2026
+SC-00158	Jamie Miudjiza Pilipili	£250.00	Savings	Jul-26	31-12-2026	Not Started	1/7/2026
+SC-00159	Mabel Johnson	£1000.00	Savings	Aug-26	31-12-2026	Not Started	1/8/2026
+SC-00160	Augustine Kindomba	£1000.00	Savings	May-26	31-12-2026	Not Started	1/5/2026
+SC-00161	Jessica Gwadia	£1000.00	My First Home	Feb-26	31-12-2026	Not Started	1/2/2026
+SC-00162	Yori Gbadamosi	£1000.00	Investment	Mar-26	31-12-2026	Not Started	1/3/2026
+SC-00163	Vero Aigbomian	£500.00	Savings	Feb-26	31-12-2026	Not Started	1/2/2026
+SC-00164	Yori Gbadamosi	£500.00	Savings	Jan-26	31-12-2026	Not Started	1/1/2026
+SC-00165	Ganiat Johnson	£1000.00	Savings	Apr-26	31-12-2026	Not Started	1/4/2026
+SC-00166	Esosa Ikponmwosa	£500.00	Savings	Oct-26	31-12-2026	Not Started	1/10/2026
+SC-00167	Debbie Ologbosele	£500.00	Savings	Sep-26	31-12-2026	Not Started	1/9/2026
+SC-00168	Julie Kayembe	£1000.00	Savings	Sep-26	31-12-2026	Not Started	1/9/2026
+SC-00169	Tessy Adedoyin	£1000.00	School Fees	Jan-26	31-12-2026	Not Started	1/1/2026
+SC-00170	Tessy Adedoyin	£250.00	School Fees	Aug-26	31-12-2026	Not Started	1/8/2026
+SC-00171	Eva Aiyudubie	£500.00	Property Purchase	Nov-26	31-12-2026	Not Started	1/11/2026
+SC-00172	Aimiosinor Momoh	£250.00	Savings	Mar-26	31-12-2026	Not Started	1/3/2026
+SC-00173	Sandrina Ibie Osayande	£250.00	Savings	Nov-26	31-12-2026	Not Started	1/11/2026
+SC-00174	Frank Ukpedor	£500.00	Savings	Jun-26	31-12-2026	Cancelled	1/6/2026
+SC-00175	Frank Ukpedor	£500.00	Savings	Dec-26	31-12-2026	Cancelled	1/12/2026
+SC-00176	Gbolahan Lamuye	£1000.00	School Fees	Mar-26	31-12-2026	Not Started	1/3/2026
+SC-00177	Gbolahan Lamuye	£1000.00	School Fees	Aug-26	31-12-2026	Not Started	1/8/2026
+SC-00178	Oluwabusola Olowoleru	£500.00	Savings	Jul-26	31-12-2026	Not Started	1/7/2026
+SC-00179	Davidson Sunday	£250.00	Savings	Oct-26	31-12-2026	Not Started	1/10/2026
+SC-00180	Andrew Nwabueze	£1000.00	Savings	Aug-26	31-12-2026	Cancelled	1/8/2026
+SC-00181	Kings Nagus	£500.00	Property Purchase	Nov-26	31-12-2026	Not Started	1/11/2026
+SC-00182	Joy Ugiagbe	£500.00	Investment	Oct-26	31-12-2026	Not Started	1/10/2026
+SC-00183	Enoto- obong Eluwole	£1000.00	My First Home	Nov-26	31-12-2026	Not Started	1/11/2026
+SC-00184	Kehinde Fashiku	£500.00	Savings	Oct-26	31-12-2026	Not Started	1/10/2026
+SC-00185	Kehinde Fashiku	£500.00	Savings	Nov-26	31-12-2026	Not Started	1/11/2026
+SC-00186		£500.00	Wedding	Jun-26	31-12-2026	Not Started	1/6/2026
+SC-00187	Shola Bogunjoko	£500.00	Savings	May-26	31-12-2026	Not Started	1/5/2026
+SC-00188	Shola Bogunjoko	£500.00	Savings	Nov-26	31-12-2026	Not Started	1/11/2026
+SC-00189	Feyisola Ogunsola	£500.00	Savings	Apr-26	31-12-2026	Not Started	1/4/2026
+SC-00190	Vivian Omo-Ojugo	£500.00	Savings	Feb-26	31-12-2026	Not Started	1/2/2026
+SC-00191	Mercy Aiyudubie	£250.00	Investment	Oct-26	31-12-2026	Cancelled	1/10/2026
+SC-00192	Mercy Aiyudubie	£750.00	Investment	Oct-26	31-12-2026	Not Started	1/10/2026
+SC-00193	Monica Omigie	£250.00	Savings	Dec-26	31-12-2026	Not Started	1/12/2026
+SC-00194	Tobi Osaji	£250.00	Savings	Dec-26	31-12-2026	Not Started	1/12/2026
+SC-00195	Tobi Osaji	£250.00	Savings	Jan-26	31-12-2026	Not Started	1/1/2026
+SC-00196	Aderonke Adejoke Bamidele	£1000.00	Savings	Dec-26	31-12-2026	Not Started	1/12/2026
+SC-00197	Don Kingsley Nwaorjinta	£500.00	Savings	May-26	31-12-2026	Not Started	1/5/2026
+SC-00198		£500.00	Savings	Jul-26	31-12-2026	Not Started	1/7/2026
+SC-00199		£500.00	Savings	Oct-26	31-12-2026	Cancelled	1/10/2026
+SC-00200	Bernadette Gichia	£500.00	Savings	Mar-26	31-12-2026	Not Started	1/3/2026
+SC-00201	Bernadette Gichia	£1000.00	Savings	Mar-26	31-12-2026	Not Started	1/3/2026
+SC-00202	Princess Alawode	£250.00	Savings	Oct-26	31-12-2026	Not Started	1/10/2026
+SC-00203	Iyore Edomwande	£1000.00	Property Purchase	Dec-26	31-12-2026	Not Started	1/12/2026
+SC-00204	Iyore Edomwande	£500.00	Property Purchase	May-26	31-12-2026	Not Started	1/5/2026
+SC-00205	Iyore Edomwande	£500.00	Debt Repayment	Jun-26	31-12-2026	Not Started	1/6/2026
+SC-00206	Iyore Edomwande	£500.00	Debt Repayment	Jul-26	31-12-2026	Not Started	1/7/2026
+SC-00207	Simisola Adingupu	£1000.00	Property Purchase	Dec-26	31-12-2026	Not Started	1/12/2026
+SC-00208	Tobi Osaji	£250.00	Savings	Aug-26	31-12-2026	Not Started	1/8/2026
+SC-00209	Tobi Osaji	£250.00	Savings	Sep-26	31-12-2026	Not Started	1/9/2026
+SC-00210	Augustine Kindomba	£500.00	Savings	Apr-26	31-12-2026	Not Started	1/4/2026
+SC-00211	Daniel Oronsaye	£1000.00	Property Purchase	Feb-26	31-12-2026	Not Started	1/2/2026
+SC-00212	Daniel Oronsaye	£750.00	Property Purchase	Jan-26	31-12-2026	Not Started	1/1/2026
+SC-00213	Daniel Oronsaye	£250.00	Property Purchase	Jul-26	31-12-2026	Not Started	1/7/2026
+SC-00214	Jennifer Bello	£500.00	Savings	Jun-26	31-12-2026	Not Started	1/6/2026
+SC-00215	Jennifer Bello	£250.00	Savings	Jul-26	31-12-2026	Not Started	1/7/2026
+SC-00216	Jennifer Bello	£750.00	Savings	Sep-26	31-12-2026	Not Started	1/9/2026
+SC-00217	Jennifer Bello	£500.00	Savings	Dec-26	31-12-2026	Not Started	1/12/2026
+SC-00218	Anthonia Asuen	£1000.00	Investment	May-26	31-12-2026	Not Started	1/5/2026
+SC-00219	Anthonia Asuen	£1000.00	Investment	Jun-26	31-12-2026	Not Started	1/6/2026
+SC-00220	Anthonia Asuen	£1000.00	Investment	Jul-26	31-12-2026	Not Started	1/7/2026
+SC-00221	Anthonia Asuen	£1000.00	Investment	Sep-26	31-12-2026	Not Started	1/9/2026
+SC-00222	Iyore Edomwande	£1000.00	Wedding	Feb-27	31-12-2027	Not Started	1/2/2027
+SC-00223	PEARL Test	£1000.00	Wedding	May-27	31-12-2027	Cancelled	1/5/2027
+SC-00224	Priscilla Omole	£1000.00	My First Home	Mar-26	31-12-2026	Not Started	1/3/2026

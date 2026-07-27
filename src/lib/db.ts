@@ -25,6 +25,8 @@ export interface User {
   membershipFeeConfirmedAt?: string | null;
   termsAccepted?: boolean;
   isSuperAdmin?: boolean;
+  lastLoginAt?: string;
+  invitedBy?: string;
 }
 
 export interface Commitment {

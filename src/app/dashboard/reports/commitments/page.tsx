@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { Search, Download, ExternalLink, X, PoundSterling, Filter, RotateCcw } from 'lucide-react';
 import styles from '../../commitments/commitments.module.css';
 import { useRouter } from 'next/navigation';
-
+import PaginationControls from '../../PaginationControls';
 interface Commitment {
   id: string;
   memberId: string;
@@ -48,7 +48,7 @@ function CommitmentsReportContent() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // View Modal
   const [activeModal, setActiveModal] = useState<'NONE' | 'VIEW_COMMITMENT'>('NONE');
@@ -244,28 +244,15 @@ function CommitmentsReportContent() {
           </table>
         </div>
 
-        {/* Pagination Details */}
-        {filteredCommitments.length > 0 && (
-          <div className={styles.paginationSection} style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)' }}>
-            <div className={styles.pageButtons} style={{ display: 'flex', gap: '8px' }}>
-              <button disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)} className={styles.pageBtn}>Previous</button>
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  className={`${styles.pageBtn} ${currentPage === i + 1 ? styles.activePageBtn : ''}`}
-                  onClick={() => setCurrentPage(i + 1)}
-                  style={currentPage === i + 1 ? { backgroundColor: '#1e293b', color: '#fff', border: 'none' } : {}}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)} className={styles.pageBtn}>Next</button>
-            </div>
-            <div className={styles.pageInfo} style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Showing {currentCommitments.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to {Math.min(currentPage * itemsPerPage, filteredCommitments.length)} of {filteredCommitments.length} entries
-            </div>
-          </div>
-        )}
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filteredCommitments.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(num) => { setItemsPerPage(num); setCurrentPage(1); }}
+          itemLabel="commitment"
+        />
       {/* --- VIEW COMMITMENT DETAILS MODAL --- */}
       {activeModal === 'VIEW_COMMITMENT' && selectedCmt && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>

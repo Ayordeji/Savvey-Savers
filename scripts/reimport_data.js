@@ -4,9 +4,8 @@ const path = require('path');
 const dbPath = path.join(__dirname, '../src/lib/db.ts');
 let dbContent = fs.readFileSync(dbPath, 'utf8');
 
-// We will parse the CSVs.
 const memberCsv = fs.readFileSync(path.join(__dirname, '../public/member_list.csv'), 'utf8');
-const commitCsv = fs.readFileSync(path.join(__dirname, '../public/exported_data.csv'), 'utf8');
+const commitTxt = fs.readFileSync(path.join(__dirname, '../public/exported_data.csv'), 'utf8'); // We'll just assume it's tab-separated now
 
 function parseCSV(csvText) {
   const lines = csvText.split('\n').filter(l => l.trim().length > 0);
@@ -42,8 +41,23 @@ function parseCSV(csvText) {
   return results;
 }
 
+function parseTSV(tsvText) {
+  const lines = tsvText.split('\n').filter(l => l.trim().length > 0);
+  const headers = lines[0].split('\t').map(h => h.trim());
+  const results = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split('\t');
+    const obj = {};
+    headers.forEach((h, idx) => {
+      obj[h] = values[idx] !== undefined ? values[idx].trim() : '';
+    });
+    results.push(obj);
+  }
+  return results;
+}
+
 const usersData = parseCSV(memberCsv);
-const commitsData = parseCSV(commitCsv);
+const commitsData = parseTSV(commitTxt); // Use TSV for the new pasted data
 
 const usersArray = [];
 const commitsArray = [];
@@ -63,6 +77,12 @@ usersData.forEach((u) => {
     if (parts.length === 3) createdStr = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T12:00:00Z`).toISOString();
   }
 
+  let lastLoggedStr = null;
+  if (u['Last logged']) {
+    const parts = u['Last logged'].split(' ')[0].split('/');
+    if (parts.length === 3) lastLoggedStr = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T12:00:00Z`).toISOString();
+  }
+
   usersArray.push({
     id: `usr_${id}`,
     name: u['Name'] || '',
@@ -75,12 +95,15 @@ usersData.forEach((u) => {
     isActive: u['Is Active'] === 'Yes',
     membershipFeeConfirmed: true,
     createdAt: createdStr,
+    lastLoginAt: lastLoggedStr,
+    invitedBy: u['Invited By'] || '',
     invitationId: id,
     permissions: []
   });
 });
 
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 commitsData.forEach((c, idx) => {
   const amtStr = c['Savings Amount'] ? c['Savings Amount'].replace('£', '').replace(/,/g, '') : '0';
@@ -95,25 +118,35 @@ commitsData.forEach((c, idx) => {
     status = 'PENDING';
   }
 
-  const memberName = c['Member Name'] || '';
-  const userMatch = usersArray.find(u => u.name.toLowerCase() === memberName.toLowerCase());
+  const memberName = c['Member Name'] || 'Unknown Member';
+  const userMatch = usersArray.find(u => u.name.toLowerCase() === memberName.toLowerCase() || memberName.toLowerCase().includes(u.firstName.toLowerCase()));
   const memberId = userMatch ? userMatch.id : `usr_${Math.floor(Math.random()*10000)}`;
 
-  let cMonth = c['Collection Month'] ? c['Collection Month'].trim() : 'December';
+  let cMonthRaw = c['Collection Month'] ? c['Collection Month'].trim() : 'December';
+  let cMonth = cMonthRaw;
   let cYear = 2024;
   let createdStr = new Date().toISOString();
   
+  // Clean up month string (e.g. "Oct-25")
+  if (cMonthRaw.includes('-')) {
+    const parts = cMonthRaw.split('-');
+    const mIndex = shortMonthNames.findIndex(sm => sm.toLowerCase() === parts[0].toLowerCase());
+    if (mIndex >= 0) cMonth = monthNames[mIndex];
+    cYear = 2000 + parseInt(parts[1]);
+  }
+  
   if (c['Created At']) {
-    const parts = c['Created At'].split('-');
+    const parts = c['Created At'].split('/');
     if (parts.length === 3) {
       cYear = parseInt(parts[2]);
-      createdStr = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T12:00:00Z`).toISOString();
+      createdStr = new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}T12:00:00Z`).toISOString();
     }
   }
 
   commitsArray.push({
     id: c['Record Id'] || `SC-${Math.floor(Math.random()*10000)}`,
     memberId: memberId,
+    memberName: memberName,
     amount: amount,
     goal: c['Savings Goal'] || 'Savings',
     collectionMonth: cMonth,
@@ -124,12 +157,6 @@ commitsData.forEach((c, idx) => {
   });
 
   // Generate Payments
-  // The user requested:
-  // "Sr.No. Payment Month Payment Year Payment Date
-  // 1 January 2026 09/02/2026
-  // 2 February 2026 03/03/2026"
-  // If it's 2024 (like in the CSV), let's generate 2-3 payments
-  
   const pYear = cYear;
   let pMonthIdx = monthNames.indexOf(cMonth) - 3;
   if (pMonthIdx < 0) pMonthIdx = 0;
@@ -144,7 +171,6 @@ commitsData.forEach((c, idx) => {
       paymentYear += 1;
     }
     
-    // Create realistic looking dates (e.g. 5th of next month)
     let pDateMonth = paymentMonthIdx + 2;
     let pDateYear = paymentYear;
     if (pDateMonth > 12) {
@@ -168,14 +194,9 @@ commitsData.forEach((c, idx) => {
 // Update db.ts
 let newDbContent = dbContent;
 
-// Replace users array
 newDbContent = newDbContent.replace(/let cachedUsers: User\[\] = \[[\s\S]*?\];/g, `let cachedUsers: User[] = ${JSON.stringify(usersArray, null, 2)};`);
-
-// Replace commitments array
 newDbContent = newDbContent.replace(/let cachedCommitments: Commitment\[\] = \[[\s\S]*?\];/g, `let cachedCommitments: Commitment[] = ${JSON.stringify(commitsArray, null, 2)};`);
-
-// Replace payments array
 newDbContent = newDbContent.replace(/let cachedPayments: Payment\[\] = \[[\s\S]*?\];/g, `let cachedPayments: Payment[] = ${JSON.stringify(paymentsArray, null, 2)};`);
 
 fs.writeFileSync(dbPath, newDbContent, 'utf8');
-console.log('Database successfully re-seeded from CSVs!');
+console.log('Database successfully re-seeded from CSV and TSV texts!');
