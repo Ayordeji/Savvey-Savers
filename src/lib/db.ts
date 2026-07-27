@@ -30,11 +30,12 @@ export interface User {
 export interface Commitment {
   id: string;
   memberId: string;
+  memberName?: string;
   amount: number;
   goal: string;
   collectionMonth: string;
   collectionYear: number;
-  endDate: string;
+  endDate?: string;
   status: 'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED';
   createdAt: string;
   updatedAt?: string | null;

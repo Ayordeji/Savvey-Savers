@@ -34,6 +34,7 @@ interface User {
   id: string;
   name: string;
   role: string;
+  invitationId?: string;
 }
 
 export default function SavingsCommitmentsPage() {
@@ -49,7 +50,7 @@ export default function SavingsCommitmentsPage() {
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
-  const [yearFilter, setYearFilter] = useState(String(new Date().getFullYear()));
+  const [yearFilter, setYearFilter] = useState('');
   const [loading, setLoading] = useState(true);
 
   // Settings configs
@@ -694,6 +695,9 @@ export default function SavingsCommitmentsPage() {
                 paginatedCommitments.map((c, idx) => {
                   const isExpanded = expandedCmtId === c.id;
                   const isBottomRow = idx >= 2 && paginatedCommitments.length >= 4 && idx >= paginatedCommitments.length - 2;
+                  const displayMemberName = (c.memberName && c.memberName !== 'Unknown Member')
+                    ? c.memberName
+                    : (users.find(u => u.id === c.memberId || u.invitationId === c.memberId || u.name?.toLowerCase() === c.memberName?.toLowerCase())?.name || 'Member');
                   return (
                     <Fragment key={c.id}>
                       <tr className={isExpanded ? styles.expandedRow : ''} style={{ cursor: 'pointer' }}>
@@ -713,7 +717,7 @@ export default function SavingsCommitmentsPage() {
                         <td onClick={() => handleRowClick(c.id)} style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                           {c.id}
                         </td>
-                        <td onClick={() => handleRowClick(c.id)} style={{ fontWeight: 600 }}>{c.memberName}</td>
+                        <td onClick={() => handleRowClick(c.id)} style={{ fontWeight: 600 }}>{displayMemberName}</td>
                         <td onClick={() => handleRowClick(c.id)}>£{c.amount}</td>
                         <td onClick={() => handleRowClick(c.id)}>{c.goal}</td>
                         <td onClick={() => handleRowClick(c.id)}>{c.collectionMonth} {c.collectionYear}</td>

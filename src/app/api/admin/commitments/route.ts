@@ -31,7 +31,11 @@ export async function GET() {
 
   // Join member name & evaluate status based on cycle length
   const formatted = commitments.map((c) => {
-    const member = allUsers.find((u) => u.id === c.memberId);
+    const member = allUsers.find((u) => 
+      u.id === c.memberId ||
+      (u.invitationId && c.memberId && u.invitationId.toLowerCase() === c.memberId.toLowerCase()) ||
+      (u.name && c.memberName && u.name.toLowerCase().trim() === c.memberName.toLowerCase().trim())
+    );
     
     // Auto-prefix ID with SCC- if old format
     let id = c.id;
@@ -47,11 +51,15 @@ export async function GET() {
       status = 'ACTIVE';
     }
 
+    const nameToUse = (c.memberName && c.memberName !== 'Unknown Member' && c.memberName.trim().length > 0)
+      ? c.memberName
+      : (member ? member.name : 'Unknown Member');
+
     return {
       ...c,
       id,
       status,
-      memberName: member ? member.name : 'Unknown Member'
+      memberName: nameToUse
     };
   });
 
