@@ -198,9 +198,8 @@ function CommitmentsReportContent() {
         </button>
       </div>
 
-      <div className={styles.tableCard}>
-        <div className={styles.tableResponsive}>
-          <table className={styles.table}>
+      <div className="table-container">
+          <table className="custom-table">
             <thead>
               <tr>
                 <th>RECORD ID</th>
@@ -267,8 +266,6 @@ function CommitmentsReportContent() {
             </div>
           </div>
         )}
-      </div>
-
       {/* --- VIEW COMMITMENT DETAILS MODAL --- */}
       {activeModal === 'VIEW_COMMITMENT' && selectedCmt && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>

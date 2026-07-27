@@ -178,9 +178,8 @@ function MemberReportContent() {
         </button>
       </div>
 
-      <div className={styles.tableCard}>
-        <div className={styles.tableResponsive}>
-          <table className={styles.table}>
+      <div className="table-container">
+          <table className="custom-table">
             <thead>
               <tr>
                 <th style={{ minWidth: '120px' }}>INVITATION ID</th>
@@ -264,6 +263,5 @@ function MemberReportContent() {
           </div>
         )}
       </div>
-    </div>
   );
 }
