@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, Fragment, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, PoundSterling, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import PaginationControls from '../PaginationControls';
@@ -38,6 +39,15 @@ interface User {
 }
 
 export default function SavingsCommitmentsPage() {
+  return (
+    <Suspense fallback={<div>Loading commitments...</div>}>
+      <CommitmentsContent />
+    </Suspense>
+  );
+}
+
+function CommitmentsContent() {
+  const searchParams = useSearchParams();
   const dialog = useDialog();
   const [currentUser, setCurrentUser] = useState<{ id: string; role: 'ADMIN' | 'MEMBER' } | null>(null);
   const [commitments, setCommitments] = useState<Commitment[]>([]);
@@ -501,6 +511,13 @@ export default function SavingsCommitmentsPage() {
 
   const [statusFilter, setStatusFilter] = useState('');
   const [monthFilter, setMonthFilter] = useState('');
+
+  useEffect(() => {
+    const m = searchParams.get('month');
+    const y = searchParams.get('year');
+    if (m) setMonthFilter(m);
+    if (y) setYearFilter(y);
+  }, [searchParams]);
 
   const currentYearNum = new Date().getFullYear();
 

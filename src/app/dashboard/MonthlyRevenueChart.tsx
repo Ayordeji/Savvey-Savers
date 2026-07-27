@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface MonthlyRevenueChartProps {
   monthlyData: number[];
@@ -9,7 +10,12 @@ interface MonthlyRevenueChartProps {
 }
 
 export default function MonthlyRevenueChart({ monthlyData, months, selectedYear = '2026' }: MonthlyRevenueChartProps) {
+  const router = useRouter();
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
+  const handleBarClick = (monthName: string) => {
+    router.push(`/dashboard/commitments?month=${monthName}&year=${selectedYear}`);
+  };
 
   const now = new Date();
   const currentYearNum = now.getFullYear();
@@ -121,6 +127,7 @@ export default function MonthlyRevenueChart({ monthlyData, months, selectedYear 
               key={idx}
               onMouseEnter={() => setHoveredIdx(idx)}
               onMouseLeave={() => setHoveredIdx(null)}
+              onClick={() => handleBarClick(months[idx])}
               style={{ cursor: 'pointer' }}
             >
               {/* Hover highlight background rectangle */}
