@@ -160,11 +160,31 @@ export async function POST(req: Request) {
       let targetUser = (memberEmail ? userByEmailMap.get(memberEmail) : null) || (memberId ? userByMemberIdMap.get(memberId) : null);
 
       if (!targetUser && !dryRun) {
-        report.errors.push(`Commitment ${recordId}: Saver not found for email '${memberEmail}' or Member ID '${memberId}'. Skipped.`);
-        continue;
+        // Auto-create member if commitment specifies an email or memberId
+        const newEmail = memberEmail || `${(memberId || 'member').toLowerCase().replace(/[^a-z0-9]/g, '')}@savveysavers.com`;
+        const newName = c.memberName || c.name || (memberEmail ? memberEmail.split('@')[0] : (memberId || 'Member'));
+
+        try {
+          targetUser = await db.users.create({
+            id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            name: newName,
+            email: newEmail,
+            phone: c.phone || '',
+            role: 'MEMBER',
+            isActive: true,
+            membershipFeeConfirmed: true,
+            invitationId: memberId || `M-${String(report.usersCreated + 1).padStart(6, '0')}`,
+            createdAt: new Date().toISOString()
+          });
+          userByEmailMap.set(newEmail.toLowerCase(), targetUser);
+          if (memberId) userByMemberIdMap.set(memberId, targetUser);
+          report.usersCreated++;
+        } catch (e: any) {
+          console.warn('Auto-create member during commitment migration notice:', e?.message || e);
+        }
       }
 
-      const userIdToUse = targetUser ? targetUser.id : (memberId || 'unknown');
+      const userIdToUse = targetUser ? targetUser.id : (memberId || admin.id);
 
       const commitmentData = {
         id: recordId,

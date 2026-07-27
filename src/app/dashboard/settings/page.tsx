@@ -57,9 +57,12 @@ function SettingsContent() {
     const idxEmail = getIdx(['email', 'mail']);
     const idxPhone = getIdx(['phone', 'mobile', 'tel', 'contact']);
     const idxRole = getIdx(['role']);
+    const idxRecordId = getIdx(['record id', 'commitment id', 'recordid', 'commitmentid', 'id']);
     const idxAmount = getIdx(['amount', 'savings', 'commitment']);
+    const idxGoal = getIdx(['goal', 'purpose', 'savings goal']);
     const idxMonth = getIdx(['month', 'collection month']);
     const idxYear = getIdx(['year', 'collection year']);
+    const idxStatus = getIdx(['status', 'state']);
 
     const users: any[] = [];
     const commitments: any[] = [];
@@ -73,9 +76,13 @@ function SettingsContent() {
       const name = idxName !== -1 && cols[idxName] ? cols[idxName] : '';
       const phone = idxPhone !== -1 && cols[idxPhone] ? cols[idxPhone] : '';
       const role = idxRole !== -1 && cols[idxRole] ? cols[idxRole] : 'MEMBER';
-      const amount = idxAmount !== -1 ? parseFloat(cols[idxAmount]) || 0 : 0;
+      const recordId = idxRecordId !== -1 && cols[idxRecordId] ? cols[idxRecordId] : '';
+      const rawAmount = idxAmount !== -1 && cols[idxAmount] ? cols[idxAmount].replace(/[^0-9\.]/g, '') : '';
+      const amount = parseFloat(rawAmount) || 0;
+      const goal = idxGoal !== -1 && cols[idxGoal] ? cols[idxGoal] : 'Savings Goal';
       const month = idxMonth !== -1 && cols[idxMonth] ? cols[idxMonth] : 'February';
       const year = idxYear !== -1 ? parseInt(cols[idxYear], 10) || 2026 : 2026;
+      const statusStr = idxStatus !== -1 && cols[idxStatus] ? cols[idxStatus] : 'ACTIVE';
 
       if (email || memberId || name) {
         users.push({
@@ -86,18 +93,20 @@ function SettingsContent() {
           role: role.toUpperCase().includes('ADMIN') ? 'ADMIN' : 'MEMBER',
           isActive: true
         });
+      }
 
-        if (amount > 0) {
-          commitments.push({
-            memberEmail: email,
-            memberId: memberId,
-            amount: amount,
-            goal: 'Savings Goal',
-            collectionMonth: month,
-            collectionYear: year,
-            status: 'ACTIVE'
-          });
-        }
+      if (amount > 0 || recordId) {
+        commitments.push({
+          id: recordId || undefined,
+          memberEmail: email,
+          memberId: memberId,
+          memberName: name,
+          amount: amount || 250,
+          goal: goal,
+          collectionMonth: month,
+          collectionYear: year,
+          status: statusStr.toUpperCase().includes('COMPLET') ? 'COMPLETED' : (statusStr.toUpperCase().includes('CANCEL') ? 'CANCELLED' : 'ACTIVE')
+        });
       }
     }
 
@@ -1060,20 +1069,35 @@ function SettingsContent() {
                     setMigrationError('');
                     setMigrationReport(null);
                     try {
-                      const payload = migrationMode === 'CSV' ? parseCsvToPayload(migrationCsvText) : JSON.parse(migrationJson);
+                      let payload: any = {};
+                      if (migrationMode === 'CSV') {
+                        payload = parseCsvToPayload(migrationCsvText);
+                      } else {
+                        try {
+                          payload = JSON.parse(migrationJson);
+                        } catch (jsonErr: any) {
+                          throw new Error('Invalid JSON format: ' + jsonErr.message);
+                        }
+                      }
                       const res = await fetch('/api/admin/migrate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ ...payload, dryRun: true, overwrite: migrationOverwrite })
                       });
-                      const data = await res.json();
+                      const resText = await res.text();
+                      let data: any = {};
+                      try {
+                        data = JSON.parse(resText);
+                      } catch (e) {
+                        throw new Error(resText || 'Server error occurred during validation');
+                      }
                       if (res.ok) {
                         setMigrationReport(data.report);
                       } else {
                         setMigrationError(data.error || 'Validation failed');
                       }
                     } catch (err: any) {
-                      setMigrationError('Format parsing error: ' + err.message);
+                      setMigrationError(err.message || 'Validation failed');
                     } finally {
                       setMigrationRunning(false);
                     }
@@ -1093,20 +1117,35 @@ function SettingsContent() {
                     setMigrationError('');
                     setMigrationReport(null);
                     try {
-                      const payload = migrationMode === 'CSV' ? parseCsvToPayload(migrationCsvText) : JSON.parse(migrationJson);
+                      let payload: any = {};
+                      if (migrationMode === 'CSV') {
+                        payload = parseCsvToPayload(migrationCsvText);
+                      } else {
+                        try {
+                          payload = JSON.parse(migrationJson);
+                        } catch (jsonErr: any) {
+                          throw new Error('Invalid JSON format: ' + jsonErr.message);
+                        }
+                      }
                       const res = await fetch('/api/admin/migrate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ ...payload, dryRun: false, overwrite: migrationOverwrite })
                       });
-                      const data = await res.json();
+                      const resText = await res.text();
+                      let data: any = {};
+                      try {
+                        data = JSON.parse(resText);
+                      } catch (e) {
+                        throw new Error(resText || 'Server error occurred during migration');
+                      }
                       if (res.ok) {
                         setMigrationReport(data.report);
                       } else {
                         setMigrationError(data.error || 'Migration failed');
                       }
                     } catch (err: any) {
-                      setMigrationError('Format parsing error: ' + err.message);
+                      setMigrationError(err.message || 'Migration failed');
                     } finally {
                       setMigrationRunning(false);
                     }
