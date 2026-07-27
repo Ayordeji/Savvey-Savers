@@ -638,9 +638,7 @@ function CommitmentsContent() {
             <option value="">All Statuses</option>
             <option value="ACTIVE">Active</option>
             <option value="COMPLETED">Completed</option>
-            <option value="NOT_YET_STARTED">Not yet started</option>
             <option value="PENDING">Pending</option>
-            <option value="CANCELLED">Cancelled</option>
           </select>
 
           <select

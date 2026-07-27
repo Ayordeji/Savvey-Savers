@@ -86,7 +86,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     // 3. Status counts
     activeCommitmentsCount = yearCommitments.filter((c) => c.status === 'ACTIVE').length;
     pendingCommitmentsCount = yearCommitments.filter((c) => c.status === 'PENDING').length;
-    notStartedCommitmentsCount = yearCommitments.filter((c) => c.status === 'NOT_YET_STARTED').length;
     completedCommitmentsCount = yearCommitments.filter((c) => c.status === 'COMPLETED').length;
 
     // 4. Expected Revenue: sum of all active and completed commitments in the year
@@ -106,7 +105,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     
     activeCommitmentsCount = myCommitmentsYearly.filter((c) => c.status === 'ACTIVE').length;
     pendingCommitmentsCount = myCommitmentsYearly.filter((c) => c.status === 'PENDING').length;
-    notStartedCommitmentsCount = myCommitmentsYearly.filter((c) => c.status === 'NOT_YET_STARTED').length;
     completedCommitmentsCount = myCommitmentsYearly.filter((c) => c.status === 'COMPLETED').length;
 
     const revenueCommitments = myCommitmentsYearly.filter((c) => c.status === 'ACTIVE' || c.status === 'COMPLETED');
@@ -169,8 +167,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           </div>
         </Link>
 
-        {/* Card 2: Not Yet Started -> Links to NOT_YET_STARTED Commitments */}
-        <Link href="/dashboard/commitments?status=NOT_YET_STARTED" style={{ textDecoration: 'none', display: 'block' }}>
+        {/* Card 2: Total Commitments -> Links to Commitments */}
+        <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
             backgroundColor: '#000000',
             border: '1px solid #1f2937',
@@ -191,14 +189,14 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
             }}>
-              <Users size={28} />
+              <PiggyBank size={28} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-                Not Yet Started
+                Total Commitments
               </span>
               <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                {`${notStartedCommitmentsCount} / ${totalCommitmentsCount}`}
+                {totalCommitmentsCount}
               </h3>
             </div>
           </div>
@@ -274,7 +272,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           </div>
         </Link>
 
-        {/* Card 5: Harvests Released -> Links to Completed Commitments */}
+        {/* Card 5: Completed Commitments -> Links to COMPLETED Commitments */}
         <Link href="/dashboard/commitments?status=COMPLETED" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
             backgroundColor: '#000000',
@@ -300,10 +298,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-                Harvests Released
+                Completed Commitments
               </span>
               <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                {`${completedCommitmentsCount} of ${totalCommitmentsCount}`}
+                {`${completedCommitmentsCount} / ${totalCommitmentsCount}`}
               </h3>
             </div>
           </div>
