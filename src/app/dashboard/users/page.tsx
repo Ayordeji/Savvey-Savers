@@ -1084,7 +1084,6 @@ export default function ManageUsersPage() {
                 <th>Role</th>
                 <th>Created On</th>
                 <th>Is Active</th>
-                <th>Savings Commitment</th>
                 <th>Membership</th>
                 <th style={{ textAlign: 'right' }}>Action</th>
               </tr>
@@ -1141,29 +1140,6 @@ export default function ManageUsersPage() {
                         />
                         <span className={styles.slider}></span>
                       </label>
-                    </td>
-                    <td>
-                      {(() => {
-                        const userCmts = allCommitmentsList.filter((c: any) =>
-                          c.memberId === u.id ||
-                          (c.memberEmail && u.email && c.memberEmail.toLowerCase() === u.email.toLowerCase()) ||
-                          (c.memberName && u.name && c.memberName.toLowerCase() === u.name.toLowerCase())
-                        );
-                        const activeCmt = userCmts.find((c: any) => c.status === 'ACTIVE') || userCmts[0];
-                        if (!activeCmt) {
-                          return <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>None</span>;
-                        }
-                        return (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                            <span style={{ fontWeight: 700, color: '#064e3b', fontSize: '0.85rem' }}>
-                              £{Number(activeCmt.amount).toFixed(2)}/mo
-                            </span>
-                            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                              {activeCmt.collectionMonth} {activeCmt.collectionYear}
-                            </span>
-                          </div>
-                        );
-                      })()}
                     </td>
                     <td>
                       <button

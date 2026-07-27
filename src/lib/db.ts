@@ -3047,6 +3047,16 @@ class TableWrapper<T extends { id?: string; key?: string }> {
     } else {
       fallbackList.push(createdObj);
     }
+    
+    // Also update active cache if present to prevent reverting to fallback on immediate fetch
+    if (this.memoryCache) {
+      const cacheIdx = this.memoryCache.data.findIndex((item: any) => (item.id && item.id === id) || (item.key && item.key === id));
+      if (cacheIdx >= 0) {
+        this.memoryCache.data[cacheIdx] = createdObj;
+      } else {
+        this.memoryCache.data.push(createdObj);
+      }
+    }
 
     return createdObj;
   }
@@ -3076,11 +3086,24 @@ class TableWrapper<T extends { id?: string; key?: string }> {
 
     const fallbackList = this.getFallbackData();
     const idx = fallbackList.findIndex((item: any) => item[keyField] === keyValue);
+    let updatedObj: T;
+    
     if (idx >= 0) {
       fallbackList[idx] = { ...fallbackList[idx], ...updateData };
-      return fallbackList[idx];
+      updatedObj = fallbackList[idx];
+    } else {
+      updatedObj = { [keyField]: keyValue, ...updateData } as unknown as T;
     }
-    return { [keyField]: keyValue, ...updateData } as unknown as T;
+
+    // Also update active cache to prevent stale data
+    if (this.memoryCache) {
+      const cacheIdx = this.memoryCache.data.findIndex((item: any) => item[keyField] === keyValue);
+      if (cacheIdx >= 0) {
+        this.memoryCache.data[cacheIdx] = { ...this.memoryCache.data[cacheIdx], ...updateData };
+      }
+    }
+    
+    return updatedObj;
   }
 
   // Emulates prisma.model.delete()
@@ -3104,6 +3127,14 @@ class TableWrapper<T extends { id?: string; key?: string }> {
       deletedObj = fallbackList[idx];
       fallbackList.splice(idx, 1);
     }
+    
+    if (this.memoryCache) {
+      const cacheIdx = this.memoryCache.data.findIndex((item: any) => item[keyField] === keyValue);
+      if (cacheIdx >= 0) {
+        this.memoryCache.data.splice(cacheIdx, 1);
+      }
+    }
+    
     return deletedObj;
   }
 }
