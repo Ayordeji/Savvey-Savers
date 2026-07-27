@@ -981,8 +981,8 @@ export default function ManageUsersPage() {
 
       {/* Filter and Search controls */}
       <div className={styles.searchBarContainer} style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1 }}>
-          <div className={styles.searchWrapper}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, flexWrap: 'wrap' }}>
+          <div className={styles.searchWrapper} style={{ flex: 2, minWidth: '200px', maxWidth: 'none' }}>
             <Search size={16} className={styles.searchIcon} />
             <input
               type="text"
@@ -999,7 +999,7 @@ export default function ManageUsersPage() {
               setUsersPage(1);
             }}
             className="form-select"
-            style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-main)', minWidth: '150px' }}
+            style={{ flex: 1, padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-main)', minWidth: '150px', maxWidth: '250px' }}
           >
             <option value="">All Users</option>
             <option value="ACTIVE">Active Users</option>
