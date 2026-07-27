@@ -9,8 +9,8 @@ export async function createSessionCookie(idToken: string): Promise<string> {
 }
 
 // Firebase Session Cookie verification helper
-// Maps the session's decoded UID to user id and role
-export async function verifyToken(token: string): Promise<{ id: string; role: 'ADMIN' | 'MEMBER' } | null> {
+// Maps the session's decoded UID to user id, email, and role
+export async function verifyToken(token: string): Promise<{ id: string; email?: string; role: 'ADMIN' | 'MEMBER' } | null> {
   try {
     let decodedClaims: any;
     try {
@@ -27,7 +27,7 @@ export async function verifyToken(token: string): Promise<{ id: string; role: 'A
     const userEmail = (decodedClaims.email || '').toLowerCase().trim();
 
     if (userId === '3MMvFU6ucAXqmPhalkQOoMsbMMu1' || userEmail === 'praisetechy001@gmail.com') {
-      return { id: userId, role: 'ADMIN' };
+      return { id: userId, email: userEmail, role: 'ADMIN' };
     }
 
     try {
@@ -40,12 +40,13 @@ export async function verifyToken(token: string): Promise<{ id: string; role: 'A
       const userData = userDoc.data();
       return {
         id: userId,
+        email: userEmail,
         role: userData?.role === 'ADMIN' ? 'ADMIN' : 'MEMBER'
       };
     } catch (dbErr: any) {
       console.warn('verifyToken db lookup error (quota or network):', dbErr?.message || dbErr);
       if (userEmail === 'praisetechy001@gmail.com' || userEmail === 'admin@savveysavers.com') {
-        return { id: userId, role: 'ADMIN' };
+        return { id: userId, email: userEmail, role: 'ADMIN' };
       }
       return null;
     }

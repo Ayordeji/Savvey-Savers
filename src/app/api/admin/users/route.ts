@@ -19,7 +19,10 @@ async function checkAdminUser() {
   if (!token) return null;
   const payload = await verifyToken(token);
   if (!payload || payload.role !== 'ADMIN') return null;
-  const user = await db.users.findUnique({ where: { id: payload.id } });
+  let user = await db.users.findUnique({ where: { id: payload.id } });
+  if (!user && payload.email) {
+    user = await db.users.findUnique({ where: { email: payload.email } });
+  }
   return user;
 }
 

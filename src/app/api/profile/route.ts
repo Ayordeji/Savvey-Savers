@@ -9,7 +9,11 @@ async function getAuthUser() {
   if (!token) return null;
   const payload = await verifyToken(token);
   if (!payload) return null;
-  return db.users.findUnique({ where: { id: payload.id } });
+  let user = await db.users.findUnique({ where: { id: payload.id } });
+  if (!user && payload.email) {
+    user = await db.users.findUnique({ where: { email: payload.email } });
+  }
+  return user;
 }
 
 export async function GET() {

@@ -27,7 +27,12 @@ export default async function DashboardLayout({
     redirect('/');
   }
 
-  const user = await db.users.findUnique({ where: { id: payload.id } });
+  let user = await db.users.findUnique({ where: { id: payload.id } });
+  
+  if (!user && payload.email) {
+    user = await db.users.findUnique({ where: { email: payload.email } });
+  }
+
   if (!user) {
     redirect('/');
   }
