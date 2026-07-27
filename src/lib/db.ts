@@ -3066,6 +3066,9 @@ class TableWrapper<T extends { id?: string; key?: string }> {
     try {
       if (keyField === 'id') {
         await withTimeout(this.getRef().doc(keyValue).update(updateData), 1200);
+      } else if (keyField === 'key') {
+        // Settings use 'key' as the document ID — write using doc(keyValue).set with merge
+        await withTimeout(this.getRef().doc(keyValue).set(updateData, { merge: true }), 1200);
       }
     } catch (err: any) {
       console.warn(`Firestore update notice on ${this.collectionName}:`, err?.message || err);
