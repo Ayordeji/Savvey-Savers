@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Download, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from '../../users/users.module.css';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface User {
   id: string;
@@ -20,12 +20,21 @@ interface User {
 }
 
 export default function MemberReportPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '20px', color: 'var(--text-muted)' }}>Loading report...</div>}>
+      <MemberReportContent />
+    </Suspense>
+  );
+}
+
+function MemberReportContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filters & Search
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [statusFilter, setStatusFilter] = useState(''); // 'Active' or 'Inactive'
 
   // Pagination
@@ -52,21 +61,34 @@ export default function MemberReportPage() {
 
   // Filter Logic
   const filteredUsers = users.filter((u) => {
-    const matchesSearch =
-      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (u.displayId || u.invitationId || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const q = searchQuery.toLowerCase().trim();
+    
+    // Status matching
+    const isActiveStatus = statusFilter === 'Active';
+    const isInactiveStatus = statusFilter === 'Inactive';
+    const matchesStatus = !statusFilter || (isActiveStatus && u.isActive) || (isInactiveStatus && !u.isActive);
+    
+    if (!matchesStatus) return false;
+    
+    if (!q) return true;
+    return (
+      u.name.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q) ||
+      (u.phone && u.phone.includes(q)) ||
+      (u.id && u.id.toLowerCase().includes(q)) ||
+      (u.displayId && u.displayId.toLowerCase().includes(q))
+    );
+  });
 
-    let matchesStatus = true;
-    if (statusFilter === 'Active') matchesStatus = u.isActive === true;
-    if (statusFilter === 'Inactive') matchesStatus = u.isActive === false;
-
-    return matchesSearch && matchesStatus;
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    const idA = (a.displayId || a.invitationId || a.id || '').toString();
+    const idB = (b.displayId || b.invitationId || b.id || '').toString();
+    return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
   });
 
   // Pagination Logic
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / itemsPerPage));
-  const currentUsers = filteredUsers.slice(
+  const totalPages = Math.max(1, Math.ceil(sortedUsers.length / itemsPerPage));
+  const currentUsers = sortedUsers.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -105,10 +127,12 @@ export default function MemberReportPage() {
   }
 
   return (
-    <div className={styles.pageContainer}>
-      <div className={styles.header}>
+    <div>
+      <div className={styles.searchBarContainer}>
         <div>
-          <h2 className={styles.title} style={{ fontSize: '1.5rem', fontWeight: 700 }}>Members Report</h2>
+          <h2 className={styles.title} style={{ fontSize: '1.75rem', fontWeight: 700, fontFamily: 'var(--font-family-title)' }}>
+            Members Report
+          </h2>
         </div>
       </div>
 
@@ -206,7 +230,7 @@ export default function MemberReportPage() {
         </div>
 
         {/* Pagination Details */}
-        {filteredUsers.length > 0 && (
+        {sortedUsers.length > 0 && (
           <div className={styles.paginationSection} style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)' }}>
             <div className={styles.pageButtons} style={{ display: 'flex', gap: '8px' }}>
               <button
@@ -235,7 +259,7 @@ export default function MemberReportPage() {
               </button>
             </div>
             <div className={styles.pageInfo} style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Showing {currentUsers.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to {Math.min(currentPage * itemsPerPage, filteredUsers.length)} of {filteredUsers.length} entries
+              Showing {currentUsers.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to {Math.min(currentPage * itemsPerPage, sortedUsers.length)} of {sortedUsers.length} entries
             </div>
           </div>
         )}

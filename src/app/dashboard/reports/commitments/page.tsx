@@ -150,10 +150,12 @@ function CommitmentsReportContent() {
   }
 
   return (
-    <div className={styles.pageContainer}>
-      <div className={styles.header}>
+    <div>
+      <div className={styles.filterContainer}>
         <div>
-          <h2 className={styles.title} style={{ fontSize: '1.5rem', fontWeight: 700 }}>Savings Commitments Report</h2>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, fontFamily: 'var(--font-family-title)' }}>
+            Savings Commitments Report
+          </h2>
         </div>
       </div>
 
