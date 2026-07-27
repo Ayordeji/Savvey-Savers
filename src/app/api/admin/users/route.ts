@@ -349,7 +349,69 @@ export async function PUT(request: Request) {
     let isRoleChanging = false;
 
     if ('isActive' in body) {
-      updateData.isActive = !!body.isActive;
+      const newActiveState = !!body.isActive;
+      updateData.isActive = newActiveState;
+      if (!newActiveState) {
+        updateData.deactivationReason = body.deactivationReason || 'Inactive Member / User';
+      }
+
+      // Handle email notification on activation/deactivation
+      const templates = (await db.settings.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
+
+      if (!newActiveState) {
+        // Deactivation email logic
+        const reason = body.deactivationReason || '';
+        let tplId = '32'; // Default: Inactive Member
+        if (reason === 'Breach of Membership Terms') {
+          tplId = '30';
+        } else if (reason === 'Member left the Network') {
+          tplId = '31';
+        }
+
+        const foundTpl = templates.find((t: any) => t.id === tplId);
+        let subject = 'Notice of Membership Status Update';
+        let bodyText = `Dear ${user.firstName || user.name.split(' ')[0] || user.name},\n\nYour access to the Members' portal has now been deactivated.\n\nBest Wishes,\nPlatform Support\nSavvey Savers Network`;
+
+        if (reason === 'Member left the Network') {
+          subject = 'Termination of Network Membership';
+          bodyText = `Dear ${user.firstName || user.name.split(' ')[0] || user.name},\n\nFollowing your request to leave the Savvey Savers Network, your access to the Members' portal has now been deactivated. This means that you will no longer be able to access the platform using your login credentials.\n\nYou are welcome to return to the Network at any point in the future, and can continue to access the website if you wish to stay up to date with the Network’s activities.\n\nWe hope that you continue to prioritise saving.\n\nBest Wishes,\n\nPlatform Support\n\nSavvey Savers Network`;
+        } else if (foundTpl && foundTpl.enabled !== false) {
+          subject = foundTpl.subject || subject;
+          bodyText = foundTpl.body || bodyText;
+        }
+
+        // Replace template variables ({first_name}, {name}, {{MemberName}}, etc.)
+        const replacements: Record<string, string> = {
+          name: user.name,
+          MemberName: user.name,
+          first_name: user.firstName || user.name.split(' ')[0] || user.name,
+          last_name: user.lastName || user.name.split(' ').slice(1).join(' ') || '',
+          email: user.email,
+        };
+
+        Object.entries(replacements).forEach(([k, v]) => {
+          const reg1 = new RegExp(`\\{${k}\\}`, 'g');
+          const reg2 = new RegExp(`\\{\\{${k}\\}\\}`, 'g');
+          bodyText = bodyText.replace(reg1, v).replace(reg2, v);
+          subject = subject.replace(reg1, v).replace(reg2, v);
+        });
+
+        await sendEmail({
+          to: user.email,
+          subject,
+          body: bodyText
+        });
+      } else {
+        // Reactivation email logic
+        const subject = 'Account Reactivated - Savvey Savers Network';
+        const bodyText = `Dear ${user.firstName || user.name.split(' ')[0] || user.name},\n\nYour account on the Savvey Savers Network has been reactivated by your Administrator. You can now log into your dashboard using your credentials.\n\nKind regards,\nPlatform Support\nSavvey Savers Network`;
+        
+        await sendEmail({
+          to: user.email,
+          subject,
+          body: bodyText
+        });
+      }
     } else if ('membershipFeeConfirmed' in body) {
       updateData.membershipFeeConfirmed = !!body.membershipFeeConfirmed;
       updateData.membershipFeeConfirmedAt = body.membershipFeeConfirmed ? new Date().toISOString() : null;

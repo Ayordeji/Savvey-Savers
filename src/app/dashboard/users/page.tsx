@@ -45,7 +45,9 @@ export default function ManageUsersPage() {
 
 
   // Modal States
-  const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'VIEW' | 'DELETE_CONFIRM' | 'BULK_DELETE_CONFIRM' | 'MEMBERSHIP_DETAILS' | 'AGREEMENT' | 'SCHEDULE' | 'REVIEWS' | 'REQUEST_FEE' | 'CONFIRM_REQUEST_FEE' | 'CONFIRM_FEE_FORM' | 'CONFIRM_FEE_POPUP' | 'REMIND_FEE_POPUP'>('NONE');
+  const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'VIEW' | 'DELETE_CONFIRM' | 'BULK_DELETE_CONFIRM' | 'MEMBERSHIP_DETAILS' | 'AGREEMENT' | 'SCHEDULE' | 'REVIEWS' | 'REQUEST_FEE' | 'CONFIRM_REQUEST_FEE' | 'CONFIRM_FEE_FORM' | 'CONFIRM_FEE_POPUP' | 'REMIND_FEE_POPUP' | 'DEACTIVATE_CONFIRM' | 'ACTIVATE_CONFIRM'>('NONE');
+  const [deactivationReason, setDeactivationReason] = useState('');
+  const [deactivationError, setDeactivationError] = useState('');
   const [membershipAgreement, setMembershipAgreement] = useState('');
   const [feeSchedule, setFeeSchedule] = useState('');
 
@@ -627,21 +629,76 @@ export default function ManageUsersPage() {
     }
   };
 
-  const handleToggleActive = async (userId: string, active: boolean) => {
+  const handleToggleActive = (user: User, checkTargetState: boolean) => {
+    setSelectedUser(user);
+    if (!checkTargetState) {
+      // User is currently active, trying to DEACTIVATE
+      setDeactivationReason('');
+      setDeactivationError('');
+      setActiveModal('DEACTIVATE_CONFIRM');
+    } else {
+      // User is currently inactive, trying to ACTIVATE
+      setActiveModal('ACTIVATE_CONFIRM');
+    }
+  };
+
+  const handleConfirmDeactivate = async () => {
+    if (!selectedUser) return;
+    if (!deactivationReason) {
+      setDeactivationError('Please select a reason for deactivation.');
+      return;
+    }
+
+    setFormSubmitting(true);
     try {
       const res = await fetch('/api/admin/users', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: userId, isActive: active }),
+        body: JSON.stringify({
+          id: selectedUser.id,
+          isActive: false,
+          deactivationReason
+        }),
       });
+
       if (res.ok) {
         fetchUsers();
+        setActiveModal('NONE');
       } else {
         const data = await res.json();
-        await dialog.alert('Status Error', data.error || 'Failed to update status.');
+        setDeactivationError(data.error || 'Failed to deactivate user.');
       }
     } catch (err) {
-      console.error('Error toggling active status:', err);
+      setDeactivationError('A network error occurred while deactivating user.');
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
+  const handleConfirmActivate = async () => {
+    if (!selectedUser) return;
+    setFormSubmitting(true);
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedUser.id,
+          isActive: true
+        }),
+      });
+
+      if (res.ok) {
+        fetchUsers();
+        setActiveModal('NONE');
+      } else {
+        const data = await res.json();
+        await dialog.alert('Status Error', data.error || 'Failed to activate user.');
+      }
+    } catch (err) {
+      await dialog.alert('Status Error', 'A network error occurred while activating user.');
+    } finally {
+      setFormSubmitting(false);
     }
   };
 
@@ -1067,7 +1124,7 @@ export default function ManageUsersPage() {
                         <input
                           type="checkbox"
                           checked={u.isActive}
-                          onChange={(e) => handleToggleActive(u.id, e.target.checked)}
+                          onChange={(e) => handleToggleActive(u, e.target.checked)}
                         />
                         <span className={styles.slider}></span>
                       </label>
@@ -2485,6 +2542,105 @@ export default function ManageUsersPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* --- DEACTIVATE USER CONFIRMATION MODAL --- */}
+      {activeModal === 'DEACTIVATE_CONFIRM' && selectedUser && (
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
+          <div className="modal-content" style={{ maxWidth: '460px', padding: '28px', position: 'relative' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '8px', fontFamily: 'var(--font-family-title)', color: 'var(--text-main)' }}>
+              Deactivate User
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '20px', lineHeight: 1.5 }}>
+              Are you sure you want to deactivate <strong>{selectedUser.name}</strong>? Please select a reason below before submitting.
+            </p>
+
+            {deactivationError && (
+              <div style={{ backgroundColor: 'var(--status-error-bg)', color: 'var(--status-error)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
+                {deactivationError}
+              </div>
+            )}
+
+            <div className="form-group" style={{ marginBottom: '24px' }}>
+              <label className="form-label" style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '8px', display: 'block' }}>Select a reason *</label>
+              <select
+                value={deactivationReason}
+                onChange={(e) => { setDeactivationReason(e.target.value); setDeactivationError(''); }}
+                className="form-select"
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-main)', fontSize: '0.9rem' }}
+              >
+                <option value="">Select a reason</option>
+                <option value="Breach of Membership Terms">Breach of Membership Terms</option>
+                <option value="Member left the Network">Member left the Network</option>
+                <option value="Inactive Member / User">Inactive Member / User</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setActiveModal('NONE')}
+                disabled={formSubmitting}
+                className="btn btn-secondary"
+                style={{ borderRadius: '8px', padding: '9px 18px' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeactivate}
+                disabled={formSubmitting}
+                className="btn btn-primary"
+                style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#ffffff', borderRadius: '8px', padding: '9px 18px', fontWeight: 600 }}
+              >
+                {formSubmitting ? 'Deactivating...' : 'Submit'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- ACTIVATE USER CONFIRMATION MODAL --- */}
+      {activeModal === 'ACTIVATE_CONFIRM' && selectedUser && (
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
+          <div className="modal-content" style={{ maxWidth: '440px', padding: '28px', position: 'relative' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '12px', fontFamily: 'var(--font-family-title)', color: 'var(--text-main)' }}>
+              Activate User
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px', lineHeight: 1.5 }}>
+              Are you sure you want to reactivate this user?
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setActiveModal('NONE')}
+                disabled={formSubmitting}
+                className="btn btn-secondary"
+                style={{ borderRadius: '8px', padding: '9px 18px' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmActivate}
+                disabled={formSubmitting}
+                className="btn btn-primary"
+                style={{ borderRadius: '8px', padding: '9px 18px', fontWeight: 600 }}
+              >
+                {formSubmitting ? 'Activating...' : 'Submit'}
+              </button>
+            </div>
           </div>
         </div>
       )}
