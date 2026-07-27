@@ -3,6 +3,7 @@
 import { useState, useEffect, Fragment } from 'react';
 import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, PoundSterling, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
+import PaginationControls from '../PaginationControls';
 import styles from './commitments.module.css';
 
 interface Commitment {
@@ -507,6 +508,8 @@ export default function SavingsCommitmentsPage() {
   };
 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const filteredCommitments = commitments.map((c) => {
     // Status driven by cycle length: past year (< currentYear) = COMPLETED, current/future = ACTIVE
@@ -533,6 +536,9 @@ export default function SavingsCommitmentsPage() {
       ? idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' })
       : idB.localeCompare(idA, undefined, { numeric: true, sensitivity: 'base' });
   });
+
+  const totalPages = Math.max(1, Math.ceil(sortedCommitments.length / itemsPerPage));
+  const paginatedCommitments = sortedCommitments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const getActiveCommitmentsForMember = (memberId: string) => {
     return commitments.filter((c) => c.memberId === memberId && (c.status === 'ACTIVE' || c.status === 'PENDING'));
@@ -678,16 +684,16 @@ export default function SavingsCommitmentsPage() {
               </tr>
             </thead>
             <tbody>
-              {sortedCommitments.length === 0 ? (
+              {paginatedCommitments.length === 0 ? (
                 <tr>
                   <td colSpan={currentUser?.role === 'ADMIN' ? 9 : 8} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                     No savings commitments found.
                   </td>
                 </tr>
               ) : (
-                sortedCommitments.map((c, idx) => {
+                paginatedCommitments.map((c, idx) => {
                   const isExpanded = expandedCmtId === c.id;
-                  const isBottomRow = idx >= 2 && sortedCommitments.length >= 4 && idx >= sortedCommitments.length - 2;
+                  const isBottomRow = idx >= 2 && paginatedCommitments.length >= 4 && idx >= paginatedCommitments.length - 2;
                   return (
                     <Fragment key={c.id}>
                       <tr className={isExpanded ? styles.expandedRow : ''} style={{ cursor: 'pointer' }}>
@@ -827,6 +833,17 @@ export default function SavingsCommitmentsPage() {
           </table>
         </div>
       )}
+
+      {/* Pagination Controls */}
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={sortedCommitments.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(num) => { setItemsPerPage(num); setCurrentPage(1); }}
+        itemLabel="savings commitment"
+      />
 
       {/* --- ADD COMMITMENT MODAL --- */}
       {activeModal === 'ADD' && (

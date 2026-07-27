@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Check, X, ClipboardList, CheckSquare, AlertTriangle } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
+import PaginationControls from '../PaginationControls';
 
 interface SubmittedRequest {
   id: string;
@@ -21,6 +22,8 @@ export default function SubmittedRequestsPage() {
   const [requests, setRequests] = useState<SubmittedRequest[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const fetchRequests = async () => {
     try {
@@ -85,6 +88,9 @@ export default function SubmittedRequestsPage() {
       : idB.localeCompare(idA, undefined, { numeric: true, sensitivity: 'base' });
   });
 
+  const totalPages = Math.max(1, Math.ceil(sortedRequests.length / itemsPerPage));
+  const paginatedRequests = sortedRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div>
       {/* Header */}
@@ -131,14 +137,14 @@ export default function SubmittedRequestsPage() {
               </tr>
             </thead>
             <tbody>
-              {sortedRequests.length === 0 ? (
+              {paginatedRequests.length === 0 ? (
                 <tr>
                   <td colSpan={isAdmin ? 8 : 7} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                     No collection month requests submitted yet.
                   </td>
                 </tr>
               ) : (
-                sortedRequests.map((r) => (
+                paginatedRequests.map((r) => (
                   <tr key={r.id}>
                     <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                       {r.id}
@@ -190,6 +196,17 @@ export default function SubmittedRequestsPage() {
           </table>
         </div>
       )}
+
+      {/* Pagination Controls */}
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={sortedRequests.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(num) => { setItemsPerPage(num); setCurrentPage(1); }}
+        itemLabel="request"
+      />
     </div>
   );
 }

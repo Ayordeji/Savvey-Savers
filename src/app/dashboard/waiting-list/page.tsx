@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Check, X, ClipboardList, CheckSquare, Trash2, ArrowRightLeft } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
+import PaginationControls from '../PaginationControls';
 
 interface WaitingListEntry {
   id: string;
@@ -19,6 +20,8 @@ export default function WaitingListPage() {
   const dialog = useDialog();
   const [entries, setEntries] = useState<WaitingListEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Convert modal states
   const [convertModalOpen, setConvertModalOpen] = useState(false);
@@ -99,7 +102,7 @@ export default function WaitingListPage() {
         await dialog.alert('Decline Failed', 'Failed to decline application.');
       }
     } catch (err) {
-      console.error('Decline error:', err);
+      console.error('Error declining waiting list application:', err);
     }
   };
 
@@ -120,6 +123,9 @@ export default function WaitingListPage() {
       ? idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' })
       : idB.localeCompare(idA, undefined, { numeric: true, sensitivity: 'base' });
   });
+
+  const totalPages = Math.max(1, Math.ceil(sortedEntries.length / itemsPerPage));
+  const paginatedEntries = sortedEntries.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div>
@@ -162,14 +168,14 @@ export default function WaitingListPage() {
               </tr>
             </thead>
             <tbody>
-              {sortedEntries.length === 0 ? (
+              {paginatedEntries.length === 0 ? (
                 <tr>
                   <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                     No pending applications on the waiting list.
                   </td>
                 </tr>
               ) : (
-                sortedEntries.map((e) => (
+                paginatedEntries.map((e) => (
                   <tr key={e.id}>
                     <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                       {e.id}
@@ -208,6 +214,17 @@ export default function WaitingListPage() {
           </table>
         </div>
       )}
+
+      {/* Pagination Controls */}
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={sortedEntries.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(num) => { setItemsPerPage(num); setCurrentPage(1); }}
+        itemLabel="prospect"
+      />
 
       {/* --- CONVERT MODAL --- */}
       {convertModalOpen && selectedEntry && (

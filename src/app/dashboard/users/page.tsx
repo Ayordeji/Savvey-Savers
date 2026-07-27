@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle, Download, Upload } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
+import PaginationControls from '../PaginationControls';
 import styles from './users.module.css';
 
 interface User {
@@ -1143,87 +1144,16 @@ export default function ManageUsersPage() {
           </table>
         </div>
 
-        {/* Pagination */}
-        {filteredUsers.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px', padding: '0 4px', flexWrap: 'wrap', gap: '12px' }}>
-            {/* Left: count + per-page selector */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                Showing {Math.min((usersPage - 1) * usersPerPage + 1, filteredUsers.length)}–{Math.min(usersPage * usersPerPage, filteredUsers.length)} of {filteredUsers.length} member{filteredUsers.length !== 1 ? 's' : ''}
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Per page:</span>
-                <select
-                  value={usersPerPage}
-                  onChange={(e) => { setUsersPerPage(Number(e.target.value)); setUsersPage(1); }}
-                  style={{
-                    padding: '4px 8px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600,
-                    border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)',
-                    color: 'var(--text-primary)', cursor: 'pointer', outline: 'none',
-                    appearance: 'auto'
-                  }}
-                >
-                  {[10, 20, 30, 40, 50].map(n => (
-                    <option key={n} value={n}>{n}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Right: page navigation */}
-            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-              <button
-                onClick={() => setUsersPage(p => Math.max(1, p - 1))}
-                disabled={usersPage === 1}
-                style={{
-                  padding: '6px 12px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600,
-                  border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)',
-                  color: usersPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)',
-                  cursor: usersPage === 1 ? 'not-allowed' : 'pointer', opacity: usersPage === 1 ? 0.5 : 1,
-                  transition: 'all 0.15s'
-                }}
-              >← Prev</button>
-
-              {Array.from({ length: totalUsersPages }, (_, i) => i + 1)
-                .filter(p => p === 1 || p === totalUsersPages || Math.abs(p - usersPage) <= 1)
-                .reduce<(number | '...')[]>((acc, p, idx, arr) => {
-                  if (idx > 0 && typeof arr[idx - 1] === 'number' && (p as number) - (arr[idx - 1] as number) > 1) acc.push('...');
-                  acc.push(p);
-                  return acc;
-                }, [])
-                .map((item, idx) =>
-                  item === '...' ? (
-                    <span key={`ellipsis-${idx}`} style={{ padding: '6px 4px', color: 'var(--text-muted)', fontSize: '0.82rem' }}>…</span>
-                  ) : (
-                    <button
-                      key={item}
-                      onClick={() => setUsersPage(item as number)}
-                      style={{
-                        padding: '6px 11px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600,
-                        border: '1px solid', transition: 'all 0.15s', cursor: 'pointer',
-                        borderColor: usersPage === item ? 'var(--secondary)' : 'var(--border-color)',
-                        backgroundColor: usersPage === item ? 'var(--secondary)' : 'var(--card-bg)',
-                        color: usersPage === item ? '#fff' : 'var(--text-primary)',
-                      }}
-                    >{item}</button>
-                  )
-                )
-              }
-
-              <button
-                onClick={() => setUsersPage(p => Math.min(totalUsersPages, p + 1))}
-                disabled={usersPage === totalUsersPages}
-                style={{
-                  padding: '6px 12px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600,
-                  border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)',
-                  color: usersPage === totalUsersPages ? 'var(--text-muted)' : 'var(--text-primary)',
-                  cursor: usersPage === totalUsersPages ? 'not-allowed' : 'pointer',
-                  opacity: usersPage === totalUsersPages ? 0.5 : 1, transition: 'all 0.15s'
-                }}
-              >Next →</button>
-            </div>
-          </div>
-        )}
+        {/* Pagination Controls */}
+        <PaginationControls
+          currentPage={usersPage}
+          totalPages={totalUsersPages}
+          totalItems={sortedUsers.length}
+          itemsPerPage={usersPerPage}
+          onPageChange={setUsersPage}
+          onItemsPerPageChange={(num) => { setUsersPerPage(num); setUsersPage(1); }}
+          itemLabel="member"
+        />
         </>
       )}
 

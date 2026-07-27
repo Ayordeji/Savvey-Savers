@@ -27,7 +27,27 @@ export async function GET() {
   }
 
   // Get all members and admins (exclude sensitive hashes in response)
-  const allUsers = await db.users.findMany();
+  const rawUsers = await db.users.findMany();
+
+  // Strict deduplication by email & invitationId to eliminate duplicates
+  const uniqueUserMap = new Map<string, any>();
+  for (const u of rawUsers) {
+    if (!u) continue;
+    const emailKey = u.email ? u.email.toLowerCase().trim() : '';
+    const memberKey = u.invitationId ? u.invitationId.trim() : '';
+    const primaryKey = emailKey || memberKey || u.id;
+
+    if (!uniqueUserMap.has(primaryKey)) {
+      uniqueUserMap.set(primaryKey, u);
+    } else {
+      const existing = uniqueUserMap.get(primaryKey);
+      // Keep super admin or admin privileges if merge occurs
+      if (u.isSuperAdmin || u.role === 'ADMIN') {
+        uniqueUserMap.set(primaryKey, { ...existing, ...u });
+      }
+    }
+  }
+  const allUsers = Array.from(uniqueUserMap.values());
 
   // Sort by createdAt ascending to assign stable sequential display IDs
   const sortedUsers = [...allUsers].sort((a, b) => {
