@@ -146,6 +146,24 @@ const DEFAULT_COMMITMENT_AMOUNTS = [
   { amount: 20000, enabled: true }
 ];
 
+// Fast timeout wrapper to prevent cloud backend hangs on Vercel
+function withTimeout<T>(promise: Promise<T>, ms: number = 1200): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`Firestore operation timed out after ${ms}ms`));
+    }, ms);
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+
 // Embedded Fallback Dataset Snapshot (activated when Cloud Firestore quota is exceeded)
 const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
   users: [
@@ -261,7 +279,7 @@ class TableWrapper<T extends { id?: string; key?: string }> {
       items = this.memoryCache.data;
     } else {
       try {
-        const snapshot = await this.getRef().get();
+        const snapshot = await withTimeout(this.getRef().get(), 1200);
         const fetched: T[] = [];
         snapshot.forEach((doc) => {
           const data = doc.data();
@@ -310,14 +328,14 @@ class TableWrapper<T extends { id?: string; key?: string }> {
 
     try {
       if (docId) {
-        const doc = await this.getRef().doc(docId).get();
+        const doc = await withTimeout(this.getRef().doc(docId).get(), 1200);
         if (doc.exists) {
           return { id: doc.id, ...doc.data() } as unknown as T;
         }
       }
 
       if (keyName) {
-        const snapshot = await this.getRef().where('key', '==', keyName).limit(1).get();
+        const snapshot = await withTimeout(this.getRef().where('key', '==', keyName).limit(1).get(), 1200);
         if (!snapshot.empty) {
           const doc = snapshot.docs[0];
           return { id: doc.id, ...doc.data() } as unknown as T;
@@ -380,7 +398,7 @@ class TableWrapper<T extends { id?: string; key?: string }> {
     }
 
     try {
-      await this.getRef().doc(id).set(insertData);
+      await withTimeout(this.getRef().doc(id).set(insertData), 1200);
     } catch (writeErr: any) {
       console.warn(`Firestore create write notice on ${this.collectionName}:`, writeErr?.message || writeErr);
     }
@@ -411,7 +429,7 @@ class TableWrapper<T extends { id?: string; key?: string }> {
 
     try {
       if (keyField === 'id') {
-        await this.getRef().doc(keyValue).update(updateData);
+        await withTimeout(this.getRef().doc(keyValue).update(updateData), 1200);
       }
     } catch (err: any) {
       console.warn(`Firestore update notice on ${this.collectionName}:`, err?.message || err);
@@ -434,7 +452,7 @@ class TableWrapper<T extends { id?: string; key?: string }> {
 
     try {
       if (keyField === 'id') {
-        await this.getRef().doc(keyValue).delete();
+        await withTimeout(this.getRef().doc(keyValue).delete(), 1200);
       }
     } catch (err: any) {
       console.warn(`Firestore delete notice on ${this.collectionName}:`, err?.message || err);
