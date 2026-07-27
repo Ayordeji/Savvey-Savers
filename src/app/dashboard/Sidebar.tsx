@@ -12,7 +12,8 @@ import {
   LogOut,
   UserCheck,
   Bell,
-  X
+  X,
+  ClipboardList
 } from 'lucide-react';
 import styles from './layout.module.css';
 import { auth } from '@/lib/firebase';
@@ -65,6 +66,8 @@ export default function Sidebar({ user }: SidebarProps) {
   const memberLinks: NavLink[] = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Savings Commitments', href: '/dashboard/commitments', icon: PiggyBank },
+    { name: 'My Invitations', href: '/dashboard/invitations', icon: UserCheck },
+    { name: 'Collection Month Requests', href: '/dashboard/requests', icon: ClipboardList },
     { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
   ];
 

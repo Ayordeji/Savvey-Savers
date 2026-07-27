@@ -563,14 +563,12 @@ function SettingsContent() {
                         className="form-input"
                         style={{ width: '100%', backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '10px 14px', fontWeight: 700, fontSize: '0.95rem', color: '#1e293b' }}
                       >
-                        <option value="100.00">100.00</option>
-                        <option value="250.00">250.00</option>
-                        <option value="300.00">300.00</option>
-                        <option value="500.00">500.00</option>
-                        <option value="750.00">750.00</option>
-                        <option value="1000.00">1000.00</option>
-                        <option value="1250.00">1250.00</option>
-                        <option value="1500.00">1500.00</option>
+                        {amounts.filter(a => a.enabled).map(a => {
+                          const valStr = Number(a.amount).toFixed(2);
+                          return (
+                            <option key={a.amount} value={valStr}>{valStr}</option>
+                          );
+                        })}
                       </select>
                     </div>
 

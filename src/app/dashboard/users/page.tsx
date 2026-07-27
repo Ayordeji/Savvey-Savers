@@ -58,6 +58,8 @@ export default function ManageUsersPage() {
   const [feePaidDate, setFeePaidDate] = useState(new Date().toISOString().split('T')[0]);
   const [userFeeRecords, setUserFeeRecords] = useState<any[]>([]);
   const [userSavingsByYear, setUserSavingsByYear] = useState<Record<number, number>>({});
+  const [userCommitmentsList, setUserCommitmentsList] = useState<any[]>([]);
+  const [allCommitmentsList, setAllCommitmentsList] = useState<any[]>([]);
   const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
   const [editBaseFee, setEditBaseFee] = useState<string>('200');
   const [editAdminFee, setEditAdminFee] = useState<string>('30');
@@ -97,7 +99,7 @@ export default function ManageUsersPage() {
 
     for (let i = 1; i < lines.length; i++) {
       const cols = lines[i].split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
-      if (cols.length === 0 || !cols.some(c => c.length > 0)) continue;
+      if (cols.length === 0 || cols.every(c => !c)) continue;
 
       const email = idxEmail !== -1 && cols[idxEmail] ? cols[idxEmail] : '';
       const memberId = idxMemberId !== -1 && cols[idxMemberId] ? cols[idxMemberId] : '';
@@ -204,6 +206,11 @@ export default function ManageUsersPage() {
         const data = await res.json();
         setUsers(data);
         setSelectedUserIds([]); // Clear selection on successful load
+      }
+      const cmtRes = await fetch('/api/admin/commitments');
+      if (cmtRes.ok) {
+        const cData = await cmtRes.json();
+        setAllCommitmentsList(Array.isArray(cData) ? cData : []);
       }
     } catch (err) {
       console.error('Error fetching users:', err);
@@ -1072,6 +1079,7 @@ export default function ManageUsersPage() {
                 <th>Role</th>
                 <th>Created On</th>
                 <th>Is Active</th>
+                <th>Savings Commitment</th>
                 <th>Membership</th>
                 <th style={{ textAlign: 'right' }}>Action</th>
               </tr>
@@ -1080,7 +1088,7 @@ export default function ManageUsersPage() {
             <tbody>
               {paginatedUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={10} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                  <td colSpan={11} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                     No members found matching your search.
                   </td>
                 </tr>
@@ -1128,6 +1136,29 @@ export default function ManageUsersPage() {
                         />
                         <span className={styles.slider}></span>
                       </label>
+                    </td>
+                    <td>
+                      {(() => {
+                        const userCmts = allCommitmentsList.filter((c: any) =>
+                          c.memberId === u.id ||
+                          (c.memberEmail && u.email && c.memberEmail.toLowerCase() === u.email.toLowerCase()) ||
+                          (c.memberName && u.name && c.memberName.toLowerCase() === u.name.toLowerCase())
+                        );
+                        const activeCmt = userCmts.find((c: any) => c.status === 'ACTIVE') || userCmts[0];
+                        if (!activeCmt) {
+                          return <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>None</span>;
+                        }
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <span style={{ fontWeight: 700, color: '#064e3b', fontSize: '0.85rem' }}>
+                              £{Number(activeCmt.amount).toFixed(2)}/mo
+                            </span>
+                            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                              {activeCmt.collectionMonth} {activeCmt.collectionYear}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td>
                       <button
@@ -1700,6 +1731,39 @@ export default function ManageUsersPage() {
                 </div>
               );
             })()}
+
+            {/* Savings Commitments List Section */}
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
+                  Savings Commitments ({userCommitmentsList.length})
+                </span>
+              </div>
+
+              {userCommitmentsList.length === 0 ? (
+                <div style={{ fontSize: '0.85rem', color: '#64748b', textAlign: 'center', padding: '12px' }}>
+                  No savings commitment records found for this member.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
+                  {userCommitmentsList.map((cmt: any) => (
+                    <div key={cmt.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: '8px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0f172a' }}>
+                          {cmt.id} • £{Number(cmt.amount).toFixed(2)}/mo
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                          Collection: {cmt.collectionMonth} {cmt.collectionYear} ({cmt.endDate || 'December ' + cmt.collectionYear})
+                        </div>
+                      </div>
+                      <span className={`status-pill ${cmt.status === 'ACTIVE' ? 'active' : (cmt.status === 'COMPLETED' ? 'completed' : 'pending')}`} style={{ fontSize: '0.7rem', padding: '3px 8px' }}>
+                        {cmt.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary" style={{ borderRadius: '8px', padding: '8px 22px', fontWeight: 600 }}>

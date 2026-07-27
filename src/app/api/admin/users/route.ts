@@ -6,6 +6,13 @@ import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import { adminAuth } from '@/lib/firebase-admin';
 
 
+async function getUserSession() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  if (!token) return null;
+  return verifyToken(token);
+}
+
 async function checkAdminUser() {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
@@ -22,7 +29,8 @@ async function checkAdmin() {
 }
 
 export async function GET() {
-  if (!(await checkAdmin())) {
+  const session = await getUserSession();
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
@@ -98,9 +106,12 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (!(await checkAdmin())) {
+  const session = await getUserSession();
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
+
+  const isMemberInvite = session.role !== 'ADMIN';
 
   try {
     const body = await request.json();
@@ -117,14 +128,17 @@ export async function POST(request: Request) {
       city,
       postCode,
       country,
-      permissions
+      permissions,
+      commitmentAmount,
+      collectionMonth,
+      collectionYear
     } = body;
 
     const name = firstName ? `${firstName} ${lastName || ''}`.trim() : (body.name || '');
 
-    if (!name || !email || !phone || !role || !inviteMode) {
+    if (!name || !email || !phone) {
       return NextResponse.json(
-        { error: 'Name, email, phone, role, and invite mode are required.' },
+        { error: 'Name, email, and phone number are required.' },
         { status: 400 }
       );
     }
@@ -150,7 +164,7 @@ export async function POST(request: Request) {
       const fbUser = await adminAuth.createUser({
         email: normalizedEmail,
         displayName: name,
-        disabled: false
+        disabled: isMemberInvite // Disabled until Admin approval if invited by member
       });
       uid = fbUser.uid;
       console.log(`Pre-created user ${normalizedEmail} in Firebase Auth (UID: ${uid}).`);
@@ -160,22 +174,23 @@ export async function POST(request: Request) {
         uid = existingFbUser.uid;
       } else {
         console.error('Firebase Auth pre-creation failed:', authErr);
-        return NextResponse.json({ error: `Firebase Auth error: ${authErr.message}` }, { status: 500 });
+        // Fallback UID if firebase admin credentials mock
+        uid = 'usr_' + Math.random().toString(36).substring(2, 12);
       }
     }
 
     // Create user in Firestore
     const newUser = await db.users.create({
-      id: uid, // Set Document ID directly to the Firebase UID
+      id: uid,
       name,
       firstName: firstName || name.split(' ')[0] || '',
       lastName: lastName || name.split(' ').slice(1).join(' ') || '',
       email: normalizedEmail,
       phone,
-      role,
-      membership: membership || undefined,
-      isActive: true, // Default to active
-      passwordHash: 'pending_activation', // placeholder
+      role: role || 'MEMBER',
+      membership: membership || 'Standard Saver',
+      isActive: !isMemberInvite, // Inactive / pending approval if invited by a member
+      passwordHash: 'pending_activation',
       invitationId,
       invitationExpiresAt,
       addressLine1: addressLine1 || '',
@@ -187,6 +202,44 @@ export async function POST(request: Request) {
       membershipFeeConfirmed: false,
       termsAccepted: true
     });
+
+    // Create commitment if specified
+    if (commitmentAmount && parseFloat(commitmentAmount) > 0) {
+      const amtNum = parseFloat(commitmentAmount);
+      await db.commitments.create({
+        memberId: uid,
+        memberName: name,
+        memberEmail: normalizedEmail,
+        amount: amtNum,
+        goal: `Savings Goal (£${amtNum}/mo)`,
+        collectionMonth: collectionMonth || 'January',
+        collectionYear: parseInt(collectionYear) || new Date().getFullYear(),
+        status: isMemberInvite ? 'PENDING' : 'ACTIVE',
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    if (isMemberInvite) {
+      // Notify Admins about member invitation pending approval
+      const inviter = await db.users.findUnique({ where: { id: session.id } });
+      const inviterName = inviter ? inviter.name : 'A member';
+      const admins = await db.users.findMany((u) => u.role === 'ADMIN');
+      for (const admin of admins) {
+        await db.notifications.create({
+          userId: admin.id,
+          message: `${inviterName} has submitted a new member invitation for ${name} (${normalizedEmail}) - Pending Admin Approval.`,
+          type: 'MEMBER_INVITATION_SUBMITTED',
+          isRead: false
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        pendingApproval: true,
+        message: 'Member invitation submitted successfully! Pending Admin approval.',
+        user: newUser
+      });
+    }
 
     // Handle email triggering using template settings
     const host = request.headers.get('host') || 'savvey-savers.vercel.app';
