@@ -41,6 +41,15 @@ function MemberReportContent() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'displayId', direction: 'asc' });
+
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   useEffect(() => {
     fetchUsers();
@@ -82,9 +91,26 @@ function MemberReportContent() {
   });
 
   const sortedUsers = [...filteredUsers].sort((a, b) => {
-    const idA = (a.displayId || a.invitationId || a.id || '').toString();
-    const idB = (b.displayId || b.invitationId || b.id || '').toString();
-    return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
+    if (!sortConfig) return 0;
+    const { key, direction } = sortConfig;
+    
+    let aVal: any = a[key as keyof typeof a];
+    let bVal: any = b[key as keyof typeof b];
+
+    if (key === 'displayId') {
+      aVal = a.displayId || a.invitationId || a.id || '';
+      bVal = b.displayId || b.invitationId || b.id || '';
+    }
+    
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      return direction === 'asc' 
+        ? aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' })
+        : bVal.localeCompare(aVal, undefined, { numeric: true, sensitivity: 'base' });
+    }
+    
+    if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+    return 0;
   });
 
   // Pagination Logic
@@ -183,15 +209,71 @@ function MemberReportContent() {
           <table className="custom-table">
             <thead>
               <tr>
-                <th style={{ minWidth: '120px' }}>INVITATION ID</th>
-                <th style={{ minWidth: '180px' }}>NAME</th>
-                <th style={{ minWidth: '200px' }}>EMAIL</th>
+                <th onClick={() => requestSort('displayId')} style={{ minWidth: '120px', cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>INVITATION ID</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'displayId' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th onClick={() => requestSort('name')} style={{ minWidth: '180px', cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>NAME</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'name' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th onClick={() => requestSort('email')} style={{ minWidth: '200px', cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>EMAIL</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'email' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
                 <th style={{ minWidth: '130px' }}>PHONE NUMBER</th>
-                <th style={{ minWidth: '100px' }}>ROLE</th>
-                <th style={{ minWidth: '120px' }}>CREATED ON</th>
-                <th style={{ minWidth: '90px' }}>IS ACTIVE</th>
-                <th style={{ minWidth: '120px' }}>LAST LOGGED</th>
-                <th style={{ minWidth: '140px' }}>INVITED BY</th>
+                <th onClick={() => requestSort('role')} style={{ minWidth: '100px', cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>ROLE</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'role' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th onClick={() => requestSort('createdAt')} style={{ minWidth: '120px', cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>CREATED ON</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'createdAt' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th onClick={() => requestSort('isActive')} style={{ minWidth: '90px', cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>IS ACTIVE</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'isActive' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th onClick={() => requestSort('lastLoginAt')} style={{ minWidth: '120px', cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>LAST LOGGED</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'lastLoginAt' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th onClick={() => requestSort('invitedBy')} style={{ minWidth: '140px', cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>INVITED BY</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'invitedBy' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>

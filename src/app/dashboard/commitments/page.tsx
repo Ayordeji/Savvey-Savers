@@ -538,8 +538,15 @@ function CommitmentsContent() {
     setOpenDropdownId(openDropdownId === cmtId ? null : cmtId);
   };
 
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'id', direction: 'asc' });
+
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };  const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const filteredCommitments = commitments.filter((c) => {
@@ -557,11 +564,35 @@ function CommitmentsContent() {
   });
 
   const sortedCommitments = [...filteredCommitments].sort((a, b) => {
-    const idA = (a.id || '').toString();
-    const idB = (b.id || '').toString();
-    return sortOrder === 'asc'
-      ? idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' })
-      : idB.localeCompare(idA, undefined, { numeric: true, sensitivity: 'base' });
+    if (!sortConfig) return 0;
+    const { key, direction } = sortConfig;
+    
+    let aVal: any = a[key as keyof typeof a];
+    let bVal: any = b[key as keyof typeof b];
+
+    if (key === 'id') {
+      aVal = a.id || '';
+      bVal = b.id || '';
+    }
+    
+    if (key === 'memberName') {
+      aVal = (a.memberName && a.memberName !== 'Unknown Member')
+        ? a.memberName
+        : (users.find(u => u.id === a.memberId || u.invitationId === a.memberId || u.name?.toLowerCase() === a.memberName?.toLowerCase())?.name || 'Member');
+      bVal = (b.memberName && b.memberName !== 'Unknown Member')
+        ? b.memberName
+        : (users.find(u => u.id === b.memberId || u.invitationId === b.memberId || u.name?.toLowerCase() === b.memberName?.toLowerCase())?.name || 'Member');
+    }
+    
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      return direction === 'asc' 
+        ? aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' })
+        : bVal.localeCompare(aVal, undefined, { numeric: true, sensitivity: 'base' });
+    }
+    
+    if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+    return 0;
   });
 
   const totalPages = Math.max(1, Math.ceil(sortedCommitments.length / itemsPerPage));
@@ -708,22 +739,56 @@ function CommitmentsContent() {
                 )}
                 <th style={{ width: '40px' }}></th>
                 <th 
-                  onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  onClick={() => requestSort('id')}
                   style={{ cursor: 'pointer', userSelect: 'none' }}
-                  title="Click to toggle sorting order by Record Id (Ascending / Descending)"
                 >
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     <span>Record Id</span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortOrder === 'asc' ? '▲ Asc' : '▼ Desc'}
+                      {sortConfig?.key === 'id' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
                     </span>
                   </div>
                 </th>
-                <th>Member Name</th>
-                <th>Savings Amount</th>
-                <th>Collection Month</th>
-                <th>End Date</th>
-                <th>Status</th>
+                <th onClick={() => requestSort('memberName')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>Member Name</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'memberName' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th onClick={() => requestSort('amount')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>Savings Amount</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'amount' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th onClick={() => requestSort('collectionMonth')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>Collection Month</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'collectionMonth' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th onClick={() => requestSort('endDate')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>End Date</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'endDate' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th onClick={() => requestSort('status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>Status</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'status' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
                 <th style={{ textAlign: 'right' }}>Action</th>
               </tr>
             </thead>

@@ -896,8 +896,15 @@ export default function ManageUsersPage() {
     setOpenDropdownId(openDropdownId === userId ? null : userId);
   };
 
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortConfig, setSortConfig] = useState<{ key: keyof User | 'displayId'; direction: 'asc' | 'desc' } | null>({ key: 'displayId', direction: 'asc' });
 
+  const requestSort = (key: keyof User | 'displayId') => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
   const [userStatusFilter, setUserStatusFilter] = useState('');
 
   const filteredUsers = users.filter((u) => {
@@ -921,11 +928,26 @@ export default function ManageUsersPage() {
   });
 
   const sortedUsers = [...filteredUsers].sort((a, b) => {
-    const idA = (a.displayId || a.invitationId || a.id || '').toString();
-    const idB = (b.displayId || b.invitationId || b.id || '').toString();
-    return sortOrder === 'asc'
-      ? idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' })
-      : idB.localeCompare(idA, undefined, { numeric: true, sensitivity: 'base' });
+    if (!sortConfig) return 0;
+    const { key, direction } = sortConfig;
+    
+    let aVal: any = a[key as keyof User];
+    let bVal: any = b[key as keyof User];
+
+    if (key === 'displayId') {
+      aVal = a.displayId || a.invitationId || a.id || '';
+      bVal = b.displayId || b.invitationId || b.id || '';
+    }
+    
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      return direction === 'asc' 
+        ? aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' })
+        : bVal.localeCompare(aVal, undefined, { numeric: true, sensitivity: 'base' });
+    }
+    
+    if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+    return 0;
   });
 
   // Pagination
@@ -1046,24 +1068,58 @@ export default function ManageUsersPage() {
                   />
                 </th>
                 <th 
-                  onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  onClick={() => requestSort('displayId')}
                   style={{ cursor: 'pointer', userSelect: 'none' }}
-                  title="Click to toggle sorting order by ID (Ascending / Descending)"
                 >
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>Invitation ID</span>
+                    <span>INVITATION ID</span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortOrder === 'asc' ? '▲ Asc' : '▼ Desc'}
+                      {sortConfig?.key === 'displayId' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
                     </span>
                   </div>
                 </th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone Number</th>
-                <th>Role</th>
-                <th>Created On</th>
-                <th>Is Active</th>
-                <th>Membership</th>
+                <th onClick={() => requestSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>NAME</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'name' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th onClick={() => requestSort('email')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>EMAIL</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'email' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th>PHONE NUMBER</th>
+                <th onClick={() => requestSort('role')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>ROLE</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'role' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th onClick={() => requestSort('createdAt')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>CREATED ON</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'createdAt' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th onClick={() => requestSort('isActive')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>IS ACTIVE</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'isActive' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th>MEMBERSHIP</th>
                 <th style={{ textAlign: 'right' }}>Action</th>
               </tr>
             </thead>

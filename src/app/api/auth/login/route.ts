@@ -134,6 +134,16 @@ export async function POST(request: Request) {
       }
     }
 
+    // Update lastLoginAt
+    try {
+      await db.users.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date().toISOString() }
+      });
+    } catch (updateErr) {
+      console.warn('Failed to update lastLoginAt:', updateErr);
+    }
+
     // Generate Firebase Session Cookie with safe fallback to ID Token
     let sessionCookie = '';
     try {
