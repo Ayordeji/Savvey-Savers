@@ -43,11 +43,13 @@ export async function GET() {
       id = `SCC-${id.substring(4)}`;
     }
 
-    // Status driven by cycle length: past year (< currentYear) = COMPLETED, current/future = ACTIVE
+    // Status driven by cycle year: past year (< currentYear) = COMPLETED, coming year (> currentYear) = NOT_YET_STARTED, current year = ACTIVE
     let status = c.status;
     if (c.collectionYear < currentYear) {
       status = 'COMPLETED';
-    } else if (c.collectionYear >= currentYear && c.status === 'COMPLETED') {
+    } else if (c.collectionYear > currentYear) {
+      status = 'NOT_YET_STARTED';
+    } else if (!status || status === 'COMPLETED') {
       status = 'ACTIVE';
     }
 

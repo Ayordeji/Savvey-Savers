@@ -608,7 +608,9 @@ function CommitmentsContent() {
             <option value="">All Statuses</option>
             <option value="ACTIVE">Active</option>
             <option value="COMPLETED">Completed</option>
+            <option value="NOT_YET_STARTED">Not yet started</option>
             <option value="PENDING">Pending</option>
+            <option value="CANCELLED">Cancelled</option>
           </select>
 
           <select
@@ -639,6 +641,7 @@ function CommitmentsContent() {
             style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-main)' }}
           >
             <option value="">All Years</option>
+            <option value="2024">2024</option>
             <option value="2025">2025</option>
             <option value="2026">2026</option>
             <option value="2027">2027</option>
@@ -684,10 +687,10 @@ function CommitmentsContent() {
                 <th 
                   onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
                   style={{ cursor: 'pointer', userSelect: 'none' }}
-                  title="Click to toggle sorting order by Record ID (Ascending / Descending)"
+                  title="Click to toggle sorting order by Record Id (Ascending / Descending)"
                 >
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>Record ID</span>
+                    <span>Record Id</span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
                       {sortOrder === 'asc' ? '▲ Asc' : '▼ Desc'}
                     </span>
@@ -695,10 +698,10 @@ function CommitmentsContent() {
                 </th>
                 <th>Member Name</th>
                 <th>Savings Amount</th>
-                <th>Savings Goal</th>
                 <th>Collection Month</th>
+                <th>End Date</th>
                 <th>Status</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
+                <th style={{ textAlign: 'right' }}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -715,6 +718,16 @@ function CommitmentsContent() {
                   const displayMemberName = (c.memberName && c.memberName !== 'Unknown Member')
                     ? c.memberName
                     : (users.find(u => u.id === c.memberId || u.invitationId === c.memberId || u.name?.toLowerCase() === c.memberName?.toLowerCase())?.name || 'Member');
+                  
+                  const formatStatusText = (st: string) => {
+                    if (st === 'NOT_YET_STARTED') return 'Not yet started';
+                    if (st === 'ACTIVE') return 'Active';
+                    if (st === 'COMPLETED') return 'Completed';
+                    if (st === 'PENDING') return 'Pending';
+                    if (st === 'CANCELLED') return 'Cancelled';
+                    return st;
+                  };
+
                   return (
                     <Fragment key={c.id}>
                       <tr className={isExpanded ? styles.expandedRow : ''} style={{ cursor: 'pointer' }}>
@@ -735,12 +748,12 @@ function CommitmentsContent() {
                           {c.id}
                         </td>
                         <td onClick={() => handleRowClick(c.id)} style={{ fontWeight: 600 }}>{displayMemberName}</td>
-                        <td onClick={() => handleRowClick(c.id)}>£{c.amount}</td>
-                        <td onClick={() => handleRowClick(c.id)}>{c.goal}</td>
+                        <td onClick={() => handleRowClick(c.id)}>£{Number(c.amount).toFixed(2)}</td>
                         <td onClick={() => handleRowClick(c.id)}>{c.collectionMonth} {c.collectionYear}</td>
+                        <td onClick={() => handleRowClick(c.id)}>{c.endDate || `December ${c.collectionYear}`}</td>
                         <td onClick={() => handleRowClick(c.id)}>
-                          <span className={`status-pill ${c.status.toLowerCase()}`}>
-                            {c.status}
+                          <span className={`status-pill ${c.status.toLowerCase().replace(/_/g, '-')}`}>
+                            {formatStatusText(c.status)}
                           </span>
                         </td>
                         <td style={{ textAlign: 'right', position: 'relative' }}>

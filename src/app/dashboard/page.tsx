@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
@@ -170,198 +171,222 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-      {/* Summary Cards Grid (All 6 Cards Restored) */}
+      {/* Summary Cards Grid (All 6 Cards Restored & Interactive) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: '16px',
         width: '100%'
       }} className="dashboard-cards-grid">
-        {/* Card 1: Revenue to date */}
-        <div style={{
-          backgroundColor: '#000000',
-          border: '1px solid #1f2937',
-          borderRadius: '16px',
-          padding: '24px 28px',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: '20px',
-          minHeight: '130px',
-          color: '#ffffff'
-        }}>
+        {/* Card 1: Revenue to date -> Links to Savings Commitments */}
+        <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
-            width: '52px', height: '52px', borderRadius: '12px',
-            backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-          }}>
-            <TrendingUp size={28} />
+            backgroundColor: '#000000',
+            border: '1px solid #1f2937',
+            borderRadius: '16px',
+            padding: '24px 28px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: '20px',
+            minHeight: '130px',
+            color: '#ffffff',
+            cursor: 'pointer',
+            transition: 'transform 0.15s ease, border-color 0.15s ease'
+          }} className="dashboard-interactive-card">
+            <div style={{
+              width: '52px', height: '52px', borderRadius: '12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            }}>
+              <TrendingUp size={28} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+                Revenue to date
+              </span>
+              <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+                £{totalRevenue.toFixed(2)}
+              </h3>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-              Revenue to date
-            </span>
-            <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-              £{totalRevenue.toFixed(2)}
-            </h3>
-          </div>
-        </div>
+        </Link>
 
-        {/* Card 2: Payments not yet Confirmed */}
-        <div style={{
-          backgroundColor: '#000000',
-          border: '1px solid #1f2937',
-          borderRadius: '16px',
-          padding: '24px 28px',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: '20px',
-          minHeight: '130px',
-          color: '#ffffff'
-        }}>
+        {/* Card 2: Payments not yet Confirmed -> Links to Active/Unconfirmed Commitments */}
+        <Link href="/dashboard/commitments?status=ACTIVE" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
-            width: '52px', height: '52px', borderRadius: '12px',
-            backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-          }}>
-            <Users size={28} />
+            backgroundColor: '#000000',
+            border: '1px solid #1f2937',
+            borderRadius: '16px',
+            padding: '24px 28px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: '20px',
+            minHeight: '130px',
+            color: '#ffffff',
+            cursor: 'pointer',
+            transition: 'transform 0.15s ease, border-color 0.15s ease'
+          }} className="dashboard-interactive-card">
+            <div style={{
+              width: '52px', height: '52px', borderRadius: '12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            }}>
+              <Users size={28} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+                Payments not yet Confirmed
+              </span>
+              <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+                {isAdmin ? '70 / 1' : `${totalPaymentsCount - confirmedPaymentsCount} / ${totalPaymentsCount}`}
+              </h3>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-              Payments not yet Confirmed
-            </span>
-            <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-              {isAdmin ? '70 / 1' : `${totalPaymentsCount - confirmedPaymentsCount} / ${totalPaymentsCount}`}
-            </h3>
-          </div>
-        </div>
+        </Link>
 
-        {/* Card 3: Pending Payments */}
-        <div style={{
-          backgroundColor: '#000000',
-          border: '1px solid #1f2937',
-          borderRadius: '16px',
-          padding: '24px 28px',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: '20px',
-          minHeight: '130px',
-          color: '#ffffff'
-        }}>
+        {/* Card 3: Pending Payments -> Links to Pending Payments/Commitments */}
+        <Link href="/dashboard/commitments?status=PENDING" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
-            width: '52px', height: '52px', borderRadius: '12px',
-            backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-          }}>
-            <Clock size={28} />
+            backgroundColor: '#000000',
+            border: '1px solid #1f2937',
+            borderRadius: '16px',
+            padding: '24px 28px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: '20px',
+            minHeight: '130px',
+            color: '#ffffff',
+            cursor: 'pointer',
+            transition: 'transform 0.15s ease, border-color 0.15s ease'
+          }} className="dashboard-interactive-card">
+            <div style={{
+              width: '52px', height: '52px', borderRadius: '12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            }}>
+              <Clock size={28} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+                Pending Payments
+              </span>
+              <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+                £{pendingPaymentsAmount > 0 ? pendingPaymentsAmount.toFixed(2) : '3405.00'}
+              </h3>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-              Pending Payments
-            </span>
-            <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-              £{pendingPaymentsAmount > 0 ? pendingPaymentsAmount.toFixed(2) : '3405.00'}
-            </h3>
-          </div>
-        </div>
+        </Link>
 
-        {/* Card 4: Payments Confirmed */}
-        <div style={{
-          backgroundColor: '#000000',
-          border: '1px solid #1f2937',
-          borderRadius: '16px',
-          padding: '24px 28px',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: '20px',
-          minHeight: '130px',
-          color: '#ffffff'
-        }}>
+        {/* Card 4: Payments Confirmed -> Links to Completed/Confirmed Commitments */}
+        <Link href="/dashboard/commitments?status=COMPLETED" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
-            width: '52px', height: '52px', borderRadius: '12px',
-            backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-          }}>
-            <CheckCircle size={28} />
+            backgroundColor: '#000000',
+            border: '1px solid #1f2937',
+            borderRadius: '16px',
+            padding: '24px 28px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: '20px',
+            minHeight: '130px',
+            color: '#ffffff',
+            cursor: 'pointer',
+            transition: 'transform 0.15s ease, border-color 0.15s ease'
+          }} className="dashboard-interactive-card">
+            <div style={{
+              width: '52px', height: '52px', borderRadius: '12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            }}>
+              <CheckCircle size={28} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+                Payments Confirmed
+              </span>
+              <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+                {isAdmin ? '1 / 71' : `${confirmedPaymentsCount} / ${totalPaymentsCount}`}
+              </h3>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-              Payments Confirmed
-            </span>
-            <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-              {isAdmin ? '1 / 71' : `${confirmedPaymentsCount} / ${totalPaymentsCount}`}
-            </h3>
-          </div>
-        </div>
+        </Link>
 
-        {/* Card 5: Harvests Released */}
-        <div style={{
-          backgroundColor: '#000000',
-          border: '1px solid #1f2937',
-          borderRadius: '16px',
-          padding: '24px 28px',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: '20px',
-          minHeight: '130px',
-          color: '#ffffff'
-        }}>
+        {/* Card 5: Harvests Released -> Links to Completed Commitments */}
+        <Link href="/dashboard/commitments?status=COMPLETED" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
-            width: '52px', height: '52px', borderRadius: '12px',
-            backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-          }}>
-            <Gift size={28} />
+            backgroundColor: '#000000',
+            border: '1px solid #1f2937',
+            borderRadius: '16px',
+            padding: '24px 28px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: '20px',
+            minHeight: '130px',
+            color: '#ffffff',
+            cursor: 'pointer',
+            transition: 'transform 0.15s ease, border-color 0.15s ease'
+          }} className="dashboard-interactive-card">
+            <div style={{
+              width: '52px', height: '52px', borderRadius: '12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            }}>
+              <Gift size={28} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+                Harvests Released
+              </span>
+              <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+                {isAdmin ? '0 of 71' : `${completedCommitmentsCount} of ${totalCommitmentsCount}`}
+              </h3>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-              Harvests Released
-            </span>
-            <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-              {isAdmin ? '0 of 71' : `${completedCommitmentsCount} of ${totalCommitmentsCount}`}
-            </h3>
-          </div>
-        </div>
+        </Link>
 
-        {/* Card 6: Active vs Invited */}
-        <div style={{
-          backgroundColor: '#000000',
-          border: '1px solid #1f2937',
-          borderRadius: '16px',
-          padding: '24px 28px',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: '20px',
-          minHeight: '130px',
-          color: '#ffffff'
-        }}>
+        {/* Card 6: Active vs Invited -> Links to Manage Users */}
+        <Link href="/dashboard/users" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
-            width: '52px', height: '52px', borderRadius: '12px',
-            backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-          }}>
-            <Users size={28} />
+            backgroundColor: '#000000',
+            border: '1px solid #1f2937',
+            borderRadius: '16px',
+            padding: '24px 28px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: '20px',
+            minHeight: '130px',
+            color: '#ffffff',
+            cursor: 'pointer',
+            transition: 'transform 0.15s ease, border-color 0.15s ease'
+          }} className="dashboard-interactive-card">
+            <div style={{
+              width: '52px', height: '52px', borderRadius: '12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            }}>
+              <Users size={28} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+                Active vs Invited
+              </span>
+              <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+                {isAdmin ? `${activeUsersCount} / ${invitedUsersCount}` : '2 / 2'}
+              </h3>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-              Active vs Invited
-            </span>
-            <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-              {isAdmin ? `${activeUsersCount} / ${invitedUsersCount}` : '2 / 2'}
-            </h3>
-          </div>
-        </div>
+        </Link>
       </div>
 
       {/* Monthly Revenue Chart Panel */}

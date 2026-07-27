@@ -8,9 +8,31 @@
  * Run with: npx tsx scripts/import_commitments_direct.ts
  */
 
-import { adminDb } from '../src/lib/firebase-admin';
 import * as fs from 'fs';
 import * as path from 'path';
+
+// Load .env variables BEFORE importing firebase-admin
+const envPath = path.join(process.cwd(), '.env');
+if (fs.existsSync(envPath)) {
+  const envConfig = fs.readFileSync(envPath, 'utf8');
+  envConfig.split('\n').forEach((line) => {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#')) {
+      const idx = trimmed.indexOf('=');
+      if (idx !== -1) {
+        const key = trimmed.substring(0, idx).trim();
+        let value = trimmed.substring(idx + 1).trim();
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+          value = value.substring(1, value.length - 1);
+        }
+        process.env[key] = value.replace(/\\n/g, '\n');
+      }
+    }
+  });
+}
+
+// Dynamically require firebase-admin after process.env is initialized
+const { adminDb } = require('../src/lib/firebase-admin');
 
 interface RawCommitment {
   recordId: string;
@@ -21,8 +43,8 @@ interface RawCommitment {
 }
 
 async function runDirectImport() {
-  const jsonPath = '/Users/ayodeji/.gemini/antigravity-ide/brain/069dbdc2-ffd5-4abe-9c1a-03df6ad0525f/scratch/parsed_commitments.json';
-  let rawItems: RawCommitment[] = [];
+  const jsonPath = '/Users/ayodeji/.gemini/antigravity-ide/brain/069dbdc2-ffd5-4abe-9c1a-03df6ad0525f/scratch/parsed_user_commitments_v2.json';
+  let rawItems: any[] = [];
 
   if (fs.existsSync(jsonPath)) {
     rawItems = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
@@ -36,7 +58,7 @@ async function runDirectImport() {
   // Step 1: Fetch all users to map names to user IDs
   const usersSnap = await adminDb.collection('users').get();
   const userMapByLowerName = new Map<string, string>();
-  usersSnap.forEach((doc) => {
+  usersSnap.forEach((doc: any) => {
     const data = doc.data();
     if (data.name) {
       userMapByLowerName.set(data.name.toLowerCase().trim(), doc.id);
@@ -74,21 +96,31 @@ async function runDirectImport() {
   for (const item of rawItems) {
     const memberName = item.memberName ? item.memberName.trim() : 'Unknown Member';
     const lowerName = memberName.toLowerCase();
-    const matchedUserId = userMapByLowerName.get(lowerName) || `usr_${item.recordId}`;
+    const matchedUserId = userMapByLowerName.get(lowerName) || item.memberId || `usr_${item.id}`;
 
-    const docId = item.recordId;
+    const docId = item.id;
     const docRef = cmtRef.doc(docId);
 
+    let status = 'ACTIVE';
+    if (item.collectionYear < 2026) {
+      status = 'COMPLETED';
+    } else if (item.collectionYear > 2026) {
+      status = 'NOT_YET_STARTED';
+    } else {
+      status = 'ACTIVE';
+    }
+
     const commitmentData = {
-      id: item.recordId,
+      id: item.id,
       memberId: matchedUserId,
       memberName: memberName,
       amount: item.amount,
       goal: `Savings Goal (£${item.amount}/mo)`,
       collectionMonth: item.collectionMonth,
       collectionYear: item.collectionYear,
-      status: item.collectionYear < 2026 ? 'COMPLETED' : 'ACTIVE',
-      createdAt: item.collectionYear < 2026 ? `${item.collectionYear}-01-01T00:00:00Z` : '2026-01-01T00:00:00Z',
+      endDate: item.endDate || `December ${item.collectionYear}`,
+      status,
+      createdAt: item.createdAt || '2024-01-26T00:00:00Z',
       updatedAt: new Date().toISOString()
     };
 

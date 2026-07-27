@@ -36,7 +36,7 @@ export interface Commitment {
   collectionMonth: string;
   collectionYear: number;
   endDate?: string;
-  status: 'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  status: 'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'NOT_YET_STARTED';
   createdAt: string;
   updatedAt?: string | null;
 }
@@ -226,7 +226,8 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "February",
     "collectionYear": 2027,
-    "status": "ACTIVE",
+    "endDate": "December 2027",
+    "status": "NOT_YET_STARTED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
   },
@@ -238,6 +239,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "September",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -250,6 +252,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "July",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -262,6 +265,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "June",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -274,6 +278,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "May",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -286,6 +291,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "December",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -298,6 +304,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£750/mo)",
     "collectionMonth": "September",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -310,6 +317,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "July",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -322,6 +330,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "June",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -334,6 +343,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "July",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -346,6 +356,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£750/mo)",
     "collectionMonth": "January",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -358,6 +369,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "February",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -370,6 +382,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "April",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -382,6 +395,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "September",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -394,6 +408,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "August",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -406,6 +421,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "December",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -418,6 +434,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "July",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -430,6 +447,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "June",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -442,6 +460,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "May",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -454,6 +473,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "December",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -466,6 +486,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "October",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -478,6 +499,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "March",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -490,6 +512,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "March",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -497,11 +520,12 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
   {
     "id": "SC-00198",
     "memberId": "usr_SC-00198",
-    "memberName": "Member",
+    "memberName": "",
     "amount": 500,
     "goal": "Savings Goal (£500/mo)",
-    "collectionMonth": "July",
+    "collectionMonth": "£500.00",
     "collectionYear": 2026,
+    "endDate": "July 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -514,6 +538,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "May",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -526,6 +551,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "December",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -538,6 +564,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "January",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -550,6 +577,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "December",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -562,6 +590,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "December",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -574,6 +603,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£750/mo)",
     "collectionMonth": "October",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -586,6 +616,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "February",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -598,6 +629,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "April",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -610,6 +642,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "November",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -622,6 +655,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "May",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -629,11 +663,12 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
   {
     "id": "SC-00186",
     "memberId": "usr_SC-00186",
-    "memberName": "Member",
+    "memberName": "",
     "amount": 500,
     "goal": "Savings Goal (£500/mo)",
-    "collectionMonth": "June",
+    "collectionMonth": "£500.00",
     "collectionYear": 2026,
+    "endDate": "June 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -646,6 +681,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "November",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -658,6 +694,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "October",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -670,6 +707,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "November",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -682,6 +720,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "October",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -694,6 +733,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "November",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -706,6 +746,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "October",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -718,6 +759,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "July",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -730,6 +772,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "August",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -742,6 +785,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "March",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -754,6 +798,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "November",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -766,6 +811,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "March",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -778,6 +824,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "November",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -790,6 +837,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "August",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -802,6 +850,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "January",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -814,6 +863,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "September",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -826,6 +876,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "September",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -838,6 +889,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "October",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -850,6 +902,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "April",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -862,6 +915,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "January",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -874,6 +928,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "February",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -886,6 +941,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "March",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -898,6 +954,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "February",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -910,6 +967,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "May",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -922,6 +980,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "August",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -934,6 +993,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "July",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -946,6 +1006,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "July",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -958,6 +1019,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "June",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -970,6 +1032,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "February",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -982,6 +1045,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "August",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -994,6 +1058,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "July",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1006,6 +1071,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "April",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1018,6 +1084,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "February",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1030,6 +1097,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "May",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1042,6 +1110,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "June",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1054,6 +1123,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "April",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1066,6 +1136,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "November",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1078,6 +1149,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "January",
     "collectionYear": 2026,
+    "endDate": "December 2026",
     "status": "ACTIVE",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1090,6 +1162,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "May",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1102,6 +1175,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "August",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1114,6 +1188,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "November",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1126,6 +1201,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "November",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1138,6 +1214,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "November",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1150,6 +1227,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "August",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1162,6 +1240,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "December",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1174,6 +1253,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "October",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1186,6 +1266,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "December",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1198,6 +1279,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "September",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1210,6 +1292,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "November",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1222,6 +1305,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "November",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1234,6 +1318,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "October",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1246,6 +1331,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "February",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1258,6 +1344,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "December",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1270,6 +1357,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "May",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1282,6 +1370,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "August",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1294,6 +1383,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "May",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1306,6 +1396,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "December",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1318,6 +1409,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "December",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1330,6 +1422,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "July",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1342,6 +1435,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "December",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1354,6 +1448,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "June",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1366,6 +1461,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "September",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1378,6 +1474,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "September",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1390,6 +1487,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "August",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1402,6 +1500,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "May",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1414,6 +1513,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "September",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1426,6 +1526,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "June",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1438,6 +1539,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "September",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1450,6 +1552,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "December",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1462,6 +1565,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "September",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1474,6 +1578,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "April",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1486,6 +1591,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "October",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1498,6 +1604,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "March",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1510,6 +1617,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "July",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1522,6 +1630,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "October",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1534,6 +1643,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "July",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1546,6 +1656,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "November",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1558,6 +1669,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "May",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1570,6 +1682,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "January",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1582,6 +1695,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "March",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1594,6 +1708,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "December",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1606,6 +1721,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "September",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1618,6 +1734,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "June",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1630,6 +1747,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "September",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1642,6 +1760,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "October",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1654,6 +1773,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "March",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1666,6 +1786,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "March",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1678,6 +1799,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "February",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1690,6 +1812,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "January",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1702,6 +1825,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "August",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1714,6 +1838,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "July",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1726,6 +1851,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "May",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1738,6 +1864,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "April",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1750,6 +1877,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "February",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1762,6 +1890,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "October",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1774,6 +1903,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "June",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1786,6 +1916,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "June",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1798,6 +1929,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "February",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1810,6 +1942,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "January",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1822,6 +1955,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "February",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1834,6 +1968,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "October",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1846,6 +1981,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "August",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1858,6 +1994,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "November",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1870,6 +2007,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "October",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1882,6 +2020,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "August",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1894,6 +2033,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "June",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1906,6 +2046,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "April",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1918,6 +2059,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "June",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1930,6 +2072,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "July",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1942,6 +2085,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "March",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1954,6 +2098,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "January",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1966,6 +2111,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "April",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1978,6 +2124,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "October",
     "collectionYear": 2025,
+    "endDate": "December 2025",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -1990,6 +2137,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "December",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2002,6 +2150,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "December",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2014,6 +2163,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "November",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2026,6 +2176,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "November",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2038,6 +2189,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "October",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2050,6 +2202,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "August",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2062,6 +2215,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "June",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2074,6 +2228,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "June",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2086,6 +2241,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "May",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2098,6 +2254,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "September",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2110,6 +2267,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "December",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2122,6 +2280,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "December",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2134,6 +2293,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "October",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2146,6 +2306,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "August",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2158,6 +2319,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "April",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2170,6 +2332,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "March",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2182,6 +2345,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "October",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2194,6 +2358,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "April",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2206,6 +2371,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "March",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2218,6 +2384,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "September",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2230,6 +2397,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "August",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2242,6 +2410,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "September",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2254,6 +2423,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "October",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2266,6 +2436,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "September",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2278,6 +2449,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "November",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2290,6 +2462,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "August",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2302,6 +2475,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "July",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2314,6 +2488,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "June",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2326,6 +2501,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "October",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2338,6 +2514,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "March",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2350,6 +2527,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "March",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2362,6 +2540,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "February",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2374,6 +2553,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "November",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2386,6 +2566,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "September",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2398,6 +2579,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "March",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2410,6 +2592,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "April",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2422,6 +2605,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "May",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2434,6 +2618,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "September",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2446,6 +2631,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "May",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2458,6 +2644,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "September",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2470,6 +2657,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "July",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2482,6 +2670,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "May",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2494,6 +2683,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "April",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2506,6 +2696,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "May",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2518,6 +2709,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "February",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2530,6 +2722,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "February",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2542,6 +2735,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "January",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2554,6 +2748,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "June",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2566,6 +2761,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "December",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2578,6 +2774,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£500/mo)",
     "collectionMonth": "February",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2590,6 +2787,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "January",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2602,6 +2800,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£250/mo)",
     "collectionMonth": "October",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2614,6 +2813,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "July",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
@@ -2626,6 +2826,7 @@ const INITIAL_FALLBACK_DATA: Record<string, any[]> = {
     "goal": "Savings Goal (£1000/mo)",
     "collectionMonth": "January",
     "collectionYear": 2024,
+    "endDate": "December 2024",
     "status": "COMPLETED",
     "createdAt": "2024-01-26T00:00:00Z",
     "updatedAt": "2026-07-27T00:00:00Z"
