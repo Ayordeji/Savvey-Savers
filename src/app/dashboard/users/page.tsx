@@ -972,14 +972,6 @@ export default function ManageUsersPage() {
         
         {/* Top action buttons */}
         <div className={styles.topButtonsGroup} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            onClick={() => {
-              if (users.length === 0) return;
-              const headers = ['Member ID', 'Name', 'Email', 'Phone', 'Role', 'Is Active', 'Joined Date'];
-              const rows = users.map(u => [
-                `"${u.displayId || u.invitationId || u.id}"`,
-        <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={handleOpenAddModal} className="btn btn-primary btn-sm" style={{ backgroundColor: 'var(--secondary)', color: 'white', borderRadius: '8px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 600 }}>
             <Plus size={16} />
             <span>Add Member</span>
