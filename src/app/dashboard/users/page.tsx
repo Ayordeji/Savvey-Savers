@@ -898,8 +898,18 @@ export default function ManageUsersPage() {
 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
+  const [userStatusFilter, setUserStatusFilter] = useState('');
+
   const filteredUsers = users.filter((u) => {
     const q = searchQuery.toLowerCase().trim();
+    
+    // Status matching
+    const isActiveStatus = userStatusFilter === 'ACTIVE';
+    const isInvitedStatus = userStatusFilter === 'INVITED';
+    const matchesStatus = !userStatusFilter || (isActiveStatus && u.isActive) || (isInvitedStatus && !u.isActive);
+    
+    if (!matchesStatus) return false;
+    
     if (!q) return true;
     return (
       u.name.toLowerCase().includes(q) ||
@@ -1026,6 +1036,19 @@ export default function ManageUsersPage() {
               className={styles.searchInput}
             />
           </div>
+          <select
+            value={userStatusFilter}
+            onChange={(e) => {
+              setUserStatusFilter(e.target.value);
+              setUsersPage(1);
+            }}
+            className="form-select"
+            style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-main)', minWidth: '150px' }}
+          >
+            <option value="">All Users</option>
+            <option value="ACTIVE">Active Users</option>
+            <option value="INVITED">Invited Users</option>
+          </select>
           {selectedUserIds.length > 0 && (
             <button
               onClick={() => { setErrorMsg(''); setActiveModal('BULK_DELETE_CONFIRM'); }}
