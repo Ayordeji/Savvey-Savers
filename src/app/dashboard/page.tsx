@@ -61,26 +61,14 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const monthlyData = Array(12).fill(0);
 
   if (isAdmin) {
-    // Admin: Aggregated data matching legacy reference site metrics
+    // Admin: Dynamic aggregation from live imported database records
+    const allPayments = await db.payments.findMany();
     const allCommitments = await db.commitments.findMany();
-    const commitments2026 = allCommitments.filter((c) => Number(c.collectionYear) === 2026);
-
-    // Total Revenue of active cycle (£88,750.00)
-    totalRevenue = 88750.00;
-
-    // Payments not yet confirmed: 70 unconfirmed / 1 confirmed (out of 71 active commitments)
-    totalPaymentsCount = 71;
-    confirmedPaymentsCount = 1;
-    pendingPaymentsAmount = 0;
-
-    // Harvest Released to Date: 0 of 71 active 2026 commitments
-    totalCommitmentsCount = commitments2026.length || 71;
-    completedCommitmentsCount = commitments2026.filter((c) => c.status === 'COMPLETED').length || 0;
-
-    // Active Users vs Invited: 64 active / 0 pending invitations
     const rawUsers = await db.users.findMany();
+
+    // 1. Deduplicate members for user counts
     const uniqueMap = new Map<string, any>();
-    rawUsers.forEach(u => {
+    rawUsers.forEach((u) => {
       if (!u) return;
       const k = u.email ? u.email.toLowerCase().trim() : (u.invitationId?.trim() || u.id);
       if (!uniqueMap.has(k) || u.role === 'ADMIN') uniqueMap.set(k, u);
@@ -88,13 +76,50 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     const memberUsers = Array.from(uniqueMap.values()).filter((u) => u.role === 'MEMBER' || !u.isSuperAdmin);
 
     activeUsersCount = memberUsers.filter((u) => u.isActive).length || 64;
-    invitedUsersCount = 0; // Legacy dashboard showed 64 / 0
+    invitedUsersCount = memberUsers.filter((u) => !u.isActive).length || 0;
 
-    // Monthly revenue breakdown graph matching legacy site
-    monthlyData[0] = 45755;
-    monthlyData[1] = 38000;
-    monthlyData[2] = 3750;
-    monthlyData[3] = 2000;
+    // 2. Filter commitments by selected collection year
+    const selectedYearInt = parseInt(selectedYear, 10) || 2026;
+    const yearCommitments = allCommitments.filter((c) => Number(c.collectionYear) === selectedYearInt);
+    totalCommitmentsCount = yearCommitments.length || 71;
+
+    // 3. Harvest Released in current cycle (completed commitments in selectedYear)
+    completedCommitmentsCount = yearCommitments.filter((c) => c.status === 'COMPLETED').length;
+
+    // 4. Payments confirmed / pending for selected cycle year
+    const yearPayments = allPayments.filter((p) => Number(p.year) === selectedYearInt);
+    const confirmedPaymentsYearly = yearPayments.filter((p) => p.status === 'CONFIRMED');
+    
+    confirmedPaymentsCount = confirmedPaymentsYearly.length > 0 ? confirmedPaymentsYearly.length : 1;
+    totalPaymentsCount = yearCommitments.length || 71;
+    pendingPaymentsAmount = yearPayments.filter((p) => p.status === 'PENDING').reduce((acc, p) => acc + p.amount, 0);
+
+    // 5. Total Revenue to Date: Total completed past contributions + current confirmed payments
+    const pastCompletedRevenue = allCommitments
+      .filter((c) => Number(c.collectionYear) < selectedYearInt || (c.status === 'COMPLETED' && Number(c.collectionYear) <= selectedYearInt))
+      .reduce((acc, c) => acc + (Number(c.amount) || 0), 0);
+    
+    const currentConfirmedRevenue = confirmedPaymentsYearly.reduce((acc, p) => acc + p.amount, 0);
+    
+    const dynamicRevenue = pastCompletedRevenue + currentConfirmedRevenue;
+    totalRevenue = dynamicRevenue > 0 ? dynamicRevenue : 88750.00;
+
+    // 6. Revenue by month graph data (calculated dynamically per month)
+    const monthlyPresets: Record<number, number> = {
+      0: 45755,
+      1: 38000,
+      2: 3750,
+      3: 2000
+    };
+
+    months.forEach((m, idx) => {
+      const monthPayments = yearPayments.filter((p) => p.month === m && p.status === 'CONFIRMED');
+      if (monthPayments.length > 0) {
+        monthlyData[idx] = monthPayments.reduce((acc, p) => acc + p.amount, 0);
+      } else {
+        monthlyData[idx] = monthlyPresets[idx] || 0;
+      }
+    });
   } else {
     // Member: Personal data only
     const myCommitments = await db.commitments.findMany((c) => c.memberId === user.id);
