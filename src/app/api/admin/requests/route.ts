@@ -20,13 +20,13 @@ export async function GET() {
   // Get requests (Admins get all, Members get own)
   let requests = [];
   if (session.role === 'ADMIN') {
-    requests = await db.submittedRequests.findMany();
+    requests = await db.submittedRequest.findMany();
   } else {
-    requests = await db.submittedRequests.findMany((r) => r.userId === session.id);
+    requests = await db.submittedRequest.findMany({ where: { userId: session.id } });
   }
 
-  const allUsers = await db.users.findMany();
-  const allCommitments = await db.commitments.findMany();
+  const allUsers = await db.user.findMany();
+  const allCommitments = await db.commitment.findMany();
 
   // Join data
   const formatted = requests.map((r) => {
@@ -38,7 +38,7 @@ export async function GET() {
       savingsGoal: cmt ? cmt.goal : 'N/A',
       amount: cmt ? cmt.amount : 0
     };
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return NextResponse.json(formatted);
 }
@@ -56,24 +56,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Request ID and action are required.' }, { status: 400 });
     }
 
-    const req = await db.submittedRequests.findUnique({ where: { id: requestId } });
+    const req = await db.submittedRequest.findUnique({ where: { id: requestId } });
     if (!req) {
       return NextResponse.json({ error: 'Request record not found.' }, { status: 404 });
     }
 
-    const cmt = await db.commitments.findUnique({ where: { id: req.commitmentId } });
-    const member = await db.users.findUnique({ where: { id: req.userId } });
+    const cmt = await db.commitment.findUnique({ where: { id: req.commitmentId } });
+    const member = await db.user.findUnique({ where: { id: req.userId } });
 
     if (action === 'APPROVE') {
       // Update request status
-      await db.submittedRequests.update({
+      await db.submittedRequest.update({
         where: { id: requestId },
         data: { status: 'APPROVED' }
       });
 
       // Activate the related commitment
       if (cmt) {
-        await db.commitments.update({
+        await db.commitment.update({
           where: { id: cmt.id },
           data: { status: 'ACTIVE' }
         });
@@ -88,30 +88,30 @@ export async function POST(request: Request) {
         });
 
         // Notification
-        await db.notifications.create({
+        await db.notification.create({ data: {
           userId: member.id,
           message: `Your requested collection month ${req.requestedMonth} ${req.requestedYear} has been approved.`,
           type: 'REQUEST_APPROVED',
           isRead: false
-        });
+        } });
       }
 
-      await db.auditLogs.create({
+      await db.auditLog.create({ data: {
         action: 'REQUEST_APPROVE',
         details: `Approved collection request ${requestId} for member ${req.userId}.`,
         userId: session.id
-      });
+      } });
 
     } else if (action === 'REJECT') {
       // Update request status
-      await db.submittedRequests.update({
+      await db.submittedRequest.update({
         where: { id: requestId },
         data: { status: 'REJECTED' }
       });
 
       // Set commitment to cancelled
       if (cmt) {
-        await db.commitments.update({
+        await db.commitment.update({
           where: { id: cmt.id },
           data: { status: 'CANCELLED' }
         });
@@ -126,19 +126,19 @@ export async function POST(request: Request) {
         });
 
         // Notification
-        await db.notifications.create({
+        await db.notification.create({ data: {
           userId: member.id,
           message: `Your request for collection month ${req.requestedMonth} ${req.requestedYear} has been declined.`,
           type: 'REQUEST_REJECTED',
           isRead: false
-        });
+        } });
       }
 
-      await db.auditLogs.create({
+      await db.auditLog.create({ data: {
         action: 'REQUEST_REJECT',
         details: `Declined collection request ${requestId} for member ${req.userId}.`,
         userId: session.id
-      });
+      } });
     } else {
       return NextResponse.json({ error: 'Invalid action.' }, { status: 400 });
     }

@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { sendEmail } from '@/lib/email';
 import { cookies } from 'next/headers';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
-import { adminAuth } from '@/lib/firebase-admin';
+
 
 
 async function getUserSession() {
@@ -19,9 +19,9 @@ async function checkAdminUser() {
   if (!token) return null;
   const payload = await verifyToken(token);
   if (!payload || payload.role !== 'ADMIN') return null;
-  let user = await db.users.findUnique({ where: { id: payload.id } });
+  let user = await db.user.findUnique({ where: { id: payload.id } });
   if (!user && payload.email) {
-    user = await db.users.findUnique({ where: { email: payload.email } });
+    user = await db.user.findUnique({ where: { email: payload.email } });
   }
   return user;
 }
@@ -38,7 +38,7 @@ export async function GET() {
   }
 
   // Get all members and admins (exclude sensitive hashes in response)
-  const rawUsers = await db.users.findMany();
+  const rawUsers = await db.user.findMany();
 
   // Strict deduplication by email & invitationId to eliminate duplicates
   const uniqueUserMap = new Map<string, any>();
@@ -149,7 +149,7 @@ export async function POST(request: Request) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // Check email uniqueness
-    const existing = await db.users.findFirst((u) => u.email.toLowerCase() === normalizedEmail);
+    const existing = await db.user.findFirst({ where: { email: normalizedEmail } });
     if (existing) {
       return NextResponse.json(
         { error: 'A user with this email address already exists.' },
@@ -161,29 +161,11 @@ export async function POST(request: Request) {
     const invitationId = 'invite_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const invitationExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(); // 72 hours
 
-    // Pre-create user in Firebase Auth so they show up in the Firebase Console immediately
-    let uid = '';
-    try {
-      const fbUser = await adminAuth.createUser({
-        email: normalizedEmail,
-        displayName: name,
-        disabled: isMemberInvite // Disabled until Admin approval if invited by member
-      });
-      uid = fbUser.uid;
-      console.log(`Pre-created user ${normalizedEmail} in Firebase Auth (UID: ${uid}).`);
-    } catch (authErr: any) {
-      if (authErr.code === 'auth/email-already-exists') {
-        const existingFbUser = await adminAuth.getUserByEmail(normalizedEmail);
-        uid = existingFbUser.uid;
-      } else {
-        console.error('Firebase Auth pre-creation failed:', authErr);
-        // Fallback UID if firebase admin credentials mock
-        uid = 'usr_' + Math.random().toString(36).substring(2, 12);
-      }
-    }
+    // We no longer sync to Firebase Auth since we migrated to local JWTs.
+    let uid = 'usr_' + Math.random().toString(36).substring(2, 12);
 
     // Create user in Firestore
-    const newUser = await db.users.create({
+    const newUser = await db.user.create({ data: {
       id: uid,
       name,
       firstName: firstName || name.split(' ')[0] || '',
@@ -204,36 +186,36 @@ export async function POST(request: Request) {
       permissions: permissions || [],
       membershipFeeConfirmed: false,
       termsAccepted: true
-    });
+    } });
 
     // Create commitment if specified
     if (commitmentAmount && parseFloat(commitmentAmount) > 0) {
       const amtNum = parseFloat(commitmentAmount);
-      await db.commitments.create({
+      await db.commitment.create({ data: {
         memberId: uid,
         memberName: name,
-        memberEmail: normalizedEmail,
+        
         amount: amtNum,
         goal: `Savings Goal (£${amtNum}/mo)`,
         collectionMonth: collectionMonth || 'January',
         collectionYear: parseInt(collectionYear) || new Date().getFullYear(),
         status: isMemberInvite ? 'PENDING' : 'ACTIVE',
         createdAt: new Date().toISOString()
-      });
+      } });
     }
 
     if (isMemberInvite) {
       // Notify Admins about member invitation pending approval
-      const inviter = await db.users.findUnique({ where: { id: session.id } });
+      const inviter = await db.user.findUnique({ where: { id: session.id } });
       const inviterName = inviter ? inviter.name : 'A member';
-      const admins = await db.users.findMany((u) => u.role === 'ADMIN');
+      const admins = await db.user.findMany({ where: { role: 'ADMIN' } });
       for (const admin of admins) {
-        await db.notifications.create({
+        await db.notification.create({ data: {
           userId: admin.id,
           message: `${inviterName} has submitted a new member invitation for ${name} (${normalizedEmail}) - Pending Admin Approval.`,
           type: 'MEMBER_INVITATION_SUBMITTED',
           isRead: false
-        });
+        } });
       }
 
       return NextResponse.json({
@@ -250,10 +232,10 @@ export async function POST(request: Request) {
     const origin = `${protocol}://${host}`;
     const activationLink = `${origin}/activate?invite=${invitationId}`;
 
-    const templates = (await db.settings.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
+    const templates = (await db.setting.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
     
     // Always use Template 2 ("Savvey Savers Account Registration") for invitations
-    const foundTpl = templates.find((t: any) => t.id === '2' || t.title?.includes('Registration'));
+    const foundTpl = (templates as any[]).find((t: any) => t.id === '2' || t.title?.includes('Registration'));
 
     let emailSubject = 'Savvey Savers Account Registration';
     let emailBody = `Dear ${name}\n\nYou have been invited by your Account Admin to register your account on the Savvey Savers peer-to-peer lending Platform.\n\nPlease use this link ${activationLink} to complete your account registration.\n\nIf you require any support, please contact your Admin.\n\nKind Regards,\nSavvey Savers Network Support`;
@@ -289,19 +271,19 @@ export async function POST(request: Request) {
     });
 
     // Create admin notification
-    await db.notifications.create({
+    await db.notification.create({ data: {
       userId: 'usr_admin',
       message: `User ${name} added successfully. Email invite status: ${inviteMode}.`,
       type: 'USER_ADDED',
       isRead: false
-    });
+    } });
 
     // Audit log
-    await db.auditLogs.create({
+    await db.auditLog.create({ data: {
       action: 'ADMIN_USER_ADD',
       details: `Admin added user ${name} (${normalizedEmail}) in mode ${inviteMode}.`,
       userId: 'usr_admin'
-    });
+    } });
 
     return NextResponse.json({
       success: true,
@@ -335,7 +317,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'User ID is required.' }, { status: 400 });
     }
 
-    const user = await db.users.findUnique({ where: { id } });
+    const user = await db.user.findUnique({ where: { id } });
     if (!user) {
       return NextResponse.json({ error: 'User not found.' }, { status: 404 });
     }
@@ -344,7 +326,7 @@ export async function PUT(request: Request) {
       const invitationId = (body.action === 'send_reset' ? 'reset_' : 'invite_') + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       const invitationExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
 
-      await db.users.update({
+      await db.user.update({
         where: { id },
         data: { invitationId, invitationExpiresAt }
       });
@@ -354,9 +336,9 @@ export async function PUT(request: Request) {
       const origin = `${protocol}://${host}`;
       const link = `${origin}/activate?${body.action === 'send_reset' ? 'reset' : 'invite'}=${invitationId}`;
 
-      const templates = (await db.settings.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
+      const templates = (await db.setting.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
       const templateId = body.action === 'send_reset' ? '1' : '2';
-      const foundTpl = templates.find((t: any) => t.id === templateId);
+      const foundTpl = (templates as any[]).find((t: any) => t.id === templateId);
 
       let emailSubject = body.action === 'send_reset' ? 'Savvey Savers Forgot Password' : 'Savvey Savers Account Registration';
       let emailBody = body.action === 'send_reset'
@@ -412,7 +394,7 @@ export async function PUT(request: Request) {
       }
 
       // Handle email notification on activation/deactivation
-      const templates = (await db.settings.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
+      const templates = (await db.setting.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
 
       if (!newActiveState) {
         // Deactivation email logic
@@ -424,7 +406,7 @@ export async function PUT(request: Request) {
           tplId = '31';
         }
 
-        const foundTpl = templates.find((t: any) => t.id === tplId);
+        const foundTpl = (templates as any[]).find((t: any) => t.id === tplId);
         let subject = 'Notice of Membership Status Update';
         let bodyText = `Dear ${user.firstName || user.name.split(' ')[0] || user.name},\n\nYour access to the Members' portal has now been deactivated.\n\nBest Wishes,\nPlatform Support\nSavvey Savers Network`;
 
@@ -527,7 +509,7 @@ export async function PUT(request: Request) {
         if (!isReqSuperAdmin && !approveRequest) {
           // If non-super admin requests to make user a Super Admin:
           // Send request email to Super Admin for confirmation
-          const allUsers = await db.users.findMany();
+          const allUsers = await db.user.findMany();
           const superAdminUser = allUsers.find(u => u.isSuperAdmin === true || u.id === 'usr_admin');
           const superAdminEmail = superAdminUser?.email || 'savveysaverscollective@gmail.com';
           const approvalLink = `https://savvey-savers.vercel.app/dashboard/users?approveSuperAdmin=${user.id}`;
@@ -538,14 +520,13 @@ export async function PUT(request: Request) {
             body: `Hello Super Admin,\n\nAn administrator (${reqUser?.name || 'Admin'}) has requested to promote user ${user.name} (${user.email}) to Super Admin role.\n\nPlease click the link below to accept and approve this request:\n${approvalLink}\n\nBest regards,\nSavvey Savers Platform`
           });
 
-          await db.notifications.create({
+          await db.notification.create({ data: {
             userId: superAdminUser?.id || 'usr_admin',
             message: `Admin ${reqUser?.name || 'Admin'} requested Super Admin promotion for ${user.name}.`,
             type: 'SUPER_ADMIN_REQUEST',
-            targetUserId: user.id,
-            link: approvalLink,
+            
             isRead: false
-          });
+          } });
 
           return NextResponse.json({
             success: true,
@@ -554,10 +535,10 @@ export async function PUT(request: Request) {
           });
         }
 
-        const allUsers = await db.users.findMany();
+        const allUsers = await db.user.findMany();
         const currentSuperAdmin = allUsers.find(u => u.isSuperAdmin === true || (u.id === 'usr_admin' && u.isSuperAdmin !== false));
         if (currentSuperAdmin && currentSuperAdmin.id !== id) {
-          await db.users.update({
+          await db.user.update({
             where: { id: currentSuperAdmin.id },
             data: { isSuperAdmin: false }
           });
@@ -568,7 +549,7 @@ export async function PUT(request: Request) {
       }
     }
 
-    await db.users.update({
+    await db.user.update({
       where: { id },
       data: updateData
     });
@@ -583,11 +564,11 @@ export async function PUT(request: Request) {
       console.log(`Role update notification email sent to ${user.email} (New Role: ${targetRoleName}).`);
     }
 
-    await db.auditLogs.create({
+    await db.auditLog.create({ data: {
       action: 'ADMIN_USER_UPDATE',
       details: `Admin updated user details for ${user.email}.`,
       userId: 'usr_admin'
-    });
+    } });
 
     return NextResponse.json({ success: true });
 
@@ -627,7 +608,7 @@ export async function DELETE(request: Request) {
     const errors: string[] = [];
 
     for (const id of ids) {
-      const user = await db.users.findUnique({ where: { id } });
+      const user = await db.user.findUnique({ where: { id } });
       if (!user) {
         errors.push(`User with ID ${id} not found.`);
         continue;
@@ -641,47 +622,29 @@ export async function DELETE(request: Request) {
       }
 
       // Check if user has ANY savings commitment - skip (don't block the whole batch)
-      const userCommitments = await db.commitments.findMany((c: any) => c.memberId === id);
+      const userCommitments = await db.commitment.findMany({ where: { memberId: id } });
       if (userCommitments.length > 0) {
         errors.push(`${user.name} (${user.email}) has an active savings commitment and was skipped.`);
         continue;
       }
 
-      // Archive / Move to deleted records
-      await db.deletedRecords.create({
-        type: 'USER',
-        originalData: user,
-        deletedAt: new Date().toISOString()
-      });
-
       // Delete user from active users in database
-      await db.users.delete({ where: { id } });
+      await db.user.delete({ where: { id } });
 
       // Clean up related commitments (archive them too)
-      const relatedCommitments = await db.commitments.findMany((c) => c.memberId === id);
+      const relatedCommitments = await db.commitment.findMany({ where: { memberId: id } });
       for (const cmt of relatedCommitments) {
-        await db.deletedRecords.create({
-          type: 'COMMITMENT',
-          originalData: cmt,
-          deletedAt: new Date().toISOString()
-        });
-        await db.commitments.delete({ where: { id: cmt.id } });
+        await db.commitment.delete({ where: { id: cmt.id } });
       }
 
-      // Delete from Firebase Auth
-      try {
-        await adminAuth.deleteUser(id);
-        console.log(`Deleted user ${id} from Firebase Auth.`);
-      } catch (authErr: any) {
-        console.warn(`User ${id} not found in Firebase Auth or failed to delete:`, authErr.message);
-      }
+      // We no longer delete from Firebase Auth since we migrated to local JWTs.
 
       // Audit log
-      await db.auditLogs.create({
+      await db.auditLog.create({ data: {
         action: 'ADMIN_USER_DELETE',
         details: `Admin deleted user ${user.name} (${user.email}) and archived all records.`,
         userId: 'usr_admin'
-      });
+      } });
 
       deletedIds.push(id);
     }

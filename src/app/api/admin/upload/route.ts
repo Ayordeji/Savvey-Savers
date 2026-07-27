@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { adminStorage } from '@/lib/firebase-admin';
+
 import { cookies } from 'next/headers';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 

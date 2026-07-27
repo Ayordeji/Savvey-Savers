@@ -16,7 +16,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
-  const records = (await db.deletedRecords.findMany()).sort(
+  const records = (await db.deletedRecord.findMany()).sort(
     (a, b) => new Date(b.deletedAt).getTime() - new Date(a.deletedAt).getTime()
   );
   return NextResponse.json(records);
@@ -28,9 +28,9 @@ export async function DELETE() {
   }
 
   try {
-    const records = await db.deletedRecords.findMany();
+    const records = await db.deletedRecord.findMany();
     for (const r of records) {
-      await db.deletedRecords.delete({ where: { id: r.id } });
+      await db.deletedRecord.delete({ where: { id: r.id } });
     }
     return NextResponse.json({ success: true });
   } catch (err: any) {

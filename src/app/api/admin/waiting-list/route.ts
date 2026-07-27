@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     // Verify duplicate email in users
-    const existingUser = await db.users.findFirst((u) => u.email.toLowerCase() === entry.email.toLowerCase());
+    const existingUser = await db.user.findFirst({ where: { email: entry.email } });
     if (existingUser) {
       // Clean up waiting list and error out
       await db.waitingList.delete({ where: { id: waitingListId } });
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     const invitationExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
 
     // 2. Create User
-    const newUser = await db.users.create({
+    const newUser = await db.user.create({ data: {
       name: entry.name,
       email: entry.email,
       phone: entry.phone,
@@ -63,10 +63,10 @@ export async function POST(request: Request) {
       passwordHash: 'pending_activation',
       invitationId,
       invitationExpiresAt
-    });
+    } });
 
     // 3. Create active commitment based on intended amount
-    await db.commitments.create({
+    await db.commitment.create({ data: {
       memberId: newUser.id,
       amount: entry.monthlySavingsCommitment,
       goal: 'Savings',
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       endDate: `${new Date().getFullYear()}-12-31`,
       status: 'ACTIVE',
       updatedAt: new Date().toISOString()
-    });
+    } });
 
     // 4. Send email
     const host = request.headers.get('host') || 'savvey-savers.vercel.app';
@@ -103,19 +103,19 @@ export async function POST(request: Request) {
     await db.waitingList.delete({ where: { id: waitingListId } });
 
     // Admin notification
-    await db.notifications.create({
+    await db.notification.create({ data: {
       userId: 'usr_admin',
       message: `Prospect ${entry.name} converted to member successfully in mode ${inviteMode}.`,
       type: 'PROSPECT_CONVERTED',
       isRead: false
-    });
+    } });
 
     // Audit log
-    await db.auditLogs.create({
+    await db.auditLog.create({ data: {
       action: 'ADMIN_PROSPECT_APPROVE',
       details: `Admin approved waiting list entry for ${entry.name} (${entry.email}) and created user.`,
       userId: 'usr_admin'
-    });
+    } });
 
     return NextResponse.json({ success: true });
 
@@ -147,11 +147,11 @@ export async function DELETE(request: Request) {
     await db.waitingList.delete({ where: { id } });
 
     // Audit log
-    await db.auditLogs.create({
+    await db.auditLog.create({ data: {
       action: 'ADMIN_PROSPECT_DECLINE',
       details: `Admin declined waiting list entry for ${entry.name} (${entry.email}).`,
       userId: 'usr_admin'
-    });
+    } });
 
     return NextResponse.json({ success: true });
 

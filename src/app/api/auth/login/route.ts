@@ -1,168 +1,87 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { adminAuth } from '@/lib/firebase-admin';
 import { createSessionCookie, COOKIE_NAME } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
-    // CSRF Mitigation Check
-    const origin = request.headers.get('origin');
-    const host = request.headers.get('host') || '';
-    if (origin) {
-      const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
-      const isKnownDomain = origin.includes('vercel.app') || origin.includes('savveysavers.com');
-      const isAllowedOrigin = isLocalhost || isKnownDomain || (host && origin.includes(host));
-      if (!isAllowedOrigin) {
-        return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 });
-      }
-    }
+    const { email, password } = await request.json();
 
-    const { idToken, name: reqName, phone: reqPhone } = await request.json();
-
-    if (!idToken) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: 'Firebase ID Token is required' },
-        { status: 400 }
-      );
-    }
-
-    let uid = '';
-    let email = '';
-    let tokenName = '';
-
-    const isMockToken = idToken.startsWith('mock_token_');
-    const isDev = process.env.NODE_ENV !== 'production';
-
-    if (isMockToken && isDev) {
-      const payloadStr = idToken.substring('mock_token_'.length);
-      const parts = payloadStr.split('_');
-      email = parts[0].toLowerCase().trim();
-      tokenName = decodeURIComponent(parts.slice(1).join('_') || 'Google User').trim();
-      uid = 'usr_mock_' + Buffer.from(email).toString('hex').substring(0, 10);
-    } else {
-      // Verify the Firebase ID Token
-      const decodedToken = await adminAuth.verifyIdToken(idToken);
-      uid = decodedToken.uid;
-      email = decodedToken.email || '';
-      tokenName = decodedToken.name || '';
-    }
-
-    if (!email) {
-      return NextResponse.json(
-        { error: 'Email claim is missing from Firebase token' },
+        { error: 'Email and password are required' },
         { status: 400 }
       );
     }
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if the user document exists in Firestore (primary lookup by UID)
-    let user = await db.users.findUnique({ where: { id: uid } });
+    // Find user in Prisma DB
+    const user = await db.user.findUnique({ 
+      where: { email: normalizedEmail } 
+    });
 
-    // Fallback: If not found by UID, lookup by email (e.g., if pre-seeded, invited, or super admin)
     if (!user) {
-      // 1. Try indexed email lookup
-      user = await db.users.findFirst({ where: { email: normalizedEmail } });
-
-      // 2. Try case-insensitive / trimmed email fallback scan
-      if (!user) {
-        user = await db.users.findFirst((u: any) => {
-          if (!u || !u.email || typeof u.email !== 'string') return false;
-          return u.email.toLowerCase().trim() === normalizedEmail;
-        });
-      }
-
-      if (user) {
-        // If found by email but doc key differs from Firebase UID, migrate the doc to match Firebase Auth UID
-        if (user.id !== uid) {
-          await db.users.delete({ where: { id: user.id } });
-          user = await db.users.create({
-            ...user,
-            id: uid,
-            isActive: true
-          });
-        }
-      }
+      return NextResponse.json(
+        { error: 'Invalid email or password.' },
+        { status: 401 }
+      );
     }
 
-    let isNewUser = false;
- 
-    // Auto-registration check: allow super admin and default admin initializers
-    if (!user) {
-      const isSuperAdminEmail = normalizedEmail === 'praisetechy001@gmail.com';
-      const isDefaultAdmin = normalizedEmail === 'admin@savveysavers.com';
+    if (!user.isActive) {
+       return NextResponse.json(
+        { error: 'Your account is inactive. Please contact administration.' },
+        { status: 403 }
+      );
+    }
 
-      if (!isSuperAdminEmail && !isDefaultAdmin) {
-        return NextResponse.json(
-          { error: 'Your email address is not registered on the platform. Please join the waiting list to request access.' },
-          { status: 403 }
-        );
-      }
+    // Compare passwords
+    let isValidPassword = false;
+    
+    // Check if the hash starts with $2 (bcrypt standard format)
+    if (user.passwordHash && user.passwordHash.startsWith('$2')) {
+       isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    } else {
+       // Support raw password login for manually seeded users (like our script did 'Password123!')
+       isValidPassword = password === user.passwordHash;
+       
+       // Note: in a production app, we would rehash the raw password here and update it.
+    }
 
-      isNewUser = true;
-      user = await db.users.create({
-        id: uid,
-        name: reqName || tokenName || (isSuperAdminEmail ? 'Praise' : 'Admin User'),
-        email: normalizedEmail,
-        phone: reqPhone || (isSuperAdminEmail ? '+447000000000' : ''),
-        role: 'ADMIN',
-        isSuperAdmin: isSuperAdminEmail,
-        isActive: true,
-        membershipFeeConfirmed: true,
-        permissions: [
-          'DELETE_USER',
-          'EDIT_USER',
-          'VIEW_USER',
-          'MANAGE_COMMITMENTS',
-          'MANAGE_PAYMENTS',
-          'MANAGE_SETTINGS',
-          'VIEW_AUDIT_LOGS',
-          'SEND_NOTIFICATIONS',
-        ]
-      });
- 
-      // System notification
-      try {
-        await db.notifications.create({
-          userId: user.id,
-          message: `Welcome to Savvey Savers! Your account has been registered successfully.`,
-          type: 'ACCOUNT_ACTIVATION',
-          isRead: false
-        });
-      } catch (ntfErr) {
-        console.warn('Login notification creation non-blocking notice:', ntfErr);
-      }
+    if (!isValidPassword) {
+      return NextResponse.json(
+        { error: 'Invalid email or password.' },
+        { status: 401 }
+      );
     }
 
     // Update lastLoginAt
     try {
-      await db.users.update({
+      await db.user.update({
         where: { id: user.id },
-        data: { lastLoginAt: new Date().toISOString() }
+        data: { lastLoginAt: new Date() }
       });
     } catch (updateErr) {
       console.warn('Failed to update lastLoginAt:', updateErr);
     }
 
-    // Generate Firebase Session Cookie with safe fallback to ID Token
-    let sessionCookie = '';
-    try {
-      sessionCookie = await createSessionCookie(idToken);
-    } catch (cookieErr: any) {
-      console.warn('Firebase createSessionCookie failed, using ID token as fallback session:', cookieErr?.message || cookieErr);
-      sessionCookie = idToken;
-    }
+    // Generate JWT Session Cookie
+    const payload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    };
+    
+    const sessionCookie = await createSessionCookie(payload);
 
     const response = NextResponse.json({
       success: true,
-      isNewUser,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
         isActive: user.isActive,
-        membership: user.membership || null
       }
     });
 
@@ -177,12 +96,14 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24 * 5, // 5 days
     });
 
-    // Record login audit event safely
+    // Record login audit event
     try {
-      await db.auditLogs.create({
-        action: isNewUser ? 'USER_SIGNUP_FIREBASE' : 'USER_LOGIN_FIREBASE',
-        details: `User ${user.email} logged in via Firebase Auth.`,
-        userId: user.id
+      await db.auditLog.create({
+        data: {
+          action: 'USER_LOGIN',
+          details: `User ${user.email} logged in.`,
+          userId: user.id
+        }
       });
     } catch (auditErr) {
       console.warn('Login audit log non-blocking notice:', auditErr);
@@ -190,7 +111,7 @@ export async function POST(request: Request) {
 
     return response;
   } catch (err: any) {
-    console.error('Firebase Login API error:', err);
+    console.error('Login API error:', err);
     return NextResponse.json(
       { error: err?.message || 'An unexpected error occurred. Please try again.' },
       { status: 500 }

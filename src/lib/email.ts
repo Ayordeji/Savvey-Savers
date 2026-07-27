@@ -14,11 +14,13 @@ if (!resendApiKey) {
 export async function sendEmail({ to, subject, body }: { to: string; subject: string; body: string }) {
   try {
     // Record email in local database for developer dashboard previewing
-    await db.mockEmails.create({
-      to,
-      subject,
-      body,
-      sentAt: new Date().toISOString()
+    await db.mockEmail.create({
+      data: {
+        to,
+        subject,
+        body,
+        sentAt: new Date().toISOString()
+      }
     });
 
     if (resend) {

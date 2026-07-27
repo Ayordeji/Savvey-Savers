@@ -16,15 +16,15 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
-  const allUsers = await db.users.findMany();
+  const allUsers = await db.user.findMany();
 
   // Get commitments
   let commitments = [];
   if (session.role === 'ADMIN') {
-    commitments = await db.commitments.findMany();
+    commitments = await db.commitment.findMany();
   } else {
     // Member: own commitments only
-    commitments = await db.commitments.findMany((c) => c.memberId === session.id);
+    commitments = await db.commitment.findMany((c) => c.memberId === session.id);
   }
 
   const currentYear = new Date().getFullYear();
@@ -48,7 +48,7 @@ export async function GET() {
     if (c.collectionYear < currentYear) {
       status = 'COMPLETED';
     } else if (c.collectionYear > currentYear) {
-      status = 'NOT_YET_STARTED';
+      status = 'PENDING';
     } else if (!status || status === 'COMPLETED') {
       status = 'ACTIVE';
     }
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Member, goal, and amount are required.' }, { status: 400 });
     }
 
-    const member = await db.users.findUnique({ where: { id: targetMemberId } });
+    const member = await db.user.findUnique({ where: { id: targetMemberId } });
     if (!member) {
       return NextResponse.json({ error: 'Target member not found.' }, { status: 404 });
     }
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
 
     const currentYear = new Date().getFullYear();
     const status = startYear < currentYear ? 'COMPLETED' : (requestCollection ? 'PENDING' : 'ACTIVE');
-    const newCommitment = await db.commitments.create({
+    const newCommitment = await db.commitment.create({
       memberId: targetMemberId,
       amount: parseFloat(amount),
       goal,
@@ -126,9 +126,9 @@ export async function POST(request: Request) {
       });
 
       // Generate notifications for Admins
-      const admins = await db.users.findMany((u) => u.role === 'ADMIN');
+      const admins = await db.user.findMany((u) => u.role === 'ADMIN');
       for (const admin of admins) {
-        await db.notifications.create({
+        await db.notification.create({
           userId: admin.id,
           message: `Collection month requested by ${member.name} for ${startMonth} ${startYear}.`,
           type: 'COLLECTION_REQUESTED',
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
       }
 
       // Member personal notification
-      await db.notifications.create({
+      await db.notification.create({
         userId: member.id,
         message: `Your request for collection month ${startMonth} ${startYear} is submitted and pending approval.`,
         type: 'COLLECTION_REQUESTED',
@@ -145,7 +145,7 @@ export async function POST(request: Request) {
       });
     } else {
       // Standard active notification
-      await db.notifications.create({
+      await db.notification.create({
         userId: member.id,
         message: `New savings commitment of £${amount} created for ${goal}.`,
         type: 'COMMITMENT_CREATED',
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
     }
 
     // Audit log
-    await db.auditLogs.create({
+    await db.auditLog.create({
       action: 'COMMITMENT_ADD',
       details: `Savings commitment for ${member.name} (£${amount}/mo for ${goal}) created. Request collection: ${requestCollection}.`,
       userId: session.id
@@ -178,13 +178,13 @@ export async function PUT(request: Request) {
   try {
     const { id, amount, goal, collectionMonth, collectionYear, status } = await request.json();
 
-    const cmt = await db.commitments.findUnique({ where: { id } });
+    const cmt = await db.commitment.findUnique({ where: { id } });
     if (!cmt) {
       return NextResponse.json({ error: 'Commitment not found.' }, { status: 404 });
     }
 
     // Update
-    await db.commitments.update({
+    await db.commitment.update({
       where: { id },
       data: {
         amount: amount ? parseFloat(amount) : cmt.amount,
@@ -195,7 +195,7 @@ export async function PUT(request: Request) {
       }
     });
 
-    await db.auditLogs.create({
+    await db.auditLog.create({
       action: 'ADMIN_COMMITMENT_UPDATE',
       details: `Admin updated savings commitment record ${id}.`,
       userId: 'usr_admin'
@@ -234,23 +234,23 @@ export async function DELETE(request: Request) {
         const numPart = rawId.substring(4); // strip "SCC-"
         // Try cmt_ prefix first (legacy format)
         const legacyId = `cmt_${numPart}`;
-        const legacyDoc = await db.commitments.findUnique({ where: { id: legacyId } });
+        const legacyDoc = await db.commitment.findUnique({ where: { id: legacyId } });
         if (legacyDoc) {
           resolvedId = legacyId;
         }
         // else keep as SCC- (native format from our migration import)
       }
 
-      const cmt = await db.commitments.findUnique({ where: { id: resolvedId } });
+      const cmt = await db.commitment.findUnique({ where: { id: resolvedId } });
       if (!cmt) {
         // Last-ditch: scan by querying all to find by the display id field or stored id
-        const all = await db.commitments.findMany();
+        const all = await db.commitment.findMany();
         const found = all.find((c: any) => c.id === rawId || c.id === resolvedId);
         if (!found) continue;
         resolvedId = found.id;
       }
 
-      const finalCmt = await db.commitments.findUnique({ where: { id: resolvedId } });
+      const finalCmt = await db.commitment.findUnique({ where: { id: resolvedId } });
       if (!finalCmt) continue;
 
       const archivedData = {
@@ -258,15 +258,15 @@ export async function DELETE(request: Request) {
         status: 'CANCELLED'
       };
 
-      await db.deletedRecords.create({
+      await db.deletedRecord.create({
         type: 'COMMITMENT',
         originalData: archivedData,
         deletedAt: new Date().toISOString()
       });
 
-      await db.commitments.delete({ where: { id: resolvedId } });
+      await db.commitment.delete({ where: { id: resolvedId } });
 
-      await db.auditLogs.create({
+      await db.auditLog.create({
         action: 'ADMIN_COMMITMENT_CANCEL',
         details: `Admin deleted and archived savings commitment ${resolvedId} for member ${finalCmt.memberId}.`,
         userId: session.id || 'usr_admin'

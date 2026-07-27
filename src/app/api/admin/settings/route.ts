@@ -12,12 +12,12 @@ async function getUserSession() {
 
 export async function GET() {
   // Publicly accessible settings for landing page and dashboard
-  const savingGoals = (await db.settings.findUnique({ where: { key: 'savingGoals' } }))?.value || [];
-  const commitmentAmounts = (await db.settings.findUnique({ where: { key: 'commitmentAmounts' } }))?.value || [];
-  const membershipAgreement = (await db.settings.findUnique({ where: { key: 'membershipAgreement' } }))?.value || null;
-  const feeSchedule = (await db.settings.findUnique({ where: { key: 'feeSchedule' } }))?.value || null;
+  const savingGoals = (await db.setting.findUnique({ where: { key: 'savingGoals' } }))?.value || [];
+  const commitmentAmounts = (await db.setting.findUnique({ where: { key: 'commitmentAmounts' } }))?.value || [];
+  const membershipAgreement = (await db.setting.findUnique({ where: { key: 'membershipAgreement' } }))?.value || null;
+  const feeSchedule = (await db.setting.findUnique({ where: { key: 'feeSchedule' } }))?.value || null;
 
-  const securityQuestions = (await db.settings.findUnique({ where: { key: 'securityQuestions' } }))?.value || [
+  const securityQuestions = (await db.setting.findUnique({ where: { key: 'securityQuestions' } }))?.value || [
     "What was the name of your first primary school?",
     "What is your mother's maiden name?",
     "What city were you born in?",
@@ -25,14 +25,14 @@ export async function GET() {
     "What is your favorite book title?"
   ];
 
-  const collectionMonthsMap = (await db.settings.findUnique({ where: { key: 'collectionMonthsMap' } }))?.value || {
+  const collectionMonthsMap = (await db.setting.findUnique({ where: { key: 'collectionMonthsMap' } }))?.value || {
     "100.00": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     "250.00": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     "300.00": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     "500.00": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
   };
 
-  const notificationSettings = (await db.settings.findUnique({ where: { key: 'notificationSettings' } }))?.value || {
+  const notificationSettings = (await db.setting.findUnique({ where: { key: 'notificationSettings' } }))?.value || {
     emailOnInvite: true,
     emailOnPayment: true,
     emailOnPayout: true,
@@ -74,7 +74,7 @@ export async function GET() {
     { id: "32", title: "Inactive Member", reminderHours: "N/A", enabled: true, subject: "Your Membership Has Been Deactivated", body: "Dear {{MemberName}},\n\nDue to an extended period of inactivity, your access to the Members’ Portal has been deactivated.\n\nYou’re always welcome to return to Savvey Savers Collective in the future. If you would like to rejoin, please contact your Dedicated Relationship Manager, who will be happy to assist you. You can also continue to visit our website to stay up to date with the latest news and activities.\n\nWe wish you every success in your savings journey and hope to welcome you back in the future.\n\nKind regards,\nPlatform Support\nSavvey Savers Collective" }
   ];
 
-  const dbEmailTemplates = (await db.settings.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
+  const dbEmailTemplates = (await db.setting.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
   const existingIds = new Set((dbEmailTemplates as any[]).map((t: any) => t.id));
   const emailTemplates = [
     ...dbEmailTemplates,
@@ -107,24 +107,24 @@ export async function POST(request: Request) {
     }
 
     // Save/update settings
-    const existing = await db.settings.findUnique({ where: { key } });
+    const existing = await db.setting.findUnique({ where: { key } });
     if (existing) {
-      await db.settings.update({
+      await db.setting.update({
         where: { key },
         data: { value }
       });
     } else {
-      await db.settings.create({
+      await db.setting.create({
         key,
         value
       });
     }
 
-    await db.auditLogs.create({
+    await db.auditLog.create({ data: {
       action: 'ADMIN_SETTINGS_UPDATE',
       details: `Admin updated settings configuration for key: ${key}.`,
       userId: 'usr_admin'
-    });
+    } });
 
     return NextResponse.json({ success: true });
 

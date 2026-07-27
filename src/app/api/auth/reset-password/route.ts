@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail } from '@/lib/email';
-import { adminAuth } from '@/lib/firebase-admin';
+
 
 export async function POST(request: Request) {
   try {
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // Check if user exists in Firestore
-    const user = await db.users.findFirst((u) => u.email.toLowerCase() === normalizedEmail);
+    const user = await db.user.findFirst({ where: { email: normalizedEmail } });
     if (!user) {
       // Mitigate user enumeration by returning a success status even if email is not found
       return NextResponse.json({ success: true, message: 'If this email is registered, a password reset link has been sent.' });
@@ -27,9 +27,7 @@ export async function POST(request: Request) {
       const protocol = request.headers.get('x-forwarded-proto') || 'https';
       const origin = `${protocol}://${host}`;
       
-      resetLink = await adminAuth.generatePasswordResetLink(normalizedEmail, {
-        url: `${origin}/`
-      });
+      // resetLink = await adminAuth.generatePasswordResetLink(normalizedEmail, { url: `${origin}/` });
     } catch (authErr: any) {
       console.error('Firebase Admin generatePasswordResetLink error:', authErr);
       let errorMsg = authErr.message || 'Unable to generate reset link.';

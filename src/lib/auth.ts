@@ -1,63 +1,43 @@
-import { adminAuth, adminDb } from './firebase-admin';
+import { SignJWT, jwtVerify } from 'jose';
+import { cookies } from 'next/headers';
 
-export const COOKIE_NAME = process.env.NODE_ENV === 'production' ? '__Host-savvey-session' : 'savvey-session';
+export const COOKIE_NAME = 'savvey-session';
 
-// Firebase Session Cookie creation helper
-export async function createSessionCookie(idToken: string): Promise<string> {
-  const expiresIn = 1000 * 60 * 60 * 24 * 5; // 5 days session
-  return adminAuth.createSessionCookie(idToken, { expiresIn });
+const secretKey = process.env.JWT_SECRET || 'super_secret_savvey_savers_key_2026_!@#$';
+const encodedKey = new TextEncoder().encode(secretKey);
+
+export async function createSessionCookie(payload: any): Promise<string> {
+  const jwt = await new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('5d')
+    .sign(encodedKey);
+  
+  return jwt;
 }
 
-// Firebase Session Cookie verification helper
-// Maps the session's decoded UID to user id, email, and role
 export async function verifyToken(token: string): Promise<{ id: string; email?: string; role: 'ADMIN' | 'MEMBER' } | null> {
+  if (!token) return null;
+  
   try {
-    let decodedClaims: any;
-    try {
-      decodedClaims = await adminAuth.verifySessionCookie(token, true);
-    } catch (cookieErr) {
-      decodedClaims = await adminAuth.verifyIdToken(token);
-    }
-
-    if (!decodedClaims || !decodedClaims.uid) {
-      return null;
-    }
-
-    const userId = decodedClaims.uid;
-    const userEmail = (decodedClaims.email || '').toLowerCase().trim();
-
-    if (userId === '3MMvFU6ucAXqmPhalkQOoMsbMMu1' || userEmail === 'praisetechy001@gmail.com') {
-      return { id: userId, email: userEmail, role: 'ADMIN' };
-    }
-
-    try {
-      // Fetch user from Firestore to retrieve their role
-      const userDoc = await adminDb.collection('users').doc(userId).get();
-      if (!userDoc.exists) {
-        return null;
-      }
-
-      const userData = userDoc.data();
-      return {
-        id: userId,
-        email: userEmail,
-        role: userData?.role === 'ADMIN' ? 'ADMIN' : 'MEMBER'
-      };
-    } catch (dbErr: any) {
-      console.warn('verifyToken db lookup error (quota or network):', dbErr?.message || dbErr);
-      if (userEmail === 'praisetechy001@gmail.com' || userEmail === 'admin@savveysavers.com') {
-        return { id: userId, email: userEmail, role: 'ADMIN' };
-      }
-      // Fallback to MEMBER role for valid tokens when Firestore fails
-      return { id: userId, email: userEmail, role: 'MEMBER' };
-    }
-  } catch (err) {
-    if (token && token.startsWith('mock_token_')) {
-      const emailPart = token.replace('mock_token_', '').split('_')[0] || '';
-      const email = emailPart.toLowerCase().trim();
-      const role = (email === 'praisetechy001@gmail.com' || email === 'admin@savveysavers.com') ? 'ADMIN' : 'MEMBER';
-      return { id: `mock_${email}`, email, role };
-    }
+    const { payload } = await jwtVerify(token, encodedKey, {
+      algorithms: ['HS256'],
+    });
+    
+    return {
+      id: payload.id as string,
+      email: payload.email as string,
+      role: payload.role as 'ADMIN' | 'MEMBER',
+    };
+  } catch (error) {
+    console.error('Failed to verify token:', error);
     return null;
   }
+}
+
+export async function getSession() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get(COOKIE_NAME)?.value;
+  if (!session) return null;
+  return await verifyToken(session);
 }

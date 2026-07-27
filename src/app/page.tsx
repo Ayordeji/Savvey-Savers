@@ -2,17 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock, Mail, User, Phone, PiggyBank, ArrowRight, CheckCircle2, Eye, EyeOff, FileText, CalendarRange, Star, X } from 'lucide-react';
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
-  sendPasswordResetEmail,
-  signInWithRedirect,
-  getRedirectResult
-} from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { Eye, EyeOff, Lock, Mail, ArrowRight, User, Phone, CheckCircle2, X, Star } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -77,30 +67,6 @@ export default function Home() {
   const [waitSuccess, setWaitSuccess] = useState(false);
   const [waitError, setWaitError] = useState('');
 
-  // Check if Firebase is configured, otherwise fallback to simulator
-  const isFirebaseConfigured = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== 'mock-api-key';
-
-  useEffect(() => {
-    if (isFirebaseConfigured) {
-      getRedirectResult(auth)
-        .then(async (userCredential) => {
-          if (userCredential) {
-            setGoogleLoading(true);
-            const idToken = await userCredential.user.getIdToken();
-            await handleGoogleAuth(idToken);
-          }
-        })
-        .catch((err) => {
-          console.error('Redirect auth error:', err);
-          let message = `Google sign-in failed (${err.code || err.message}). Please try again.`;
-          if (err.code === 'auth/popup-blocked') {
-            message = 'Google sign-in popup was blocked by your browser. Please enable popups or try again.';
-          }
-          setGoogleError(message);
-        });
-    }
-  }, [isFirebaseConfigured]);
-
   // Auto-dismiss errors and status messages after 5 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -134,20 +100,16 @@ export default function Home() {
     setResetMessage('');
 
     try {
-      if (isFirebaseConfigured) {
-        const res = await fetch('/api/auth/reset-password', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: resetEmail })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setResetMessage(data.message || `A password reset link has been successfully sent to ${resetEmail} via Resend.`);
-        } else {
-          setResetError(data.error || 'Failed to send password reset email.');
-        }
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetEmail })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResetMessage(data.message || `A password reset link has been successfully sent to ${resetEmail}.`);
       } else {
-        setResetMessage(`[Simulator Mode] Reset link generated for ${resetEmail}.`);
+        setResetError(data.error || 'Failed to send password reset email.');
       }
     } catch (err: any) {
       console.error('Password reset error:', err);
@@ -163,22 +125,10 @@ export default function Home() {
     setLoginError('');
 
     try {
-      let idToken = '';
-      
-      if (isFirebaseConfigured) {
-        // 1. Sign in with Firebase Client Auth
-        const userCredential = await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
-        idToken = await userCredential.user.getIdToken();
-      } else {
-        // Fallback simulator: create a mock token
-        idToken = `mock_token_${loginEmail.trim()}_Registered User`;
-      }
-
-      // 2. Exchange token with local Next.js session route
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
       });
 
       const data = await res.json();
@@ -190,14 +140,8 @@ export default function Home() {
         setLoginError(data.error || 'Login failed. Please try again.');
       }
     } catch (err: any) {
-      console.error('Firebase Login Error:', err);
-      let message = 'Login failed. Please check your credentials.';
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        message = 'Invalid email or password.';
-      } else if (err.code === 'auth/invalid-email') {
-        message = 'Please enter a valid email address.';
-      }
-      setLoginError(message);
+      console.error('Login Error:', err);
+      setLoginError('A network error occurred. Please try again.');
     } finally {
       setLoginLoading(false);
     }
@@ -205,70 +149,8 @@ export default function Home() {
 
 
 
-  const handleGoogleAuth = async (idToken: string) => {
-    setGoogleLoading(true);
-    setGoogleError('');
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        router.push('/dashboard');
-        router.refresh();
-      } else {
-        setGoogleError(data.error || 'Google authentication failed.');
-      }
-    } catch (err) {
-      setGoogleError('A network error occurred during Google authentication.');
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
   const handleGoogleLogin = async () => {
-    if (!isFirebaseConfigured) {
-      // Trigger simulation mode view
-      setShowGoogleSimulator(true);
-      setSimulatorEmail('');
-      setSimulatorName('');
-      setGoogleError('');
-      return;
-    }
-
-    setGoogleLoading(true);
-    setGoogleError('');
-    try {
-      const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(auth, provider);
-      const idToken = await userCredential.user.getIdToken();
-      await handleGoogleAuth(idToken);
-    } catch (err: any) {
-      console.error('Google Sign In Error:', err);
-      let message = `Google sign-in failed (${err.code || err.message}). Please try again.`;
-      if (err.code === 'auth/popup-closed-by-user') {
-        message = 'Google sign-in popup was closed before authentication.';
-      } else if (err.code === 'auth/blocked-by-project') {
-        message = 'Google sign-in is blocked. Check your Firebase console configuration.';
-      } else if (err.code === 'auth/popup-blocked') {
-        console.log('Popup blocked. Falling back to signInWithRedirect...');
-        try {
-          const provider = new GoogleAuthProvider();
-          await signInWithRedirect(auth, provider);
-          return;
-        } catch (redirectErr: any) {
-          console.error('Google Redirect Error:', redirectErr);
-          message = `Google sign-in was blocked and redirect fallback failed (${redirectErr.code || redirectErr.message}).`;
-        }
-      }
-      setGoogleError(message);
-      setGoogleLoading(false);
-    }
+     setGoogleError('Google sign in is currently disabled during system upgrade.');
   };
 
   const handleWaitingList = async (e: React.FormEvent) => {

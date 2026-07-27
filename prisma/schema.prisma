@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                       String    @id @default(uuid())
+  name                     String
+  firstName                String?
+  lastName                 String?
+  email                    String    @unique
+  passwordHash             String?
+  phone                    String?
+  role                     String    @default("MEMBER") // 'ADMIN' or 'MEMBER'
+  isActive                 Boolean   @default(true)
+  membership               String?
+  invitationId             String?
+  invitationExpiresAt      DateTime?
+  addressLine1             String?
+  addressLine2             String?
+  city                     String?
+  postCode                 String?
+  country                  String?
+  permissions              String[]
+  membershipFeeConfirmed   Boolean?
+  membershipFeeConfirmedAt DateTime?
+  termsAccepted            Boolean?
+  isSuperAdmin             Boolean?
+  lastLoginAt              DateTime?
+  invitedBy                String?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  commitments              Commitment[]
+  payments                 Payment[]
+  notifications            Notification[]
+  requests                 SubmittedRequest[]
+  auditLogs                AuditLog[]
+  membershipFeeRecords     MembershipFeeRecord[]
+}
+
+model Commitment {
+  id              String    @id @default(uuid())
+  memberId        String
+  memberName      String?
+  amount          Float
+  goal            String
+  collectionMonth String
+  collectionYear  Int
+  endDate         DateTime?
+  status          String    @default("PENDING") // 'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'NOT_YET_STARTED'
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  payments        Payment[]
+  requests        SubmittedRequest[]
+}
+
+model Payment {
+  id            String    @id @default(uuid())
+  commitmentId  String
+  amount        Float
+  month         String
+  year          Int
+  status        String    @default("PENDING") // 'PENDING' | 'CONFIRMED'
+  confirmedAt   DateTime?
+  confirmedById String?
+  receiptUrl    String?
+  createdAt     DateTime  @default(now())
+
+  commitment    Commitment @relation(fields: [commitmentId], references: [id], onDelete: Cascade)
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SubmittedRequest {
+  id             String   @id @default(uuid())
+  userId         String
+  commitmentId   String
+  requestedMonth String
+  requestedYear  Int
+  status         String   @default("PENDING") // 'PENDING' | 'APPROVED' | 'REJECTED'
+  createdAt      DateTime @default(now())
+
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commitment     Commitment @relation(fields: [commitmentId], references: [id], onDelete: Cascade)
+}
+
+model WaitingList {
+  id                       String   @id @default(uuid())
+  name                     String
+  email                    String
+  phone                    String
+  monthlySavingsCommitment Float
+  isReferred               Boolean  @default(false)
+  referredBy               String?
+  createdAt                DateTime @default(now())
+}
+
+model Setting {
+  key   String @id
+  value Json
+}
+
+model MockEmail {
+  id        String    @id @default(uuid())
+  to        String
+  subject   String
+  body      String
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  details   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MembershipFeeRecord {
+  id          String   @id @default(uuid())
+  userId      String
+  year        Int
+  baseFee     Float
+  adminFee    Float
+  totalFee    Float
+  status      String   @default("PENDING") // 'PENDING' | 'PAID'
+  requestedAt DateTime @default(now())
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

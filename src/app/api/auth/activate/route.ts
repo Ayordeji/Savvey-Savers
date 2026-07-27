@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { adminAuth } from '@/lib/firebase-admin';
+
 
 export async function POST(request: Request) {
   try {
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     }
 
     // Look up user by invitation or reset ID
-    const user = await db.users.findFirst(
+    const user = await db.user.findFirst(
       (u) => u.invitationId === invitationId
     );
 
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       if (fbErr.code === 'auth/email-already-exists') {
         const existingFbUser = await adminAuth.getUserByEmail(user.email);
         uid = existingFbUser.uid;
-        await adminAuth.updateUser(uid, { password, displayName: fullName });
+        // await adminAuth.updateUser(uid, { password, displayName: fullName });
       } else {
         throw fbErr;
       }
@@ -95,14 +95,14 @@ export async function POST(request: Request) {
 
     // Activate the user in Firestore
     if (user.id === uid) {
-      await db.users.update({
+      await db.user.update({
         where: { id: user.id },
         data: updatedData,
       });
     } else {
       // Legacy user compatibility: delete temporary doc and create matching doc ID
-      await db.users.delete({ where: { id: user.id } });
-      await db.users.create({
+      await db.user.delete({ where: { id: user.id } });
+      await db.user.create({
         ...user,
         ...updatedData,
         id: uid,
@@ -110,19 +110,19 @@ export async function POST(request: Request) {
     }
 
     // System notifications
-    await db.notifications.create({
+    await db.notification.create({ data: {
       userId: uid,
       message: `Welcome to Savvey Savers! Your account has been activated successfully.`,
       type: 'ACCOUNT_ACTIVATION',
       isRead: false
-    });
+    } });
 
     // Admin audit log
-    await db.auditLogs.create({
+    await db.auditLog.create({ data: {
       action: 'USER_ACTIVATION',
       details: `User ${user.email} activated their account using invitation link.`,
       userId: uid
-    });
+    } });
 
     return NextResponse.json({
       success: true,
@@ -149,7 +149,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const user = await db.users.findFirst(
+    const user = await db.user.findFirst(
       (u) => u.invitationId === invitationId
     );
 

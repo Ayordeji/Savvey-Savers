@@ -152,7 +152,7 @@ function CommitmentsReportContent() {
 
   const handleExportCSV = () => {
     if (filteredCommitments.length === 0) return;
-    const headers = ['RECORD ID', 'MEMBER NAME', 'SAVINGS AMOUNT', 'SAVINGS GOAL', 'COLLECTION MONTH', 'END DATE', 'STATUS'];
+    const headers = ['Record ID', 'Member Name', 'Savings Amount (£)', 'Collection Month', 'Collection Year', 'Status'];
     const rows = filteredCommitments.map(c => [
       `"${c.id}"`,
       `"${c.memberName.replace(/"/g, '""')}"`,
@@ -236,7 +236,7 @@ function CommitmentsReportContent() {
               <tr>
                 <th onClick={() => requestSort('id')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>RECORD ID</span>
+                    <span>Record ID</span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
                       {sortConfig?.key === 'id' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
                     </span>
@@ -244,7 +244,7 @@ function CommitmentsReportContent() {
                 </th>
                 <th onClick={() => requestSort('memberName')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>MEMBER NAME</span>
+                    <span>Member Name</span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
                       {sortConfig?.key === 'memberName' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
                     </span>
@@ -252,23 +252,16 @@ function CommitmentsReportContent() {
                 </th>
                 <th onClick={() => requestSort('amount')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>SAVINGS AMOUNT</span>
+                    <span>Savings Amount (£)</span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
                       {sortConfig?.key === 'amount' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
                     </span>
                   </div>
                 </th>
-                <th onClick={() => requestSort('goal')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>SAVINGS GOAL</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'goal' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
-                </th>
+                
                 <th onClick={() => requestSort('collectionMonth')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>COLLECTION MONTH</span>
+                    <span>Collection Month</span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
                       {sortConfig?.key === 'collectionMonth' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
                     </span>
@@ -276,7 +269,7 @@ function CommitmentsReportContent() {
                 </th>
                 <th onClick={() => requestSort('endDate')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>END DATE</span>
+                    <span>Collection Year</span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
                       {sortConfig?.key === 'endDate' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
                     </span>
@@ -284,7 +277,7 @@ function CommitmentsReportContent() {
                 </th>
                 <th onClick={() => requestSort('status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>STATUS</span>
+                    <span>Status</span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
                       {sortConfig?.key === 'status' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
                     </span>
@@ -304,12 +297,12 @@ function CommitmentsReportContent() {
                     </div>
                   </td>
                   <td style={{ fontWeight: 600, color: '#16a34a' }}>£{Number(cmt.amount).toFixed(2)}</td>
-                  <td>{cmt.goal}</td>
+                  
                   <td className={styles.dateCell}>{cmt.collectionMonth} {cmt.collectionYear}</td>
-                  <td className={styles.dateCell}>{cmt.endDate || `December ${cmt.collectionYear}`}</td>
+                  <td className={styles.dateCell}>{cmt.collectionYear}</td>
                   <td>
                     <span className={`status-pill ${cmt.status.toLowerCase().replace(/_/g, '-')}`}>
-                      {cmt.status === 'NOT_YET_STARTED' ? 'Not yet started' : cmt.status}
+                      {cmt.status === 'PENDING' ? 'Pending' : cmt.status.charAt(0).toUpperCase() + cmt.status.slice(1).toLowerCase()}
                     </span>
                   </td>
                 </tr>
@@ -377,18 +370,15 @@ function CommitmentsReportContent() {
                 <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>{selectedCmt.collectionMonth} {selectedCmt.collectionYear}</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Monthly Savings Amount</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Savings Amount (£)</span>
                 <div style={{ fontWeight: 700, color: '#16a34a', marginTop: '4px', fontSize: '1rem' }}>£{Number(selectedCmt.amount).toFixed(2)}</div>
               </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Savings Goal</span>
-                <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>{selectedCmt.goal}</div>
-              </div>
+              
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</span>
                 <div style={{ marginTop: '4px' }}>
                   <span className={`status-pill ${selectedCmt.status.toLowerCase().replace(/_/g, '-')}`} style={{ fontSize: '0.72rem' }}>
-                    {selectedCmt.status === 'NOT_YET_STARTED' ? 'Not yet started' : selectedCmt.status}
+                    {selectedCmt.status === 'PENDING' ? 'Pending' : selectedCmt.status.charAt(0).toUpperCase() + selectedCmt.status.slice(1).toLowerCase()}
                   </span>
                 </div>
               </div>

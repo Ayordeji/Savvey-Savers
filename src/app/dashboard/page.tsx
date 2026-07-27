@@ -37,7 +37,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     redirect('/');
   }
 
-  const user = await db.users.findUnique({ where: { id: payload.id } });
+  const user = await db.user.findUnique({ where: { id: payload.id } });
   if (!user) {
     redirect('/');
   }
@@ -66,8 +66,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   if (isAdmin) {
     // Admin: Dynamic aggregation from live imported database records
-    const allCommitments = await db.commitments.findMany();
-    const rawUsers = await db.users.findMany();
+    const allCommitments = await db.commitment.findMany();
+    const rawUsers = await db.user.findMany();
 
     // 1. Deduplicate members for user counts
     const uniqueMap = new Map<string, any>();

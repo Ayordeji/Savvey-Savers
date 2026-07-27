@@ -19,8 +19,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import styles from './layout.module.css';
-import { auth } from '@/lib/firebase';
-import { signOut } from 'firebase/auth';
+
 
 interface SidebarProps {
   user: {
@@ -93,7 +92,6 @@ export default function Sidebar({ user }: SidebarProps) {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await signOut(auth);
       const response = await fetch('/api/auth/logout', { method: 'POST' });
       if (response.ok) {
         router.push('/');

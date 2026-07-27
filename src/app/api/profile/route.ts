@@ -9,9 +9,9 @@ async function getAuthUser() {
   if (!token) return null;
   const payload = await verifyToken(token);
   if (!payload) return null;
-  let user = await db.users.findUnique({ where: { id: payload.id } });
+  let user = await db.user.findUnique({ where: { id: payload.id } });
   if (!user && payload.email) {
-    user = await db.users.findUnique({ where: { email: payload.email } });
+    user = await db.user.findUnique({ where: { email: payload.email } });
   }
   return user;
 }
@@ -62,7 +62,7 @@ export async function PUT(req: Request) {
     const updatedLastName = (lastName || '').trim();
     const fullName = `${updatedFirstName} ${updatedLastName}`.trim() || user.name;
 
-    const updatedUser = await db.users.update({
+    const updatedUser = await db.user.update({
       where: { id: user.id },
       data: {
         firstName: updatedFirstName,

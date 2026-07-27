@@ -19,9 +19,9 @@ export async function GET() {
   // Get notifications (Admin gets all, Member gets own)
   let notifications = [];
   if (session.role === 'ADMIN') {
-    notifications = await db.notifications.findMany();
+    notifications = await db.notification.findMany();
   } else {
-    notifications = await db.notifications.findMany((n) => n.userId === session.id);
+    notifications = await db.notification.findMany({ where: { userId: session.id } });
   }
 
   // Sort newest first
@@ -40,19 +40,19 @@ export async function POST(request: Request) {
   const id = searchParams.get('id');
 
   if (id) {
-    const notification = await db.notifications.findUnique({ where: { id } });
+    const notification = await db.notification.findUnique({ where: { id } });
     if (notification) {
-      await db.notifications.update({
+      await db.notification.update({
         where: { id },
         data: { isRead: true }
       });
     }
   } else {
-    const userNotifications = await db.notifications.findMany(
+    const userNotifications = await db.notification.findMany(
       (n) => n.userId === session.id && !n.isRead
     );
     for (const n of userNotifications) {
-      await db.notifications.update({
+      await db.notification.update({
         where: { id: n.id },
         data: { isRead: true }
       });
@@ -73,7 +73,7 @@ export async function DELETE(request: Request) {
     const id = searchParams.get('id');
 
     if (id) {
-      const notification = await db.notifications.findUnique({ where: { id } });
+      const notification = await db.notification.findUnique({ where: { id } });
       if (!notification) {
         return NextResponse.json({ error: 'Notification not found.' }, { status: 404 });
       }
@@ -83,17 +83,17 @@ export async function DELETE(request: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
-      await db.notifications.delete({ where: { id } });
+      await db.notification.delete({ where: { id } });
     } else {
       // Wipes all notifications visible to this user
       let userNotifications = [];
       if (session.role === 'ADMIN') {
-        userNotifications = await db.notifications.findMany();
+        userNotifications = await db.notification.findMany();
       } else {
-        userNotifications = await db.notifications.findMany((n) => n.userId === session.id);
+        userNotifications = await db.notification.findMany({ where: { userId: session.id } });
       }
       for (const n of userNotifications) {
-        await db.notifications.delete({ where: { id: n.id } });
+        await db.notification.delete({ where: { id: n.id } });
       }
     }
 

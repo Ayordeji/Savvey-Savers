@@ -27,10 +27,10 @@ export default async function DashboardLayout({
     redirect('/');
   }
 
-  let user = await db.users.findUnique({ where: { id: payload.id } });
+  let user = await db.user.findUnique({ where: { id: payload.id } });
   
   if (!user && payload.email) {
-    user = await db.users.findUnique({ where: { email: payload.email } });
+    user = await db.user.findUnique({ where: { email: payload.email } });
   }
 
   if (!user) {
@@ -38,9 +38,9 @@ export default async function DashboardLayout({
   }
 
   // Count unread notifications
-  const unreadNotifications = await db.notifications.findMany(
-    (n) => n.userId === user.id && !n.isRead
-  );
+  const unreadNotifications = await db.notification.findMany({
+    where: { userId: user.id, isRead: false }
+  });
   const unreadCount = unreadNotifications.length;
 
   return (
@@ -51,8 +51,8 @@ export default async function DashboardLayout({
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role,
-        membership: user.membership
+        role: user.role as 'ADMIN' | 'MEMBER',
+        membership: user.membership || undefined
       }} />
 
       <main className={styles.mainContent}>
@@ -61,8 +61,8 @@ export default async function DashboardLayout({
             id: user.id,
             name: user.name,
             email: user.email,
-            role: user.role,
-            membership: user.membership,
+            role: user.role as 'ADMIN' | 'MEMBER',
+            membership: user.membership || undefined,
             displayId: (user as any).displayId || user.id
           }}
           unreadCount={unreadCount}

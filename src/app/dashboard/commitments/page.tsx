@@ -773,14 +773,14 @@ function CommitmentsContent() {
                     </span>
                   </div>
                 </th>
-                <th onClick={() => requestSort('endDate')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>End Date</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'endDate' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
-                </th>
+                <th onClick={() => requestSort('collectionYear')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+      <span>Collection Year</span>
+      <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+        {sortConfig?.key === 'collectionYear' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+      </span>
+    </div>
+  </th>
                 <th onClick={() => requestSort('status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     <span>Status</span>
@@ -808,7 +808,7 @@ function CommitmentsContent() {
                     : (users.find(u => u.id === c.memberId || u.invitationId === c.memberId || u.name?.toLowerCase() === c.memberName?.toLowerCase())?.name || 'Member');
                   
                   const formatStatusText = (st: string) => {
-                    if (st === 'NOT_YET_STARTED') return 'Not yet started';
+                    if (st === 'NOT_YET_STARTED') return 'Pending';
                     if (st === 'ACTIVE') return 'Active';
                     if (st === 'COMPLETED') return 'Completed';
                     if (st === 'PENDING') return 'Pending';
@@ -853,7 +853,7 @@ function CommitmentsContent() {
                         </td>
                         <td onClick={() => handleRowClick(c.id)}>£{Number(c.amount).toFixed(2)}</td>
                         <td onClick={() => handleRowClick(c.id)}>{c.collectionMonth} {c.collectionYear}</td>
-                        <td onClick={() => handleRowClick(c.id)}>{c.endDate || `December ${c.collectionYear}`}</td>
+                        <td onClick={() => handleRowClick(c.id)}>{c.collectionYear}</td>
                         <td onClick={() => handleRowClick(c.id)}>
                           <span className={`status-pill ${c.status.toLowerCase().replace(/_/g, '-')}`}>
                             {formatStatusText(c.status)}
@@ -1202,18 +1202,15 @@ function CommitmentsContent() {
                 <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>{selectedCmt.collectionMonth} {selectedCmt.collectionYear}</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Monthly Savings Amount</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Savings Amount (£)</span>
                 <div style={{ fontWeight: 700, color: '#16a34a', marginTop: '4px', fontSize: '1rem' }}>£{Number(selectedCmt.amount).toFixed(2)}</div>
               </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Savings Goal</span>
-                <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>{selectedCmt.goal}</div>
-              </div>
+              
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</span>
                 <div style={{ marginTop: '4px' }}>
                   <span className={`status-pill ${selectedCmt.status.toLowerCase().replace(/_/g, '-')}`} style={{ fontSize: '0.72rem' }}>
-                    {selectedCmt.status === 'NOT_YET_STARTED' ? 'Not yet started' : selectedCmt.status}
+                    {selectedCmt.status === 'NOT_YET_STARTED' ? 'Pending' : selectedCmt.status}
                   </span>
                 </div>
               </div>

@@ -10,9 +10,9 @@ async function checkAdminUser() {
   if (!token) return null;
   const payload = await verifyToken(token);
   if (!payload || payload.role !== 'ADMIN') return null;
-  let user = await db.users.findUnique({ where: { id: payload.id } });
+  let user = await db.user.findUnique({ where: { id: payload.id } });
   if (!user && payload.email) {
-    user = await db.users.findUnique({ where: { email: payload.email } });
+    user = await db.user.findUnique({ where: { email: payload.email } });
   }
   return user;
 }
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     };
 
     // Cache of existing users by email and invitationId for fast lookup
-    const existingUsersList = await db.users.findMany();
+    const existingUsersList = await db.user.findMany();
     const userByEmailMap = new Map<string, any>();
     const userByMemberIdMap = new Map<string, any>();
 
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
             createdAt: u.createdAt || existing.createdAt
           };
 
-          const updated = await db.users.update({
+          const updated = await db.user.update({
             where: { id: existing.id },
             data: updatedData
           });
@@ -123,7 +123,7 @@ export async function POST(req: Request) {
             }
           }
 
-          const newUser = await db.users.create({
+          const newUser = await db.user.create({
             id: firebaseUid,
             name: u.name || email.split('@')[0],
             email: email,
@@ -146,7 +146,7 @@ export async function POST(req: Request) {
 
     // Refresh User Lookup Map for Commitments processing
     if (!dryRun) {
-      const refreshedUsers = await db.users.findMany();
+      const refreshedUsers = await db.user.findMany();
       refreshedUsers.forEach((u) => {
         if (u.email) userByEmailMap.set(u.email.toLowerCase().trim(), u);
         if (u.invitationId) userByMemberIdMap.set(u.invitationId.trim(), u);
@@ -168,7 +168,7 @@ export async function POST(req: Request) {
         const newName = c.memberName || c.name || (memberEmail ? memberEmail.split('@')[0] : (memberId || 'Member'));
 
         try {
-          targetUser = await db.users.create({
+          targetUser = await db.user.create({
             id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
             name: newName,
             email: newEmail,
@@ -202,10 +202,10 @@ export async function POST(req: Request) {
       };
 
       if (!dryRun) {
-        const existingCmt = await db.commitments.findUnique({ where: { id: recordId } });
+        const existingCmt = await db.commitment.findUnique({ where: { id: recordId } });
         if (existingCmt) {
           if (overwrite) {
-            await db.commitments.update({
+            await db.commitment.update({
               where: { id: recordId },
               data: commitmentData
             });
@@ -214,7 +214,7 @@ export async function POST(req: Request) {
             report.warnings.push(`Commitment ${recordId} already exists. Skipped.`);
           }
         } else {
-          await db.commitments.create(commitmentData);
+          await db.commitment.create({ data: commitmentData });
           report.commitmentsCreated++;
         }
       } else {
@@ -233,7 +233,7 @@ export async function POST(req: Request) {
 
       if (!dryRun) {
         const paymentId = p.id || `pay_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-        await db.payments.create({
+        await db.payment.create({
           id: paymentId,
           commitmentId: cmtId,
           amount: parseFloat(p.amount) || 0,
@@ -255,8 +255,7 @@ export async function POST(req: Request) {
       report.waitingListProcessed++;
       if (!dryRun) {
         const wId = w.id || `WL-${String(Date.now()).slice(-5)}`;
-        await db.waitingList.create({
-          id: wId,
+        await db.waitingList.create({ data: { id: wId,
           name: w.name || `${w.firstName || ''} ${w.lastName || ''}`.trim(),
           email: (w.email || '').toLowerCase().trim(),
           phone: w.phone || '',
@@ -264,7 +263,7 @@ export async function POST(req: Request) {
           isReferred: Boolean(w.isReferred || w.referredBy),
           referredBy: w.referredBy || '',
           createdAt: w.createdAt || new Date().toISOString()
-        });
+        } });
         report.waitingListCreated++;
       } else {
         report.waitingListCreated++;

@@ -33,11 +33,11 @@ export async function POST(request: Request) {
     });
 
     // Audit log
-    await db.auditLogs.create({
+    await db.auditLog.create({ data: {
       action: 'USER_LOGOUT',
       details: 'User logged out and session cookie cleared.',
       userId: userId
-    });
+    } });
 
     return response;
   } catch (err: any) {

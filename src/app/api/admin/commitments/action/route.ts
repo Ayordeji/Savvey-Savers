@@ -40,8 +40,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Payment record not found.' }, { status: 404 });
       }
 
-      const cmt = await db.commitments.findUnique({ where: { id: payment.commitmentId } });
-      const member = cmt ? await db.users.findUnique({ where: { id: cmt.memberId } }) : null;
+      const cmt = await db.commitment.findUnique({ where: { id: payment.commitmentId } });
+      const member = cmt ? await db.user.findUnique({ where: { id: cmt.memberId } }) : null;
 
       // Update payment
       await db.payments.update({
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
       // Automatically complete the commitment upon payment confirmation
       if (cmt) {
-        await db.commitments.update({
+        await db.commitment.update({
           where: { id: cmt.id },
           data: {
             status: 'COMPLETED',
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
         });
 
         // Member Notification
-        await db.notifications.create({
+        await db.notification.create({
           userId: member.id,
           message: `Your payment of £${payment.amount} for ${payment.month} ${payment.year} has been confirmed.`,
           type: 'PAYMENT_CONFIRMED',
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
         });
       }
 
-      await db.auditLogs.create({
+      await db.auditLog.create({
         action: 'PAYMENT_CONFIRM',
         details: `Confirmed savings payment of £${payment.amount} for ${payment.month} ${payment.year}.`,
         userId: session.id
@@ -96,12 +96,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Commitment, month, year, and amount are required.' }, { status: 400 });
       }
 
-      const cmt = await db.commitments.findUnique({ where: { id: commitmentId } });
+      const cmt = await db.commitment.findUnique({ where: { id: commitmentId } });
       if (!cmt) {
         return NextResponse.json({ error: 'Commitment not found.' }, { status: 404 });
       }
 
-      const member = await db.users.findUnique({ where: { id: cmt.memberId } });
+      const member = await db.user.findUnique({ where: { id: cmt.memberId } });
 
       // Create confirmed payment
       const pastPayment = await db.payments.create({
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
         });
 
         // Member Notification
-        await db.notifications.create({
+        await db.notification.create({
           userId: member.id,
           message: `Past contribution of £${amount} for ${month} ${year} has been recorded by the admin.`,
           type: 'PAYMENT_RECORDED',
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
         });
       }
 
-      await db.auditLogs.create({
+      await db.auditLog.create({
         action: 'PAST_PAYMENT_RECORD',
         details: `Recorded past payment of £${amount} for ${month} ${year} under commitment ${commitmentId}.`,
         userId: session.id
@@ -147,19 +147,19 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Commitment ID is required.' }, { status: 400 });
       }
 
-      const cmt = await db.commitments.findUnique({ where: { id: commitmentId } });
+      const cmt = await db.commitment.findUnique({ where: { id: commitmentId } });
       if (!cmt) {
         return NextResponse.json({ error: 'Commitment not found.' }, { status: 404 });
       }
 
-      const member = await db.users.findUnique({ where: { id: cmt.memberId } });
+      const member = await db.user.findUnique({ where: { id: cmt.memberId } });
 
       // Compute total confirmed payout amount (total payments received)
       const relatedPayments = await db.payments.findMany((p) => p.commitmentId === commitmentId && p.status === 'CONFIRMED');
       const harvestAmount = relatedPayments.reduce((acc, p) => acc + p.amount, 0);
 
       // Update commitment status to COMPLETED
-      await db.commitments.update({
+      await db.commitment.update({
         where: { id: commitmentId },
         data: {
           status: 'COMPLETED'
@@ -175,7 +175,7 @@ export async function POST(request: Request) {
         });
 
         // Member Notification
-        await db.notifications.create({
+        await db.notification.create({
           userId: member.id,
           message: `Congratulations! Your harvest payout of £${harvestAmount} has been released.`,
           type: 'HARVEST_RELEASED',
@@ -183,7 +183,7 @@ export async function POST(request: Request) {
         });
       }
 
-      await db.auditLogs.create({
+      await db.auditLog.create({
         action: 'HARVEST_RELEASE',
         details: `Released payout harvest of £${harvestAmount} for commitment ${commitmentId}.`,
         userId: session.id
@@ -214,16 +214,16 @@ export async function POST(request: Request) {
 
       if (targetCommitmentIds.length > 0) {
         for (const cId of targetCommitmentIds) {
-          const cmt = await db.commitments.findUnique({ where: { id: cId } });
+          const cmt = await db.commitment.findUnique({ where: { id: cId } });
           if (cmt) {
-            const member = await db.users.findUnique({ where: { id: cmt.memberId } });
+            const member = await db.user.findUnique({ where: { id: cmt.memberId } });
             if (member) {
               await sendEmail({
                 to: member.email,
                 subject: 'Savvey Savers - Friendly Savings Reminder',
                 body: `Hello ${member.name},\n\nThis is a friendly reminder from your Savvey Savers coordinator regarding your savings commitment for "${cmt.goal}" (Monthly amount: £${cmt.amount}).\n\nPlease proceed with your payment/deposit and notify your coordinator to confirm receipt.\n\nBest regards,\nSavvey Savers Collective`
               });
-              await db.notifications.create({
+              await db.notification.create({
                 userId: member.id,
                 message: `Friendly reminder regarding your savings commitment "${cmt.goal}".`,
                 type: 'REMINDER_SENT',
@@ -235,14 +235,14 @@ export async function POST(request: Request) {
         }
       } else {
         for (const mId of targetMemberIds) {
-          const member = await db.users.findUnique({ where: { id: mId } });
+          const member = await db.user.findUnique({ where: { id: mId } });
           if (member) {
             await sendEmail({
               to: member.email,
               subject: 'Savvey Savers - Friendly Savings Reminder',
               body: `Hello ${member.name},\n\nThis is a friendly reminder from your Savvey Savers coordinator regarding your active savings commitments.\n\nPlease proceed with your monthly savings payment/deposit and notify your coordinator.\n\nBest regards,\nSavvey Savers Collective`
             });
-            await db.notifications.create({
+            await db.notification.create({
               userId: member.id,
               message: `Friendly reminder sent by coordinator regarding your savings commitments.`,
               type: 'REMINDER_SENT',
@@ -253,7 +253,7 @@ export async function POST(request: Request) {
         }
       }
 
-      await db.auditLogs.create({
+      await db.auditLog.create({
         action: 'SEND_REMINDER',
         details: `Sent bulk contribution reminder emails to ${count} recipient(s).`,
         userId: session.id

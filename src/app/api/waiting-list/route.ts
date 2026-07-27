@@ -57,9 +57,7 @@ export async function POST(request: Request) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // Check if email already on waiting list
-    const existingWaiting = await db.waitingList.findFirst(
-      (w) => w.email.toLowerCase() === normalizedEmail
-    );
+    const existingWaiting = await db.waitingList.findFirst({ where: { email: normalizedEmail } });
     if (existingWaiting) {
       return NextResponse.json(
         { error: 'You are already on our waiting list! We will reach out shortly.' },
@@ -68,7 +66,7 @@ export async function POST(request: Request) {
     }
 
     // Check if email already a registered member
-    const existingUser = await db.users.findFirst(
+    const existingUser = await db.user.findFirst(
       (u) => u.email.toLowerCase() === normalizedEmail
     );
     if (existingUser) {
@@ -79,26 +77,25 @@ export async function POST(request: Request) {
     }
 
     // Save waiting list entry
-    const entry = await db.waitingList.create({
-      name,
+    const entry = await db.waitingList.create({ data: { name,
       email: normalizedEmail,
       phone,
       monthlySavingsCommitment: commitmentVal,
       isReferred: !!referredBy,
       referredBy: referredBy || undefined,
-    });
+    } });
 
     // Create notifications for all admins and audit log (non-blocking side-effects)
     try {
-      const admins = await db.users.findMany((u) => u.role === 'ADMIN');
+      const admins = await db.user.findMany({ where: { role: 'ADMIN' } });
       for (const admin of admins) {
         try {
-          await db.notifications.create({
+          await db.notification.create({ data: {
             userId: admin.id,
             message: `New prospect ${name} signed up on the waiting list. Intended amount: £${commitmentVal}.`,
             type: 'WAITING_LIST_SIGNUP',
             isRead: false,
-          });
+          } });
 
           await sendEmail({
             to: admin.email,
@@ -110,11 +107,11 @@ export async function POST(request: Request) {
         }
       }
 
-      await db.auditLogs.create({
+      await db.auditLog.create({ data: {
         action: 'WAITING_LIST_ADD',
         details: `Prospect ${name} (${email}) added to waiting list.`,
         userId: 'system',
-      });
+      } });
     } catch (sideEffectErr) {
       console.warn('Waiting list side-effects warning:', sideEffectErr);
     }

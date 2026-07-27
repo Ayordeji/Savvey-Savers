@@ -17,12 +17,12 @@ export async function GET(request: Request) {
   const userId = searchParams.get('userId');
 
   if (userId) {
-    const records = await db.membershipFeeRecords.findMany((r) => r.userId === userId);
+    const records = await db.membershipFeeRecord.findMany({ where: { userId } });
     const sorted = [...records].sort((a, b) => b.year - a.year);
     return NextResponse.json(sorted);
   }
 
-  const allRecords = await db.membershipFeeRecords.findMany();
+  const allRecords = await db.membershipFeeRecord.findMany();
   return NextResponse.json(allRecords);
 }
 
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User ID is required.' }, { status: 400 });
     }
 
-    const user = await db.users.findUnique({ where: { id: userId } });
+    const user = await db.user.findUnique({ where: { id: userId } });
     if (!user) {
       return NextResponse.json({ error: 'User not found.' }, { status: 404 });
     }
@@ -55,12 +55,12 @@ export async function POST(request: Request) {
       }
 
       // Flag if record already exists for this year
-      const existingRecords = await db.membershipFeeRecords.findMany((r) => r.userId === userId && Number(r.year) === parsedYear);
+      const existingRecords = await db.membershipFeeRecord.findMany({ where: { userId, year: parsedYear } });
       if (existingRecords.length > 0) {
         return NextResponse.json({ error: `A membership fee request has already been created for the year ${parsedYear}.` }, { status: 400 });
       }
 
-      const record = await db.membershipFeeRecords.create({
+      const record = await db.membershipFeeRecord.create({
         userId,
         year: parsedYear,
         baseFee: parsedBase,
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       });
 
       // Update user fee status flag
-      await db.users.update({
+      await db.user.update({
         where: { id: userId },
         data: {
           membershipFeeConfirmed: false
@@ -86,13 +86,12 @@ export async function POST(request: Request) {
       });
 
       // Create in-app notification
-      await db.notifications.create({
+      await db.notification.create({ data: {
         userId,
         message: `Membership Fee request for ${parsedYear} (£${totalFee.toFixed(2)}) has been issued.`,
         type: 'FEE_REQUEST',
         isRead: false,
-        createdAt: new Date().toISOString()
-      });
+        createdAt: new Date().toISOString() } });
 
       return NextResponse.json({ success: true, record });
 
@@ -103,9 +102,9 @@ export async function POST(request: Request) {
 
       let recordToEdit;
       if (recordId) {
-        recordToEdit = await db.membershipFeeRecords.findUnique({ where: { id: recordId } });
+        recordToEdit = await db.membershipFeeRecord.findUnique({ where: { id: recordId } });
       } else if (year) {
-        const userRecords = await db.membershipFeeRecords.findMany((r) => r.userId === userId && Number(r.year) === Number(year));
+        const userRecords = await db.membershipFeeRecord.findMany({ where: { userId, year: Number(year) } });
         recordToEdit = userRecords[0];
       }
 
@@ -118,7 +117,7 @@ export async function POST(request: Request) {
       const newYear = parsedYear !== undefined ? parsedYear : recordToEdit.year;
       const newTotal = newBase + newAdmin;
 
-      const record = await db.membershipFeeRecords.update({
+      const record = await db.membershipFeeRecord.update({
         where: { id: recordToEdit.id },
         data: {
           baseFee: newBase,
@@ -137,18 +136,18 @@ export async function POST(request: Request) {
 
       let recordToUpdate;
       if (recordId) {
-        recordToUpdate = await db.membershipFeeRecords.findUnique({ where: { id: recordId } });
+        recordToUpdate = await db.membershipFeeRecord.findUnique({ where: { id: recordId } });
       } else if (year) {
-        const userRecords = await db.membershipFeeRecords.findMany((r) => r.userId === userId && Number(r.year) === Number(year));
+        const userRecords = await db.membershipFeeRecord.findMany({ where: { userId, year: Number(year) } });
         recordToUpdate = userRecords.find((r) => r.status === 'PENDING') || userRecords[0];
       } else {
-        const userRecords = await db.membershipFeeRecords.findMany((r) => r.userId === userId);
+        const userRecords = await db.membershipFeeRecord.findMany({ where: { userId } });
         const pendingRecord = userRecords.find((r) => r.status === 'PENDING') || userRecords[0];
         recordToUpdate = pendingRecord;
       }
 
       if (recordToUpdate) {
-        await db.membershipFeeRecords.update({
+        await db.membershipFeeRecord.update({
           where: { id: recordToUpdate.id },
           data: {
             status: 'PAID',
@@ -158,7 +157,7 @@ export async function POST(request: Request) {
         });
       } else {
         // Create paid record if none existed
-        await db.membershipFeeRecords.create({
+        await db.membershipFeeRecord.create({
           userId,
           year: new Date().getFullYear(),
           baseFee: parsedAmount || 0,
@@ -171,7 +170,7 @@ export async function POST(request: Request) {
       }
 
       // Mark user fee confirmed
-      await db.users.update({
+      await db.user.update({
         where: { id: userId },
         data: {
           membershipFeeConfirmed: true,
@@ -187,19 +186,18 @@ export async function POST(request: Request) {
       });
 
       // Create in-app notification
-      await db.notifications.create({
+      await db.notification.create({ data: {
         userId,
         message: `Your membership fee payment of £${(parsedAmount || recordToUpdate?.totalFee || 0).toFixed(2)} has been confirmed.`,
         type: 'FEE_PAID',
         isRead: false,
-        createdAt: new Date().toISOString()
-      });
+        createdAt: new Date().toISOString() } });
 
       return NextResponse.json({ success: true });
 
     } else if (action === 'REMIND') {
       // Send reminder email to pay up
-      const userRecords = await db.membershipFeeRecords.findMany((r) => r.userId === userId && r.status === 'PENDING');
+      const userRecords = await db.membershipFeeRecord.findMany({ where: { userId, status: 'PENDING' } });
       const pendingFee = userRecords[0];
       const dueAmount = pendingFee ? pendingFee.totalFee : 230;
 
@@ -209,13 +207,12 @@ export async function POST(request: Request) {
         body: `Hello ${user.name},\n\nThis is a friendly reminder to pay your outstanding membership fee of £${dueAmount.toFixed(2)} for ${pendingFee ? pendingFee.year : new Date().getFullYear()}.\n\nPlease complete your offline payment with your group coordinator at your earliest convenience.\n\nThank you,\nSavvey Savers Collective`
       });
 
-      await db.notifications.create({
+      await db.notification.create({ data: {
         userId,
         message: `Reminder: Please settle your outstanding membership fee of £${dueAmount.toFixed(2)}.`,
         type: 'FEE_REMINDER',
         isRead: false,
-        createdAt: new Date().toISOString()
-      });
+        createdAt: new Date().toISOString() } });
 
       return NextResponse.json({ success: true, message: 'Reminder email sent successfully.' });
 
