@@ -109,14 +109,8 @@ commitsData.forEach((c, idx) => {
   const amtStr = c['Savings Amount'] ? c['Savings Amount'].replace('£', '').replace(/,/g, '') : '0';
   const amount = parseFloat(amtStr);
   
-  let status = c['Status'];
-  if (status === 'Not Started' || status === 'Not yet started' || status === 'Not yet Started' || status === 'NOT_YET_STARTED') {
-    status = 'PENDING';
-  } else if (status) {
-    status = status.toUpperCase();
-  } else {
-    status = 'PENDING';
-  }
+  let statusRaw = c['Status'];
+  let status = 'PENDING';
 
   const memberName = c['Member Name'] || 'Unknown Member';
   const userMatch = usersArray.find(u => u.name.toLowerCase() === memberName.toLowerCase() || memberName.toLowerCase().includes(u.firstName.toLowerCase()));
@@ -143,6 +137,17 @@ commitsData.forEach((c, idx) => {
     }
   }
 
+  // Dynamic Status Evaluation
+  if (statusRaw && statusRaw.toUpperCase() === 'CANCELLED') {
+    status = 'CANCELLED';
+  } else if (cYear < 2026) {
+    status = 'COMPLETED';
+  } else if (cYear === 2026) {
+    status = 'ACTIVE';
+  } else {
+    status = 'PENDING';
+  }
+
   commitsArray.push({
     id: c['Record Id'] || `SC-${Math.floor(Math.random()*10000)}`,
     memberId: memberId,
@@ -157,26 +162,23 @@ commitsData.forEach((c, idx) => {
   });
 
   // Generate Payments
-  const pYear = cYear;
-  let pMonthIdx = monthNames.indexOf(cMonth) - 3;
-  if (pMonthIdx < 0) pMonthIdx = 0;
+  let pYear = cYear;
   
-  const numPayments = status === 'COMPLETED' ? 3 : (status === 'ACTIVE' ? 2 : (status === 'PENDING' ? 0 : 0));
+  // Completed (previous years) get 12 payments. Active (current year) gets Jan & Feb. Pending (future) gets 0.
+  const numPayments = status === 'COMPLETED' ? 12 : (status === 'ACTIVE' ? 2 : 0);
   
   for (let i = 0; i < numPayments; i++) {
-    let paymentMonthIdx = pMonthIdx + i;
+    // Start generating payments from January of the collection year
+    let paymentMonthIdx = i; // Jan is 0, Feb is 1
     let paymentYear = pYear;
     if (paymentMonthIdx >= 12) {
       paymentMonthIdx -= 12;
       paymentYear += 1;
     }
     
-    let pDateMonth = paymentMonthIdx + 2;
+    // Pay date is 5th of that month
+    let pDateMonth = paymentMonthIdx + 1;
     let pDateYear = paymentYear;
-    if (pDateMonth > 12) {
-      pDateMonth -= 12;
-      pDateYear += 1;
-    }
     const payDate = new Date(`${pDateYear}-${String(pDateMonth).padStart(2, '0')}-05T12:00:00Z`);
 
     paymentsArray.push({
