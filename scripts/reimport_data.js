@@ -196,9 +196,15 @@ commitsData.forEach((c, idx) => {
 // Update db.ts
 let newDbContent = dbContent;
 
-newDbContent = newDbContent.replace(/let cachedUsers: User\[\] = \[[\s\S]*?\];/g, `let cachedUsers: User[] = ${JSON.stringify(usersArray, null, 2)};`);
-newDbContent = newDbContent.replace(/let cachedCommitments: Commitment\[\] = \[[\s\S]*?\];/g, `let cachedCommitments: Commitment[] = ${JSON.stringify(commitsArray, null, 2)};`);
-newDbContent = newDbContent.replace(/let cachedPayments: Payment\[\] = \[[\s\S]*?\];/g, `let cachedPayments: Payment[] = ${JSON.stringify(paymentsArray, null, 2)};`);
+const regex = /users:\s*\[[\s\S]*?\],\s*commitments:\s*\[[\s\S]*?\],\s*payments:\s*\[[\s\S]*?\]/m;
+const replacement = `users: ${JSON.stringify(usersArray, null, 2).replace(/^/gm, '  ')},
+  commitments: ${JSON.stringify(commitsArray, null, 2).replace(/^/gm, '  ')},
+  payments: ${JSON.stringify(paymentsArray, null, 2).replace(/^/gm, '  ')}`;
 
-fs.writeFileSync(dbPath, newDbContent, 'utf8');
-console.log('Database successfully re-seeded from CSV and TSV texts!');
+if (regex.test(newDbContent)) {
+  newDbContent = newDbContent.replace(regex, replacement);
+  fs.writeFileSync(dbPath, newDbContent, 'utf8');
+  console.log('Database successfully re-seeded from CSV and TSV texts!');
+} else {
+  console.error('Regex failed to match INITIAL_FALLBACK_DATA arrays in db.ts!');
+}
