@@ -76,13 +76,13 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     });
     const memberUsers = Array.from(uniqueMap.values()).filter((u) => u.role === 'MEMBER' || !u.isSuperAdmin);
 
-    activeUsersCount = memberUsers.filter((u) => u.isActive).length || 64;
-    invitedUsersCount = memberUsers.filter((u) => !u.isActive).length || 0;
+    activeUsersCount = memberUsers.filter((u) => u.isActive).length;
+    invitedUsersCount = memberUsers.filter((u) => !u.isActive).length;
 
     // 2. Filter commitments by selected collection year
     const selectedYearInt = parseInt(selectedYear, 10) || 2026;
     const yearCommitments = allCommitments.filter((c) => Number(c.collectionYear) === selectedYearInt);
-    totalCommitmentsCount = yearCommitments.length || 71;
+    totalCommitmentsCount = yearCommitments.length;
 
     // 3. Harvest Released in current cycle (completed commitments in selectedYear)
     completedCommitmentsCount = yearCommitments.filter((c) => c.status === 'COMPLETED').length;
@@ -91,42 +91,18 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     const yearPayments = allPayments.filter((p) => Number(p.year) === selectedYearInt);
     const confirmedPaymentsYearly = yearPayments.filter((p) => p.status === 'CONFIRMED');
     
-    confirmedPaymentsCount = confirmedPaymentsYearly.length > 0 ? confirmedPaymentsYearly.length : 1;
-    totalPaymentsCount = yearCommitments.length || 71;
+    confirmedPaymentsCount = confirmedPaymentsYearly.length;
+    totalPaymentsCount = yearCommitments.length;
     pendingPaymentsAmount = yearPayments.filter((p) => p.status === 'PENDING').reduce((acc, p) => acc + p.amount, 0);
 
-    // 5. Total Revenue to Date: Total completed past contributions + current confirmed payments
-    const pastCompletedRevenue = allCommitments
-      .filter((c) => Number(c.collectionYear) < selectedYearInt || (c.status === 'COMPLETED' && Number(c.collectionYear) <= selectedYearInt))
-      .reduce((acc, c) => acc + (Number(c.amount) || 0), 0);
-    
-    const currentConfirmedRevenue = confirmedPaymentsYearly.reduce((acc, p) => acc + p.amount, 0);
-    
-    const dynamicRevenue = pastCompletedRevenue + currentConfirmedRevenue;
-    totalRevenue = dynamicRevenue > 0 ? dynamicRevenue : 88750.00;
-
-    // 6. Revenue by month graph data (calculated dynamically per month matching exact legacy totals)
-    const monthlyPresets: Record<number, number> = {
-      0: 44500,
-      1: 40000,
-      2: 2250,
-      3: 500,
-      4: 500,
-      5: 500,
-      6: 500
-    };
-
+    // 5. Revenue by month graph data — strictly from confirmed payments in DB
     months.forEach((m, idx) => {
       const monthPayments = yearPayments.filter((p) => p.month === m && p.status === 'CONFIRMED');
-      if (monthPayments.length > 0) {
-        monthlyData[idx] = monthPayments.reduce((acc, p) => acc + p.amount, 0);
-      } else {
-        monthlyData[idx] = monthlyPresets[idx] || 0;
-      }
+      monthlyData[idx] = monthPayments.reduce((acc, p) => acc + p.amount, 0);
     });
 
-    const monthlyTotalSum = monthlyData.reduce((acc, v) => acc + v, 0);
-    totalRevenue = monthlyTotalSum > 0 ? monthlyTotalSum : 88750.00;
+    // 6. Total Revenue to Date = sum of all confirmed monthly payments
+    totalRevenue = monthlyData.reduce((acc, v) => acc + v, 0);
   } else {
     // Member: Personal data only
     const myCommitments = await db.commitments.findMany((c) => c.memberId === user.id);
@@ -242,7 +218,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 Payments not yet Confirmed
               </span>
               <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                {isAdmin ? '70 / 1' : `${totalPaymentsCount - confirmedPaymentsCount} / ${totalPaymentsCount}`}
+                {`${totalPaymentsCount - confirmedPaymentsCount} / ${totalPaymentsCount}`}
               </h3>
             </div>
           </div>
@@ -277,7 +253,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 Pending Payments
               </span>
               <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                £{pendingPaymentsAmount > 0 ? pendingPaymentsAmount.toFixed(2) : '3405.00'}
+                £{pendingPaymentsAmount.toFixed(2)}
               </h3>
             </div>
           </div>
@@ -312,7 +288,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 Payments Confirmed
               </span>
               <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                {isAdmin ? '1 / 71' : `${confirmedPaymentsCount} / ${totalPaymentsCount}`}
+                {`${confirmedPaymentsCount} / ${totalPaymentsCount}`}
               </h3>
             </div>
           </div>
@@ -347,7 +323,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 Harvests Released
               </span>
               <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                {isAdmin ? '0 of 71' : `${completedCommitmentsCount} of ${totalCommitmentsCount}`}
+                {`${completedCommitmentsCount} of ${totalCommitmentsCount}`}
               </h3>
             </div>
           </div>
@@ -382,7 +358,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 Active vs Invited
               </span>
               <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                {isAdmin ? `${activeUsersCount} / ${invitedUsersCount}` : '2 / 2'}
+                {`${activeUsersCount} / ${invitedUsersCount}`}
               </h3>
             </div>
           </div>

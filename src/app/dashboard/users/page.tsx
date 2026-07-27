@@ -240,6 +240,11 @@ export default function ManageUsersPage() {
   }, []);
 
   useEffect(() => {
+    // Pre-fill search from URL ?search= param (used when navigating from Commitments page via member name)
+    const searchParam = searchParams.get('search');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    }
     const approveId = searchParams.get('approveSuperAdmin');
     if (approveId && users.length > 0) {
       const targetUser = users.find((u) => u.id === approveId);

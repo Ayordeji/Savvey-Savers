@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, Fragment, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, PoundSterling, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, PoundSterling, Calendar, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import PaginationControls from '../PaginationControls';
 import styles from './commitments.module.css';
@@ -72,10 +72,13 @@ function CommitmentsContent() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   // Modal states
-  const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'REMINDER' | 'PAST_PAYMENT'>('NONE');
+  const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'REMINDER' | 'PAST_PAYMENT' | 'VIEW_COMMITMENT'>('NONE');
   const [selectedCmt, setSelectedCmt] = useState<Commitment | null>(null);
+  const [viewCmtPayments, setViewCmtPayments] = useState<Payment[]>([]);
+  const [viewCmtLoading, setViewCmtLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [formSubmitting, setFormSubmitting] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (errorMsg) {
@@ -104,14 +107,13 @@ function CommitmentsContent() {
   const [formYear, setFormYear] = useState('2026');
   const [formStatus, setFormStatus] = useState<'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'NOT_YET_STARTED'>('ACTIVE');
 
-  // Reminder fields
-  const [reminderSaverId, setReminderSaverId] = useState('');
-  const [reminderCmtId, setReminderCmtId] = useState('');
+  // Reminder fields — now supports bulk (multiple commitments)
+  const [reminderCmtIds, setReminderCmtIds] = useState<string[]>([]);
 
   // Past payment fields
   const [pastPayMonth, setPastPayMonth] = useState('January');
-  const [pastPayYear, setPastPayYear] = useState('2026');
-  const [pastPayAmount, setPastPayAmount] = useState('');
+  const [pastPayCollectionMonth, setPastPayCollectionMonth] = useState('January');
+  const [pastPaySendNotification, setPastPaySendNotification] = useState<'yes' | 'no'>('no');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   const months = [
@@ -199,17 +201,36 @@ function CommitmentsContent() {
 
   const handleOpenReminderModal = () => {
     setErrorMsg('');
-    setReminderSaverId(users[0]?.id || '');
-    setReminderCmtId('');
+    // Pre-populate from selected IDs in table
+    setReminderCmtIds(selectedIds.length > 0 ? [...selectedIds] : []);
     setActiveModal('REMINDER');
+  };
+
+  const handleOpenViewCommitmentModal = async (cmt: Commitment) => {
+    setSelectedCmt(cmt);
+    setViewCmtPayments([]);
+    setViewCmtLoading(true);
+    setActiveModal('VIEW_COMMITMENT');
+    try {
+      const res = await fetch(`/api/admin/payments?commitmentId=${cmt.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setViewCmtPayments(data);
+      }
+    } catch (err) {
+      console.error('Error fetching payments for view:', err);
+    } finally {
+      setViewCmtLoading(false);
+    }
   };
 
   const handleOpenPastPaymentModal = (cmt: Commitment) => {
     setErrorMsg('');
     setSelectedCmt(cmt);
     setPastPayMonth('January');
-    setPastPayYear('2026');
-    setPastPayAmount(cmt.amount.toString());
+    setPastPayCollectionMonth(cmt.collectionMonth || 'January');
+    setPastPaySendNotification('no');
+    setReceiptFile(null);
     setActiveModal('PAST_PAYMENT');
     setOpenDropdownId(null);
   };
@@ -308,30 +329,38 @@ function CommitmentsContent() {
   const handleReminderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    if (!reminderSaverId || !reminderCmtId) {
-      setErrorMsg('Please select a member and their active commitment.');
+    if (reminderCmtIds.length === 0) {
+      setErrorMsg('Please select at least one savings commitment to send a reminder for.');
       return;
     }
 
     setFormSubmitting(true);
-    try {
-      const res = await fetch('/api/admin/commitments/action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'SEND_REMINDER',
-          memberId: reminderSaverId,
-          commitmentId: reminderCmtId
-        })
-      });
+    let successCount = 0;
+    let failCount = 0;
 
-      if (res.ok) {
-        await dialog.alert('Reminder Dispatched', 'Friendly savings email reminder dispatched successfully!');
-        setActiveModal('NONE');
-      } else {
-        const data = await res.json();
-        setErrorMsg(data.error || 'Failed to send reminder.');
+    try {
+      for (const cmtId of reminderCmtIds) {
+        const cmt = commitments.find((c) => c.id === cmtId);
+        if (!cmt) continue;
+        const res = await fetch('/api/admin/commitments/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'SEND_REMINDER',
+            memberId: cmt.memberId,
+            commitmentId: cmtId
+          })
+        });
+        if (res.ok) successCount++;
+        else failCount++;
       }
+
+      if (failCount === 0) {
+        await dialog.alert('Reminders Dispatched', `Successfully sent ${successCount} payment reminder${successCount > 1 ? 's' : ''}!`);
+      } else {
+        await dialog.alert('Partial Success', `Sent ${successCount} reminders successfully. ${failCount} failed.`);
+      }
+      setActiveModal('NONE');
     } catch (err) {
       setErrorMsg('A network error occurred.');
     } finally {
@@ -346,24 +375,6 @@ function CommitmentsContent() {
 
     setFormSubmitting(true);
     try {
-      let receiptUrl = '';
-      if (receiptFile) {
-        const formData = new FormData();
-        formData.append('file', receiptFile);
-        const uploadRes = await fetch('/api/admin/upload', {
-          method: 'POST',
-          body: formData,
-        });
-        if (!uploadRes.ok) {
-          const errData = await uploadRes.json();
-          setErrorMsg(errData.error || 'Failed to upload receipt file.');
-          setFormSubmitting(false);
-          return;
-        }
-        const uploadData = await uploadRes.json();
-        receiptUrl = uploadData.url;
-      }
-
       const res = await fetch('/api/admin/commitments/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -371,15 +382,15 @@ function CommitmentsContent() {
           action: 'RECORD_PAST_PAYMENT',
           commitmentId: selectedCmt.id,
           month: pastPayMonth,
-          year: pastPayYear,
-          amount: pastPayAmount,
-          receiptUrl
+          year: selectedCmt.collectionYear,
+          amount: selectedCmt.amount,
+          collectionMonth: pastPayCollectionMonth,
+          sendNotification: pastPaySendNotification === 'yes'
         })
       });
 
       if (res.ok) {
         fetchPayments(selectedCmt.id);
-        setReceiptFile(null);
         setActiveModal('NONE');
       } else {
         const data = await res.json();
@@ -571,8 +582,29 @@ function CommitmentsContent() {
             Savings Commitments
           </h2>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          {currentUser?.role === 'ADMIN' && (
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {selectedIds.length > 0 && currentUser?.role === 'ADMIN' && (
+            <button
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+              className="btn btn-danger btn-sm"
+              style={{ backgroundColor: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Trash2 size={15} />
+              <span>{isBulkDeleting ? 'Deleting...' : `Delete (${selectedIds.length})`}</span>
+            </button>
+          )}
+          {selectedIds.length > 0 && currentUser?.role === 'ADMIN' && (
+            <button
+              onClick={handleOpenReminderModal}
+              className="btn btn-secondary btn-sm"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <BellRing size={15} />
+              <span>Send Reminders ({selectedIds.length})</span>
+            </button>
+          )}
+          {currentUser?.role === 'ADMIN' && selectedIds.length === 0 && (
             <button onClick={handleOpenReminderModal} className="btn btn-secondary btn-sm">
               <BellRing size={16} />
               <span>Send Reminder</span>
@@ -650,15 +682,10 @@ function CommitmentsContent() {
         </div>
 
         {selectedIds.length > 0 && currentUser?.role === 'ADMIN' && (
-          <button
-            onClick={handleBulkDelete}
-            disabled={isBulkDeleting}
-            className="btn btn-danger btn-sm"
-            style={{ backgroundColor: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <Trash2 size={15} />
-            <span>{isBulkDeleting ? 'Deleting...' : `Delete Selected (${selectedIds.length})`}</span>
-          </button>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontWeight: 600, color: 'var(--primary)' }}>{selectedIds.length} selected</span>
+            <span>— use bulk actions above</span>
+          </div>
         )}
       </div>
 
@@ -744,10 +771,25 @@ function CommitmentsContent() {
                         <td onClick={() => handleRowClick(c.id)} style={{ paddingRight: 0 }}>
                           {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                         </td>
-                        <td onClick={() => handleRowClick(c.id)} style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        <td
+                          onClick={() => handleOpenViewCommitmentModal(c)}
+                          style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '3px' }}
+                          title="Click to view commitment details"
+                        >
                           {c.id}
                         </td>
-                        <td onClick={() => handleRowClick(c.id)} style={{ fontWeight: 600 }}>{displayMemberName}</td>
+                        <td style={{ fontWeight: 600 }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/dashboard/users?search=${encodeURIComponent(displayMemberName)}`);
+                            }}
+                            style={{ background: 'none', border: 'none', color: 'var(--text-main)', fontWeight: 600, cursor: 'pointer', padding: 0, textAlign: 'left', fontSize: 'inherit', textDecoration: 'underline', textDecorationColor: 'rgba(0,0,0,0.2)', textUnderlineOffset: '3px' }}
+                            title={`View ${displayMemberName} in Manage Users`}
+                          >
+                            {displayMemberName}
+                          </button>
+                        </td>
                         <td onClick={() => handleRowClick(c.id)}>£{Number(c.amount).toFixed(2)}</td>
                         <td onClick={() => handleRowClick(c.id)}>{c.collectionMonth} {c.collectionYear}</td>
                         <td onClick={() => handleRowClick(c.id)}>{c.endDate || `December ${c.collectionYear}`}</td>
@@ -771,7 +813,7 @@ function CommitmentsContent() {
                                   {c.status !== 'CANCELLED' && (
                                     <button onClick={() => handleOpenPastPaymentModal(c)} className={styles.dropdownItem}>
                                       <PoundSterling size={14} />
-                                      <span>Record Past Payment</span>
+                                      <span>Payment for Past Month</span>
                                     </button>
                                   )}
                                   {c.status !== 'COMPLETED' && c.status !== 'CANCELLED' && (
@@ -973,12 +1015,17 @@ function CommitmentsContent() {
       {activeModal === 'REMINDER' && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content">
-            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
             </button>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '16px', fontFamily: 'var(--font-family-title)' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)' }}>
               Monthly Payment Reminder
             </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
+              {reminderCmtIds.length > 0
+                ? `Send payment reminders to ${reminderCmtIds.length} selected commitment${reminderCmtIds.length > 1 ? 's' : ''}.`
+                : 'Select savings commitments to send reminders for.'}
+            </p>
 
             {errorMsg && (
               <div style={{ backgroundColor: 'var(--status-error-bg)', color: 'var(--status-error)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '10px', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '16px' }}>
@@ -987,49 +1034,63 @@ function CommitmentsContent() {
             )}
 
             <form onSubmit={handleReminderSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Multi-select commitments */}
               <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Savers</label>
-                <select
-                  value={reminderSaverId}
-                  onChange={(e) => {
-                    setReminderSaverId(e.target.value);
-                    setReminderCmtId('');
-                  }}
-                  className="form-select"
-                >
-                  <option value="">Select a member...</option>
-                  {users.map((u) => (
-                    <option key={u.id} value={u.id}>{u.name}</option>
-                  ))}
-                </select>
+                <label className="form-label">Savings Commitments (select multiple)</label>
+                <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', maxHeight: '240px', overflowY: 'auto', backgroundColor: 'var(--bg-surface)' }}>
+                  {commitments.filter((c) => c.status === 'ACTIVE' || c.status === 'PENDING').map((c) => {
+                    const isChecked = reminderCmtIds.includes(c.id);
+                    return (
+                      <label
+                        key={c.id}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '10px',
+                          padding: '10px 14px', cursor: 'pointer',
+                          borderBottom: '1px solid var(--border-color)',
+                          backgroundColor: isChecked ? 'rgba(46,58,78,0.08)' : 'transparent'
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setReminderCmtIds((prev) => [...prev, c.id]);
+                            } else {
+                              setReminderCmtIds((prev) => prev.filter((id) => id !== c.id));
+                            }
+                          }}
+                          style={{ width: '16px', height: '16px', accentColor: '#2e3a4e', flexShrink: 0 }}
+                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-main)' }}>{c.memberName}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            {c.id} • £{c.amount}/mo • Payout: {c.collectionMonth} {c.collectionYear}
+                          </span>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+                {reminderCmtIds.length > 0 && (
+                  <p style={{ fontSize: '0.78rem', color: 'var(--primary)', marginTop: '6px', fontWeight: 600 }}>
+                    {reminderCmtIds.length} commitment{reminderCmtIds.length > 1 ? 's' : ''} selected
+                  </p>
+                )}
               </div>
 
-              {reminderSaverId && (
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Active Savings Commitment</label>
-                  <select
-                    value={reminderCmtId}
-                    onChange={(e) => setReminderCmtId(e.target.value)}
-                    className="form-select"
-                    required
-                  >
-                    <option value="">Select commitment cycle...</option>
-                    {getActiveCommitmentsForMember(reminderSaverId).map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.goal} (£{c.amount}/mo - Payout: {c.collectionMonth})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
                 <button type="button" onClick={() => setActiveModal('NONE')} className="btn btn-secondary" style={{ flex: 1 }}>
                   Cancel
                 </button>
-                <button type="submit" disabled={formSubmitting || !reminderCmtId} className="btn btn-primary" style={{ flex: 1.2 }}>
+                <button
+                  type="submit"
+                  disabled={formSubmitting || reminderCmtIds.length === 0}
+                  className="btn btn-primary"
+                  style={{ flex: 1.2 }}
+                >
                   <BellRing size={16} />
-                  <span>{formSubmitting ? 'Sending...' : 'Send Reminder'}</span>
+                  <span>{formSubmitting ? 'Sending...' : `Send ${reminderCmtIds.length > 1 ? `${reminderCmtIds.length} Reminders` : 'Reminder'}`}</span>
                 </button>
               </div>
             </form>
@@ -1037,18 +1098,128 @@ function CommitmentsContent() {
         </div>
       )}
 
-      {/* --- RECORD PAST PAYMENT MODAL --- */}
+      {/* --- VIEW COMMITMENT DETAILS MODAL --- */}
+      {activeModal === 'VIEW_COMMITMENT' && selectedCmt && (
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
+          <div className="modal-content" style={{ maxWidth: '640px', padding: '28px', position: 'relative' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                <PoundSterling size={20} style={{ color: 'var(--primary)' }} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', margin: 0 }}>Saving Commitment</h3>
+              </div>
+              <div style={{ fontFamily: 'monospace', fontSize: '1rem', fontWeight: 700, color: 'var(--primary)', paddingLeft: '30px' }}>{selectedCmt.id}</div>
+            </div>
+
+            {/* Info Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px', backgroundColor: 'var(--bg-subtle, #f8fafc)', borderRadius: '12px', padding: '16px', border: '1px solid var(--border-color)' }}>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Record ID</span>
+                <div style={{ fontWeight: 700, color: 'var(--text-main)', fontFamily: 'monospace', marginTop: '4px', fontSize: '0.85rem' }}>{selectedCmt.id}</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Member Name</span>
+                <div style={{ marginTop: '4px' }}>
+                  <button
+                    onClick={() => {
+                      router.push(`/dashboard/users?search=${encodeURIComponent(selectedCmt.memberName)}`);
+                      setActiveModal('NONE');
+                    }}
+                    style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: '0.9rem', textDecoration: 'underline', textUnderlineOffset: '3px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    title="Go to Manage Users"
+                  >
+                    {selectedCmt.memberName}
+                    <ExternalLink size={12} />
+                  </button>
+                </div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Collection Month</span>
+                <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>{selectedCmt.collectionMonth} {selectedCmt.collectionYear}</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Monthly Savings Amount</span>
+                <div style={{ fontWeight: 700, color: '#16a34a', marginTop: '4px', fontSize: '1rem' }}>£{Number(selectedCmt.amount).toFixed(2)}</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Savings Goal</span>
+                <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>{selectedCmt.goal}</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</span>
+                <div style={{ marginTop: '4px' }}>
+                  <span className={`status-pill ${selectedCmt.status.toLowerCase().replace(/_/g, '-')}`} style={{ fontSize: '0.72rem' }}>
+                    {selectedCmt.status === 'NOT_YET_STARTED' ? 'Not yet started' : selectedCmt.status}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment History Table */}
+            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '12px', color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment History</h4>
+            {viewCmtLoading ? (
+              <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>Loading payments...</div>
+            ) : viewCmtPayments.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '0.85rem', backgroundColor: 'var(--bg-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                No payments logged yet for this commitment.
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--bg-subtle, #f1f5f9)', borderBottom: '2px solid var(--border-color)' }}>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>SR.NO.</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment Month</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment Year</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment Date</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amount</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {viewCmtPayments.map((pay, i) => (
+                      <tr key={pay.id} style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: i % 2 === 0 ? 'transparent' : 'var(--bg-subtle, #fafafa)' }}>
+                        <td style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-muted)' }}>{i + 1}</td>
+                        <td style={{ padding: '10px 14px', fontWeight: 600 }}>{pay.month}</td>
+                        <td style={{ padding: '10px 14px' }}>{pay.year}</td>
+                        <td style={{ padding: '10px 14px', color: 'var(--text-muted)' }}>
+                          {pay.createdAt ? new Date(pay.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
+                        </td>
+                        <td style={{ padding: '10px 14px', fontWeight: 700, color: '#16a34a' }}>£{Number(pay.amount).toFixed(2)}</td>
+                        <td style={{ padding: '10px 14px' }}>
+                          <span className={`status-pill ${pay.status === 'CONFIRMED' ? 'active' : 'pending'}`} style={{ fontSize: '0.65rem' }}>
+                            {pay.status === 'CONFIRMED' ? 'Confirmed' : 'Pending'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+              <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary" style={{ borderRadius: '8px', padding: '8px 22px' }}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- PAYMENT FOR PAST MONTH MODAL --- */}
       {activeModal === 'PAST_PAYMENT' && selectedCmt && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content">
-            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
             </button>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)' }}>
-              Record Past Payment
+              Payment for Past Month
             </h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
-              Add a historical contribution payment for {selectedCmt.memberName}&apos;s cycle.
+              Record a historical monthly payment for <strong>{selectedCmt.memberName}</strong> — {selectedCmt.id}.
             </p>
 
             {errorMsg && (
@@ -1058,61 +1229,42 @@ function CommitmentsContent() {
             )}
 
             <form onSubmit={handlePastPaymentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Payment Month</label>
-                  <select value={pastPayMonth} onChange={(e) => setPastPayMonth(e.target.value)} className="form-select">
-                    {months.map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Payment Year</label>
-                  <select value={pastPayYear} onChange={(e) => setPastPayYear(e.target.value)} className="form-select">
-                    <option value="2025">2025</option>
-                    <option value="2026">2026</option>
-                    <option value="2027">2027</option>
-                  </select>
-                </div>
+              {/* Payment: Month's Payment */}
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Month&apos;s Payment</label>
+                <select value={pastPayMonth} onChange={(e) => setPastPayMonth(e.target.value)} className="form-select" required>
+                  {months.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
               </div>
 
-               <div className="form-group" style={{ margin: 0 }}>
-                 <label className="form-label">Payment Amount (£)</label>
-                 <input
-                   type="number"
-                   required
-                   min="1"
-                   value={pastPayAmount}
-                   onChange={(e) => setPastPayAmount(e.target.value)}
-                   className="form-input"
-                 />
-               </div>
+              {/* Collection Month */}
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Collection Month</label>
+                <select value={pastPayCollectionMonth} onChange={(e) => setPastPayCollectionMonth(e.target.value)} className="form-select">
+                  {months.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
 
-               <div className="form-group" style={{ margin: 0 }}>
-                 <label className="form-label">Receipt / Document (Optional)</label>
-                 <input
-                   type="file"
-                   accept="image/*,application/pdf"
-                   onChange={(e) => {
-                     const files = e.target.files;
-                     if (files && files.length > 0) {
-                       setReceiptFile(files[0]);
-                     } else {
-                       setReceiptFile(null);
-                     }
-                   }}
-                   className="form-input"
-                   style={{ padding: '8px 12px', fontSize: '0.85rem' }}
-                 />
-               </div>
+              {/* Send Notification */}
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Send Notification</label>
+                <select value={pastPaySendNotification} onChange={(e) => setPastPaySendNotification(e.target.value as 'yes' | 'no')} className="form-select">
+                  <option value="" disabled>Choose...</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
 
-              <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
                 <button type="button" onClick={() => setActiveModal('NONE')} className="btn btn-secondary" style={{ flex: 1 }}>
                   Cancel
                 </button>
                 <button type="submit" disabled={formSubmitting} className="btn btn-primary" style={{ flex: 1 }}>
-                  {formSubmitting ? 'Recording...' : 'Record Payment'}
+                  {formSubmitting ? 'Saving...' : 'Submit'}
                 </button>
               </div>
             </form>
