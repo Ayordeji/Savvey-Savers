@@ -167,42 +167,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           </div>
         </Link>
 
-        {/* Card 2: Total Commitments -> Links to Commitments */}
-        <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
-          <div style={{
-            backgroundColor: '#000000',
-            border: '1px solid #1f2937',
-            borderRadius: '16px',
-            padding: '24px 28px',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: '20px',
-            minHeight: '130px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            transition: 'transform 0.15s ease, border-color 0.15s ease'
-          }} className="dashboard-interactive-card">
-            <div style={{
-              width: '52px', height: '52px', borderRadius: '12px',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-            }}>
-              <PiggyBank size={28} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-                Total Commitments
-              </span>
-              <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                {totalCommitmentsCount}
-              </h3>
-            </div>
-          </div>
-        </Link>
-
-        {/* Card 3: Pending Commitments -> Links to PENDING Commitments */}
+        {/* Card 2: Pending Commitments -> Links to PENDING Commitments */}
         <Link href="/dashboard/commitments?status=PENDING" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
             backgroundColor: '#000000',
@@ -272,7 +237,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           </div>
         </Link>
 
-        {/* Card 5: Completed Commitments -> Links to COMPLETED Commitments */}
+        {/* Card 4: Harvests Released -> Links to COMPLETED Commitments */}
         <Link href="/dashboard/commitments?status=COMPLETED" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
             backgroundColor: '#000000',
@@ -298,7 +263,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-                Completed Commitments
+                Harvests Released
               </span>
               <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
                 {`${completedCommitmentsCount} / ${totalCommitmentsCount}`}
@@ -307,7 +272,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           </div>
         </Link>
 
-        {/* Card 6: Active vs Invited -> Links to Manage Users */}
+        {/* Card 5: Active vs Invited -> Links to Manage Users */}
         <Link href="/dashboard/users" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
             backgroundColor: '#000000',
