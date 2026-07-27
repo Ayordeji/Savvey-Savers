@@ -45,14 +45,14 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const isAdmin = user.role === 'ADMIN';
 
   // --- QUERY & METRICS COMPUTATION ---
-  let pendingPaymentsAmount = 0;
-  let totalPaymentsCount = 0;
-  let confirmedPaymentsCount = 0;
-  let totalCommitmentsCount = 0;
+  let totalRevenue = 0;
+  let activeCommitmentsCount = 0;
+  let pendingCommitmentsCount = 0;
+  let notStartedCommitmentsCount = 0;
   let completedCommitmentsCount = 0;
+  let totalCommitmentsCount = 0;
   let activeUsersCount = 0;
   let invitedUsersCount = 0;
-  let totalRevenue = 0;
 
   // Monthly values for chart (Jan - Dec)
   const months = [
@@ -63,7 +63,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   if (isAdmin) {
     // Admin: Dynamic aggregation from live imported database records
-    const allPayments = await db.payments.findMany();
     const allCommitments = await db.commitments.findMany();
     const rawUsers = await db.users.findMany();
 
@@ -84,57 +83,38 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     const yearCommitments = allCommitments.filter((c) => Number(c.collectionYear) === selectedYearInt);
     totalCommitmentsCount = yearCommitments.length;
 
-    // 3. Harvest Released in current cycle (completed commitments in selectedYear)
+    // 3. Status counts
+    activeCommitmentsCount = yearCommitments.filter((c) => c.status === 'ACTIVE').length;
+    pendingCommitmentsCount = yearCommitments.filter((c) => c.status === 'PENDING').length;
+    notStartedCommitmentsCount = yearCommitments.filter((c) => c.status === 'NOT_YET_STARTED').length;
     completedCommitmentsCount = yearCommitments.filter((c) => c.status === 'COMPLETED').length;
 
-    // 4. Payments confirmed / pending for selected cycle year
-    const yearPayments = allPayments.filter((p) => Number(p.year) === selectedYearInt);
-    const confirmedPaymentsYearly = yearPayments.filter((p) => p.status === 'CONFIRMED');
-    
-    confirmedPaymentsCount = confirmedPaymentsYearly.length;
-    totalPaymentsCount = yearCommitments.length;
-    pendingPaymentsAmount = yearPayments.filter((p) => p.status === 'PENDING').reduce((acc, p) => acc + p.amount, 0);
+    // 4. Expected Revenue: sum of all active and completed commitments in the year
+    const revenueCommitments = yearCommitments.filter((c) => c.status === 'ACTIVE' || c.status === 'COMPLETED');
+    totalRevenue = revenueCommitments.reduce((acc, c) => acc + c.amount, 0);
 
-    // 5. Revenue by month graph data — strictly from confirmed payments in DB
+    // 5. Monthly Distribution (Expected revenue distributed by collection month)
     months.forEach((m, idx) => {
-      const monthPayments = yearPayments.filter((p) => p.month === m && p.status === 'CONFIRMED');
-      monthlyData[idx] = monthPayments.reduce((acc, p) => acc + p.amount, 0);
+      const monthCmts = revenueCommitments.filter((c) => c.collectionMonth === m);
+      monthlyData[idx] = monthCmts.reduce((acc, c) => acc + c.amount, 0);
     });
-
-    // 6. Total Revenue to Date = sum of all confirmed monthly payments
-    totalRevenue = monthlyData.reduce((acc, v) => acc + v, 0);
   } else {
     // Member: Personal data only
     const myCommitments = await db.commitments.findMany((c) => c.memberId === user.id);
     const myCommitmentsYearly = myCommitments.filter((c) => String(c.collectionYear) === String(selectedYear));
     totalCommitmentsCount = myCommitmentsYearly.length;
+    
+    activeCommitmentsCount = myCommitmentsYearly.filter((c) => c.status === 'ACTIVE').length;
+    pendingCommitmentsCount = myCommitmentsYearly.filter((c) => c.status === 'PENDING').length;
+    notStartedCommitmentsCount = myCommitmentsYearly.filter((c) => c.status === 'NOT_YET_STARTED').length;
     completedCommitmentsCount = myCommitmentsYearly.filter((c) => c.status === 'COMPLETED').length;
 
-    const myCommitmentIds = myCommitments.map((c) => c.id);
-    const myPaymentsAll = await db.payments.findMany((p) => myCommitmentIds.includes(p.commitmentId));
-    const myConfirmedPaymentsAll = myPaymentsAll.filter((p) => p.status === 'CONFIRMED');
-    totalRevenue = myConfirmedPaymentsAll.reduce((acc, p) => acc + p.amount, 0);
+    const revenueCommitments = myCommitmentsYearly.filter((c) => c.status === 'ACTIVE' || c.status === 'COMPLETED');
+    totalRevenue = revenueCommitments.reduce((acc, c) => acc + c.amount, 0);
 
-    const myPaymentsYearly = myPaymentsAll.filter((p) => String(p.year) === String(selectedYear));
-    const myConfirmedPaymentsYearly = myPaymentsYearly.filter((p) => p.status === 'CONFIRMED');
-    const myPendingPaymentsYearly = myPaymentsYearly.filter((p) => p.status === 'PENDING');
-
-    pendingPaymentsAmount = myPendingPaymentsYearly.reduce((acc, p) => acc + p.amount, 0);
-    totalPaymentsCount = myPaymentsYearly.length;
-    confirmedPaymentsCount = myConfirmedPaymentsYearly.length;
-
-    // Populate monthly data (filtered by year, past & current month only)
-    const now = new Date();
-    const currentYearNum = now.getFullYear();
-    const currentMonthIdx = now.getMonth();
-
-    myConfirmedPaymentsYearly.forEach((p) => {
-      const monthIdx = months.indexOf(p.month);
-      const pYear = Number(selectedYear);
-      const isFuture = pYear > currentYearNum || (pYear === currentYearNum && monthIdx > currentMonthIdx);
-      if (monthIdx !== -1 && !isFuture) {
-        monthlyData[monthIdx] += p.amount;
-      }
+    months.forEach((m, idx) => {
+      const monthCmts = revenueCommitments.filter((c) => c.collectionMonth === m);
+      monthlyData[idx] = monthCmts.reduce((acc, c) => acc + c.amount, 0);
     });
   }
 
@@ -189,8 +169,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           </div>
         </Link>
 
-        {/* Card 2: Payments not yet Confirmed -> Links to Active/Unconfirmed Commitments */}
-        <Link href="/dashboard/commitments?status=ACTIVE" style={{ textDecoration: 'none', display: 'block' }}>
+        {/* Card 2: Not Yet Started -> Links to NOT_YET_STARTED Commitments */}
+        <Link href="/dashboard/commitments?status=NOT_YET_STARTED" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
             backgroundColor: '#000000',
             border: '1px solid #1f2937',
@@ -215,16 +195,16 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-                Payments not yet Confirmed
+                Not Yet Started
               </span>
               <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                {`${totalPaymentsCount - confirmedPaymentsCount} / ${totalPaymentsCount}`}
+                {`${notStartedCommitmentsCount} / ${totalCommitmentsCount}`}
               </h3>
             </div>
           </div>
         </Link>
 
-        {/* Card 3: Pending Payments -> Links to Pending Payments/Commitments */}
+        {/* Card 3: Pending Commitments -> Links to PENDING Commitments */}
         <Link href="/dashboard/commitments?status=PENDING" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
             backgroundColor: '#000000',
@@ -250,17 +230,17 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-                Pending Payments
+                Pending Commitments
               </span>
               <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                £{pendingPaymentsAmount.toFixed(2)}
+                {`${pendingCommitmentsCount} / ${totalCommitmentsCount}`}
               </h3>
             </div>
           </div>
         </Link>
 
-        {/* Card 4: Payments Confirmed -> Links to Completed/Confirmed Commitments */}
-        <Link href="/dashboard/commitments?status=COMPLETED" style={{ textDecoration: 'none', display: 'block' }}>
+        {/* Card 4: Active Commitments -> Links to ACTIVE Commitments */}
+        <Link href="/dashboard/commitments?status=ACTIVE" style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
             backgroundColor: '#000000',
             border: '1px solid #1f2937',
@@ -285,10 +265,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-                Payments Confirmed
+                Active Commitments
               </span>
               <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                {`${confirmedPaymentsCount} / ${totalPaymentsCount}`}
+                {`${activeCommitmentsCount} / ${totalCommitmentsCount}`}
               </h3>
             </div>
           </div>

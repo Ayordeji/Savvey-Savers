@@ -526,8 +526,10 @@ function CommitmentsContent() {
   useEffect(() => {
     const m = searchParams.get('month');
     const y = searchParams.get('year');
+    const s = searchParams.get('status');
     if (m) setMonthFilter(m);
     if (y) setYearFilter(y);
+    if (s) setStatusFilter(s);
   }, [searchParams]);
 
   const currentYearNum = new Date().getFullYear();
@@ -540,11 +542,7 @@ function CommitmentsContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const filteredCommitments = commitments.map((c) => {
-    // Status driven by cycle length: past year (< currentYear) = COMPLETED, current/future = ACTIVE
-    const computedStatus: Commitment['status'] = c.collectionYear < currentYearNum ? 'COMPLETED' : (c.status === 'COMPLETED' ? 'ACTIVE' : c.status);
-    return { ...c, status: computedStatus };
-  }).filter((c) => {
+  const filteredCommitments = commitments.filter((c) => {
     const q = searchQuery.toLowerCase().trim();
     const matchesSearch = !q ||
       c.memberName.toLowerCase().includes(q) ||
