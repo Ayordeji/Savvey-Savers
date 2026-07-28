@@ -122,36 +122,34 @@ function CommitmentsContent() {
 
   const fetchInitialData = async () => {
     try {
-      // 1. Fetch current user from profile or settings checks
-      const meRes = await fetch('/api/admin/users');
-      if (meRes.ok) {
-        const uList = await meRes.json();
-        // Determine logged in profile (usr_admin by default if we are admin, or we can check via login API details)
-        // For local development, check who is active. Or write a small auth fetch
-        const cmtRes = await fetch('/api/admin/commitments');
-        if (cmtRes.ok) {
-          const cmtData = await cmtRes.json();
-          setCommitments(cmtData);
-        }
-
-        // Determine user list
-        setUsers(uList.filter((u: any) => u.role === 'MEMBER'));
-        
-        // Check if there is an active session
-        const sessRes = await fetch('/api/auth/session');
-        if (sessRes.ok) {
-          const sessData = await sessRes.json();
-          if (sessData.session) {
-            setCurrentUser(sessData.session);
-          } else {
-            setCurrentUser({ id: 'member', role: 'MEMBER' });
-          }
+      // 1. Always fetch session first — this is the source of truth for role
+      const sessRes = await fetch('/api/auth/session');
+      if (sessRes.ok) {
+        const sessData = await sessRes.json();
+        if (sessData.loggedIn && sessData.user) {
+          setCurrentUser(sessData.user);
         } else {
           setCurrentUser({ id: 'member', role: 'MEMBER' });
         }
+      } else {
+        setCurrentUser({ id: 'member', role: 'MEMBER' });
       }
 
-      // 2. Fetch settings
+      // 2. Fetch users list + commitments (admin-only endpoint)
+      const meRes = await fetch('/api/admin/users');
+      if (meRes.ok) {
+        const uList = await meRes.json();
+        setUsers(uList.filter((u: any) => u.role === 'MEMBER'));
+      }
+
+      // 3. Always fetch commitments (accessible by all logged-in users)
+      const cmtRes = await fetch('/api/admin/commitments');
+      if (cmtRes.ok) {
+        const cmtData = await cmtRes.json();
+        setCommitments(cmtData);
+      }
+
+      // 4. Fetch settings
       const settingsRes = await fetch('/api/admin/settings');
       if (settingsRes.ok) {
         const sData = await settingsRes.json();
