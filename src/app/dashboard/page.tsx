@@ -66,59 +66,56 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const currentRealYear = 2026; // System base year
 
   if (isAdmin) {
-    // Admin: Dynamic aggregation from live imported database records
-    const allCommitments = await db.commitment.findMany({
-      include: { payments: true }
-    });
-    const rawUsers = await db.user.findMany();
+    try {
+      // Admin: Dynamic aggregation from live imported database records
+      const allCommitments = await db.commitment.findMany();
+      const allPayments = await db.payment.findMany({ where: { status: 'CONFIRMED' } });
+      const rawUsers = await db.user.findMany();
 
-    // 1. Deduplicate members for user counts
-    const uniqueMap = new Map<string, any>();
-    rawUsers.forEach((u) => {
-      if (!u) return;
-      const k = u.email ? u.email.toLowerCase().trim() : (u.invitationId?.trim() || u.id);
-      if (!uniqueMap.has(k) || u.role === 'ADMIN') uniqueMap.set(k, u);
-    });
-    const memberUsers = Array.from(uniqueMap.values()).filter((u) => u.role === 'MEMBER' || !u.isSuperAdmin);
-
-    activeUsersCount = memberUsers.filter((u) => u.isActive).length;
-    invitedUsersCount = memberUsers.filter((u) => !u.isActive).length;
-
-    // 2. All-Time Revenue = sum of all CONFIRMED savings commitment payments (not membership fees)
-    allCommitments.forEach((c) => {
-      const confirmedPayments = c.payments.filter((p: any) => p.status === 'CONFIRMED');
-      const confirmed = confirmedPayments.reduce((acc: number, p: any) => acc + p.amount, 0);
-      allTimeRevenue += confirmed;
-    });
-
-    // 3. Filter commitments by selected collection year
-    const selectedYearInt = parseInt(selectedYear, 10) || currentRealYear;
-    const yearCommitments = allCommitments.filter((c) => Number(c.collectionYear) === selectedYearInt);
-    totalCommitmentsCount = yearCommitments.length;
-
-    // 4. Status counts for selected year
-    activeCommitmentsCount = yearCommitments.filter((c) => c.status === 'ACTIVE').length;
-    pendingCommitmentsCount = yearCommitments.filter((c) => c.status === 'PENDING').length;
-    completedCommitmentsCount = yearCommitments.filter((c) => c.status === 'COMPLETED').length;
-
-    // Harvest Released Total — sum of actual harvestAmount from all released commitments
-    harvestReleasedTotal = allCommitments
-      .filter((c) => c.status === 'COMPLETED' && (c as any).harvestAmount)
-      .reduce((acc, c) => acc + ((c as any).harvestAmount || 0), 0);
-
-    // 5. Revenue for selected year = confirmed payments on commitments in that year
-    yearCommitments.forEach((c) => {
-      const confirmedPayments = c.payments.filter((p: any) => p.status === 'CONFIRMED' && p.year === selectedYearInt);
-      revenueForYear += confirmedPayments.reduce((acc: number, p: any) => acc + p.amount, 0);
-    });
-
-    // 6. Monthly Distribution — confirmed payments by month for selected year
-    months.forEach((m, idx) => {
-      yearCommitments.forEach((c) => {
-        const monthPayments = c.payments.filter((p: any) => p.status === 'CONFIRMED' && p.month === m && p.year === selectedYearInt);
-        monthlyData[idx] += monthPayments.reduce((acc: number, p: any) => acc + p.amount, 0);
+      // 1. Deduplicate members for user counts
+      const uniqueMap = new Map<string, any>();
+      rawUsers.forEach((u) => {
+        if (!u) return;
+        const k = u.email ? u.email.toLowerCase().trim() : (u.invitationId?.trim() || u.id);
+        if (!uniqueMap.has(k) || u.role === 'ADMIN') uniqueMap.set(k, u);
       });
-    });
+      const memberUsers = Array.from(uniqueMap.values()).filter((u) => u.role === 'MEMBER' || !u.isSuperAdmin);
+
+      activeUsersCount = memberUsers.filter((u) => u.isActive).length;
+      invitedUsersCount = memberUsers.filter((u) => !u.isActive).length;
+
+      // 2. All-Time Revenue = sum of all CONFIRMED savings commitment payments
+      allTimeRevenue = allPayments.reduce((acc, p) => acc + p.amount, 0);
+
+      // 3. Filter commitments by selected collection year
+      const selectedYearInt = parseInt(selectedYear, 10) || currentRealYear;
+      const yearCommitments = allCommitments.filter((c) => Number(c.collectionYear) === selectedYearInt);
+      totalCommitmentsCount = yearCommitments.length;
+
+      // 4. Status counts for selected year
+      activeCommitmentsCount = yearCommitments.filter((c) => c.status === 'ACTIVE').length;
+      pendingCommitmentsCount = yearCommitments.filter((c) => c.status === 'PENDING').length;
+      completedCommitmentsCount = yearCommitments.filter((c) => c.status === 'COMPLETED').length;
+
+      // Harvest Released Total — sum of actual harvestAmount from all released commitments
+      harvestReleasedTotal = allCommitments
+        .filter((c) => c.status === 'COMPLETED' && (c as any).harvestAmount)
+        .reduce((acc, c) => acc + ((c as any).harvestAmount || 0), 0);
+
+      // 5. Revenue for selected year = confirmed payments on commitments in that year
+      const yearCommitmentIds = new Set(yearCommitments.map((c) => c.id));
+      const yearPayments = allPayments.filter((p) => yearCommitmentIds.has(p.commitmentId) && (p as any).year === selectedYearInt);
+      revenueForYear = yearPayments.reduce((acc, p) => acc + p.amount, 0);
+
+      // 6. Monthly Distribution — confirmed payments by month for selected year
+      months.forEach((m, idx) => {
+        const monthPayments = yearPayments.filter((p) => (p as any).month === m);
+        monthlyData[idx] = monthPayments.reduce((acc, p) => acc + p.amount, 0);
+      });
+    } catch (err) {
+      console.error('Dashboard metrics error:', err);
+      // Fallback: page still renders, just with zero stats
+    }
   } else {
     // Basic fallback for non-admins if ever reached
     allTimeRevenue = 0;
