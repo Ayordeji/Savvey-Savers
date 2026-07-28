@@ -77,7 +77,6 @@ export async function POST(request: Request) {
       postCode: (postCode || user.postCode || '').trim(),
       country: 'UNITED KINGDOM',
       termsAccepted: termsAccepted !== false,
-      securityQuestions: securityQuestions || [],
     };
 
     // Activate the user in Firestore

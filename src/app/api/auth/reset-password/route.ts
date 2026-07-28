@@ -20,9 +20,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, message: 'If this email is registered, a password reset link has been sent.' });
     }
 
-    // Generate a unique reset token
-    const { v4: uuidv4 } = require('uuid');
-    const resetToken = uuidv4();
+    // Generate a unique reset token in the M-XXXXXX format
+    const random6Digit = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetToken = `M-${random6Digit}`;
     
     // Set token to expire in 1 hour
     const expiresAt = new Date();

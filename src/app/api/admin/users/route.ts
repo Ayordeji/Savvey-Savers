@@ -158,7 +158,8 @@ export async function POST(request: Request) {
     }
 
     // Generate activation fields
-    const invitationId = 'invite_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const random6Digit = Math.floor(100000 + Math.random() * 900000).toString();
+    const invitationId = `M-${random6Digit}`;
     const invitationExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(); // 72 hours
 
     // We no longer sync to Firebase Auth since we migrated to local JWTs.
