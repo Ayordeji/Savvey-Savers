@@ -258,6 +258,14 @@ function CommitmentsReportContent() {
                     </span>
                   </div>
                 </th>
+                <th onClick={() => requestSort('goal')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>Savings Goal</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'goal' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
                 
                 <th onClick={() => requestSort('collectionMonth')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -297,6 +305,7 @@ function CommitmentsReportContent() {
                     </div>
                   </td>
                   <td style={{ fontWeight: 600, color: '#16a34a' }}>£{Number(cmt.amount).toFixed(2)}</td>
+                  <td>{cmt.goal || 'Savings Goal'}</td>
                   
                   <td className={styles.dateCell}>{cmt.collectionMonth} {cmt.collectionYear}</td>
                   <td className={styles.dateCell}>{cmt.collectionYear}</td>
@@ -309,7 +318,7 @@ function CommitmentsReportContent() {
               ))}
               {currentCommitments.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>
                     No savings commitments match your filters.
                   </td>
                 </tr>

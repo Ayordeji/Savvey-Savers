@@ -877,6 +877,18 @@ function CommitmentsContent() {
                                       <span>Payment for Past Month</span>
                                     </button>
                                   )}
+                                  {paymentsMap[c.id]?.some(p => p.status === 'PENDING') && (
+                                    <button onClick={() => {
+                                      const pendingPayment = paymentsMap[c.id].find(p => p.status === 'PENDING');
+                                      if (pendingPayment) {
+                                        handleConfirmPayment(pendingPayment.id, c.id);
+                                        setOpenDropdownId(null);
+                                      }
+                                    }} className={styles.dropdownItem}>
+                                      <Check size={14} />
+                                      <span>Confirm Payment Receipt</span>
+                                    </button>
+                                  )}
                                   {c.status !== 'COMPLETED' && c.status !== 'CANCELLED' && (
                                     <button onClick={() => handleReleaseHarvest(c.id)} className={styles.dropdownItem}>
                                       <Check size={14} />
@@ -922,14 +934,6 @@ function CommitmentsContent() {
                                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
                                         {pay.status === 'CONFIRMED' ? (
                                           <span className="status-pill confirmed" style={{ fontSize: '0.65rem' }}>Confirmed</span>
-                                        ) : (currentUser?.role === 'ADMIN' && c.status !== 'PENDING' && c.status !== 'CANCELLED') ? (
-                                          <button
-                                            onClick={() => handleConfirmPayment(pay.id, c.id)}
-                                            className="btn btn-primary btn-sm"
-                                            style={{ padding: '4px 8px', fontSize: '0.75rem' }}
-                                          >
-                                            Confirm Receipt
-                                          </button>
                                         ) : (
                                           <span className="status-pill pending" style={{ fontSize: '0.65rem' }}>Awaiting Confirmation</span>
                                         )}

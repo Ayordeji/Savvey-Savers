@@ -104,7 +104,7 @@ export async function POST(request: Request) {
 
     // Admin notification
     await db.notification.create({ data: {
-      userId: 'usr_admin',
+      userId: session.id || session?.id,
       message: `Prospect ${entry.name} converted to member successfully in mode ${inviteMode}.`,
       type: 'PROSPECT_CONVERTED',
       isRead: false
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
     await db.auditLog.create({ data: {
       action: 'ADMIN_PROSPECT_APPROVE',
       details: `Admin approved waiting list entry for ${entry.name} (${entry.email}) and created user.`,
-      userId: 'usr_admin'
+      userId: session.id || session?.id
     } });
 
     return NextResponse.json({ success: true });
@@ -150,7 +150,7 @@ export async function DELETE(request: Request) {
     await db.auditLog.create({ data: {
       action: 'ADMIN_PROSPECT_DECLINE',
       details: `Admin declined waiting list entry for ${entry.name} (${entry.email}).`,
-      userId: 'usr_admin'
+      userId: session.id || session?.id
     } });
 
     return NextResponse.json({ success: true });

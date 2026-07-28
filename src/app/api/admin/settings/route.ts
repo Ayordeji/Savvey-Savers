@@ -123,7 +123,7 @@ export async function POST(request: Request) {
     await db.auditLog.create({ data: {
       action: 'ADMIN_SETTINGS_UPDATE',
       details: `Admin updated settings configuration for key: ${key}.`,
-      userId: 'usr_admin'
+      userId: session.id
     } });
 
     return NextResponse.json({ success: true });

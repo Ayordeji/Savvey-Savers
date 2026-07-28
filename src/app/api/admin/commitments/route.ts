@@ -199,7 +199,7 @@ export async function PUT(request: Request) {
     await db.auditLog.create({ data: {
       action: 'ADMIN_COMMITMENT_UPDATE',
       details: `Admin updated savings commitment record ${id}.`,
-      userId: 'usr_admin'
+      userId: session.id || session?.id
     } });
 
     return NextResponse.json({ success: true });
@@ -266,7 +266,7 @@ export async function DELETE(request: Request) {
       await db.auditLog.create({ data: {
         action: 'ADMIN_COMMITMENT_CANCEL',
         details: `Admin deleted and archived savings commitment ${resolvedId} for member ${finalCmt.memberId}.`,
-        userId: session.id || 'usr_admin'
+        userId: session.id
       } });
     }
 

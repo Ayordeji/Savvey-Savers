@@ -92,6 +92,7 @@ export async function GET() {
     membershipFeeConfirmed: u.membershipFeeConfirmed,
     membershipFeeConfirmedAt: u.membershipFeeConfirmedAt || null,
     createdAt: u.createdAt,
+    lastLoginAt: u.lastLoginAt,
     invitationId: u.invitationId,
     invitationExpiresAt: u.invitationExpiresAt,
     addressLine1: u.addressLine1,
@@ -274,7 +275,7 @@ export async function POST(request: Request) {
 
     // Create admin notification
     await db.notification.create({ data: {
-      userId: 'usr_admin',
+      userId: session.id || session?.id,
       message: `User ${name} added successfully. Email invite status: ${inviteMode}.`,
       type: 'USER_ADDED',
       isRead: false
@@ -284,7 +285,7 @@ export async function POST(request: Request) {
     await db.auditLog.create({ data: {
       action: 'ADMIN_USER_ADD',
       details: `Admin added user ${name} (${normalizedEmail}) in mode ${inviteMode}.`,
-      userId: 'usr_admin'
+      userId: session.id || session?.id
     } });
 
     return NextResponse.json({
@@ -569,7 +570,7 @@ export async function PUT(request: Request) {
     await db.auditLog.create({ data: {
       action: 'ADMIN_USER_UPDATE',
       details: `Admin updated user details for ${user.email}.`,
-      userId: 'usr_admin'
+      userId: session.id || session?.id
     } });
 
     return NextResponse.json({ success: true });
@@ -645,7 +646,7 @@ export async function DELETE(request: Request) {
       await db.auditLog.create({ data: {
         action: 'ADMIN_USER_DELETE',
         details: `Admin deleted user ${user.name} (${user.email}) and archived all records.`,
-        userId: 'usr_admin'
+        userId: session.id || session?.id
       } });
 
       deletedIds.push(id);
