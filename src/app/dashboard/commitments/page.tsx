@@ -792,7 +792,6 @@ function CommitmentsContent() {
                 </tr>
               ) : (
                 paginatedCommitments.map((c, idx) => {
-                  const isExpanded = expandedCmtId === c.id;
                   const isBottomRow = idx >= 2 && paginatedCommitments.length >= 4 && idx >= paginatedCommitments.length - 2;
                   const displayMemberName = (c.memberName && c.memberName !== 'Unknown Member')
                     ? c.memberName
