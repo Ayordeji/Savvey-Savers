@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Fragment, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, PoundSterling, Calendar, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, PoundSterling, Calendar, ChevronDown, ChevronUp, ExternalLink, Banknote } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import PaginationControls from '../PaginationControls';
 import styles from './commitments.module.css';
@@ -155,6 +155,26 @@ function CommitmentsContent() {
         const sData = await settingsRes.json();
         setGoals(sData.savingGoals?.filter((g: any) => g.enabled) || []);
         setAmounts(sData.commitmentAmounts?.filter((a: any) => a.enabled) || []);
+      }
+
+      // 5. Pre-load payments for all commitments so the dropdown shows correct state immediately
+      if (cmtRes.ok) {
+        const freshCommitmentsRes = await fetch('/api/admin/commitments');
+        const freshCommitments = freshCommitmentsRes.ok ? await freshCommitmentsRes.json() : [];
+        const allPaymentsRes = await Promise.allSettled(
+          freshCommitments.map((cmt: any) =>
+            fetch(`/api/admin/payments?commitmentId=${cmt.id}`)
+              .then(r => r.ok ? r.json() : [])
+              .then(payments => ({ id: cmt.id, payments }))
+          )
+        );
+        const newPaymentsMap: Record<string, Payment[]> = {};
+        for (const result of allPaymentsRes) {
+          if (result.status === 'fulfilled') {
+            newPaymentsMap[result.value.id] = result.value.payments;
+          }
+        }
+        setPaymentsMap(newPaymentsMap);
       }
     } catch (err) {
       console.error('Error fetching commitments page data:', err);
@@ -865,7 +885,15 @@ function CommitmentsContent() {
                                       <span>Payment for Past Month</span>
                                     </button>
                                   )}
-                                  {paymentsMap[c.id]?.some(p => p.status === 'PENDING') ? (
+                                  {/* Show 'Confirm Payment Receipt' only if there's a PENDING payment.
+                                      Show 'Payment Done' only if payments are loaded (not undefined) and all are CONFIRMED.
+                                      If paymentsMap[c.id] is undefined (not loaded), show a loading state. */}
+                                  {paymentsMap[c.id] === undefined ? (
+                                    <button disabled className={styles.dropdownItem} style={{ opacity: 0.4, cursor: 'not-allowed' }}>
+                                      <Check size={14} />
+                                      <span>Loading...</span>
+                                    </button>
+                                  ) : paymentsMap[c.id]?.some(p => p.status === 'PENDING') ? (
                                     <button onClick={() => {
                                       const pendingPayment = paymentsMap[c.id].find(p => p.status === 'PENDING');
                                       if (pendingPayment) {
@@ -876,10 +904,19 @@ function CommitmentsContent() {
                                       <Check size={14} />
                                       <span>Confirm Payment Receipt</span>
                                     </button>
-                                  ) : (
-                                    <button disabled className={styles.dropdownItem} style={{ opacity: 0.5, cursor: 'not-allowed' }}>
-                                      <Check size={14} />
+                                  ) : paymentsMap[c.id]?.some(p => p.status === 'CONFIRMED') ? (
+                                    <button disabled className={styles.dropdownItem} style={{ opacity: 0.55, cursor: 'not-allowed' }}>
+                                      <Banknote size={14} />
                                       <span>Payment Done</span>
+                                    </button>
+                                  ) : (
+                                    // No payments at all — show Confirm Payment Receipt as it's freshly created
+                                    <button onClick={() => {
+                                      // Refresh payments for this commitment first, then re-render
+                                      fetchPayments(c.id);
+                                    }} className={styles.dropdownItem} style={{ opacity: 0.6 }}>
+                                      <Check size={14} />
+                                      <span>Confirm Payment Receipt</span>
                                     </button>
                                   )}
                                   {c.status !== 'COMPLETED' && c.status !== 'CANCELLED' && (

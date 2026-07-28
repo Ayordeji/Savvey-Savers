@@ -45,6 +45,7 @@ model User {
 
 model Commitment {
   id              String    @id @default(uuid())
+  displayId       String?   @unique // SC-XXXXX format display ID
   memberId        String
   memberName      String?
   amount          Float

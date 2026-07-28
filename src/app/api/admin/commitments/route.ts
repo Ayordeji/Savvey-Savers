@@ -37,10 +37,14 @@ export async function GET() {
       (u.name && c.memberName && u.name.toLowerCase().trim() === c.memberName.toLowerCase().trim())
     );
     
-    // Auto-prefix ID with SCC- if old format
-    let id = c.id;
-    if (id.startsWith('cmt_')) {
-      id = `SCC-${id.substring(4)}`;
+    // Auto-prefix ID with SCC- if old format (cmt_ prefix from migration)
+    let id = c.displayId || c.id;
+    if (!c.displayId) {
+      // Fallback: raw UUID or cmt_ prefix get shown as-is or reformatted
+      if (id.startsWith('cmt_')) {
+        id = `SCC-${id.substring(4)}`;
+      }
+      // Raw UUIDs without a displayId are not yet formatted — show them as-is for now
     }
 
     // Status driven by cycle year: past year (< currentYear) = COMPLETED, coming year (> currentYear) = NOT_YET_STARTED, current year = ACTIVE
@@ -99,7 +103,23 @@ export async function POST(request: Request) {
 
     const currentYear = new Date().getFullYear();
     const status = startYear < currentYear ? 'COMPLETED' : (requestCollection ? 'PENDING' : 'ACTIVE');
+
+    // Generate sequential SC-XXXXX displayId
+    const existingCommitments = await db.commitment.findMany({
+      where: { displayId: { startsWith: 'SC-' } },
+      select: { displayId: true }
+    });
+    let maxScNum = 0;
+    for (const ec of existingCommitments) {
+      if (ec.displayId) {
+        const num = parseInt(ec.displayId.replace(/^SC-0*/, ''), 10);
+        if (!isNaN(num) && num > maxScNum) maxScNum = num;
+      }
+    }
+    const nextScId = `SC-${String(maxScNum + 1).padStart(5, '0')}`;
+
     const newCommitment = await db.commitment.create({ data: {
+      displayId: nextScId,
       memberId: targetMemberId,
       amount: parseFloat(amount),
       goal,
@@ -107,7 +127,7 @@ export async function POST(request: Request) {
       collectionYear: startYear,
       endDate: endDate ? new Date(endDate) : new Date(startYear, 11, 31),
       status,
-      updatedAt: new Date().toISOString()
+      memberName: member.name || ''
     } });
 
     // Create related payments placeholder for the collection month
