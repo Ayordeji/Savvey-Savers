@@ -48,9 +48,9 @@ export async function POST(request: Request) {
       });
     }
   } else {
-    const userNotifications = await db.notification.findMany(
-      (n) => n.userId === session.id && !n.isRead
-    );
+    const userNotifications = await db.notification.findMany({
+      where: { userId: session.id, isRead: false }
+    });
     for (const n of userNotifications) {
       await db.notification.update({
         where: { id: n.id },

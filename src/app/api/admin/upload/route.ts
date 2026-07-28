@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
-
 import { cookies } from 'next/headers';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+);
 
 async function getUserSession() {
   const cookieStore = await cookies();
@@ -48,24 +53,26 @@ export async function POST(request: Request) {
     const randomName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${cleanExtension}`;
     const destinationPath = `receipts/${randomName}`;
 
-    // Get bucket reference
-    const bucket = adminStorage.bucket();
-    const storageFile = bucket.file(destinationPath);
-
-    // Save to Firebase Storage
-    await storageFile.save(buffer, {
-      metadata: {
+    // Upload to Supabase Storage bucket 'receipts'
+    const { data, error } = await supabase.storage
+      .from('receipts')
+      .upload(destinationPath, buffer, {
         contentType: file.type,
-      },
-    });
+        upsert: true,
+      });
+
+    if (error) {
+      throw error;
+    }
 
     // Construct download link
-    const encodedPath = encodeURIComponent(destinationPath);
-    const downloadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media`;
+    const { data: { publicUrl } } = supabase.storage
+      .from('receipts')
+      .getPublicUrl(destinationPath);
 
     return NextResponse.json({
       success: true,
-      url: downloadUrl,
+      url: publicUrl,
       fileName: file.name
     });
   } catch (err: any) {

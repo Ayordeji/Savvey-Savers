@@ -60,15 +60,15 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: `A membership fee request has already been created for the year ${parsedYear}.` }, { status: 400 });
       }
 
-      const record = await db.membershipFeeRecord.create({
+      const record = await db.membershipFeeRecord.create({ data: {
         userId,
         year: parsedYear,
         baseFee: parsedBase,
         adminFee: parsedAdmin,
         totalFee: totalFee,
         status: 'PENDING',
-        requestedAt: new Date().toISOString()
-      });
+        requestedAt: new Date()
+      } });
 
       // Update user fee status flag
       await db.user.update({
@@ -157,16 +157,16 @@ export async function POST(request: Request) {
         });
       } else {
         // Create paid record if none existed
-        await db.membershipFeeRecord.create({
+        await db.membershipFeeRecord.create({ data: {
           userId,
           year: new Date().getFullYear(),
           baseFee: parsedAmount || 0,
           adminFee: 0,
           totalFee: parsedAmount || 0,
           status: 'PAID',
-          requestedAt: paymentDate,
-          paidAt: paymentDate
-        });
+          requestedAt: new Date(paymentDate),
+          paidAt: new Date(paymentDate)
+        } });
       }
 
       // Mark user fee confirmed

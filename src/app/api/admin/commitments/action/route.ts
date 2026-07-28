@@ -35,7 +35,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Payment ID is required.' }, { status: 400 });
       }
 
-      const payment = await db.payments.findUnique({ where: { id: paymentId } });
+      const payment = await db.payment.findUnique({ where: { id: paymentId } });
       if (!payment) {
         return NextResponse.json({ error: 'Payment record not found.' }, { status: 404 });
       }
@@ -44,12 +44,11 @@ export async function POST(request: Request) {
       const member = cmt ? await db.user.findUnique({ where: { id: cmt.memberId } }) : null;
 
       // Update payment
-      await db.payments.update({
+      await db.payment.update({
         where: { id: paymentId },
         data: {
           status: 'CONFIRMED',
-          confirmedAt: new Date().toISOString(),
-          confirmedById: session.id
+          confirmedAt: new Date()
         }
       });
 
@@ -73,19 +72,19 @@ export async function POST(request: Request) {
         });
 
         // Member Notification
-        await db.notification.create({
+        await db.notification.create({ data: {
           userId: member.id,
           message: `Your payment of £${payment.amount} for ${payment.month} ${payment.year} has been confirmed.`,
           type: 'PAYMENT_CONFIRMED',
           isRead: false
-        });
+        } });
       }
 
-      await db.auditLog.create({
+      await db.auditLog.create({ data: {
         action: 'PAYMENT_CONFIRM',
         details: `Confirmed savings payment of £${payment.amount} for ${payment.month} ${payment.year}.`,
         userId: session.id
-      });
+      } });
 
       return NextResponse.json({ success: true });
     }
@@ -104,16 +103,16 @@ export async function POST(request: Request) {
       const member = await db.user.findUnique({ where: { id: cmt.memberId } });
 
       // Create confirmed payment
-      const pastPayment = await db.payments.create({
+      const pastPayment = await db.payment.create({ data: {
         commitmentId,
+        userId: cmt.memberId,
         amount: parseFloat(amount),
         month,
         year: parseInt(year),
         status: 'CONFIRMED',
-        confirmedAt: new Date().toISOString(),
-        confirmedById: session.id,
+        confirmedAt: new Date(),
         receiptUrl: receiptUrl || null
-      });
+      } });
 
       if (member) {
         // Send Email
@@ -124,19 +123,19 @@ export async function POST(request: Request) {
         });
 
         // Member Notification
-        await db.notification.create({
+        await db.notification.create({ data: {
           userId: member.id,
           message: `Past contribution of £${amount} for ${month} ${year} has been recorded by the admin.`,
           type: 'PAYMENT_RECORDED',
           isRead: false
-        });
+        } });
       }
 
-      await db.auditLog.create({
+      await db.auditLog.create({ data: {
         action: 'PAST_PAYMENT_RECORD',
         details: `Recorded past payment of £${amount} for ${month} ${year} under commitment ${commitmentId}.`,
         userId: session.id
-      });
+      } });
 
       return NextResponse.json({ success: true, payment: pastPayment });
     }
@@ -155,7 +154,7 @@ export async function POST(request: Request) {
       const member = await db.user.findUnique({ where: { id: cmt.memberId } });
 
       // Compute total confirmed payout amount (total payments received)
-      const relatedPayments = await db.payments.findMany((p) => p.commitmentId === commitmentId && p.status === 'CONFIRMED');
+      const relatedPayments = await db.payment.findMany({ where: { commitmentId, status: 'CONFIRMED' } });
       const harvestAmount = relatedPayments.reduce((acc, p) => acc + p.amount, 0);
 
       // Update commitment status to COMPLETED
@@ -175,19 +174,19 @@ export async function POST(request: Request) {
         });
 
         // Member Notification
-        await db.notification.create({
+        await db.notification.create({ data: {
           userId: member.id,
           message: `Congratulations! Your harvest payout of £${harvestAmount} has been released.`,
           type: 'HARVEST_RELEASED',
           isRead: false
-        });
+        } });
       }
 
-      await db.auditLog.create({
+      await db.auditLog.create({ data: {
         action: 'HARVEST_RELEASE',
         details: `Released payout harvest of £${harvestAmount} for commitment ${commitmentId}.`,
         userId: session.id
-      });
+      } });
 
       return NextResponse.json({ success: true });
     }
@@ -223,12 +222,12 @@ export async function POST(request: Request) {
                 subject: 'Savvey Savers - Friendly Savings Reminder',
                 body: `Hello ${member.name},\n\nThis is a friendly reminder from your Savvey Savers coordinator regarding your savings commitment for "${cmt.goal}" (Monthly amount: £${cmt.amount}).\n\nPlease proceed with your payment/deposit and notify your coordinator to confirm receipt.\n\nBest regards,\nSavvey Savers Collective`
               });
-              await db.notification.create({
+              await db.notification.create({ data: {
                 userId: member.id,
                 message: `Friendly reminder regarding your savings commitment "${cmt.goal}".`,
                 type: 'REMINDER_SENT',
                 isRead: false
-              });
+              } });
               count++;
             }
           }
@@ -242,22 +241,22 @@ export async function POST(request: Request) {
               subject: 'Savvey Savers - Friendly Savings Reminder',
               body: `Hello ${member.name},\n\nThis is a friendly reminder from your Savvey Savers coordinator regarding your active savings commitments.\n\nPlease proceed with your monthly savings payment/deposit and notify your coordinator.\n\nBest regards,\nSavvey Savers Collective`
             });
-            await db.notification.create({
+            await db.notification.create({ data: {
               userId: member.id,
               message: `Friendly reminder sent by coordinator regarding your savings commitments.`,
               type: 'REMINDER_SENT',
               isRead: false
-            });
+            } });
             count++;
           }
         }
       }
 
-      await db.auditLog.create({
+      await db.auditLog.create({ data: {
         action: 'SEND_REMINDER',
         details: `Sent bulk contribution reminder emails to ${count} recipient(s).`,
         userId: session.id
-      });
+      } });
 
       return NextResponse.json({ success: true, count });
     }

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
-import { adminAuth } from '@/lib/firebase-admin';
+// Firebase Admin removed — using JWT auth
 
 async function checkAdminUser() {
   const cookieStore = await cookies();
@@ -98,33 +98,9 @@ export async function POST(req: Request) {
       } else {
         if (!dryRun) {
           const userId = u.id || `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-          
-          // Optionally provision Firebase Auth User if adminAuth is configured
-          let firebaseUid = userId;
-          try {
-            if (adminAuth) {
-              const fbUser = await adminAuth.createUser({
-                uid: userId,
-                email: email,
-                displayName: u.name || email.split('@')[0],
-                disabled: u.isActive === false
-              });
-              firebaseUid = fbUser.uid;
-            }
-          } catch (fbErr: any) {
-            // If firebase user already exists in Firebase Auth, attempt to fetch UID
-            if (fbErr?.code === 'auth/email-already-exists' && adminAuth) {
-              try {
-                const existingFb = await adminAuth.getUserByEmail(email);
-                firebaseUid = existingFb.uid;
-              } catch (e) {
-                // Ignore fallback to local userId
-              }
-            }
-          }
 
-          const newUser = await db.user.create({
-            id: firebaseUid,
+          const newUser = await db.user.create({ data: {
+            id: userId,
             name: u.name || email.split('@')[0],
             email: email,
             phone: u.phone || '',
@@ -133,7 +109,7 @@ export async function POST(req: Request) {
             membershipFeeConfirmed: u.membershipFeeConfirmed !== undefined ? u.membershipFeeConfirmed : true,
             invitationId: memberId || `M-${String(report.usersCreated + 1).padStart(6, '0')}`,
             createdAt: u.createdAt || new Date().toISOString()
-          });
+          } });
 
           userByEmailMap.set(email, newUser);
           if (newUser.invitationId) userByMemberIdMap.set(newUser.invitationId, newUser);
@@ -168,7 +144,7 @@ export async function POST(req: Request) {
         const newName = c.memberName || c.name || (memberEmail ? memberEmail.split('@')[0] : (memberId || 'Member'));
 
         try {
-          targetUser = await db.user.create({
+          targetUser = await db.user.create({ data: {
             id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
             name: newName,
             email: newEmail,
@@ -178,7 +154,7 @@ export async function POST(req: Request) {
             membershipFeeConfirmed: true,
             invitationId: memberId || `M-${String(report.usersCreated + 1).padStart(6, '0')}`,
             createdAt: new Date().toISOString()
-          });
+          } });
           userByEmailMap.set(newEmail.toLowerCase(), targetUser);
           if (memberId) userByMemberIdMap.set(memberId, targetUser);
           report.usersCreated++;
@@ -233,17 +209,22 @@ export async function POST(req: Request) {
 
       if (!dryRun) {
         const paymentId = p.id || `pay_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-        await db.payment.create({
+        // Need userId for the payment. Look up the commitment first to get memberId.
+        const cmt = await db.commitment.findUnique({ where: { id: cmtId } });
+        const paymentUserId = cmt ? cmt.memberId : 'unknown_user';
+
+        await db.payment.create({ data: {
           id: paymentId,
           commitmentId: cmtId,
+          userId: paymentUserId,
           amount: parseFloat(p.amount) || 0,
           month: p.month || 'January',
           year: parseInt(p.year || '2026', 10),
           status: p.status || 'CONFIRMED',
-          confirmedAt: p.confirmedAt || new Date().toISOString(),
+          confirmedAt: p.confirmedAt ? new Date(p.confirmedAt) : new Date(),
           receiptUrl: p.receiptUrl || null,
-          createdAt: p.createdAt || new Date().toISOString()
-        });
+          createdAt: p.createdAt ? new Date(p.createdAt) : new Date()
+        } });
         report.paymentsCreated++;
       } else {
         report.paymentsCreated++;

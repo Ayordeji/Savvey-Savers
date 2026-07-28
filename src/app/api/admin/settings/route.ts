@@ -77,7 +77,7 @@ export async function GET() {
   const dbEmailTemplates = (await db.setting.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
   const existingIds = new Set((dbEmailTemplates as any[]).map((t: any) => t.id));
   const emailTemplates = [
-    ...dbEmailTemplates,
+    ...(dbEmailTemplates as any[]),
     ...defaultEmailTemplates.filter((t) => !existingIds.has(t.id))
   ];
 
@@ -114,10 +114,10 @@ export async function POST(request: Request) {
         data: { value }
       });
     } else {
-      await db.setting.create({
+      await db.setting.create({ data: {
         key,
         value
-      });
+      } });
     }
 
     await db.auditLog.create({ data: {

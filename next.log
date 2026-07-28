@@ -1,0 +1,38 @@
+
+> tmp-app@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.158:3000
+- Environments: .env
+✓ Ready in 871ms
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+ POST /api/auth/login 401 in 4.2s (next.js: 1338ms, application-code: 2.8s)
+✓ Compiled in 132.5s
+Login API error: Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].user.findUnique()` invocation in
+/Users/ayodeji/Documents/ME/PROJECTS/Ajo Savings Contribution Platform/.next/dev/server/chunks/[root-of-the-server]__04gns-0._.js:164:154
+
+  161 }
+  162 const normalizedEmail = email.toLowerCase().trim();
+  163 // Find user in Prisma DB
+→ 164 const user = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].user.findUnique(
+
+    at <unknown> (src/app/api/auth/login/route.ts:20:32)
+    at async POST (src/app/api/auth/login/route.ts:20:18)
+  18 |
+  19 |     // Find user in Prisma DB
+> 20 |     const user = await db.user.findUnique({ 
+     |                                ^
+  21 |       where: { email: normalizedEmail } 
+  22 |     });
+  23 | {
+  code: 'ETIMEDOUT',
+  meta: { modelName: 'User' },
+  clientVersion: '7.9.1'
+}
+ POST /api/auth/login 500 in 77s (next.js: 150ms, application-code: 77s)
+  Reload env: .env
+[?25h

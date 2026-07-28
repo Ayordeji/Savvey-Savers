@@ -3,8 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle2, Eye, EyeOff, Check, X } from 'lucide-react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+// Firebase auth removed — using JWT-based auth
 
 const DEFAULT_SECURITY_QUESTIONS = [
   "What City were you born in?",
@@ -204,27 +203,15 @@ function ActivationContent() {
       if (res.ok) {
         setSuccess(true);
 
-        // Perform auto sign-in
-        let idToken = '';
-        const isFirebaseConfigured = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== 'mock-api-key';
-
-        if (isFirebaseConfigured) {
-          try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            idToken = await userCredential.user.getIdToken();
-          } catch (fbErr) {
-            console.warn('Firebase sign in failed during activation:', fbErr);
-          }
-        } else {
-          idToken = `mock_token_${email}_Registered Member`;
-        }
-
-        if (idToken) {
+        // Perform auto sign-in using JWT auth
+        try {
           await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken }),
+            body: JSON.stringify({ email, password }),
           });
+        } catch (loginErr) {
+          console.warn('Auto sign-in after activation failed:', loginErr);
         }
 
         // Direct user to Savings Commitment tab (/dashboard/commitments)

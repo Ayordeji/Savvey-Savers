@@ -66,9 +66,9 @@ export async function POST(request: Request) {
     }
 
     // Check if email already a registered member
-    const existingUser = await db.user.findFirst(
-      (u) => u.email.toLowerCase() === normalizedEmail
-    );
+    const existingUser = await db.user.findFirst({
+      where: { email: normalizedEmail }
+    });
     if (existingUser) {
       return NextResponse.json(
         { error: 'This email is already registered as a member on the platform.' },

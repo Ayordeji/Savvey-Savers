@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import bcrypt from 'bcryptjs';
 
 
 export async function POST(request: Request) {
@@ -34,9 +35,9 @@ export async function POST(request: Request) {
     }
 
     // Look up user by invitation or reset ID
-    const user = await db.user.findFirst(
-      (u) => u.invitationId === invitationId
-    );
+    const user = await db.user.findFirst({
+      where: { invitationId }
+    });
 
     if (!user) {
       return NextResponse.json(
@@ -57,24 +58,9 @@ export async function POST(request: Request) {
     const updatedLastName = (lastName || user.lastName || '').trim();
     const fullName = `${updatedFirstName} ${updatedLastName}`.trim() || user.name;
 
-    // Create user in Firebase Auth using the email address and password
-    let uid = '';
-    try {
-      const fbUser = await adminAuth.createUser({
-        email: user.email,
-        password: password,
-        displayName: fullName,
-      });
-      uid = fbUser.uid;
-    } catch (fbErr: any) {
-      if (fbErr.code === 'auth/email-already-exists') {
-        const existingFbUser = await adminAuth.getUserByEmail(user.email);
-        uid = existingFbUser.uid;
-        // await adminAuth.updateUser(uid, { password, displayName: fullName });
-      } else {
-        throw fbErr;
-      }
-    }
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+    const uid = user.id;
 
     const updatedData = {
       isActive: true,
@@ -83,6 +69,7 @@ export async function POST(request: Request) {
       firstName: updatedFirstName,
       lastName: updatedLastName,
       name: fullName,
+      passwordHash: passwordHash,
       phone: (phone || user.phone || '').trim(),
       addressLine1: (addressLine1 || user.addressLine1 || '').trim(),
       addressLine2: (addressLine2 || user.addressLine2 || '').trim(),
@@ -102,11 +89,11 @@ export async function POST(request: Request) {
     } else {
       // Legacy user compatibility: delete temporary doc and create matching doc ID
       await db.user.delete({ where: { id: user.id } });
-      await db.user.create({
+      await db.user.create({ data: {
         ...user,
         ...updatedData,
         id: uid,
-      });
+      } });
     }
 
     // System notifications
@@ -149,9 +136,9 @@ export async function GET(request: Request) {
       );
     }
 
-    const user = await db.user.findFirst(
-      (u) => u.invitationId === invitationId
-    );
+    const user = await db.user.findFirst({
+      where: { invitationId }
+    });
 
     if (!user) {
       return NextResponse.json(
