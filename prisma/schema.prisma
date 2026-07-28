@@ -53,6 +53,8 @@ model Commitment {
   collectionYear  Int
   endDate         DateTime?
   status          String    @default("PENDING") // 'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'NOT_YET_STARTED'
+  harvestAmount   Float?    // Amount released when admin releases harvest
+  harvestReleasedAt DateTime? // Timestamp when harvest was released
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

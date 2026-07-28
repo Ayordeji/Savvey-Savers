@@ -54,6 +54,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   let totalCommitmentsCount = 0;
   let activeUsersCount = 0;
   let invitedUsersCount = 0;
+  let harvestReleasedTotal = 0; // Total £ amount of all released harvests
 
   // Monthly values for chart (Jan - Dec)
   const months = [
@@ -66,7 +67,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   if (isAdmin) {
     // Admin: Dynamic aggregation from live imported database records
-    const allCommitments = await db.commitment.findMany();
+    const allCommitments = await db.commitment.findMany({
+      include: { payments: true }
+    });
     const rawUsers = await db.user.findMany();
 
     // 1. Deduplicate members for user counts
@@ -81,9 +84,12 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     activeUsersCount = memberUsers.filter((u) => u.isActive).length;
     invitedUsersCount = memberUsers.filter((u) => !u.isActive).length;
 
-    // 2. All-Time Revenue
-    const allTimeRevenueCmts = allCommitments.filter((c) => c.status === 'ACTIVE' || c.status === 'COMPLETED');
-    allTimeRevenue = allTimeRevenueCmts.reduce((acc, c) => acc + c.amount, 0);
+    // 2. All-Time Revenue = sum of all CONFIRMED savings commitment payments (not membership fees)
+    allCommitments.forEach((c) => {
+      const confirmedPayments = c.payments.filter((p: any) => p.status === 'CONFIRMED');
+      const confirmed = confirmedPayments.reduce((acc: number, p: any) => acc + p.amount, 0);
+      allTimeRevenue += confirmed;
+    });
 
     // 3. Filter commitments by selected collection year
     const selectedYearInt = parseInt(selectedYear, 10) || currentRealYear;
@@ -95,14 +101,23 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     pendingCommitmentsCount = yearCommitments.filter((c) => c.status === 'PENDING').length;
     completedCommitmentsCount = yearCommitments.filter((c) => c.status === 'COMPLETED').length;
 
-    // 5. Expected Revenue for selected year
-    const revenueCommitments = yearCommitments.filter((c) => c.status === 'ACTIVE' || c.status === 'COMPLETED');
-    revenueForYear = revenueCommitments.reduce((acc, c) => acc + c.amount, 0);
+    // Harvest Released Total — sum of actual harvestAmount from all released commitments
+    harvestReleasedTotal = allCommitments
+      .filter((c) => c.status === 'COMPLETED' && (c as any).harvestAmount)
+      .reduce((acc, c) => acc + ((c as any).harvestAmount || 0), 0);
 
-    // 6. Monthly Distribution (Expected revenue distributed by collection month)
+    // 5. Revenue for selected year = confirmed payments on commitments in that year
+    yearCommitments.forEach((c) => {
+      const confirmedPayments = c.payments.filter((p: any) => p.status === 'CONFIRMED' && p.year === selectedYearInt);
+      revenueForYear += confirmedPayments.reduce((acc: number, p: any) => acc + p.amount, 0);
+    });
+
+    // 6. Monthly Distribution — confirmed payments by month for selected year
     months.forEach((m, idx) => {
-      const monthCmts = revenueCommitments.filter((c) => c.collectionMonth === m);
-      monthlyData[idx] = monthCmts.reduce((acc, c) => acc + c.amount, 0);
+      yearCommitments.forEach((c) => {
+        const monthPayments = c.payments.filter((p: any) => p.status === 'CONFIRMED' && p.month === m && p.year === selectedYearInt);
+        monthlyData[idx] += monthPayments.reduce((acc: number, p: any) => acc + p.amount, 0);
+      });
     });
   } else {
     // Basic fallback for non-admins if ever reached
@@ -303,7 +318,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 Harvests Released
               </span>
               <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                {`${completedCommitmentsCount} / ${totalCommitmentsCount}`}
+                £{harvestReleasedTotal.toFixed(2)}
               </h3>
             </div>
           </div>

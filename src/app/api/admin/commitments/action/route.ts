@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       const cmt = await db.commitment.findUnique({ where: { id: payment.commitmentId } });
       const member = cmt ? await db.user.findUnique({ where: { id: cmt.memberId } }) : null;
 
-      // Update payment
+      // Update payment to CONFIRMED — the commitment stays ACTIVE
       await db.payment.update({
         where: { id: paymentId },
         data: {
@@ -52,16 +52,8 @@ export async function POST(request: Request) {
         }
       });
 
-      // Automatically complete the commitment upon payment confirmation
-      if (cmt) {
-        await db.commitment.update({
-          where: { id: cmt.id },
-          data: {
-            status: 'COMPLETED',
-            updatedAt: new Date().toISOString()
-          }
-        });
-      }
+      // NOTE: Commitment status is NOT changed here.
+      // The commitment only moves to COMPLETED when the admin explicitly releases the harvest.
 
       if (member && cmt) {
         // Dispatch Email Notification
@@ -157,11 +149,13 @@ export async function POST(request: Request) {
       const relatedPayments = await db.payment.findMany({ where: { commitmentId, status: 'CONFIRMED' } });
       const harvestAmount = relatedPayments.reduce((acc, p) => acc + p.amount, 0);
 
-      // Update commitment status to COMPLETED
+      // Update commitment status to COMPLETED and record the harvest amount
       await db.commitment.update({
         where: { id: commitmentId },
         data: {
-          status: 'COMPLETED'
+          status: 'COMPLETED',
+          harvestAmount,
+          harvestReleasedAt: new Date()
         }
       });
 
