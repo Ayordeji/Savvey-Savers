@@ -20,22 +20,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, message: 'If this email is registered, a password reset link has been sent.' });
     }
 
-    // Generate standard password reset link using Firebase Admin SDK
-    let resetLink = '';
-    try {
-      const host = request.headers.get('host') || 'savvey-savers.vercel.app';
-      const protocol = request.headers.get('x-forwarded-proto') || 'https';
-      const origin = `${protocol}://${host}`;
-      
-      // resetLink = await adminAuth.generatePasswordResetLink(normalizedEmail, { url: `${origin}/` });
-    } catch (authErr: any) {
-      console.error('Firebase Admin generatePasswordResetLink error:', authErr);
-      let errorMsg = authErr.message || 'Unable to generate reset link.';
-      if (errorMsg.includes('Unable to create the email action link') || errorMsg.includes('INTERNAL ASSERT FAILED')) {
-        errorMsg = 'Unable to generate password reset link. Please ensure that "Email/Password" sign-in provider is enabled in your Firebase Console under Authentication > Sign-in method, and that your domain is whitelisted in "Authorized domains" under Settings.';
+    // Generate a unique reset token
+    const { v4: uuidv4 } = require('uuid');
+    const resetToken = uuidv4();
+    
+    // Set token to expire in 1 hour
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1);
+
+    // Save token to user
+    await db.user.update({
+      where: { id: user.id },
+      data: {
+        invitationId: resetToken,
+        invitationExpiresAt: expiresAt
       }
-      return NextResponse.json({ error: `Firebase Auth configuration issue: ${errorMsg}` }, { status: 500 });
-    }
+    });
+
+    const host = request.headers.get('host') || 'savvey-savers.vercel.app';
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const origin = `${protocol}://${host}`;
+    
+    const resetLink = `${origin}/activate?token=${resetToken}`;
 
     // Send the password reset email via Resend
     const emailSubject = 'Savvey Savers - Password Reset Request';
