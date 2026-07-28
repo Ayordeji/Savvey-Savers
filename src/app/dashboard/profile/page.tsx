@@ -54,6 +54,21 @@ export default function ProfilePage() {
     setSuccessMsg('');
     setErrorMsg('');
 
+    const validateUkPhoneNumber = (phoneStr: string) => {
+      if (!phoneStr) return false;
+      const cleaned = phoneStr.replace(/[\s\-\(\)]/g, '');
+      if (/^\+44\d{10}$/.test(cleaned)) return true;
+      if (/^0\d{10}$/.test(cleaned)) return true;
+      if (/^44\d{10}$/.test(cleaned)) return true;
+      return false;
+    };
+
+    if (!validateUkPhoneNumber(phone)) {
+      setErrorMsg('Only valid UK phone numbers (e.g. +44 7700 900022 or 07700900022) are accepted.');
+      setSaving(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/profile', {
         method: 'PUT',

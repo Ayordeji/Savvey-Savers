@@ -896,7 +896,7 @@ export default function ManageUsersPage() {
     setOpenDropdownId(openDropdownId === userId ? null : userId);
   };
 
-  const [sortConfig, setSortConfig] = useState<{ key: keyof User | 'displayId'; direction: 'asc' | 'desc' } | null>({ key: 'displayId', direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState<{ key: keyof User | 'displayId'; direction: 'asc' | 'desc' } | null>({ key: 'displayId', direction: 'desc' });
 
   const requestSort = (key: keyof User | 'displayId') => {
     let direction: 'asc' | 'desc' = 'asc';

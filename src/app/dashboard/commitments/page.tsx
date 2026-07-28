@@ -538,7 +538,7 @@ function CommitmentsContent() {
     setOpenDropdownId(openDropdownId === cmtId ? null : cmtId);
   };
 
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'id', direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'id', direction: 'desc' });
 
   const requestSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';

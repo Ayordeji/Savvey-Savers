@@ -41,7 +41,7 @@ function MemberReportContent() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'displayId', direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'displayId', direction: 'desc' });
 
   const requestSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';

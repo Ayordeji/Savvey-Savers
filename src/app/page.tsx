@@ -159,11 +159,16 @@ export default function Home() {
     setWaitError('');
     setWaitSuccess(false);
 
-    // Strict UK Phone Number check (+44 or 07...)
-    const cleanedPhone = waitPhone.trim().replace(/[\s\-\(\)]/g, '');
-    const isUkPhone = /^(\+44|0)[1-9]\d{8,9}$/.test(cleanedPhone);
+    const validateUkPhoneNumber = (phoneStr: string) => {
+      if (!phoneStr) return false;
+      const cleaned = phoneStr.replace(/[\s\-\(\)]/g, '');
+      if (/^\+44\d{10}$/.test(cleaned)) return true;
+      if (/^0\d{10}$/.test(cleaned)) return true;
+      if (/^44\d{10}$/.test(cleaned)) return true;
+      return false;
+    };
 
-    if (!isUkPhone) {
+    if (!validateUkPhoneNumber(waitPhone)) {
       setWaitError('Only valid UK phone numbers (e.g. +44 7700 900022 or 07700900022) are accepted.');
       setWaitLoading(false);
       return;
