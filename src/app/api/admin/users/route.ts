@@ -322,7 +322,8 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  if (!(await checkAdmin())) {
+  const reqUser = await checkAdmin();
+  if (!reqUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
@@ -520,7 +521,7 @@ export async function PUT(request: Request) {
 
       // If promoting to Super Admin, handle the transfer safely
       if (isSuperAdmin === true || role === 'SUPER_ADMIN') {
-        const reqUser = await checkAdmin();
+        // We already have reqUser from the top of the function
         const isReqSuperAdmin = reqUser && (reqUser.isSuperAdmin === true || reqUser.id === 'usr_admin');
 
         if (!isReqSuperAdmin && !approveRequest) {
@@ -584,7 +585,7 @@ export async function PUT(request: Request) {
     await db.auditLog.create({ data: {
       action: 'ADMIN_USER_UPDATE',
       details: `Admin updated user details for ${user.email}.`,
-      userId: session.id || session?.id
+      userId: reqUser.id
     } });
 
     return NextResponse.json({ success: true });
@@ -660,7 +661,7 @@ export async function DELETE(request: Request) {
       await db.auditLog.create({ data: {
         action: 'ADMIN_USER_DELETE',
         details: `Admin deleted user ${user.name} (${user.email}) and archived all records.`,
-        userId: session.id || session?.id
+        userId: reqUser.id
       } });
 
       deletedIds.push(id);
