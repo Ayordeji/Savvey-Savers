@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     const protocol = request.headers.get('x-forwarded-proto') || 'https';
     const origin = `${protocol}://${host}`;
     
-    const resetLink = `${origin}/activate?reset=${resetToken}`;
+    const resetLink = `${origin}/reset-password?token=${resetToken}`;
 
     // Send the password reset email via Resend
     const emailSubject = 'Savvey Savers - Password Reset Request';

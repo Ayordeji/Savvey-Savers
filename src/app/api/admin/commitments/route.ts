@@ -90,6 +90,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Target member not found.' }, { status: 404 });
     }
 
+    if (!member.membershipFeeConfirmed) {
+      return NextResponse.json({ error: 'Membership payment has not yet been confirmed.' }, { status: 403 });
+    }
+
     const startMonth = collectionMonth || 'January';
     const startYear = parseInt(collectionYear) || new Date().getFullYear();
 

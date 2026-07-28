@@ -160,8 +160,22 @@ export async function POST(request: Request) {
     }
 
     // Generate activation fields
-    const random6Digit = Math.floor(100000 + Math.random() * 900000).toString();
-    const invitationId = `M-${random6Digit}`;
+    // Generate sequential M-XXXXXX ID
+    const existingUsers = await db.user.findMany({
+      where: { invitationId: { startsWith: 'M-' } },
+      select: { invitationId: true }
+    });
+    let maxId = 0;
+    for (const u of existingUsers) {
+      if (u.invitationId) {
+        const num = parseInt(u.invitationId.substring(2), 10);
+        if (!isNaN(num) && num > maxId) {
+          maxId = num;
+        }
+      }
+    }
+    const nextIdStr = String(maxId + 1).padStart(6, '0');
+    const invitationId = `M-${nextIdStr}`;
     const invitationExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(); // 72 hours
 
     // We no longer sync to Firebase Auth since we migrated to local JWTs.

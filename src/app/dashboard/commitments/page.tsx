@@ -68,7 +68,6 @@ function CommitmentsContent() {
   const [amounts, setAmounts] = useState<{ amount: number; enabled: boolean }[]>([]);
 
   // UI expansion states
-  const [expandedCmtId, setExpandedCmtId] = useState<string | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   // Modal states
@@ -180,14 +179,6 @@ function CommitmentsContent() {
     fetchInitialData();
   }, []);
 
-  const handleRowClick = (cmtId: string) => {
-    if (expandedCmtId === cmtId) {
-      setExpandedCmtId(null);
-    } else {
-      setExpandedCmtId(cmtId);
-      fetchPayments(cmtId);
-    }
-  };
 
   const handleOpenAddModal = () => {
     setErrorMsg('');
@@ -818,7 +809,7 @@ function CommitmentsContent() {
 
                   return (
                     <Fragment key={c.id}>
-                      <tr className={isExpanded ? styles.expandedRow : ''} style={{ cursor: 'pointer' }}>
+                      <tr style={{ cursor: 'pointer' }}>
                         {currentUser?.role === 'ADMIN' && (
                           <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                             <input
@@ -829,9 +820,7 @@ function CommitmentsContent() {
                             />
                           </td>
                         )}
-                        <td onClick={() => handleRowClick(c.id)} style={{ paddingRight: 0 }}>
-                          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        </td>
+                        <td></td>
                         <td
                           onClick={() => handleOpenViewCommitmentModal(c)}
                           style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '3px' }}
@@ -851,10 +840,10 @@ function CommitmentsContent() {
                             {displayMemberName}
                           </button>
                         </td>
-                        <td onClick={() => handleRowClick(c.id)}>£{Number(c.amount).toFixed(2)}</td>
-                        <td onClick={() => handleRowClick(c.id)}>{c.collectionMonth} {c.collectionYear}</td>
-                        <td onClick={() => handleRowClick(c.id)}>{c.collectionYear}</td>
-                        <td onClick={() => handleRowClick(c.id)}>
+                        <td>£{Number(c.amount).toFixed(2)}</td>
+                        <td>{c.collectionMonth} {c.collectionYear}</td>
+                        <td>{c.collectionYear}</td>
+                        <td>
                           <span className={`status-pill ${c.status.toLowerCase().replace(/_/g, '-')}`}>
                             {formatStatusText(c.status)}
                           </span>
@@ -877,7 +866,7 @@ function CommitmentsContent() {
                                       <span>Payment for Past Month</span>
                                     </button>
                                   )}
-                                  {paymentsMap[c.id]?.some(p => p.status === 'PENDING') && (
+                                  {paymentsMap[c.id]?.some(p => p.status === 'PENDING') ? (
                                     <button onClick={() => {
                                       const pendingPayment = paymentsMap[c.id].find(p => p.status === 'PENDING');
                                       if (pendingPayment) {
@@ -887,6 +876,11 @@ function CommitmentsContent() {
                                     }} className={styles.dropdownItem}>
                                       <Check size={14} />
                                       <span>Confirm Payment Receipt</span>
+                                    </button>
+                                  ) : (
+                                    <button disabled className={styles.dropdownItem} style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+                                      <Check size={14} />
+                                      <span>Payment Done</span>
                                     </button>
                                   )}
                                   {c.status !== 'COMPLETED' && c.status !== 'CANCELLED' && (
@@ -908,64 +902,6 @@ function CommitmentsContent() {
                         </td>
                       </tr>
 
-                      {/* Row Expanded payment details */}
-                      {isExpanded && (
-                        <tr className={styles.expandedRow}>
-                          <td colSpan={currentUser?.role === 'ADMIN' ? 9 : 8}>
-                            <div className={styles.expandedContainer}>
-                              <div className={styles.expandedHeader}>
-                                <span className={styles.expandedTitle}>Contribution Log History</span>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                  Detailed offline payments for cycle record ID: {c.id}
-                                </span>
-                              </div>
-                              <div className={styles.paymentsGrid}>
-                                {!paymentsMap[c.id] ? (
-                                  <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading payments...</div>
-                                ) : paymentsMap[c.id].length === 0 ? (
-                                  <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No payments logged yet.</div>
-                                ) : (
-                                  paymentsMap[c.id].map((pay) => (
-                                    <div key={pay.id} className={styles.paymentCard}>
-                                      <div className={styles.paymentMeta}>
-                                        <span className={styles.paymentMonth}>{pay.month} {pay.year}</span>
-                                        <span className={styles.paymentAmount}>£{pay.amount}</span>
-                                      </div>
-                                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
-                                        {pay.status === 'CONFIRMED' ? (
-                                          <span className="status-pill confirmed" style={{ fontSize: '0.65rem' }}>Confirmed</span>
-                                        ) : (
-                                          <span className="status-pill pending" style={{ fontSize: '0.65rem' }}>Awaiting Confirmation</span>
-                                        )}
-                                        {pay.receiptUrl && (
-                                          <a
-                                            href={pay.receiptUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="btn btn-secondary btn-sm"
-                                            style={{
-                                              padding: '4px 8px',
-                                              fontSize: '0.75rem',
-                                              display: 'inline-flex',
-                                              alignItems: 'center',
-                                              textDecoration: 'none',
-                                              borderColor: '#1e3529',
-                                              color: '#e2ede5',
-                                              backgroundColor: 'rgba(255,255,255,0.05)'
-                                            }}
-                                          >
-                                            View Receipt
-                                          </a>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
                     </Fragment>
                   );
                 })

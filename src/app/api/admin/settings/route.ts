@@ -12,8 +12,27 @@ async function getUserSession() {
 
 export async function GET() {
   // Publicly accessible settings for landing page and dashboard
-  const savingGoals = (await db.setting.findUnique({ where: { key: 'savingGoals' } }))?.value || [];
-  const commitmentAmounts = (await db.setting.findUnique({ where: { key: 'commitmentAmounts' } }))?.value || [];
+  const savingGoals = (await db.setting.findUnique({ where: { key: 'savingGoals' } }))?.value || [
+    { goal: "Debt Repayment", enabled: true },
+    { goal: "Dream Holiday", enabled: true },
+    { goal: "Investment", enabled: true },
+    { goal: "My First Home", enabled: true },
+    { goal: "Property Purchase", enabled: true },
+    { goal: "Savings", enabled: true },
+    { goal: "School Fees", enabled: true },
+    { goal: "Wedding", enabled: true },
+    { goal: "Other", enabled: true }
+  ];
+  const commitmentAmounts = (await db.setting.findUnique({ where: { key: 'commitmentAmounts' } }))?.value || [
+    { amount: "100.00", enabled: true },
+    { amount: "250.00", enabled: true },
+    { amount: "300.00", enabled: true },
+    { amount: "500.00", enabled: true },
+    { amount: "750.00", enabled: true },
+    { amount: "1000.00", enabled: true },
+    { amount: "1250.00", enabled: true },
+    { amount: "1500.00", enabled: true }
+  ];
   const membershipAgreement = (await db.setting.findUnique({ where: { key: 'membershipAgreement' } }))?.value || null;
   const feeSchedule = (await db.setting.findUnique({ where: { key: 'feeSchedule' } }))?.value || null;
 
