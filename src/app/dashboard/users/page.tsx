@@ -30,6 +30,7 @@ interface User {
   membershipFeeConfirmedAt?: string | null;
   termsAccepted?: boolean;
   isSuperAdmin?: boolean;
+  hasPendingFee?: boolean;
 }
 
 export default function ManageUsersPage() {
@@ -1211,10 +1212,12 @@ export default function ManageUsersPage() {
                               <FileText size={14} />
                               <span>Request Membership Fee</span>
                             </button>
-                            <button onClick={() => handleOpenConfirmFeeModal(u)} className={styles.dropdownItem}>
-                              <CheckCircle size={14} />
-                              <span>Confirm Membership Fee</span>
-                            </button>
+                            {u.hasPendingFee && (
+                              <button onClick={() => handleOpenConfirmFeeModal(u)} className={styles.dropdownItem}>
+                                <CheckCircle size={14} />
+                                <span>Confirm Membership Fee</span>
+                              </button>
+                            )}
                             <button onClick={() => handleOpenReminderPopup(u)} className={styles.dropdownItem}>
                               <Mail size={14} />
                               <span>Request Member To Pay Up</span>

@@ -38,7 +38,9 @@ export async function GET() {
   }
 
   // Get all members and admins (exclude sensitive hashes in response)
-  const rawUsers = await db.user.findMany();
+  const rawUsers = await db.user.findMany({
+    include: { membershipFeeRecords: true }
+  });
 
   // Strict deduplication by email & invitationId to eliminate duplicates
   const uniqueUserMap = new Map<string, any>();
@@ -74,15 +76,15 @@ export async function GET() {
       return !lower.startsWith('invite_') && !lower.startsWith('tok_') && !lower.startsWith('usr_');
     };
 
-    const memberId = (isValidMemberId(u.id) ? u.id : null) ||
+    const memberId = u.displayId || 
+                     (isValidMemberId(u.id) ? u.id : null) ||
                      (isValidMemberId(u.invitationId) ? u.invitationId : null) ||
-                     (isValidMemberId((u as any).displayId) ? (u as any).displayId : null) ||
                      `M-${String(idx + 1).padStart(6, '0')}`;
 
     return {
       id: u.id,
       displayId: memberId,
-    isSuperAdmin: u.isSuperAdmin === true || (u.id === 'usr_admin' && u.isSuperAdmin !== false),
+      isSuperAdmin: u.isSuperAdmin === true || (u.id === 'usr_admin' && u.isSuperAdmin !== false),
     name: u.name,
     email: u.email,
     phone: u.phone,
@@ -91,6 +93,7 @@ export async function GET() {
     membership: u.membership,
     membershipFeeConfirmed: u.membershipFeeConfirmed,
     membershipFeeConfirmedAt: u.membershipFeeConfirmedAt || null,
+    hasPendingFee: u.membershipFeeRecords?.some((r: any) => r.status === 'PENDING') || false,
     createdAt: u.createdAt,
     lastLoginAt: u.lastLoginAt,
     invitationId: u.invitationId,
@@ -159,23 +162,23 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate activation fields
-    // Generate sequential M-XXXXXX ID
+    // Generate sequential M-XXXXXX ID using displayId instead of invitationId
     const existingUsers = await db.user.findMany({
-      where: { invitationId: { startsWith: 'M-' } },
-      select: { invitationId: true }
+      where: { displayId: { startsWith: 'M-' } },
+      select: { displayId: true }
     });
     let maxId = 0;
     for (const u of existingUsers) {
-      if (u.invitationId) {
-        const num = parseInt(u.invitationId.substring(2), 10);
+      if (u.displayId) {
+        const num = parseInt(u.displayId.substring(2), 10);
         if (!isNaN(num) && num > maxId) {
           maxId = num;
         }
       }
     }
     const nextIdStr = String(maxId + 1).padStart(6, '0');
-    const invitationId = `M-${nextIdStr}`;
+    const displayId = `M-${nextIdStr}`;
+    const invitationId = `invite_${Math.random().toString(36).substring(2, 15)}`;
     const invitationExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(); // 72 hours
 
     // We no longer sync to Firebase Auth since we migrated to local JWTs.
@@ -193,6 +196,7 @@ export async function POST(request: Request) {
       membership: membership || 'Standard Saver',
       isActive: !isMemberInvite, // Inactive / pending approval if invited by a member
       passwordHash: 'pending_activation',
+      displayId,
       invitationId,
       invitationExpiresAt,
       addressLine1: addressLine1 || '',

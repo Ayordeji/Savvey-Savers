@@ -138,14 +138,16 @@ function CommitmentsContent() {
         setUsers(uList.filter((u: any) => u.role === 'MEMBER'));
         
         // Check if there is an active session
-        // We will mock fetch to understand if we are Admin or Member
-        // Simple heuristic: if we can query full user list (more than 1 admin user, etc), let's check
-        // The endpoint /api/admin/users only allows Admin. If it returns 403, we are a Member.
-        // Let's check:
-        if (meRes.status === 403) {
-          setCurrentUser({ id: 'member', role: 'MEMBER' }); // dummy fallback
+        const sessRes = await fetch('/api/auth/session');
+        if (sessRes.ok) {
+          const sessData = await sessRes.json();
+          if (sessData.session) {
+            setCurrentUser(sessData.session);
+          } else {
+            setCurrentUser({ id: 'member', role: 'MEMBER' });
+          }
         } else {
-          setCurrentUser({ id: 'usr_admin', role: 'ADMIN' });
+          setCurrentUser({ id: 'member', role: 'MEMBER' });
         }
       }
 

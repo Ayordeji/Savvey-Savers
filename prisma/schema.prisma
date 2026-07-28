@@ -18,6 +18,7 @@ model User {
   isActive                 Boolean   @default(true)
   membership               String?
   invitationId             String?
+  displayId                String?
   invitationExpiresAt      DateTime?
   addressLine1             String?
   addressLine2             String?

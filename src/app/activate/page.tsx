@@ -133,6 +133,12 @@ function ActivationContent() {
       setError('Please fill in all required fields marked with *.');
       return;
     }
+    
+    const phoneClean = phone.replace(/[^\d+]/g, '');
+    if (phoneClean.length < 10 || !phoneClean.startsWith('+44')) {
+      setError('Please enter a valid UK phone number starting with +44');
+      return;
+    }
 
     setStep(2);
   };
@@ -344,7 +350,12 @@ function ActivationContent() {
                   type="tel"
                   required
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => {
+                    let val = e.target.value.replace(/[^\d+]/g, '');
+                    if (val.startsWith('0')) val = '+44' + val.substring(1);
+                    else if (val.length > 0 && !val.startsWith('+')) val = '+44' + val;
+                    setPhone(val);
+                  }}
                   placeholder="+44 7700 900022"
                   className="form-input"
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', backgroundColor: 'var(--bg-main)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }}
