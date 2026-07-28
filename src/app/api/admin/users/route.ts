@@ -43,7 +43,7 @@ export async function GET() {
   // Strict deduplication by email & invitationId to eliminate duplicates
   const uniqueUserMap = new Map<string, any>();
   for (const u of rawUsers) {
-    if (!u) continue;
+    if (!u || u.id === 'usr_admin') continue;
     const emailKey = u.email ? u.email.toLowerCase().trim() : '';
     const memberKey = u.invitationId ? u.invitationId.trim() : '';
     const primaryKey = emailKey || memberKey || u.id;
@@ -74,7 +74,8 @@ export async function GET() {
       return !lower.startsWith('invite_') && !lower.startsWith('tok_') && !lower.startsWith('usr_');
     };
 
-    const memberId = (isValidMemberId(u.invitationId) ? u.invitationId : null) ||
+    const memberId = (isValidMemberId(u.id) ? u.id : null) ||
+                     (isValidMemberId(u.invitationId) ? u.invitationId : null) ||
                      (isValidMemberId((u as any).displayId) ? (u as any).displayId : null) ||
                      `M-${String(idx + 1).padStart(6, '0')}`;
 
