@@ -79,21 +79,11 @@ export async function POST(request: Request) {
       termsAccepted: termsAccepted !== false,
     };
 
-    // Activate the user in Firestore
-    if (user.id === uid) {
-      await db.user.update({
-        where: { id: user.id },
-        data: updatedData,
-      });
-    } else {
-      // Legacy user compatibility: delete temporary doc and create matching doc ID
-      await db.user.delete({ where: { id: user.id } });
-      await db.user.create({ data: {
-        ...user,
-        ...updatedData,
-        id: uid,
-      } });
-    }
+    // Activate the user
+    await db.user.update({
+      where: { id: user.id },
+      data: updatedData,
+    });
 
     // System notifications
     await db.notification.create({ data: {

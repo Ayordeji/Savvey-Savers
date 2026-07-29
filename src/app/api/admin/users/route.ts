@@ -181,10 +181,9 @@ export async function POST(request: Request) {
     const invitationId = `invite_${Math.random().toString(36).substring(2, 15)}`;
     const invitationExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(); // 72 hours
 
-    // We no longer sync to Firebase Auth since we migrated to local JWTs.
     let uid = 'usr_' + Math.random().toString(36).substring(2, 12);
 
-    // Create user in Firestore
+    // Create user in Database
     const newUser = await db.user.create({ data: {
       id: uid,
       name,
@@ -655,8 +654,6 @@ export async function DELETE(request: Request) {
       for (const cmt of relatedCommitments) {
         await db.commitment.delete({ where: { id: cmt.id } });
       }
-
-      // We no longer delete from Firebase Auth since we migrated to local JWTs.
 
       // Audit log
       await db.auditLog.create({ data: {

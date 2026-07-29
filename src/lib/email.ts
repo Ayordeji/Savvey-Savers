@@ -8,7 +8,7 @@ const mailFrom = process.env.MAIL_FROM || 'onboarding@resend.dev'; // fallback s
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 if (!resendApiKey) {
-  console.warn('[Resend Email Warning]: RESEND_API_KEY environment variable is not defined. Emails will be logged locally in Firestore mockEmails collection but not sent.');
+  console.warn('[Resend Email Warning]: RESEND_API_KEY environment variable is not defined. Emails will be logged locally in Database mockEmails collection but not sent.');
 }
 
 export async function sendEmail({ to, subject, body }: { to: string; subject: string; body: string }) {

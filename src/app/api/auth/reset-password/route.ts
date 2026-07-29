@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if user exists in Firestore
+    // Check if user exists in Database
     const user = await db.user.findFirst({ where: { email: normalizedEmail } });
     if (!user) {
       // Mitigate user enumeration by returning a success status even if email is not found
