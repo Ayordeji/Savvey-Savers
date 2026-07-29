@@ -37,7 +37,13 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     redirect('/');
   }
 
-  const user = await db.user.findUnique({ where: { id: payload.id } });
+  let user: Awaited<ReturnType<typeof db.user.findUnique>> = null;
+  try {
+    user = await db.user.findUnique({ where: { id: payload.id } });
+  } catch (dbErr) {
+    console.error('Dashboard: DB error fetching user', dbErr);
+    redirect('/');
+  }
   if (!user) {
     redirect('/');
   }
