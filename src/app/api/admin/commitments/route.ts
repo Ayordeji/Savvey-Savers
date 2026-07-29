@@ -319,9 +319,11 @@ export async function DELETE(request: Request) {
         status: 'CANCELLED'
       };
 
-      // Archive to deletedRecord is skipped (model may not exist) — just delete
-
-      await db.commitment.delete({ where: { id: resolvedId } });
+      // Archive by setting status to CANCELLED instead of deleting permanently
+      await db.commitment.update({ 
+        where: { id: resolvedId },
+        data: { status: 'CANCELLED' }
+      });
 
       await db.auditLog.create({ data: {
         action: 'ADMIN_COMMITMENT_CANCEL',

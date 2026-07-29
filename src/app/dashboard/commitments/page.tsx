@@ -403,6 +403,7 @@ function CommitmentsContent() {
       if (res.ok) {
         fetchPayments(selectedCmt.id);
         setActiveModal('NONE');
+        await dialog.alert('Success', 'Past payment recorded successfully.');
       } else {
         const data = await res.json();
         setErrorMsg(data.error || 'Failed to record payment.');
@@ -465,6 +466,7 @@ function CommitmentsContent() {
         if (res2.ok) {
           setCommitments(await res2.json());
         }
+        await dialog.alert('Success', 'Harvest payout released and member notified.');
       }
     } catch (err) {
       console.error('Error releasing harvest:', err);
@@ -473,7 +475,7 @@ function CommitmentsContent() {
 
   const handleDeleteCommitment = async (cmtId: string) => {
     setOpenDropdownId(null);
-    if (!(await dialog.confirm('Delete Savings Commitment', 'Are you sure you want to delete this savings commitment? The record will be safely archived under Deleted Records.'))) return;
+    if (!(await dialog.confirm('Cancel Savings Commitment', 'Are you sure you want to cancel this savings commitment? The record will be safely archived.'))) return;
 
     try {
       const res = await fetch(`/api/admin/commitments?id=${cmtId}`, {
@@ -486,6 +488,7 @@ function CommitmentsContent() {
         if (res2.ok) {
           setCommitments(await res2.json());
         }
+        await dialog.alert('Success', 'Commitment cancelled successfully.');
       } else {
         const data = await res.json();
         await dialog.alert('Delete Failed', data.error || 'Failed to delete commitment.');
@@ -906,8 +909,7 @@ function CommitmentsContent() {
                                         <span>Loading...</span>
                                       </button>
                                     ) : (
-                                      // If there's a pending payment OR no payments exist (freshly created fallback)
-                                      paymentsMap[c.id].some(p => p.status === 'PENDING') || paymentsMap[c.id].length === 0 ? (
+                                      paymentsMap[c.id].some(p => p.status === 'PENDING') ? (
                                         <button onClick={() => {
                                           const pending = paymentsMap[c.id]?.find(p => p.status === 'PENDING');
                                           handleConfirmPayment(pending?.id, c.id);
@@ -915,6 +917,11 @@ function CommitmentsContent() {
                                         }} className={styles.dropdownItem}>
                                           <ReceiptText size={14} />
                                           <span>Confirm Payment Receipt</span>
+                                        </button>
+                                      ) : paymentsMap[c.id].length === 0 ? (
+                                        <button disabled className={styles.dropdownItem} style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+                                          <ReceiptText size={14} />
+                                          <span>No Pending Payment</span>
                                         </button>
                                       ) : (
                                         <button disabled className={styles.dropdownItem} style={{ opacity: 1, cursor: 'not-allowed', color: '#16a34a' }}>
