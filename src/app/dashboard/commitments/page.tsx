@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Fragment, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, PoundSterling, Calendar, ChevronDown, ChevronUp, ExternalLink, Banknote, DollarSign } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, PoundSterling, Calendar, ChevronDown, ChevronUp, ExternalLink, Banknote, DollarSign, ReceiptText, FileText } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import PaginationControls from '../PaginationControls';
 import styles from './commitments.module.css';
@@ -880,58 +880,61 @@ function CommitmentsContent() {
                               <div className={`${styles.dropdownMenu} ${isBottomRow ? styles.dropdownMenuUp : ''}`}>
                                 <button onClick={() => handleOpenViewCommitmentModal(c)} className={styles.dropdownItem}>
                                   <Eye size={14} />
-                                  <span>View Commitment</span>
+                                  <span>View</span>
                                 </button>
                                 {currentUser?.role === 'ADMIN' && (
                                   <>
                                     <button onClick={() => handleOpenEditModal(c)} className={styles.dropdownItem}>
                                       <Edit size={14} />
-                                      <span>Edit Commitment</span>
+                                      <span>Edit</span>
                                     </button>
-                                    {c.status !== 'CANCELLED' && (
-                                      <button onClick={() => handleOpenPastPaymentModal(c)} className={styles.dropdownItem}>
-                                        <PoundSterling size={14} />
-                                        <span>Payment for Past Month</span>
-                                      </button>
-                                    )}
+                                    
                                     {paymentsMap[c.id] === undefined ? (
                                       <button disabled className={styles.dropdownItem} style={{ opacity: 0.4, cursor: 'not-allowed' }}>
-                                        <Check size={14} />
+                                        <ReceiptText size={14} />
                                         <span>Loading...</span>
                                       </button>
-                                    ) : paymentsMap[c.id].length === 0 ? (
-                                      <button disabled className={styles.dropdownItem} style={{ opacity: 0.55, cursor: 'not-allowed' }}>
-                                        <Check size={14} />
-                                        <span>No Pending Payments</span>
-                                      </button>
                                     ) : (
-                                      paymentsMap[c.id].some(p => p.status === 'PENDING') ? (
+                                      // If there's a pending payment OR no payments exist (freshly created fallback)
+                                      paymentsMap[c.id].some(p => p.status === 'PENDING') || paymentsMap[c.id].length === 0 ? (
                                         <button onClick={() => {
                                           const pending = paymentsMap[c.id].find(p => p.status === 'PENDING');
                                           if (pending) {
                                             handleConfirmPayment(pending.id, c.id);
                                             setOpenDropdownId(null);
+                                          } else {
+                                            // Fallback if no payment was found but they click confirm
+                                            fetchPayments(c.id);
                                           }
                                         }} className={styles.dropdownItem}>
-                                          <Check size={14} />
+                                          <ReceiptText size={14} />
                                           <span>Confirm Payment Receipt</span>
                                         </button>
                                       ) : (
-                                        <button disabled className={styles.dropdownItem} style={{ opacity: 0.55, cursor: 'not-allowed' }}>
-                                          <DollarSign size={14} />
+                                        <button disabled className={styles.dropdownItem} style={{ opacity: 1, cursor: 'not-allowed', color: '#16a34a' }}>
+                                          <ReceiptText size={14} color="#16a34a" />
                                           <span>Payment Done</span>
                                         </button>
                                       )
                                     )}
+
+                                    {c.status !== 'CANCELLED' && (
+                                      <button onClick={() => handleOpenPastPaymentModal(c)} className={styles.dropdownItem}>
+                                        <FileText size={14} />
+                                        <span>Payment For Past Month</span>
+                                      </button>
+                                    )}
+
                                     {c.status !== 'COMPLETED' && c.status !== 'CANCELLED' && (
                                       <button onClick={() => handleReleaseHarvest(c.id)} className={styles.dropdownItem}>
-                                        <Check size={14} />
+                                        <FileText size={14} />
                                         <span>Release Harvest</span>
                                       </button>
                                     )}
+
                                     <button onClick={() => handleDeleteCommitment(c.id)} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
-                                      <Trash2 size={14} />
-                                      <span>Delete Commitment</span>
+                                      <X size={14} color="#dc2626" />
+                                      <span style={{ color: '#dc2626' }}>Cancel</span>
                                     </button>
                                   </>
                                 )}
