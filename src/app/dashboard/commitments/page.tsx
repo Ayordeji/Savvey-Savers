@@ -158,22 +158,37 @@ function CommitmentsContent() {
       }
 
       // 5. Pre-load payments for all commitments so the dropdown shows correct state immediately
-      if (cmtRes.ok) {
-        const freshCommitmentsRes = await fetch('/api/admin/commitments');
-        const freshCommitments = freshCommitmentsRes.ok ? await freshCommitmentsRes.json() : [];
-        const allPaymentsRes = await Promise.allSettled(
-          freshCommitments.map((cmt: any) =>
-            fetch(`/api/admin/payments?commitmentId=${cmt.id}`)
-              .then(r => r.ok ? r.json() : [])
-              .then(payments => ({ id: cmt.id, payments }))
-          )
-        );
+      const allPaymentsRes = await fetch('/api/admin/payments');
+      if (allPaymentsRes.ok) {
+        const allPayments = await allPaymentsRes.json();
         const newPaymentsMap: Record<string, Payment[]> = {};
-        for (const result of allPaymentsRes) {
-          if (result.status === 'fulfilled') {
-            newPaymentsMap[result.value.id] = result.value.payments;
-          }
+        
+        // Group payments by commitment ID
+        if (Array.isArray(allPayments)) {
+          allPayments.forEach((p: Payment) => {
+            if (!newPaymentsMap[p.commitmentId]) {
+              newPaymentsMap[p.commitmentId] = [];
+            }
+            newPaymentsMap[p.commitmentId].push(p);
+          });
         }
+        
+        // Ensure every fetched commitment at least has an empty array if no payments exist
+        if (cmtRes.ok) {
+          try {
+            // Re-fetch commitments quickly just for IDs since the original response body is used
+            const freshRes = await fetch('/api/admin/commitments');
+            if (freshRes.ok) {
+              const freshData = await freshRes.json();
+              freshData.forEach((cmt: any) => {
+                if (!newPaymentsMap[cmt.id]) {
+                  newPaymentsMap[cmt.id] = [];
+                }
+              });
+            }
+          } catch(e) {}
+        }
+        
         setPaymentsMap(newPaymentsMap);
       }
     } catch (err) {

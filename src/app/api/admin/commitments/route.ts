@@ -57,13 +57,16 @@ export async function GET() {
     }
   }
 
-  // Persist missing SC- IDs back to DB asynchronously (fire-and-forget)
+  // Persist missing SC- IDs back to DB asynchronously (but sequentially to avoid exhausting the 1-conn pool)
   if (toBackfill.length > 0) {
-    Promise.allSettled(
-      toBackfill.map(({ id, displayId }) =>
-        db.commitment.update({ where: { id }, data: { displayId } }).catch(() => {})
-      )
-    ).catch(() => {});
+    // Fire and forget, but execute sequentially in the background
+    (async () => {
+      for (const { id, displayId } of toBackfill) {
+        try {
+          await db.commitment.update({ where: { id }, data: { displayId } });
+        } catch (e) {}
+      }
+    })();
   }
 
   // Join member name & evaluate status based on cycle length
