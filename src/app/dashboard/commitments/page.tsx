@@ -415,7 +415,7 @@ function CommitmentsContent() {
   };
 
   const handleConfirmPayment = async (paymentId: string, commitmentId: string) => {
-    if (!(await dialog.confirm('Confirm Payment', 'Confirm receipt of this contribution payment? This triggers an email receipt.'))) return;
+    if (!(await dialog.confirm('Confirm Payment', 'Confirm receipt of this contribution payment? This triggers an email receipt.', 'Proceed', 'Cancel'))) return;
     try {
       const res = await fetch('/api/admin/commitments/action', {
         method: 'POST',
@@ -427,10 +427,20 @@ function CommitmentsContent() {
       });
 
       if (res.ok) {
-        fetchPayments(commitmentId);
+        // Refresh commitments
+        const res2 = await fetch('/api/admin/commitments');
+        if (res2.ok) {
+          setCommitments(await res2.json());
+        }
+        await fetchPayments(commitmentId);
+        await dialog.alert('Success', 'Payment confirmed successfully. The commitment now shows as Payment Done.');
+      } else {
+        const data = await res.json();
+        await dialog.alert('Error', data.error || 'Failed to confirm payment.');
       }
     } catch (err) {
       console.error('Error confirming payment:', err);
+      await dialog.alert('Error', 'A network error occurred while confirming payment.');
     }
   };
 

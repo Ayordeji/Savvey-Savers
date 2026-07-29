@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState } from 'react';
 
 interface DialogContextProps {
-  confirm: (title: string, message: string) => Promise<boolean>;
+  confirm: (title: string, message: string, confirmText?: string, cancelText?: string) => Promise<boolean>;
   alert: (title: string, message: string) => Promise<void>;
 }
 
@@ -13,6 +13,8 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
+  const [confirmTextState, setConfirmTextState] = useState('Confirm');
+  const [cancelTextState, setCancelTextState] = useState('Cancel');
   const [type, setType] = useState<'ALERT' | 'CONFIRM'>('ALERT');
   const [resolveRef, setResolveRef] = useState<((val: any) => void) | null>(null);
 
@@ -26,10 +28,12 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   };
 
-  const confirm = (title: string, message: string): Promise<boolean> => {
+  const confirm = (title: string, message: string, confirmText = 'Confirm', cancelText = 'Cancel'): Promise<boolean> => {
     return new Promise((resolve) => {
       setTitle(title);
       setMessage(message);
+      setConfirmTextState(confirmText);
+      setCancelTextState(cancelText);
       setType('CONFIRM');
       setIsOpen(true);
       setResolveRef(() => resolve);
@@ -63,14 +67,14 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     className="btn btn-secondary"
                     style={{ minWidth: '100px', cursor: 'pointer' }}
                   >
-                    Cancel
+                    {cancelTextState}
                   </button>
                   <button
                     onClick={() => handleClose(true)}
                     className="btn btn-primary"
                     style={{ minWidth: '100px', backgroundColor: 'var(--primary)', cursor: 'pointer' }}
                   >
-                    Confirm
+                    {confirmTextState}
                   </button>
                 </>
               ) : (

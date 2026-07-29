@@ -57,10 +57,24 @@ export async function POST(request: Request) {
 
       if (member && cmt) {
         // Dispatch Email Notification
+        const settingsRecord = await db.setting.findUnique({ where: { key: 'emailTemplates' } });
+        const templates = settingsRecord?.value as any[] || [];
+        const monthlyTemplate = templates.find(t => t.id === "22");
+        
+        let emailSubject = 'We’ve Received It';
+        let emailBody = `Dear ${member.name},\n\nWe are pleased to confirm that we have received your savings payment for <b>${payment.month}</b>.\n\nThis is a confirmation notice only, and no further action is required from you.\n\nKind regards,\n\nPlatform Support\nSavvey Savers Collective`;
+        
+        if (monthlyTemplate && monthlyTemplate.enabled) {
+          emailSubject = monthlyTemplate.subject || monthlyTemplate.title;
+          emailBody = monthlyTemplate.body
+            .replace(/{fullMonthName}/g, payment.month)
+            .replace(/{name}/g, member.name);
+        }
+
         await sendEmail({
           to: member.email,
-          subject: 'We’ve Received It',
-          body: `Dear ${member.name},\n\nWe are pleased to confirm that we have received your savings payment for <b>${payment.month}</b>.\n\nThis is a confirmation notice only, and no further action is required from you.\n\nKind regards,\n\nPlatform Support\nSavvey Savers Collective`
+          subject: emailSubject,
+          body: emailBody
         });
 
         // Member Notification
