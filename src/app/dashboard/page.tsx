@@ -13,7 +13,8 @@ import {
   Briefcase,
   PiggyBank,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  PoundSterling
 } from 'lucide-react';
 
 interface PageProps {
