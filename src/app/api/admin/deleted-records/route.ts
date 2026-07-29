@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
+import { db } from '@/lib/db';
 
 async function checkAdmin() {
   const cookieStore = await cookies();
@@ -15,8 +16,14 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
-  // deletedRecord model has been removed from schema, returning empty array
-  return NextResponse.json([]);
+  try {
+    const records = await db.deletedRecord.findMany({
+      orderBy: { deletedAt: 'desc' }
+    });
+    return NextResponse.json(records);
+  } catch (err: any) {
+    return NextResponse.json({ error: 'Failed to fetch deleted records' }, { status: 500 });
+  }
 }
 
 export async function DELETE() {
@@ -25,7 +32,7 @@ export async function DELETE() {
   }
 
   try {
-    // deletedRecord model has been removed from schema, doing nothing
+    await db.deletedRecord.deleteMany({});
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error('Error clearing deleted records:', err);

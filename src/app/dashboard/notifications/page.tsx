@@ -158,8 +158,8 @@ export default function NotificationsPage() {
                   display: 'flex',
                   gap: '16px',
                   alignItems: 'center',
-                  borderLeft: n.isRead ? '1px solid var(--border-color)' : '4px solid var(--primary)',
-                  backgroundColor: n.isRead ? 'rgba(255,255,255,0.01)' : 'rgba(99, 102, 241, 0.03)',
+                  borderLeft: n.isRead ? undefined : '4px solid var(--primary)',
+                  backgroundColor: n.isRead ? undefined : 'rgba(99, 102, 241, 0.03)',
                   transition: 'background-color var(--transition-fast)',
                   cursor: 'pointer'
                 }}

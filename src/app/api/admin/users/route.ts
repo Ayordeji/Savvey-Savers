@@ -572,9 +572,24 @@ export async function DELETE(request: Request) {
       // Delete user from active users in database
       await db.user.delete({ where: { id } });
 
+      // Create DeletedRecord for the user
+      await db.deletedRecord.create({
+        data: {
+          type: 'USER',
+          originalData: JSON.parse(JSON.stringify(user))
+        }
+      });
+
       // Clean up related commitments (archive them too)
       const relatedCommitments = await db.commitment.findMany({ where: { memberId: id } });
       for (const cmt of relatedCommitments) {
+        // Create DeletedRecord for each commitment
+        await db.deletedRecord.create({
+          data: {
+            type: 'COMMITMENT',
+            originalData: JSON.parse(JSON.stringify(cmt))
+          }
+        });
         await db.commitment.delete({ where: { id: cmt.id } });
       }
 

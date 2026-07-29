@@ -177,8 +177,8 @@ export default function WaitingListPage() {
               ) : (
                 paginatedEntries.map((e) => (
                   <tr key={e.id}>
-                    <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      {e.id}
+                    <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }} title={e.id}>
+                      WL-{e.id.substring(0, 6).toUpperCase()}
                     </td>
                     <td style={{ fontWeight: 600 }}>{e.name}</td>
                     <td>{e.email}</td>

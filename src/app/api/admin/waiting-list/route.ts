@@ -57,8 +57,26 @@ export async function POST(request: Request) {
     const invitationId = 'invite_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const invitationExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
 
+    // Generate sequential M-XXXXXX ID
+    const existingUsers = await db.user.findMany({ select: { id: true, displayId: true } });
+    let maxId = 0;
+    for (const u of existingUsers) {
+      if (u.displayId && /^M-\d+$/.test(u.displayId)) {
+        const num = parseInt(u.displayId.substring(2), 10);
+        if (!isNaN(num) && num > maxId) maxId = num;
+      }
+      if (u.id && /^M-\d+$/.test(u.id)) {
+        const num = parseInt(u.id.substring(2), 10);
+        if (!isNaN(num) && num > maxId) maxId = num;
+      }
+    }
+    const nextIdStr = String(maxId + 1).padStart(6, '0');
+    const userDisplayId = `M-${nextIdStr}`;
+
     // 2. Create User
     const newUser = await db.user.create({ data: {
+      id: userDisplayId,
+      displayId: userDisplayId,
       name: entry.name,
       email: entry.email,
       phone: entry.phone,
@@ -101,8 +119,27 @@ export async function POST(request: Request) {
        goal = 'Indefinite Savings';
     }
 
+    // Generate sequential SC-XXXXX displayId
+    const existingCommitments = await db.commitment.findMany({
+      select: { id: true, displayId: true }
+    });
+    let maxScNum = 0;
+    for (const ec of existingCommitments) {
+      if (ec.displayId && /^SC-\d+$/.test(ec.displayId)) {
+        const num = parseInt(ec.displayId.replace(/^SC-0*/, '') || '0', 10);
+        if (num > maxScNum) maxScNum = num;
+      }
+      if (ec.id && /^SC-\d+$/.test(ec.id)) {
+        const num = parseInt(ec.id.replace(/^SC-0*/, '') || '0', 10);
+        if (num > maxScNum) maxScNum = num;
+      }
+    }
+    const nextScId = `SC-${String(maxScNum + 1).padStart(5, '0')}`;
+
     await db.commitment.create({
        data: {
+         id: nextScId,
+         displayId: nextScId,
          memberId: newUser.id,
          memberName: newUser.name,
          amount: entry.monthlySavingsCommitment,
