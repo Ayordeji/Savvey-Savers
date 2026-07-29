@@ -403,6 +403,7 @@ function CommitmentsContent() {
       if (res.ok) {
         fetchPayments(selectedCmt.id);
         setActiveModal('NONE');
+        router.refresh();
         await dialog.alert('Success', 'Past payment recorded successfully.');
       } else {
         const data = await res.json();
@@ -466,6 +467,7 @@ function CommitmentsContent() {
         if (res2.ok) {
           setCommitments(await res2.json());
         }
+        router.refresh();
         await dialog.alert('Success', 'Harvest payout released and member notified.');
       }
     } catch (err) {
@@ -488,6 +490,7 @@ function CommitmentsContent() {
         if (res2.ok) {
           setCommitments(await res2.json());
         }
+        router.refresh();
         await dialog.alert('Success', 'Commitment cancelled successfully.');
       } else {
         const data = await res.json();

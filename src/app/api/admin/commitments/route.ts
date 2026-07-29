@@ -79,12 +79,14 @@ export async function GET() {
 
     // Status driven by cycle year
     let status = c.status;
-    if (c.collectionYear < currentYear) {
-      status = 'COMPLETED';
-    } else if (c.collectionYear > currentYear) {
-      status = 'PENDING';
-    } else if (!status || status === 'COMPLETED') {
-      status = 'ACTIVE';
+    if (status !== 'CANCELLED') {
+      if (c.collectionYear < currentYear) {
+        status = 'COMPLETED';
+      } else if (c.collectionYear > currentYear) {
+        status = 'PENDING';
+      } else if (!status || status === 'COMPLETED') {
+        status = 'ACTIVE';
+      }
     }
 
     const nameToUse = (c.memberName && c.memberName !== 'Unknown Member' && c.memberName.trim().length > 0)
