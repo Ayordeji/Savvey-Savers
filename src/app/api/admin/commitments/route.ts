@@ -33,8 +33,17 @@ export async function GET() {
   let maxScNum = 0;
   for (const c of commitments) {
     const did = (c as any).displayId;
+    const legacyId = c.id;
+    
+    // Check displayId
     if (did && /^SC-\d+$/.test(did)) {
       const n = parseInt(did.replace(/^SC-0*/, '') || '0', 10);
+      if (n > maxScNum) maxScNum = n;
+    }
+    
+    // Check legacy ID which might be SC-xxx
+    if (legacyId && /^SC-\d+$/.test(legacyId)) {
+      const n = parseInt(legacyId.replace(/^SC-0*/, '') || '0', 10);
       if (n > maxScNum) maxScNum = n;
     }
   }
@@ -48,7 +57,9 @@ export async function GET() {
   const toBackfill: { id: string; displayId: string }[] = [];
   for (const c of sorted) {
     const did = (c as any).displayId;
-    const hasValidSc = did && /^SC-\d+$/.test(did);
+    const legacyId = c.id;
+    const hasValidSc = (did && /^SC-\d+$/.test(did)) || (legacyId && /^SC-\d+$/.test(legacyId));
+    
     if (!hasValidSc) {
       maxScNum++;
       const newDisplayId = `SC-${String(maxScNum).padStart(5, '0')}`;
@@ -57,9 +68,8 @@ export async function GET() {
     }
   }
 
-  // Persist missing SC- IDs back to DB asynchronously (but sequentially to avoid exhausting the 1-conn pool)
+  // Persist missing SC- IDs back to DB sequentially to avoid exhausting the 1-conn pool
   if (toBackfill.length > 0) {
-    // Fire and forget, but execute sequentially in the background
     (async () => {
       for (const { id, displayId } of toBackfill) {
         try {
@@ -77,8 +87,7 @@ export async function GET() {
       (u.name && c.memberName && u.name.toLowerCase().trim() === c.memberName.toLowerCase().trim())
     );
 
-    // Use displayId (already assigned above if it was missing)
-    const id = (c as any).displayId || c.id;
+    const displayId = (c as any).displayId || (c.id && /^SC-\d+$/.test(c.id) ? c.id : c.id);
 
     // Status driven by cycle year
     let status = c.status;
@@ -98,7 +107,8 @@ export async function GET() {
 
     return {
       ...c,
-      id,
+      id: c.id, // NEVER overwrite the primary key
+      displayId, // Provide displayId explicitly
       status,
       memberName: nameToUse
     };

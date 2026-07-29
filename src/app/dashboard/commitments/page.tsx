@@ -9,6 +9,7 @@ import styles from './commitments.module.css';
 
 interface Commitment {
   id: string;
+  displayId?: string;
   memberId: string;
   memberName: string;
   amount: number;
@@ -881,7 +882,7 @@ function CommitmentsContent() {
                           style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '3px' }}
                           title="Click to view commitment details"
                         >
-                          {c.id}
+                          {c.displayId || c.id}
                         </td>
                         <td style={{ fontWeight: 600 }}>
                           <button
@@ -1139,7 +1140,7 @@ function CommitmentsContent() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                           <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-main)' }}>{c.memberName}</span>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            {c.id} • £{c.amount}/mo • Payout: {c.collectionMonth} {c.collectionYear}
+                            {c.displayId || c.id} • £{c.amount}/mo • Payout: {c.collectionMonth} {c.collectionYear}
                           </span>
                         </div>
                       </label>
@@ -1185,14 +1186,14 @@ function CommitmentsContent() {
                 <PoundSterling size={20} style={{ color: 'var(--primary)' }} />
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', margin: 0 }}>Saving Commitment</h3>
               </div>
-              <div style={{ fontFamily: 'monospace', fontSize: '1rem', fontWeight: 700, color: 'var(--primary)', paddingLeft: '30px' }}>{selectedCmt.id}</div>
+              <div style={{ fontFamily: 'monospace', fontSize: '1rem', fontWeight: 700, color: 'var(--primary)', paddingLeft: '30px' }}>{selectedCmt.displayId || selectedCmt.id}</div>
             </div>
 
             {/* Info Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px', backgroundColor: 'var(--bg-subtle, #f8fafc)', borderRadius: '12px', padding: '16px', border: '1px solid var(--border-color)' }}>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Record ID</span>
-                <div style={{ fontWeight: 700, color: 'var(--text-main)', fontFamily: 'monospace', marginTop: '4px', fontSize: '0.85rem' }}>{selectedCmt.id}</div>
+                <div style={{ fontWeight: 700, color: 'var(--text-main)', fontFamily: 'monospace', marginTop: '4px', fontSize: '0.85rem' }}>{selectedCmt.displayId || selectedCmt.id}</div>
               </div>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Member Name</span>
@@ -1290,7 +1291,7 @@ function CommitmentsContent() {
               Payment for Past Month
             </h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
-              Record a historical monthly payment for <strong>{selectedCmt.memberName}</strong> — {selectedCmt.id}.
+              Record a historical monthly payment for <strong>{selectedCmt.memberName}</strong> — {selectedCmt.displayId || selectedCmt.id}.
             </p>
 
             {errorMsg && (
@@ -1354,7 +1355,7 @@ function CommitmentsContent() {
               Edit Commitment Details
             </h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
-              Modify settings for commitment cycle ID: {selectedCmt.id}.
+              Modify settings for commitment cycle ID: {selectedCmt.displayId || selectedCmt.id}.
             </p>
 
             {errorMsg && (

@@ -2045,9 +2045,9 @@ export default function ManageUsersPage() {
               <button
                 type="button"
                 onClick={handleConfirmFeeSubmit}
-                disabled={formSubmitting || userFeeRecords.length === 0}
+                disabled={formSubmitting}
                 className="btn btn-primary"
-                style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 28px', fontWeight: 600, opacity: (formSubmitting || userFeeRecords.length === 0) ? 0.6 : 1, cursor: (formSubmitting || userFeeRecords.length === 0) ? 'not-allowed' : 'pointer' }}
+                style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 28px', fontWeight: 600, opacity: formSubmitting ? 0.6 : 1, cursor: formSubmitting ? 'not-allowed' : 'pointer' }}
               >
                 {formSubmitting ? 'Submitting...' : 'Submit'}
               </button>
