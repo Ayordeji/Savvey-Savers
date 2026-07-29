@@ -31,11 +31,17 @@ export async function POST(request: Request) {
 
     // --- Action 1: CONFIRM_PAYMENT ---
     if (action === 'CONFIRM_PAYMENT') {
-      if (!paymentId) {
-        return NextResponse.json({ error: 'Payment ID is required.' }, { status: 400 });
+      if (!paymentId && !commitmentId) {
+        return NextResponse.json({ error: 'Payment ID or Commitment ID is required.' }, { status: 400 });
       }
 
-      const payment = await db.payment.findUnique({ where: { id: paymentId } });
+      let payment;
+      if (paymentId) {
+        payment = await db.payment.findUnique({ where: { id: paymentId } });
+      } else {
+        payment = await db.payment.findFirst({ where: { commitmentId, status: 'PENDING' } });
+      }
+
       if (!payment) {
         return NextResponse.json({ error: 'Payment record not found.' }, { status: 404 });
       }

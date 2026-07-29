@@ -414,7 +414,7 @@ function CommitmentsContent() {
     }
   };
 
-  const handleConfirmPayment = async (paymentId: string, commitmentId: string) => {
+  const handleConfirmPayment = async (paymentId: string | undefined, commitmentId: string) => {
     if (!(await dialog.confirm('Confirm Payment', 'Confirm receipt of this contribution payment? This triggers an email receipt.', 'Proceed', 'Cancel'))) return;
     try {
       const res = await fetch('/api/admin/commitments/action', {
@@ -422,7 +422,8 @@ function CommitmentsContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'CONFIRM_PAYMENT',
-          paymentId
+          paymentId: paymentId || undefined,
+          commitmentId
         })
       });
 
@@ -908,14 +909,9 @@ function CommitmentsContent() {
                                       // If there's a pending payment OR no payments exist (freshly created fallback)
                                       paymentsMap[c.id].some(p => p.status === 'PENDING') || paymentsMap[c.id].length === 0 ? (
                                         <button onClick={() => {
-                                          const pending = paymentsMap[c.id].find(p => p.status === 'PENDING');
-                                          if (pending) {
-                                            handleConfirmPayment(pending.id, c.id);
-                                            setOpenDropdownId(null);
-                                          } else {
-                                            // Fallback if no payment was found but they click confirm
-                                            fetchPayments(c.id);
-                                          }
+                                          const pending = paymentsMap[c.id]?.find(p => p.status === 'PENDING');
+                                          handleConfirmPayment(pending?.id, c.id);
+                                          setOpenDropdownId(null);
                                         }} className={styles.dropdownItem}>
                                           <ReceiptText size={14} />
                                           <span>Confirm Payment Receipt</span>
