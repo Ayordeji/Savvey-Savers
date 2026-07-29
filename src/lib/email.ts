@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { db } from './db';
+import { defaultEmailTemplates, EmailTemplate } from './emailTemplates';
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const mailFrom = process.env.MAIL_FROM || 'onboarding@resend.dev'; // fallback standard Resend domain if none specified
@@ -44,6 +45,53 @@ export async function sendEmail({ to, subject, body }: { to: string; subject: st
     }
   } catch (err: any) {
     console.error('[EMAIL SENDING FAILED]', err);
+    return { success: false, error: err.message || err };
+  }
+}
+
+export async function sendTemplatedEmail(
+  templateId: string,
+  to: string,
+  variables: Record<string, string>
+) {
+  try {
+    const dbEmailTemplatesStr = await db.setting.findUnique({ where: { key: 'emailTemplates' } });
+    const dbEmailTemplates = (dbEmailTemplatesStr?.value as any[]) || [];
+    
+    // Find the template in DB, or fallback to default
+    let template = dbEmailTemplates.find((t: any) => t.id === templateId) as EmailTemplate | undefined;
+    if (!template) {
+      template = defaultEmailTemplates.find(t => t.id === templateId);
+    }
+    
+    if (!template) {
+      console.warn(`[sendTemplatedEmail] Template ID ${templateId} not found.`);
+      return { success: false, error: 'Template not found' };
+    }
+    
+    if (!template.enabled) {
+      console.log(`[sendTemplatedEmail] Template ID ${templateId} is disabled in settings. Skipping email to ${to}.`);
+      return { success: true, messageId: 'skipped-disabled' };
+    }
+    
+    let subject = template.subject;
+    let body = template.body;
+    
+    for (const [key, value] of Object.entries(variables)) {
+      // replace {key}
+      const regex = new RegExp(`\\{${key}\\}`, 'g');
+      subject = subject.replace(regex, value);
+      body = body.replace(regex, value);
+      
+      // replace {{key}} just in case (some templates have {{MemberName}})
+      const doubleRegex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+      subject = subject.replace(doubleRegex, value);
+      body = body.replace(doubleRegex, value);
+    }
+    
+    return await sendEmail({ to, subject, body });
+  } catch (err: any) {
+    console.error(`[sendTemplatedEmail] Error parsing template ${templateId}`, err);
     return { success: false, error: err.message || err };
   }
 }

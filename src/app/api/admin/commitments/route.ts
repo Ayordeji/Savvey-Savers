@@ -169,6 +169,7 @@ export async function POST(request: Request) {
     const nextScId = `SC-${String(maxScNum + 1).padStart(5, '0')}`;
 
     const newCommitment = await db.commitment.create({ data: {
+      id: nextScId,
       displayId: nextScId,
       memberId: targetMemberId,
       amount: parseFloat(amount),

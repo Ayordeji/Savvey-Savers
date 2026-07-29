@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendEmail } from '@/lib/email';
+import { sendTemplatedEmail } from '@/lib/email';
 
 
 export async function POST(request: Request) {
@@ -43,14 +43,9 @@ export async function POST(request: Request) {
     
     const resetLink = `${origin}/reset-password?token=${resetToken}`;
 
-    // Send the password reset email via Resend
-    const emailSubject = 'Savvey Savers - Password Reset Request';
-    const emailBody = `Hello ${user.name},\n\nYou requested a password reset for your Savvey Savers account.\n\nClick the link below to reset your password:\n${resetLink}\n\nIf you did not request this, you can safely ignore this email.\n\nBest regards,\nSavvey Savers Team`;
-
-    const sendResult = await sendEmail({
-      to: normalizedEmail,
-      subject: emailSubject,
-      body: emailBody
+    const sendResult = await sendTemplatedEmail("1", normalizedEmail, {
+      name: user.name,
+      reacturl: resetLink
     });
 
     if (!sendResult.success) {

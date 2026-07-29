@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, sendTemplatedEmail } from '@/lib/email';
 import { cookies } from 'next/headers';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 
@@ -240,42 +240,16 @@ export async function POST(request: Request) {
     const origin = `${protocol}://${host}`;
     const activationLink = `${origin}/activate?invite=${invitationId}`;
 
-    const templates = (await db.setting.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
-    
-    // Always use Template 2 ("Savvey Savers Account Registration") for invitations
-    const foundTpl = (templates as any[]).find((t: any) => t.id === '2' || t.title?.includes('Registration'));
-
-    let emailSubject = 'Savvey Savers Account Registration';
-    let emailBody = `Dear ${name}\n\nYou have been invited by your Account Admin to register your account on the Savvey Savers peer-to-peer lending Platform.\n\nPlease use this link ${activationLink} to complete your account registration.\n\nIf you require any support, please contact your Admin.\n\nKind Regards,\nSavvey Savers Network Support`;
-
-    if (foundTpl && foundTpl.enabled !== false) {
-      emailSubject = foundTpl.subject || emailSubject;
-      emailBody = foundTpl.body || emailBody;
-
-      // Replace template variables
-      const replacements: Record<string, string> = {
-        name,
-        memberName: name,
-        invitedUser: name,
-        first_name: firstName || name.split(' ')[0] || '',
-        last_name: lastName || name.split(' ').slice(1).join(' ') || '',
-        email: normalizedEmail,
-        reacturl: activationLink,
-        url: activationLink,
-        loginUrl: activationLink,
-      };
-
-      Object.entries(replacements).forEach(([key, val]) => {
-        const reg = new RegExp(`\\{${key}\\}`, 'g');
-        emailBody = emailBody.replace(reg, val);
-        emailSubject = emailSubject.replace(reg, val);
-      });
-    }
-
-    await sendEmail({
-      to: normalizedEmail,
-      subject: emailSubject,
-      body: emailBody
+    await sendTemplatedEmail("2", normalizedEmail, {
+      name,
+      memberName: name,
+      invitedUser: name,
+      first_name: firstName || name.split(' ')[0] || '',
+      last_name: lastName || name.split(' ').slice(1).join(' ') || '',
+      email: normalizedEmail,
+      reacturl: activationLink,
+      url: activationLink,
+      loginUrl: activationLink,
     });
 
     // Create admin notification
@@ -347,41 +321,16 @@ export async function PUT(request: Request) {
         ? `${origin}/reset-password?token=${invitationId}` 
         : `${origin}/activate?invite=${invitationId}`;
 
-      const templates = (await db.setting.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
       const templateId = body.action === 'send_reset' ? '1' : '2';
-      const foundTpl = (templates as any[]).find((t: any) => t.id === templateId);
-
-      let emailSubject = body.action === 'send_reset' ? 'Savvey Savers Forgot Password' : 'Savvey Savers Account Registration';
-      let emailBody = body.action === 'send_reset'
-        ? `Dear ${user.name},\n\nYou have requested a password reset on the Savvey Savers peer-to-peer lending Platform.\n\nPlease use this link ${link} to reset your password.\n\nIf you require any support, please contact your Admin.\n\nKind Regards,\nSavvey Savers Network Support.`
-        : `Dear ${user.name},\n\nYou have been invited by your Account Admin to register your account on the Savvey Savers peer-to-peer lending Platform.\n\nPlease use this link ${link} to complete your account registration.\n\nIf you require any support, please contact your Admin.\n\nKind Regards,\nSavvey Savers Network Support`;
-
-      if (foundTpl && foundTpl.enabled !== false) {
-        emailSubject = foundTpl.subject || emailSubject;
-        emailBody = foundTpl.body || emailBody;
-
-        const replacements: Record<string, string> = {
-          name: user.name,
-          memberName: user.name,
-          first_name: user.firstName || user.name.split(' ')[0] || '',
-          last_name: user.lastName || user.name.split(' ').slice(1).join(' ') || '',
-          email: user.email,
-          reacturl: link,
-          url: link,
-          loginUrl: link,
-        };
-
-        Object.entries(replacements).forEach(([key, val]) => {
-          const reg = new RegExp(`\\{${key}\\}`, 'g');
-          emailBody = emailBody.replace(reg, val);
-          emailSubject = emailSubject.replace(reg, val);
-        });
-      }
-
-      const mailRes = await sendEmail({
-        to: user.email,
-        subject: emailSubject,
-        body: emailBody
+      const mailRes = await sendTemplatedEmail(templateId, user.email, {
+        name: user.name,
+        memberName: user.name,
+        first_name: user.firstName || user.name.split(' ')[0] || '',
+        last_name: user.lastName || user.name.split(' ').slice(1).join(' ') || '',
+        email: user.email,
+        reacturl: link,
+        url: link,
+        loginUrl: link,
       });
 
       if (!mailRes.success) {
@@ -405,8 +354,6 @@ export async function PUT(request: Request) {
       }
 
       // Handle email notification on activation/deactivation
-      const templates = (await db.setting.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
-
       if (!newActiveState) {
         // Deactivation email logic
         const reason = body.deactivationReason || '';
@@ -417,35 +364,12 @@ export async function PUT(request: Request) {
           tplId = '31';
         }
 
-        const foundTpl = (templates as any[]).find((t: any) => t.id === tplId);
-        let subject = 'Notice of Membership Status Update';
-        let bodyText = `Dear ${user.firstName || user.name.split(' ')[0] || user.name},\n\nYour access to the Members' portal has now been deactivated.\n\nBest Wishes,\nPlatform Support\nSavvey Savers Network`;
-
-        if (foundTpl && foundTpl.enabled !== false) {
-          subject = foundTpl.subject || subject;
-          bodyText = foundTpl.body || bodyText;
-        }
-
-        // Replace template variables ({first_name}, {name}, {{MemberName}}, etc.)
-        const replacements: Record<string, string> = {
+        await sendTemplatedEmail(tplId, user.email, {
           name: user.name,
           MemberName: user.name,
           first_name: user.firstName || user.name.split(' ')[0] || user.name,
           last_name: user.lastName || user.name.split(' ').slice(1).join(' ') || '',
           email: user.email,
-        };
-
-        Object.entries(replacements).forEach(([k, v]) => {
-          const reg1 = new RegExp(`\\{${k}\\}`, 'g');
-          const reg2 = new RegExp(`\\{\\{${k}\\}\\}`, 'g');
-          bodyText = bodyText.replace(reg1, v).replace(reg2, v);
-          subject = subject.replace(reg1, v).replace(reg2, v);
-        });
-
-        await sendEmail({
-          to: user.email,
-          subject,
-          body: bodyText
         });
       } else {
         // Reactivation email logic

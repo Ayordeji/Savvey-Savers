@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, sendTemplatedEmail } from '@/lib/email';
 import { cookies } from 'next/headers';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 
@@ -81,10 +81,11 @@ export async function POST(request: Request) {
 
       if (member && cmt) {
         // Send email
-        await sendEmail({
-          to: member.email,
-          subject: 'Savvey Savers - Collection Month Approved!',
-          body: `Hello ${member.name},\n\nGood news! Your request for collection month ${req.requestedMonth} ${req.requestedYear} (Savings target: ${cmt.goal}) has been officially APPROVED by the group coordinator.\n\nYour rotating savings cycle is now active.\n\nBest regards,\nSavvey Savers Team`
+        await sendTemplatedEmail("21", member.email, {
+          savers_name: member.name,
+          month_name: `${req.requestedMonth} ${req.requestedYear}`,
+          amount: cmt.amount.toString(),
+          saving_goal: cmt.goal
         });
 
         // Notification
@@ -119,10 +120,9 @@ export async function POST(request: Request) {
 
       if (member && cmt) {
         // Send email
-        await sendEmail({
-          to: member.email,
-          subject: 'Savvey Savers - Collection Month Request Update',
-          body: `Hello ${member.name},\n\nYour request for collection month ${req.requestedMonth} ${req.requestedYear} has been declined by the group coordinator.\n\nPlease contact your coordinator to select an alternative month.\n\nBest regards,\nSavvey Savers Team`
+        await sendTemplatedEmail("16", member.email, {
+          name: member.name,
+          month_year: `${req.requestedMonth} ${req.requestedYear}`
         });
 
         // Notification

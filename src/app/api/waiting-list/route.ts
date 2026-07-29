@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, sendTemplatedEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
   try {
@@ -115,6 +115,18 @@ export async function POST(request: Request) {
     } catch (sideEffectErr) {
       console.warn('Waiting list side-effects warning:', sideEffectErr);
     }
+
+    // Send the prospect the waiting list confirmation using Template 26
+    const fName = name.split(' ')[0] || '';
+    const lName = name.split(' ').slice(1).join(' ') || '';
+    await sendTemplatedEmail("26", normalizedEmail, {
+      first_name: fName,
+      last_name: lName,
+      email: normalizedEmail,
+      phone: phone,
+      savings_commitment: commitmentVal.toString(),
+      referred_by: referredBy || 'N/A'
+    });
 
     return NextResponse.json({
       success: true,

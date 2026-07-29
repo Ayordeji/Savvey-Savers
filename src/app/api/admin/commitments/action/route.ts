@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, sendTemplatedEmail } from '@/lib/email';
 import { cookies } from 'next/headers';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 
@@ -65,22 +65,9 @@ export async function POST(request: Request) {
         // Dispatch Email Notification
         const settingsRecord = await db.setting.findUnique({ where: { key: 'emailTemplates' } });
         const templates = settingsRecord?.value as any[] || [];
-        const monthlyTemplate = templates.find(t => t.id === "22");
-        
-        let emailSubject = 'We’ve Received It';
-        let emailBody = `Dear ${member.name},\n\nWe are pleased to confirm that we have received your savings payment for <b>${payment.month}</b>.\n\nThis is a confirmation notice only, and no further action is required from you.\n\nKind regards,\n\nPlatform Support\nSavvey Savers Collective`;
-        
-        if (monthlyTemplate && monthlyTemplate.enabled) {
-          emailSubject = monthlyTemplate.subject || monthlyTemplate.title;
-          emailBody = monthlyTemplate.body
-            .replace(/{fullMonthName}/g, payment.month)
-            .replace(/{name}/g, member.name);
-        }
-
-        await sendEmail({
-          to: member.email,
-          subject: emailSubject,
-          body: emailBody
+        await sendTemplatedEmail("22", member.email, {
+          fullMonthName: payment.month,
+          name: member.name
         });
 
         // Member Notification
@@ -127,11 +114,9 @@ export async function POST(request: Request) {
       } });
 
       if (member) {
-        // Send Email
-        await sendEmail({
-          to: member.email,
-          subject: 'We’ve Received It',
-          body: `Dear ${member.name},\n\nWe are pleased to confirm that we have received your savings payment for <b>${month}</b>.\n\nThis is a confirmation notice only, and no further action is required from you.\n\nKind regards,\n\nPlatform Support\nSavvey Savers Collective`
+        await sendTemplatedEmail("22", member.email, {
+          fullMonthName: month,
+          name: member.name
         });
 
         // Member Notification
@@ -188,11 +173,14 @@ export async function POST(request: Request) {
       });
 
       if (member) {
-        // Send Email
-        await sendEmail({
-          to: member.email,
-          subject: 'Savvey Savers - Harvest Payout Released!',
-          body: `Hello ${member.name},\n\nCongratulations! Your savings harvest payout of £${harvestAmount} has been officially released for your collection month ${cmt.collectionMonth} ${cmt.collectionYear}.\n\nYour rotating savings cycle goal (${cmt.goal}) has been successfully achieved and closed.\n\nThank you for choosing Savvey Savers!\n\nBest regards,\nSavvey Savers Team`
+        const host = request.headers.get('host') || 'savvey-savers.vercel.app';
+        const protocol = request.headers.get('x-forwarded-proto') || 'https';
+        const origin = `${protocol}://${host}`;
+        
+        await sendTemplatedEmail("23", member.email, {
+          name: member.name,
+          saving_goal: cmt.goal,
+          url: `${origin}/dashboard/commitments`
         });
 
         // Member Notification
@@ -247,10 +235,9 @@ export async function POST(request: Request) {
           if (cmt) {
             const member = await db.user.findUnique({ where: { id: cmt.memberId } });
             if (member) {
-              await sendEmail({
-                to: member.email,
-                subject: 'Savvey Savers - Friendly Savings Reminder',
-                body: `Hello ${member.name},\n\nThis is a friendly reminder from your Savvey Savers coordinator regarding your savings commitment for "${cmt.goal}" (Monthly amount: £${cmt.amount}).\n\nPlease proceed with your payment/deposit and notify your coordinator to confirm receipt.\n\nBest regards,\nSavvey Savers Collective`
+              await sendTemplatedEmail("14", member.email, {
+                name: member.name,
+                current_month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
               });
               await db.notification.create({ data: {
                 userId: member.id,
@@ -266,10 +253,9 @@ export async function POST(request: Request) {
         for (const mId of targetMemberIds) {
           const member = await db.user.findUnique({ where: { id: mId } });
           if (member) {
-            await sendEmail({
-              to: member.email,
-              subject: 'Savvey Savers - Friendly Savings Reminder',
-              body: `Hello ${member.name},\n\nThis is a friendly reminder from your Savvey Savers coordinator regarding your active savings commitments.\n\nPlease proceed with your monthly savings payment/deposit and notify your coordinator.\n\nBest regards,\nSavvey Savers Collective`
+            await sendTemplatedEmail("14", member.email, {
+              name: member.name,
+              current_month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
             });
             await db.notification.create({ data: {
               userId: member.id,

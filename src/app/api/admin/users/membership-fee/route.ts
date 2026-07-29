@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendEmail } from '@/lib/email';
+import { sendTemplatedEmail } from '@/lib/email';
 import { cookies } from 'next/headers';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 
@@ -79,10 +79,9 @@ export async function POST(request: Request) {
       });
 
       // Notify User via Email
-      await sendEmail({
-        to: user.email,
-        subject: `Fee Request`,
-        body: `Dear ${user.name},\n\nYour ${parsedYear} Annual Membership Fee of £${totalFee.toFixed(2)} is now due.\n\nPlease make payment to the bank account provided by your Relationship Manager to secure your collection slot for the year.\n\nKind regards,\n\nPlatform Support\nSavvey Savers Collective`
+      await sendTemplatedEmail("28", user.email, {
+        total_amount: totalFee.toFixed(2),
+        payment_year: parsedYear.toString()
       });
 
       // Create in-app notification
@@ -181,10 +180,9 @@ export async function POST(request: Request) {
       // Send Email confirmation
       const paidAmount = (parsedAmount || recordToUpdate?.totalFee || 0).toFixed(2);
       const emailYear = recordToUpdate?.year || new Date().getFullYear();
-      await sendEmail({
-        to: user.email,
-        subject: `Fee Payment Confirmation`,
-        body: `Dear ${user.name},\n\nThank you for your payment.\n\nThis is to confirm that we have received your ${emailYear} Membership Fee of £${paidAmount} on ${paymentDate.toLocaleDateString('en-GB')}.\n\nWe look forward to supporting you throughout your savings journey and thank you for choosing to be part of the Savvey Savers Collective.\n\nKind regards,\n\nPlatform Support\nSavvey Savers Collective`
+      await sendTemplatedEmail("29", user.email, {
+        membership_year: emailYear.toString(),
+        payment_received_date: paymentDate.toLocaleDateString('en-GB')
       });
 
       // Create in-app notification
@@ -203,10 +201,9 @@ export async function POST(request: Request) {
       const pendingFee = userRecords[0];
       const dueAmount = pendingFee ? pendingFee.totalFee : 230;
 
-      await sendEmail({
-        to: user.email,
-        subject: `Payment Reminder: Outstanding Membership Fee (£${dueAmount.toFixed(2)})`,
-        body: `Hello ${user.name},\n\nThis is a friendly reminder to pay your outstanding membership fee of £${dueAmount.toFixed(2)} for ${pendingFee ? pendingFee.year : new Date().getFullYear()}.\n\nPlease complete your offline payment with your group coordinator at your earliest convenience.\n\nThank you,\nSavvey Savers Collective`
+      await sendTemplatedEmail("14", user.email, {
+        name: user.name,
+        current_month: (pendingFee ? pendingFee.year : new Date().getFullYear()).toString()
       });
 
       await db.notification.create({ data: {
