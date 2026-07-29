@@ -153,14 +153,17 @@ export async function POST(request: Request) {
 
     // Generate sequential SC-XXXXX displayId
     const existingCommitments = await db.commitment.findMany({
-      where: { displayId: { startsWith: 'SC-' } },
-      select: { displayId: true }
+      select: { id: true, displayId: true }
     });
     let maxScNum = 0;
     for (const ec of existingCommitments) {
-      if (ec.displayId) {
-        const num = parseInt(ec.displayId.replace(/^SC-0*/, ''), 10);
-        if (!isNaN(num) && num > maxScNum) maxScNum = num;
+      if (ec.displayId && /^SC-\d+$/.test(ec.displayId)) {
+        const num = parseInt(ec.displayId.replace(/^SC-0*/, '') || '0', 10);
+        if (num > maxScNum) maxScNum = num;
+      }
+      if (ec.id && /^SC-\d+$/.test(ec.id)) {
+        const num = parseInt(ec.id.replace(/^SC-0*/, '') || '0', 10);
+        if (num > maxScNum) maxScNum = num;
       }
     }
     const nextScId = `SC-${String(maxScNum + 1).padStart(5, '0')}`;
