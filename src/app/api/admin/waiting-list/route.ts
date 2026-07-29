@@ -24,6 +24,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  const payload = token ? await verifyToken(token) : null;
+  const adminId = payload?.id || 'admin';
+
   if (!(await checkAdmin())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
@@ -58,45 +63,55 @@ export async function POST(request: Request) {
       email: entry.email,
       phone: entry.phone,
       role: 'MEMBER',
-      membership: 'Standard Saver',
-      isActive: false,
-      passwordHash: 'pending_activation',
+      isActive: true,
+      membership: 'STANDARD',
       invitationId,
-      invitationExpiresAt
+      invitationExpiresAt,
+      membershipFeeConfirmed: false,
+      termsAccepted: false
     } });
 
-    // 3. Create active commitment based on intended amount
-    await db.commitment.create({ data: {
-      memberId: newUser.id,
-      amount: entry.monthlySavingsCommitment,
-      goal: 'Savings',
-      collectionMonth: 'December',
-      collectionYear: new Date().getFullYear(),
-      endDate: `${new Date().getFullYear()}-12-31`,
-      status: 'ACTIVE',
-      updatedAt: new Date().toISOString()
-    } });
-
-    // 4. Send email
-    const host = request.headers.get('host') || 'savvey-savers.vercel.app';
-    const protocol = request.headers.get('x-forwarded-proto') || 'https';
-    const origin = `${protocol}://${host}`;
-    const activationLink = `${origin}/activate?invite=${invitationId}`;
-    let emailSubject = '';
-    let emailBody = '';
-
-    if (inviteMode === 'SAVE_INVITE') {
-      emailSubject = 'Welcome to Savvey Savers - Invitation to Join';
-      emailBody = `Hello ${entry.name},\n\nCongratulations! Your application to join the Savvey Savers group has been approved.\n\nClick the link below to set your password and access your dashboard:\n${activationLink}\n\nThis link is active for 72 hours.\n\nBest regards,\nSavvey Savers Team`;
-    } else {
-      emailSubject = 'Welcome to Savvey Savers - Account Registered';
-      emailBody = `Hello ${entry.name},\n\nYour application to join the Savvey Savers group has been approved and registered. We will contact you when your dashboard access is ready.\n\nBest regards,\nSavvey Savers Team`;
+    // 3. Create active commitment based on their waiting list promise
+    const currentDate = new Date();
+    const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
+    const currentYear = currentDate.getFullYear();
+    const isPast15th = currentDate.getDate() > 15;
+    
+    // Determine the collection month/year
+    let collectionMonthName = currentMonth;
+    let collectionYear = currentYear;
+    
+    if (isPast15th) {
+      // Shift to next month
+      const nextMonthDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1));
+      collectionMonthName = nextMonthDate.toLocaleString('default', { month: 'long' });
+      collectionYear = nextMonthDate.getFullYear();
     }
 
-    await sendEmail({
-      to: entry.email,
-      subject: emailSubject,
-      body: emailBody
+    // Determine goal and set end date based on mode
+    let goal = 'Standard Savings';
+    let endDate = null;
+    
+    if (inviteMode === 'yearly') {
+       goal = 'Yearly Savings (12 Months)';
+       endDate = new Date(currentYear + 1, currentDate.getMonth(), currentDate.getDate()); // +1 year
+    } else if (inviteMode === 'monthly') {
+       goal = 'Monthly Flexible Savings';
+    } else {
+       goal = 'Indefinite Savings';
+    }
+
+    await db.commitment.create({
+       data: {
+         memberId: newUser.id,
+         memberName: newUser.name,
+         amount: entry.monthlySavingsCommitment,
+         goal,
+         collectionMonth: collectionMonthName,
+         collectionYear: collectionYear,
+         endDate: endDate,
+         status: 'ACTIVE'
+       }
     });
 
     // Remove prospect from waiting list
@@ -104,7 +119,7 @@ export async function POST(request: Request) {
 
     // Admin notification
     await db.notification.create({ data: {
-      userId: session.id || session?.id,
+      userId: adminId,
       message: `Prospect ${entry.name} converted to member successfully in mode ${inviteMode}.`,
       type: 'PROSPECT_CONVERTED',
       isRead: false
@@ -114,7 +129,7 @@ export async function POST(request: Request) {
     await db.auditLog.create({ data: {
       action: 'ADMIN_PROSPECT_APPROVE',
       details: `Admin approved waiting list entry for ${entry.name} (${entry.email}) and created user.`,
-      userId: session.id || session?.id
+      userId: adminId
     } });
 
     return NextResponse.json({ success: true });
@@ -126,6 +141,11 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  const payload = token ? await verifyToken(token) : null;
+  const adminId = payload?.id || 'admin';
+
   if (!(await checkAdmin())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
@@ -150,7 +170,7 @@ export async function DELETE(request: Request) {
     await db.auditLog.create({ data: {
       action: 'ADMIN_PROSPECT_DECLINE',
       details: `Admin declined waiting list entry for ${entry.name} (${entry.email}).`,
-      userId: session.id || session?.id
+      userId: adminId
     } });
 
     return NextResponse.json({ success: true });
