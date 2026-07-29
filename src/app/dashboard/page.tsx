@@ -16,6 +16,7 @@ import {
   AlertCircle,
   PoundSterling
 } from 'lucide-react';
+import MemberCommitmentsCarousel from './MemberCommitmentsCarousel';
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -134,17 +135,14 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       const activeCommitments = memberCommitments.filter(c => c.status === 'ACTIVE' || c.status === 'PENDING');
       activeCommitments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       
-      if (activeCommitments.length > 0) {
-        const latest = activeCommitments[0];
-        // Use these variables dynamically in the render phase for members
-        (global as any).__memberLatestAmount = latest.amount;
-        (global as any).__memberLatestGoal = latest.goal;
-        (global as any).__memberLatestMonth = `${latest.collectionMonth} ${latest.collectionYear}`;
-      } else {
-        (global as any).__memberLatestAmount = 0;
-        (global as any).__memberLatestGoal = 'N/A';
-        (global as any).__memberLatestMonth = 'N/A';
-      }
+      // Pass all active commitments to the carousel
+      (global as any).__memberActiveCommitments = activeCommitments.map(c => ({
+        id: c.id,
+        amount: c.amount,
+        goal: c.goal,
+        collectionMonth: c.collectionMonth,
+        collectionYear: c.collectionYear
+      }));
 
       // Total Invitations
       invitedUsersCount = await db.user.count({ where: { invitedBy: user.id } });
@@ -408,73 +406,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <>
             {/* MEMBER CARDS */}
             <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
-              <div style={{
-                backgroundColor: '#000000', border: '1px solid #1f2937', borderRadius: '16px', padding: '24px 28px',
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'row', alignItems: 'center',
-                gap: '20px', minHeight: '130px', color: '#ffffff', cursor: 'pointer', transition: 'transform 0.15s ease, border-color 0.15s ease'
-              }} className="dashboard-interactive-card">
-                <div style={{ width: '52px', height: '52px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <TrendingUp size={28} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Savings Count</span>
-                  <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0 }}>{totalCommitmentsCount}</h3>
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
-              <div style={{
-                backgroundColor: '#000000', border: '1px solid #1f2937', borderRadius: '16px', padding: '24px 28px',
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'row', alignItems: 'center',
-                gap: '20px', minHeight: '130px', color: '#ffffff', cursor: 'pointer', transition: 'transform 0.15s ease, border-color 0.15s ease'
-              }} className="dashboard-interactive-card">
-                <div style={{ width: '52px', height: '52px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <PoundSterling size={28} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Savings Amount</span>
-                  <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0 }}>
-                    £{Number((global as any).__memberLatestAmount || 0).toFixed(2)}
-                  </h3>
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
-              <div style={{
-                backgroundColor: '#000000', border: '1px solid #1f2937', borderRadius: '16px', padding: '24px 28px',
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'row', alignItems: 'center',
-                gap: '20px', minHeight: '130px', color: '#ffffff', cursor: 'pointer', transition: 'transform 0.15s ease, border-color 0.15s ease'
-              }} className="dashboard-interactive-card">
-                <div style={{ width: '52px', height: '52px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <CheckCircle size={28} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Savings Goal</span>
-                  <h3 style={{ fontSize: '1.5rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {(global as any).__memberLatestGoal}
-                  </h3>
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
-              <div style={{
-                backgroundColor: '#000000', border: '1px solid #1f2937', borderRadius: '16px', padding: '24px 28px',
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'row', alignItems: 'center',
-                gap: '20px', minHeight: '130px', color: '#ffffff', cursor: 'pointer', transition: 'transform 0.15s ease, border-color 0.15s ease'
-              }} className="dashboard-interactive-card">
-                <div style={{ width: '52px', height: '52px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Clock size={28} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Collection Month</span>
-                  <h3 style={{ fontSize: '1.5rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0 }}>
-                    {(global as any).__memberLatestMonth}
-                  </h3>
-                </div>
-              </div>
+              <MemberCommitmentsCarousel commitments={(global as any).__memberActiveCommitments || []} />
             </Link>
 
             <div style={{
@@ -487,7 +419,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Total Invitations</span>
-                <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0 }}>{invitedUsersCount}</h3>
+                <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0, color: '#ffffff' }}>{invitedUsersCount}</h3>
               </div>
             </div>
 
@@ -501,7 +433,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Harvest to Date</span>
-                <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0 }}>£{harvestReleasedTotal.toFixed(2)}</h3>
+                <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0, color: '#ffffff' }}>£{harvestReleasedTotal.toFixed(2)}</h3>
               </div>
             </div>
 
@@ -515,7 +447,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Total Saved to Date</span>
-                <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0 }}>£{allTimeRevenue.toFixed(2)}</h3>
+                <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0, color: '#ffffff' }}>£{allTimeRevenue.toFixed(2)}</h3>
               </div>
             </div>
           </>
