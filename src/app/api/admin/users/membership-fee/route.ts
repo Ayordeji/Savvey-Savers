@@ -180,11 +180,11 @@ export async function POST(request: Request) {
 
       // Send Email confirmation
       const paidAmount = (parsedAmount || recordToUpdate?.totalFee || 0).toFixed(2);
-      const year = recordToUpdate?.year || new Date().getFullYear();
+      const emailYear = recordToUpdate?.year || new Date().getFullYear();
       await sendEmail({
         to: user.email,
         subject: `Fee Payment Confirmation`,
-        body: `Dear ${user.name},\n\nThank you for your payment.\n\nThis is to confirm that we have received your ${year} Membership Fee of £${paidAmount} on ${paymentDate.toLocaleDateString('en-GB')}.\n\nWe look forward to supporting you throughout your savings journey and thank you for choosing to be part of the Savvey Savers Collective.\n\nKind regards,\n\nPlatform Support\nSavvey Savers Collective`
+        body: `Dear ${user.name},\n\nThank you for your payment.\n\nThis is to confirm that we have received your ${emailYear} Membership Fee of £${paidAmount} on ${paymentDate.toLocaleDateString('en-GB')}.\n\nWe look forward to supporting you throughout your savings journey and thank you for choosing to be part of the Savvey Savers Collective.\n\nKind regards,\n\nPlatform Support\nSavvey Savers Collective`
       });
 
       // Create in-app notification
@@ -224,6 +224,6 @@ export async function POST(request: Request) {
 
   } catch (err: any) {
     console.error('Membership fee action error:', err);
-    return NextResponse.json({ error: 'Failed to process membership fee action.' }, { status: 500 });
+    return NextResponse.json({ error: `Failed: ${err.message || String(err)}` }, { status: 500 });
   }
 }
