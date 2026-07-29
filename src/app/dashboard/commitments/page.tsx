@@ -619,8 +619,8 @@ function CommitmentsContent() {
     let bVal: any = b[key as keyof typeof b];
 
     if (key === 'id') {
-      aVal = a.id || '';
-      bVal = b.id || '';
+      aVal = a.displayId || a.id || '';
+      bVal = b.displayId || b.id || '';
     }
     
     if (key === 'memberName') {
