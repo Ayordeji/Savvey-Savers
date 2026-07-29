@@ -288,36 +288,24 @@ export async function DELETE(request: Request) {
     const ids = idParam.split(',').map((id) => id.trim()).filter(Boolean);
 
     for (const rawId of ids) {
-      // The GET endpoint transforms "cmt_XXXXXX" → "SCC-XXXXXX" for display.
-      // Reverse that so we always find the real Firestore document.
+      // Find the commitment. We query all to bypass Prisma's strict UUID validation
+      // if rawId happens to be a displayId like 'SC-00001'.
+      const all = await db.commitment.findMany();
+      
       let resolvedId = rawId;
       if (rawId.startsWith('SCC-')) {
-        const numPart = rawId.substring(4); // strip "SCC-"
-        // Try cmt_ prefix first (legacy format)
-        const legacyId = `cmt_${numPart}`;
-        const legacyDoc = await db.commitment.findUnique({ where: { id: legacyId } });
-        if (legacyDoc) {
+        const legacyId = `cmt_${rawId.substring(4)}`;
+        if (all.some((c: any) => c.id === legacyId)) {
           resolvedId = legacyId;
         }
-        // else keep as SCC- (native format from our migration import)
       }
 
-      const cmt = await db.commitment.findUnique({ where: { id: resolvedId } });
-      if (!cmt) {
-        // Last-ditch: scan by querying all to find by the display id field or stored id
-        const all = await db.commitment.findMany();
-        const found = all.find((c: any) => c.id === rawId || c.id === resolvedId || c.displayId === rawId || c.displayId === resolvedId);
-        if (!found) continue;
-        resolvedId = found.id;
-      }
+      const found = all.find((c: any) => c.id === rawId || c.displayId === rawId || c.id === resolvedId || c.displayId === resolvedId);
+      
+      if (!found) continue;
 
-      const finalCmt = await db.commitment.findUnique({ where: { id: resolvedId } });
-      if (!finalCmt) continue;
-
-      const archivedData = {
-        ...finalCmt,
-        status: 'CANCELLED'
-      };
+      const finalCmt = found;
+      resolvedId = found.id; // use the actual UUID for DB updates
 
       // Archive by setting status to CANCELLED instead of deleting permanently
       await db.commitment.update({ 
@@ -344,6 +332,6 @@ export async function DELETE(request: Request) {
 
   } catch (err: any) {
     console.error('Delete commitment error:', err);
-    return NextResponse.json({ error: 'Failed to archive commitment.' }, { status: 500 });
+    return NextResponse.json({ error: `Failed to archive commitment. Details: ${err.message || String(err)}` }, { status: 500 });
   }
 }
