@@ -81,8 +81,8 @@ export async function POST(request: Request) {
       // Notify User via Email
       await sendEmail({
         to: user.email,
-        subject: `Membership Fee Payment Request - £${totalFee.toFixed(2)} (${parsedYear})`,
-        body: `Hello ${user.name},\n\nA membership fee payment request for the year ${parsedYear} has been generated.\n\nFee Breakdown:\n- Base Membership Fee: £${parsedBase.toFixed(2)}\n- Admin Fee: £${parsedAdmin.toFixed(2)}\n- Total Amount Due: £${totalFee.toFixed(2)}\n\nPlease settle this payment with your group coordinator.\n\nBest regards,\nSavvey Savers Collective`
+        subject: `Fee Request`,
+        body: `Dear ${user.name},\n\nYour ${parsedYear} Annual Membership Fee of £${totalFee.toFixed(2)} is now due.\n\nPlease make payment to the bank account provided by your Relationship Manager to secure your collection slot for the year.\n\nKind regards,\n\nPlatform Support\nSavvey Savers Collective`
       });
 
       // Create in-app notification
@@ -179,10 +179,12 @@ export async function POST(request: Request) {
       });
 
       // Send Email confirmation
+      const paidAmount = (parsedAmount || recordToUpdate?.totalFee || 0).toFixed(2);
+      const year = recordToUpdate?.year || new Date().getFullYear();
       await sendEmail({
         to: user.email,
-        subject: `Membership Fee Payment Received - £${parsedAmount || recordToUpdate?.totalFee || 0}`,
-        body: `Hello ${user.name},\n\nYour membership fee payment of £${(parsedAmount || recordToUpdate?.totalFee || 0).toFixed(2)} has been recorded as paid.\n\nPayment Date: ${new Date(paymentDate).toLocaleDateString('en-GB')}\n\nThank you,\nSavvey Savers Collective`
+        subject: `Fee Payment Confirmation`,
+        body: `Dear ${user.name},\n\nThank you for your payment.\n\nThis is to confirm that we have received your ${year} Membership Fee of £${paidAmount} on ${new Date(paymentDate).toLocaleDateString('en-GB')}.\n\nWe look forward to supporting you throughout your savings journey and thank you for choosing to be part of the Savvey Savers Collective.\n\nKind regards,\n\nPlatform Support\nSavvey Savers Collective`
       });
 
       // Create in-app notification

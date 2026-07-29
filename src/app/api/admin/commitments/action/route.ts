@@ -59,8 +59,8 @@ export async function POST(request: Request) {
         // Dispatch Email Notification
         await sendEmail({
           to: member.email,
-          subject: 'Savvey Savers - Payment Confirmation',
-          body: `Hello ${member.name},\n\nThis is to confirm that your savings payment of £${payment.amount} for ${payment.month} ${payment.year} (Commitment: ${cmt.goal}) has been successfully received and confirmed.\n\nThank you for saving!\n\nBest regards,\nSavvey Savers Team`
+          subject: 'We’ve Received It',
+          body: `Dear ${member.name},\n\nWe are pleased to confirm that we have received your savings payment for <b>${payment.month}</b>.\n\nThis is a confirmation notice only, and no further action is required from you.\n\nKind regards,\n\nPlatform Support\nSavvey Savers Collective`
         });
 
         // Member Notification
@@ -110,8 +110,8 @@ export async function POST(request: Request) {
         // Send Email
         await sendEmail({
           to: member.email,
-          subject: 'Savvey Savers - Past Payment Recorded',
-          body: `Hello ${member.name},\n\nAn administrator has recorded a past contribution payment of £${amount} for ${month} ${year} under your commitment (${cmt.goal}).\n\nBest regards,\nSavvey Savers Team`
+          subject: 'We’ve Received It',
+          body: `Dear ${member.name},\n\nWe are pleased to confirm that we have received your savings payment for <b>${month}</b>.\n\nThis is a confirmation notice only, and no further action is required from you.\n\nKind regards,\n\nPlatform Support\nSavvey Savers Collective`
         });
 
         // Member Notification

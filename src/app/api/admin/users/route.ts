@@ -432,10 +432,7 @@ export async function PUT(request: Request) {
         let subject = 'Notice of Membership Status Update';
         let bodyText = `Dear ${user.firstName || user.name.split(' ')[0] || user.name},\n\nYour access to the Members' portal has now been deactivated.\n\nBest Wishes,\nPlatform Support\nSavvey Savers Network`;
 
-        if (reason === 'Member left the Network') {
-          subject = 'Termination of Network Membership';
-          bodyText = `Dear ${user.firstName || user.name.split(' ')[0] || user.name},\n\nFollowing your request to leave the Savvey Savers Network, your access to the Members' portal has now been deactivated. This means that you will no longer be able to access the platform using your login credentials.\n\nYou are welcome to return to the Network at any point in the future, and can continue to access the website if you wish to stay up to date with the Network’s activities.\n\nWe hope that you continue to prioritise saving.\n\nBest Wishes,\n\nPlatform Support\n\nSavvey Savers Network`;
-        } else if (foundTpl && foundTpl.enabled !== false) {
+        if (foundTpl && foundTpl.enabled !== false) {
           subject = foundTpl.subject || subject;
           bodyText = foundTpl.body || bodyText;
         }

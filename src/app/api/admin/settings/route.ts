@@ -98,7 +98,7 @@ export async function GET() {
   const emailTemplates = [
     ...(dbEmailTemplates as any[]),
     ...defaultEmailTemplates.filter((t) => !existingIds.has(t.id))
-  ];
+  ].sort((a, b) => parseInt(a.id) - parseInt(b.id));
 
   return NextResponse.json({
     savingGoals,

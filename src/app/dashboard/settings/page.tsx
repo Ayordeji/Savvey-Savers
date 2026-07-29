@@ -362,7 +362,7 @@ function SettingsContent() {
   const filteredTemplates = emailTemplates.filter((t) => {
     const q = emailSearchQuery.toLowerCase().trim();
     return !q || t.title.toLowerCase().includes(q) || t.id.includes(q);
-  });
+  }).sort((a, b) => parseInt(a.id) - parseInt(b.id));
 
   return (
     <div>
