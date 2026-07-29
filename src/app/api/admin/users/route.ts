@@ -69,43 +69,32 @@ export async function GET() {
     return timeA - timeB;
   });
 
-  const users = sortedUsers.map((u, idx) => {
-    const isValidMemberId = (val?: string) => {
-      if (!val) return false;
-      const lower = val.toLowerCase().trim();
-      return !lower.startsWith('invite_') && !lower.startsWith('tok_') && !lower.startsWith('usr_');
-    };
-
-    const memberId = u.displayId || 
-                     (isValidMemberId(u.id) ? u.id : null) ||
-                     (isValidMemberId(u.invitationId) ? u.invitationId : null) ||
-                     `M-${String(idx + 1).padStart(6, '0')}`;
-
+  const users = sortedUsers.map(u => {
     return {
       id: u.id,
-      displayId: memberId,
+      displayId: u.displayId || u.id,
       isSuperAdmin: u.isSuperAdmin === true || (u.id === 'usr_admin' && u.isSuperAdmin !== false),
-    name: u.name,
-    email: u.email,
-    phone: u.phone,
-    role: u.role,
-    isActive: u.isActive,
-    membership: u.membership,
-    membershipFeeConfirmed: u.membershipFeeConfirmed,
-    membershipFeeConfirmedAt: u.membershipFeeConfirmedAt || null,
-    hasPendingFee: u.membershipFeeRecords?.some((r: any) => r.status === 'PENDING') || false,
-    createdAt: u.createdAt,
-    lastLoginAt: u.lastLoginAt,
-    invitationId: u.invitationId,
-    invitationExpiresAt: u.invitationExpiresAt,
-    addressLine1: u.addressLine1,
-    addressLine2: u.addressLine2,
-    city: u.city,
-    postCode: u.postCode,
-    country: u.country,
-    permissions: u.permissions
-  };
-});
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+      role: u.role,
+      isActive: u.isActive,
+      membership: u.membership,
+      membershipFeeConfirmed: u.membershipFeeConfirmed,
+      membershipFeeConfirmedAt: u.membershipFeeConfirmedAt || null,
+      hasPendingFee: u.membershipFeeRecords?.some((r: any) => r.status === 'PENDING') || false,
+      createdAt: u.createdAt,
+      lastLoginAt: u.lastLoginAt,
+      invitationId: u.invitationId,
+      invitationExpiresAt: u.invitationExpiresAt,
+      addressLine1: u.addressLine1,
+      addressLine2: u.addressLine2,
+      city: u.city,
+      postCode: u.postCode,
+      country: u.country,
+      permissions: u.permissions
+    };
+  });
 
   // Reverse so newest users appear at the top of the dashboard, matching the QA site layout
   const newestFirstUsers = [...users].reverse();
@@ -162,18 +151,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate sequential M-XXXXXX ID using displayId instead of invitationId
+    // Generate sequential M-XXXXXX ID using displayId and id
     const existingUsers = await db.user.findMany({
-      where: { displayId: { startsWith: 'M-' } },
-      select: { displayId: true }
+      select: { id: true, displayId: true }
     });
     let maxId = 0;
     for (const u of existingUsers) {
-      if (u.displayId) {
+      if (u.displayId && /^M-\d+$/.test(u.displayId)) {
         const num = parseInt(u.displayId.substring(2), 10);
-        if (!isNaN(num) && num > maxId) {
-          maxId = num;
-        }
+        if (!isNaN(num) && num > maxId) maxId = num;
+      }
+      if (u.id && /^M-\d+$/.test(u.id)) {
+        const num = parseInt(u.id.substring(2), 10);
+        if (!isNaN(num) && num > maxId) maxId = num;
       }
     }
     const nextIdStr = String(maxId + 1).padStart(6, '0');
@@ -181,11 +171,9 @@ export async function POST(request: Request) {
     const invitationId = `invite_${Math.random().toString(36).substring(2, 15)}`;
     const invitationExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(); // 72 hours
 
-    let uid = 'usr_' + Math.random().toString(36).substring(2, 12);
-
     // Create user in Database
     const newUser = await db.user.create({ data: {
-      id: uid,
+      id: displayId,
       name,
       firstName: firstName || name.split(' ')[0] || '',
       lastName: lastName || name.split(' ').slice(1).join(' ') || '',
