@@ -899,6 +899,11 @@ function CommitmentsContent() {
                                         <Check size={14} />
                                         <span>Loading...</span>
                                       </button>
+                                    ) : paymentsMap[c.id].length === 0 ? (
+                                      <button disabled className={styles.dropdownItem} style={{ opacity: 0.55, cursor: 'not-allowed' }}>
+                                        <Check size={14} />
+                                        <span>No Pending Payments</span>
+                                      </button>
                                     ) : (
                                       paymentsMap[c.id].some(p => p.status === 'PENDING') ? (
                                         <button onClick={() => {
