@@ -479,7 +479,8 @@ export default function ManageUsersPage() {
         await dialog.alert('Fee Request Sent', `Membership fee request of £${((parseFloat(feeBase) || 0) + (parseFloat(feeAdmin) || 0)).toFixed(2)} for ${feeYear} has been created and sent to ${selectedUser.name}.`);
       } else {
         const data = await res.json();
-        setErrorMsg(data.error || 'Failed to send fee request.');
+        setActiveModal('NONE');
+        await dialog.alert('Fee Request Failed', data.error || 'Failed to send fee request.');
       }
     } catch (err) {
       setErrorMsg('A network error occurred.');

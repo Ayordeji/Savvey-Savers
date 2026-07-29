@@ -80,6 +80,8 @@ export async function POST(request: Request) {
 
       // Notify User via Email
       await sendTemplatedEmail("28", user.email, {
+        name: user.name,
+        amount: totalFee.toFixed(2),
         total_amount: totalFee.toFixed(2),
         payment_year: parsedYear.toString()
       });
@@ -181,6 +183,8 @@ export async function POST(request: Request) {
       const paidAmount = (parsedAmount || recordToUpdate?.totalFee || 0).toFixed(2);
       const emailYear = recordToUpdate?.year || new Date().getFullYear();
       await sendTemplatedEmail("29", user.email, {
+        name: user.name,
+        amount: paidAmount,
         membership_year: emailYear.toString(),
         payment_received_date: paymentDate.toLocaleDateString('en-GB')
       });

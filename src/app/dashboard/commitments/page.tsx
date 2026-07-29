@@ -964,10 +964,12 @@ function CommitmentsContent() {
                                       </button>
                                     )}
 
-                                    <button onClick={() => handleDeleteCommitment(c.id)} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
-                                      <X size={14} color="#dc2626" />
-                                      <span style={{ color: '#dc2626' }}>Cancel</span>
-                                    </button>
+                                    {c.status !== 'CANCELLED' && (
+                                      <button onClick={() => handleDeleteCommitment(c.id)} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
+                                        <X size={14} color="#dc2626" />
+                                        <span style={{ color: '#dc2626' }}>Cancel</span>
+                                      </button>
+                                    )}
                                   </>
                                 )}
                               </div>
