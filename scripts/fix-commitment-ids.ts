@@ -1,62 +1,57 @@
 import 'dotenv/config';
 import { Pool } from 'pg';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '@prisma/client';
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error('DATABASE_URL not set');
 
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
-const db = new PrismaClient({ adapter });
+const pool = new Pool({ connectionString, connectionTimeoutMillis: 10000 });
 
 async function main() {
-  const commitments = await db.commitment.findMany({ orderBy: { createdAt: 'asc' } });
+  const client = await pool.connect();
+  try {
+    // Get all commitments ordered by createdAt
+    const { rows: all } = await client.query(
+      'SELECT id, "displayId", "memberName", goal, "createdAt" FROM "Commitment" ORDER BY "createdAt" ASC'
+    );
 
-  console.log('Total commitments:', commitments.length);
+    console.log('Total commitments:', all.length);
 
-  // Separate already-have-displayId vs need one
-  const withDisplayId = commitments.filter((c: any) => c.displayId && c.displayId.startsWith('SC-'));
-  const withoutDisplayId = commitments.filter((c: any) => !c.displayId || !c.displayId.startsWith('SC-'));
-
-  console.log('Already have SC- displayId:', withDisplayId.length);
-  console.log('Need displayId:', withoutDisplayId.length);
-
-  // Find the max existing SC number
-  let maxNum = 0;
-  for (const c of withDisplayId as any[]) {
-    const n = parseInt(c.displayId.replace(/^SC-0*/, '') || '0', 10);
-    if (!isNaN(n) && n > maxNum) maxNum = n;
-  }
-  console.log('Max existing SC number:', maxNum);
-
-  // Also check if any commitment has an SC-style ID in its `id` field (old migration format)
-  // and hasn't been given a displayId yet
-  let fixed = 0;
-  for (const c of withoutDisplayId as any[]) {
-    let displayId: string;
-
-    // Check if the raw `id` looks like SC-XXXXX
-    if (c.id.startsWith('SC-') || c.id.startsWith('sc-')) {
-      displayId = c.id.toUpperCase();
-    } else if (c.id.startsWith('SCC-')) {
-      displayId = c.id.replace('SCC-', 'SC-');
-    } else {
-      // Raw UUID — assign next sequential SC number
-      maxNum++;
-      displayId = `SC-${String(maxNum).padStart(5, '0')}`;
+    // Find max existing SC- number
+    let maxNum = 0;
+    for (const row of all) {
+      if (row.displayId && /^SC-\d+$/.test(row.displayId)) {
+        const n = parseInt(row.displayId.replace(/^SC-0*/, '') || '0', 10);
+        if (n > maxNum) maxNum = n;
+      }
     }
+    console.log('Max existing SC number:', maxNum);
 
-    try {
-      await db.commitment.update({ where: { id: c.id }, data: { displayId } });
-      console.log(`Set displayId=${displayId} on commitment ${c.id} (${c.memberName || c.memberId}, ${c.goal})`);
+    // Fix all commitments without a valid SC- displayId
+    let fixed = 0;
+    for (const row of all) {
+      if (row.displayId && /^SC-\d+$/.test(row.displayId)) continue; // already good
+
+      let displayId: string;
+      if (row.id.startsWith('SC-') || row.id.startsWith('sc-')) {
+        displayId = row.id.toUpperCase();
+      } else {
+        maxNum++;
+        displayId = `SC-${String(maxNum).padStart(5, '0')}`;
+      }
+
+      await client.query(
+        'UPDATE "Commitment" SET "displayId" = $1 WHERE id = $2',
+        [displayId, row.id]
+      );
+      console.log(`Set displayId=${displayId} → ${row.memberName || row.id} (${row.goal})`);
       fixed++;
-    } catch (e: any) {
-      console.error(`Failed to set displayId=${displayId} on ${c.id}:`, e.message);
     }
-  }
 
-  console.log(`\nDone. Fixed ${fixed} commitments.`);
+    console.log(`\nDone. Fixed ${fixed} commitments.`);
+  } finally {
+    client.release();
+    await pool.end();
+  }
 }
 
-main().catch(console.error).finally(() => pool.end());
+main().catch(console.error);

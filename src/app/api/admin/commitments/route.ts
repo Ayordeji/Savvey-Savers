@@ -29,25 +29,55 @@ export async function GET() {
 
   const currentYear = new Date().getFullYear();
 
+  // Find the highest existing SC- number across all commitments
+  let maxScNum = 0;
+  for (const c of commitments) {
+    const did = (c as any).displayId;
+    if (did && /^SC-\d+$/.test(did)) {
+      const n = parseInt(did.replace(/^SC-0*/, '') || '0', 10);
+      if (n > maxScNum) maxScNum = n;
+    }
+  }
+
+  // Sort commitments by createdAt so sequential IDs are stable
+  const sorted = [...commitments].sort((a, b) =>
+    new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+
+  // Assign temporary SC- IDs to commitments missing them (in memory + async DB persist)
+  const toBackfill: { id: string; displayId: string }[] = [];
+  for (const c of sorted) {
+    const did = (c as any).displayId;
+    const hasValidSc = did && /^SC-\d+$/.test(did);
+    if (!hasValidSc) {
+      maxScNum++;
+      const newDisplayId = `SC-${String(maxScNum).padStart(5, '0')}`;
+      (c as any).displayId = newDisplayId;
+      toBackfill.push({ id: c.id, displayId: newDisplayId });
+    }
+  }
+
+  // Persist missing SC- IDs back to DB asynchronously (fire-and-forget)
+  if (toBackfill.length > 0) {
+    Promise.allSettled(
+      toBackfill.map(({ id, displayId }) =>
+        db.commitment.update({ where: { id }, data: { displayId } }).catch(() => {})
+      )
+    ).catch(() => {});
+  }
+
   // Join member name & evaluate status based on cycle length
   const formatted = commitments.map((c) => {
-    const member = allUsers.find((u) => 
+    const member = allUsers.find((u) =>
       u.id === c.memberId ||
       (u.invitationId && c.memberId && u.invitationId.toLowerCase() === c.memberId.toLowerCase()) ||
       (u.name && c.memberName && u.name.toLowerCase().trim() === c.memberName.toLowerCase().trim())
     );
-    
-    // Auto-prefix ID with SCC- if old format (cmt_ prefix from migration)
-    let id = c.displayId || c.id;
-    if (!c.displayId) {
-      // Fallback: raw UUID or cmt_ prefix get shown as-is or reformatted
-      if (id.startsWith('cmt_')) {
-        id = `SCC-${id.substring(4)}`;
-      }
-      // Raw UUIDs without a displayId are not yet formatted — show them as-is for now
-    }
 
-    // Status driven by cycle year: past year (< currentYear) = COMPLETED, coming year (> currentYear) = NOT_YET_STARTED, current year = ACTIVE
+    // Use displayId (already assigned above if it was missing)
+    const id = (c as any).displayId || c.id;
+
+    // Status driven by cycle year
     let status = c.status;
     if (c.collectionYear < currentYear) {
       status = 'COMPLETED';
