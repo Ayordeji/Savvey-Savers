@@ -91,7 +91,7 @@ export async function POST(request: Request) {
         message: `Membership Fee request for ${parsedYear} (£${totalFee.toFixed(2)}) has been issued.`,
         type: 'FEE_REQUEST',
         isRead: false,
-        createdAt: new Date().toISOString() } });
+        createdAt: new Date() } });
 
       return NextResponse.json({ success: true, record });
 
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
 
     } else if (action === 'RECORD_PAYMENT' || action === 'CONFIRM_PAYMENT') {
       const parsedAmount = Number(amountPaid);
-      const paymentDate = paidAt ? new Date(paidAt).toISOString() : new Date().toISOString();
+      const paymentDate = paidAt ? new Date(paidAt) : new Date();
 
       let recordToUpdate;
       if (recordId) {
@@ -164,8 +164,8 @@ export async function POST(request: Request) {
           adminFee: 0,
           totalFee: parsedAmount || 0,
           status: 'PAID',
-          requestedAt: new Date(paymentDate),
-          paidAt: new Date(paymentDate)
+          requestedAt: paymentDate,
+          paidAt: paymentDate
         } });
       }
 
@@ -184,7 +184,7 @@ export async function POST(request: Request) {
       await sendEmail({
         to: user.email,
         subject: `Fee Payment Confirmation`,
-        body: `Dear ${user.name},\n\nThank you for your payment.\n\nThis is to confirm that we have received your ${year} Membership Fee of £${paidAmount} on ${new Date(paymentDate).toLocaleDateString('en-GB')}.\n\nWe look forward to supporting you throughout your savings journey and thank you for choosing to be part of the Savvey Savers Collective.\n\nKind regards,\n\nPlatform Support\nSavvey Savers Collective`
+        body: `Dear ${user.name},\n\nThank you for your payment.\n\nThis is to confirm that we have received your ${year} Membership Fee of £${paidAmount} on ${paymentDate.toLocaleDateString('en-GB')}.\n\nWe look forward to supporting you throughout your savings journey and thank you for choosing to be part of the Savvey Savers Collective.\n\nKind regards,\n\nPlatform Support\nSavvey Savers Collective`
       });
 
       // Create in-app notification
@@ -193,7 +193,7 @@ export async function POST(request: Request) {
         message: `Your membership fee payment of £${(parsedAmount || recordToUpdate?.totalFee || 0).toFixed(2)} has been confirmed.`,
         type: 'FEE_PAID',
         isRead: false,
-        createdAt: new Date().toISOString() } });
+        createdAt: new Date() } });
 
       return NextResponse.json({ success: true });
 
@@ -214,7 +214,7 @@ export async function POST(request: Request) {
         message: `Reminder: Please settle your outstanding membership fee of £${dueAmount.toFixed(2)}.`,
         type: 'FEE_REMINDER',
         isRead: false,
-        createdAt: new Date().toISOString() } });
+        createdAt: new Date() } });
 
       return NextResponse.json({ success: true, message: 'Reminder email sent successfully.' });
 
