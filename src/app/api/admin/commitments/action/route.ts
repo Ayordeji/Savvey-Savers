@@ -143,6 +143,14 @@ export async function POST(request: Request) {
         } });
       }
 
+      // Admin Notification
+      await db.notification.create({ data: {
+        userId: session.id,
+        message: `You successfully recorded a past payment of £${amount} for ${member?.name || 'Unknown'} (${month} ${year}).`,
+        type: 'SYSTEM',
+        isRead: false
+      } });
+
       await db.auditLog.create({ data: {
         action: 'PAST_PAYMENT_RECORD',
         details: `Recorded past payment of £${amount} for ${month} ${year} under commitment ${commitmentId}.`,
@@ -195,6 +203,14 @@ export async function POST(request: Request) {
           isRead: false
         } });
       }
+
+      // Admin Notification
+      await db.notification.create({ data: {
+        userId: session.id,
+        message: `You successfully released a harvest payout of £${harvestAmount} for ${member?.name || 'Unknown'} (${cmt.collectionMonth} ${cmt.collectionYear}).`,
+        type: 'SYSTEM',
+        isRead: false
+      } });
 
       await db.auditLog.create({ data: {
         action: 'HARVEST_RELEASE',

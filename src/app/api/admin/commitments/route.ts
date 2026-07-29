@@ -306,7 +306,7 @@ export async function DELETE(request: Request) {
       if (!cmt) {
         // Last-ditch: scan by querying all to find by the display id field or stored id
         const all = await db.commitment.findMany();
-        const found = all.find((c: any) => c.id === rawId || c.id === resolvedId);
+        const found = all.find((c: any) => c.id === rawId || c.id === resolvedId || c.displayId === rawId || c.displayId === resolvedId);
         if (!found) continue;
         resolvedId = found.id;
       }
@@ -329,6 +329,14 @@ export async function DELETE(request: Request) {
         action: 'ADMIN_COMMITMENT_CANCEL',
         details: `Admin deleted and archived savings commitment ${resolvedId} for member ${finalCmt.memberId}.`,
         userId: session.id
+      } });
+
+      // Admin Notification
+      await db.notification.create({ data: {
+        userId: session.id,
+        message: `You successfully cancelled the commitment for member ID ${finalCmt.memberId} (Commitment ID: ${resolvedId}).`,
+        type: 'SYSTEM',
+        isRead: false
       } });
     }
 
