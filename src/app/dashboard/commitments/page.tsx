@@ -922,31 +922,33 @@ function CommitmentsContent() {
                                       <span>Edit</span>
                                     </button>
                                     
-                                    {paymentsMap[c.id] === undefined ? (
-                                      <button disabled className={styles.dropdownItem} style={{ opacity: 0.4, cursor: 'not-allowed' }}>
-                                        <ReceiptText size={14} />
-                                        <span>Loading...</span>
-                                      </button>
-                                    ) : (
-                                      paymentsMap[c.id].some(p => p.status === 'PENDING') ? (
-                                        <button onClick={() => {
-                                          const pending = paymentsMap[c.id]?.find(p => p.status === 'PENDING');
-                                          handleConfirmPayment(pending?.id, c.id);
-                                          setOpenDropdownId(null);
-                                        }} className={styles.dropdownItem}>
+                                    {c.status !== 'CANCELLED' && (
+                                      paymentsMap[c.id] === undefined ? (
+                                        <button disabled className={styles.dropdownItem} style={{ opacity: 0.4, cursor: 'not-allowed' }}>
                                           <ReceiptText size={14} />
-                                          <span>Confirm Payment Receipt</span>
-                                        </button>
-                                      ) : paymentsMap[c.id].length === 0 ? (
-                                        <button disabled className={styles.dropdownItem} style={{ opacity: 0.5, cursor: 'not-allowed' }}>
-                                          <ReceiptText size={14} />
-                                          <span>No Pending Payment</span>
+                                          <span>Loading...</span>
                                         </button>
                                       ) : (
-                                        <button disabled className={styles.dropdownItem} style={{ opacity: 1, cursor: 'not-allowed', color: '#16a34a' }}>
-                                          <ReceiptText size={14} color="#16a34a" />
-                                          <span>Payment Done</span>
-                                        </button>
+                                        paymentsMap[c.id].some(p => p.status === 'PENDING') ? (
+                                          <button onClick={() => {
+                                            const pending = paymentsMap[c.id]?.find(p => p.status === 'PENDING');
+                                            handleConfirmPayment(pending?.id, c.id);
+                                            setOpenDropdownId(null);
+                                          }} className={styles.dropdownItem}>
+                                            <ReceiptText size={14} />
+                                            <span>Confirm Payment Receipt</span>
+                                          </button>
+                                        ) : paymentsMap[c.id].length === 0 ? (
+                                          <button disabled className={styles.dropdownItem} style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+                                            <ReceiptText size={14} />
+                                            <span>No Pending Payment</span>
+                                          </button>
+                                        ) : (
+                                          <button disabled className={styles.dropdownItem} style={{ opacity: 1, cursor: 'not-allowed', color: '#16a34a' }}>
+                                            <ReceiptText size={14} color="#16a34a" />
+                                            <span>Payment Done</span>
+                                          </button>
+                                        )
                                       )
                                     )}
 
@@ -1397,6 +1399,8 @@ function CommitmentsContent() {
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Collection Year</label>
                   <select value={formYear} onChange={(e) => setFormYear(e.target.value)} className="form-select">
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
                     <option value="2026">2026</option>
                     <option value="2027">2027</option>
                     <option value="2028">2028</option>
@@ -1409,7 +1413,12 @@ function CommitmentsContent() {
                 <select value={formStatus} onChange={(e) => setFormStatus(e.target.value as any)} className="form-select">
                   <option value="ACTIVE">ACTIVE</option>
                   <option value="PENDING">PENDING</option>
-                  <option value="COMPLETED">COMPLETED</option>
+                  {(parseInt(formYear) < new Date().getFullYear() || formStatus === 'COMPLETED') && (
+                    <option value="COMPLETED">COMPLETED</option>
+                  )}
+                  {formStatus === 'CANCELLED' && (
+                    <option value="CANCELLED">CANCELLED</option>
+                  )}
                 </select>
               </div>
 

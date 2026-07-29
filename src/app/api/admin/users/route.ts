@@ -486,6 +486,13 @@ export async function PUT(request: Request) {
       data: updateData
     });
 
+    if (updateData.name && updateData.name !== user.name) {
+      await db.commitment.updateMany({
+        where: { memberId: id },
+        data: { memberName: updateData.name }
+      });
+    }
+
     if (isRoleChanging) {
       const targetRoleName = body.role === 'ADMIN' ? 'Coordinator' : 'Saver';
       await sendEmail({
