@@ -54,7 +54,7 @@ export default function ManageUsersPage() {
 
   const [feeBase, setFeeBase] = useState('200');
   const [feeAdmin, setFeeAdmin] = useState('30');
-  const [feeYear, setFeeYear] = useState('2027');
+  const [feeYear, setFeeYear] = useState(String(new Date().getFullYear()));
   const [feePaidAmount, setFeePaidAmount] = useState('230');
   const [feePaidDate, setFeePaidDate] = useState(new Date().toISOString().split('T')[0]);
   const [userFeeRecords, setUserFeeRecords] = useState<any[]>([]);
@@ -374,7 +374,7 @@ export default function ManageUsersPage() {
     setSelectedUser(user);
     setFeeBase('200');
     setFeeAdmin('30');
-    setFeeYear(String(new Date().getFullYear() + 2));
+    setFeeYear(String(new Date().getFullYear()));
     setActiveModal('REQUEST_FEE');
     setOpenDropdownId(null);
   };
@@ -388,21 +388,25 @@ export default function ManageUsersPage() {
       const res = await fetch(`/api/admin/users/membership-fee?userId=${user.id}`);
       if (res.ok) {
         const records = await res.json();
+        setUserFeeRecords(records);
         const pending = records.find((r: any) => r.status === 'PENDING') || records[0];
         if (pending) {
           setFeeBase(String(pending.baseFee || 200));
           setFeeAdmin(String(pending.adminFee || 30));
-          setFeeYear(String(pending.year || 2028));
+          setFeeYear(String(pending.year || new Date().getFullYear()));
         } else {
           setFeeBase('200');
           setFeeAdmin('30');
-          setFeeYear('2028');
+          setFeeYear(String(new Date().getFullYear()));
         }
+      } else {
+        setUserFeeRecords([]);
       }
     } catch (err) {
+      setUserFeeRecords([]);
       setFeeBase('200');
       setFeeAdmin('30');
-      setFeeYear('2028');
+      setFeeYear(String(new Date().getFullYear()));
     }
     setActiveModal('CONFIRM_FEE_FORM');
   };
@@ -417,7 +421,7 @@ export default function ManageUsersPage() {
     setEditingRecordId(rec.id);
     setEditBaseFee(String(rec.baseFee || 200));
     setEditAdminFee(String(rec.adminFee || 30));
-    setEditYear(String(rec.year || 2028));
+    setEditYear(String(rec.year || new Date().getFullYear()));
   };
 
   const handleSaveInlineFeeEdit = async (recordId: string) => {
@@ -1804,6 +1808,8 @@ export default function ManageUsersPage() {
               Request For Membership Fee
             </h3>
 
+            {errorMsg && <p style={{ color: '#dc2626', backgroundColor: '#fef2f2', border: '1px solid #fecaca', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center', fontWeight: 600 }}>{errorMsg}</p>}
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
@@ -1930,6 +1936,8 @@ export default function ManageUsersPage() {
               Confirm For Membership Fee
             </h3>
 
+            {errorMsg && <p style={{ color: '#dc2626', backgroundColor: '#fef2f2', border: '1px solid #fecaca', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center', fontWeight: 600 }}>{errorMsg}</p>}
+
             <div className="form-group" style={{ marginBottom: '16px' }}>
               <label className="form-label" style={{ fontWeight: 600, color: '#374151', fontSize: '0.85rem' }}>Select Membership Year to Confirm *</label>
               <select
@@ -1953,9 +1961,7 @@ export default function ManageUsersPage() {
                     </option>
                   ))
                 ) : (
-                  ['2026', '2027', '2028', '2029'].map((yr) => (
-                    <option key={yr} value={yr}>Year {yr}</option>
-                  ))
+                  <option value="">No fee requests found.</option>
                 )}
               </select>
             </div>
@@ -2038,9 +2044,9 @@ export default function ManageUsersPage() {
               <button
                 type="button"
                 onClick={handleConfirmFeeSubmit}
-                disabled={formSubmitting}
+                disabled={formSubmitting || userFeeRecords.length === 0}
                 className="btn btn-primary"
-                style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 28px', fontWeight: 600 }}
+                style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '6px', padding: '10px 28px', fontWeight: 600, opacity: (formSubmitting || userFeeRecords.length === 0) ? 0.6 : 1, cursor: (formSubmitting || userFeeRecords.length === 0) ? 'not-allowed' : 'pointer' }}
               >
                 {formSubmitting ? 'Submitting...' : 'Submit'}
               </button>

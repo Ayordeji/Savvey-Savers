@@ -355,7 +355,9 @@ export async function PUT(request: Request) {
       const host = request.headers.get('host') || 'savvey-savers.vercel.app';
       const protocol = request.headers.get('x-forwarded-proto') || 'https';
       const origin = `${protocol}://${host}`;
-      const link = `${origin}/activate?${body.action === 'send_reset' ? 'reset' : 'invite'}=${invitationId}`;
+      const link = body.action === 'send_reset' 
+        ? `${origin}/reset-password?token=${invitationId}` 
+        : `${origin}/activate?invite=${invitationId}`;
 
       const templates = (await db.setting.findUnique({ where: { key: 'emailTemplates' } }))?.value || [];
       const templateId = body.action === 'send_reset' ? '1' : '2';
