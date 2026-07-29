@@ -115,6 +115,14 @@ export async function POST(request: Request) {
     // Members can only create commitments for themselves
     const targetMemberId = session.role === 'ADMIN' ? memberId : session.id;
 
+    // Validate memberId is a valid UUID when provided by admin
+    if (session.role === 'ADMIN' && memberId) {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(memberId)) {
+        return NextResponse.json({ error: 'Invalid memberId format. Must be a UUID.' }, { status: 400 });
+      }
+    }
+
     if (!targetMemberId || !amount || !goal) {
       return NextResponse.json({ error: 'Member, goal, and amount are required.' }, { status: 400 });
     }
@@ -219,6 +227,10 @@ export async function POST(request: Request) {
 
   } catch (err: any) {
     console.error('Create commitment error:', err);
+    const errMsg = err?.message || '';
+    if (errMsg.includes('EMAXCONNSESSION') || errMsg.toLowerCase().includes('timeout') || errMsg.includes('Connection terminated')) {
+      return NextResponse.json({ error: 'Database connection limit reached. Please try again in a few seconds.' }, { status: 503 });
+    }
     return NextResponse.json({ error: 'Failed to create commitment.' }, { status: 500 });
   }
 }

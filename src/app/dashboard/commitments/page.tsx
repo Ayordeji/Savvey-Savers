@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Fragment, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, PoundSterling, Calendar, ChevronDown, ChevronUp, ExternalLink, Banknote } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, PoundSterling, Calendar, ChevronDown, ChevronUp, ExternalLink, Banknote, DollarSign } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import PaginationControls from '../PaginationControls';
 import styles from './commitments.module.css';
@@ -546,7 +546,11 @@ function CommitmentsContent() {
   const currentYearNum = new Date().getFullYear();
 
   const toggleDropdown = (cmtId: string) => {
-    setOpenDropdownId(openDropdownId === cmtId ? null : cmtId);
+    const isOpening = openDropdownId !== cmtId;
+    setOpenDropdownId(isOpening ? cmtId : null);
+    if (isOpening && !paymentsMap[cmtId]) {
+      fetchPayments(cmtId);
+    }
   };
 
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'id', direction: 'desc' });
@@ -868,73 +872,67 @@ function CommitmentsContent() {
                           </span>
                         </td>
                         <td style={{ textAlign: 'right', position: 'relative' }}>
-                          {currentUser?.role === 'ADMIN' ? (
-                            <div className={styles.actionsDropdown}>
-                              <button onClick={() => toggleDropdown(c.id)} className={styles.dropdownTrigger}>
-                                <MoreVertical size={16} />
-                              </button>
-                              {openDropdownId === c.id && (
-                                <div className={`${styles.dropdownMenu} ${isBottomRow ? styles.dropdownMenuUp : ''}`}>
-                                  <button onClick={() => handleOpenEditModal(c)} className={styles.dropdownItem}>
-                                    <Edit size={14} />
-                                    <span>Edit Commitment</span>
-                                  </button>
-                                  {c.status !== 'CANCELLED' && (
-                                    <button onClick={() => handleOpenPastPaymentModal(c)} className={styles.dropdownItem}>
-                                      <PoundSterling size={14} />
-                                      <span>Payment for Past Month</span>
+                          <div className={styles.actionsDropdown}>
+                            <button onClick={() => toggleDropdown(c.id)} className={styles.dropdownTrigger}>
+                              <MoreVertical size={16} />
+                            </button>
+                            {openDropdownId === c.id && (
+                              <div className={`${styles.dropdownMenu} ${isBottomRow ? styles.dropdownMenuUp : ''}`}>
+                                <button onClick={() => handleOpenViewCommitmentModal(c)} className={styles.dropdownItem}>
+                                  <Eye size={14} />
+                                  <span>View Commitment</span>
+                                </button>
+                                {currentUser?.role === 'ADMIN' && (
+                                  <>
+                                    <button onClick={() => handleOpenEditModal(c)} className={styles.dropdownItem}>
+                                      <Edit size={14} />
+                                      <span>Edit Commitment</span>
                                     </button>
-                                  )}
-                                  {/* Show 'Confirm Payment Receipt' only if there's a PENDING payment.
-                                      Show 'Payment Done' only if payments are loaded (not undefined) and all are CONFIRMED.
-                                      If paymentsMap[c.id] is undefined (not loaded), show a loading state. */}
-                                  {paymentsMap[c.id] === undefined ? (
-                                    <button disabled className={styles.dropdownItem} style={{ opacity: 0.4, cursor: 'not-allowed' }}>
-                                      <Check size={14} />
-                                      <span>Loading...</span>
+                                    {c.status !== 'CANCELLED' && (
+                                      <button onClick={() => handleOpenPastPaymentModal(c)} className={styles.dropdownItem}>
+                                        <PoundSterling size={14} />
+                                        <span>Payment for Past Month</span>
+                                      </button>
+                                    )}
+                                    {paymentsMap[c.id] === undefined ? (
+                                      <button disabled className={styles.dropdownItem} style={{ opacity: 0.4, cursor: 'not-allowed' }}>
+                                        <Check size={14} />
+                                        <span>Loading...</span>
+                                      </button>
+                                    ) : (
+                                      paymentsMap[c.id].some(p => p.status === 'PENDING') ? (
+                                        <button onClick={() => {
+                                          const pending = paymentsMap[c.id].find(p => p.status === 'PENDING');
+                                          if (pending) {
+                                            handleConfirmPayment(pending.id, c.id);
+                                            setOpenDropdownId(null);
+                                          }
+                                        }} className={styles.dropdownItem}>
+                                          <Check size={14} />
+                                          <span>Confirm Payment Receipt</span>
+                                        </button>
+                                      ) : (
+                                        <button disabled className={styles.dropdownItem} style={{ opacity: 0.55, cursor: 'not-allowed' }}>
+                                          <DollarSign size={14} />
+                                          <span>Payment Done</span>
+                                        </button>
+                                      )
+                                    )}
+                                    {c.status !== 'COMPLETED' && c.status !== 'CANCELLED' && (
+                                      <button onClick={() => handleReleaseHarvest(c.id)} className={styles.dropdownItem}>
+                                        <Check size={14} />
+                                        <span>Release Harvest</span>
+                                      </button>
+                                    )}
+                                    <button onClick={() => handleDeleteCommitment(c.id)} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
+                                      <Trash2 size={14} />
+                                      <span>Delete Commitment</span>
                                     </button>
-                                  ) : paymentsMap[c.id]?.some(p => p.status === 'PENDING') ? (
-                                    <button onClick={() => {
-                                      const pendingPayment = paymentsMap[c.id].find(p => p.status === 'PENDING');
-                                      if (pendingPayment) {
-                                        handleConfirmPayment(pendingPayment.id, c.id);
-                                        setOpenDropdownId(null);
-                                      }
-                                    }} className={styles.dropdownItem}>
-                                      <Check size={14} />
-                                      <span>Confirm Payment Receipt</span>
-                                    </button>
-                                  ) : paymentsMap[c.id]?.some(p => p.status === 'CONFIRMED') ? (
-                                    <button disabled className={styles.dropdownItem} style={{ opacity: 0.55, cursor: 'not-allowed' }}>
-                                      <Banknote size={14} />
-                                      <span>Payment Done</span>
-                                    </button>
-                                  ) : (
-                                    // No payments at all — show Confirm Payment Receipt as it's freshly created
-                                    <button onClick={() => {
-                                      // Refresh payments for this commitment first, then re-render
-                                      fetchPayments(c.id);
-                                    }} className={styles.dropdownItem} style={{ opacity: 0.6 }}>
-                                      <Check size={14} />
-                                      <span>Confirm Payment Receipt</span>
-                                    </button>
-                                  )}
-                                  {c.status !== 'COMPLETED' && c.status !== 'CANCELLED' && (
-                                    <button onClick={() => handleReleaseHarvest(c.id)} className={styles.dropdownItem}>
-                                      <Check size={14} />
-                                      <span>Release Harvest</span>
-                                    </button>
-                                  )}
-                                  <button onClick={() => handleDeleteCommitment(c.id)} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
-                                    <Trash2 size={14} />
-                                    <span>Delete Commitment</span>
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>-</span>
-                          )}
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </td>
                       </tr>
 

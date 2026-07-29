@@ -123,9 +123,48 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       // Fallback: page still renders, just with zero stats
     }
   } else {
-    // Basic fallback for non-admins if ever reached
-    allTimeRevenue = 0;
-    revenueForYear = 0;
+    try {
+      // MEMBER METRICS
+      // 1. Savings Count
+      const memberCommitments = await db.commitment.findMany({ where: { memberId: user.id } });
+      totalCommitmentsCount = memberCommitments.length;
+
+      // Find the most recent active commitment for Amount, Goal, and Month
+      const activeCommitments = memberCommitments.filter(c => c.status === 'ACTIVE' || c.status === 'PENDING');
+      activeCommitments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      if (activeCommitments.length > 0) {
+        const latest = activeCommitments[0];
+        // Use these variables dynamically in the render phase for members
+        (global as any).__memberLatestAmount = latest.amount;
+        (global as any).__memberLatestGoal = latest.goal;
+        (global as any).__memberLatestMonth = `${latest.collectionMonth} ${latest.collectionYear}`;
+      } else {
+        (global as any).__memberLatestAmount = 0;
+        (global as any).__memberLatestGoal = 'N/A';
+        (global as any).__memberLatestMonth = 'N/A';
+      }
+
+      // Total Invitations
+      invitedUsersCount = await db.user.count({ where: { invitedBy: user.id } });
+
+      // Harvest to Date
+      harvestReleasedTotal = memberCommitments
+        .filter((c) => c.status === 'COMPLETED' && (c as any).harvestAmount)
+        .reduce((acc, c) => acc + ((c as any).harvestAmount || 0), 0);
+
+      // Total Saved to Date
+      const memberPayments = await db.payment.findMany({ 
+        where: { userId: user.id, status: 'CONFIRMED' } 
+      });
+      allTimeRevenue = memberPayments.reduce((acc, p) => acc + p.amount, 0);
+
+    } catch (err) {
+      console.error('Member dashboard metrics error:', err);
+      (global as any).__memberLatestAmount = 0;
+      (global as any).__memberLatestGoal = 'N/A';
+      (global as any).__memberLatestMonth = 'N/A';
+    }
   }
 
   const selectedYearInt = parseInt(selectedYear, 10) || currentRealYear;
@@ -152,215 +191,334 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         gap: '16px',
         width: '100%'
       }} className="dashboard-cards-grid">
-        {/* Card 1: Revenue to date (All-Time) */}
-        <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
-          <div style={{
-            backgroundColor: '#000000',
-            border: '1px solid #1f2937',
-            borderRadius: '16px',
-            padding: '24px 28px',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: '20px',
-            minHeight: '130px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            transition: 'transform 0.15s ease, border-color 0.15s ease'
-          }} className="dashboard-interactive-card">
-            <div style={{
-              width: '52px', height: '52px', borderRadius: '12px',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-            }}>
-              <TrendingUp size={28} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-                Revenue to date
-              </span>
-              <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                £{allTimeRevenue.toFixed(2)}
-              </h3>
-            </div>
-          </div>
-        </Link>
+        {isAdmin ? (
+          <>
+            {/* Card 1: Revenue to date (All-Time) */}
+            <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{
+                backgroundColor: '#000000',
+                border: '1px solid #1f2937',
+                borderRadius: '16px',
+                padding: '24px 28px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: '20px',
+                minHeight: '130px',
+                color: '#ffffff',
+                cursor: 'pointer',
+                transition: 'transform 0.15s ease, border-color 0.15s ease'
+              }} className="dashboard-interactive-card">
+                <div style={{
+                  width: '52px', height: '52px', borderRadius: '12px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}>
+                  <TrendingUp size={28} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+                    Revenue to date
+                  </span>
+                  <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+                    £{allTimeRevenue.toFixed(2)}
+                  </h3>
+                </div>
+              </div>
+            </Link>
 
-        {/* Card 2: Revenue for Selected Year */}
-        <Link href={`/dashboard/commitments?year=${selectedYear}`} style={{ textDecoration: 'none', display: 'block' }}>
-          <div style={{
-            backgroundColor: '#000000',
-            border: '1px solid #1f2937',
-            borderRadius: '16px',
-            padding: '24px 28px',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: '20px',
-            minHeight: '130px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            transition: 'transform 0.15s ease, border-color 0.15s ease'
-          }} className="dashboard-interactive-card">
-            <div style={{
-              width: '52px', height: '52px', borderRadius: '12px',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-            }}>
-              <Briefcase size={28} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-                Revenue for {selectedYear}
-              </span>
-              <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                £{revenueForYear.toFixed(2)}
-              </h3>
-            </div>
-          </div>
-        </Link>
+            {/* Card 2: Revenue for Selected Year */}
+            <Link href={`/dashboard/commitments?year=${selectedYear}`} style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{
+                backgroundColor: '#000000',
+                border: '1px solid #1f2937',
+                borderRadius: '16px',
+                padding: '24px 28px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: '20px',
+                minHeight: '130px',
+                color: '#ffffff',
+                cursor: 'pointer',
+                transition: 'transform 0.15s ease, border-color 0.15s ease'
+              }} className="dashboard-interactive-card">
+                <div style={{
+                  width: '52px', height: '52px', borderRadius: '12px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}>
+                  <Briefcase size={28} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+                    Revenue for {selectedYear}
+                  </span>
+                  <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+                    £{revenueForYear.toFixed(2)}
+                  </h3>
+                </div>
+              </div>
+            </Link>
 
-        {/* Card 3: Pending Commitments -> Links to PENDING Commitments */}
-        <Link href={`/dashboard/commitments?status=PENDING&year=${selectedYear}`} style={{ textDecoration: 'none', display: 'block' }}>
-          <div style={{
-            backgroundColor: '#000000',
-            border: '1px solid #1f2937',
-            borderRadius: '16px',
-            padding: '24px 28px',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: '20px',
-            minHeight: '130px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            transition: 'transform 0.15s ease, border-color 0.15s ease'
-          }} className="dashboard-interactive-card">
-            <div style={{
-              width: '52px', height: '52px', borderRadius: '12px',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-            }}>
-              <Clock size={28} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-                Pending Commitments
-              </span>
-              <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                {`${pendingCommitmentsCount} / ${totalCommitmentsCount}`}
-              </h3>
-            </div>
-          </div>
-        </Link>
+            {/* Card 3: Pending Commitments -> Links to PENDING Commitments */}
+            <Link href={`/dashboard/commitments?status=PENDING&year=${selectedYear}`} style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{
+                backgroundColor: '#000000',
+                border: '1px solid #1f2937',
+                borderRadius: '16px',
+                padding: '24px 28px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: '20px',
+                minHeight: '130px',
+                color: '#ffffff',
+                cursor: 'pointer',
+                transition: 'transform 0.15s ease, border-color 0.15s ease'
+              }} className="dashboard-interactive-card">
+                <div style={{
+                  width: '52px', height: '52px', borderRadius: '12px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}>
+                  <Clock size={28} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+                    Pending Commitments
+                  </span>
+                  <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+                    {`${pendingCommitmentsCount} / ${totalCommitmentsCount}`}
+                  </h3>
+                </div>
+              </div>
+            </Link>
 
-        {/* Card 4: Dynamic Active/Completed Commitments */}
-        <Link href={dynamicCardLink} style={{ textDecoration: 'none', display: 'block' }}>
-          <div style={{
-            backgroundColor: '#000000',
-            border: '1px solid #1f2937',
-            borderRadius: '16px',
-            padding: '24px 28px',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: '20px',
-            minHeight: '130px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            transition: 'transform 0.15s ease, border-color 0.15s ease'
-          }} className="dashboard-interactive-card">
-            <div style={{
-              width: '52px', height: '52px', borderRadius: '12px',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-            }}>
-              <CheckCircle size={28} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-                {dynamicCardTitle}
-              </span>
-              <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                {`${dynamicCardCount} / ${totalCommitmentsCount}`}
-              </h3>
-            </div>
-          </div>
-        </Link>
+            {/* Card 4: Dynamic Active/Completed Commitments */}
+            <Link href={dynamicCardLink} style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{
+                backgroundColor: '#000000',
+                border: '1px solid #1f2937',
+                borderRadius: '16px',
+                padding: '24px 28px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: '20px',
+                minHeight: '130px',
+                color: '#ffffff',
+                cursor: 'pointer',
+                transition: 'transform 0.15s ease, border-color 0.15s ease'
+              }} className="dashboard-interactive-card">
+                <div style={{
+                  width: '52px', height: '52px', borderRadius: '12px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}>
+                  <CheckCircle size={28} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+                    {dynamicCardTitle}
+                  </span>
+                  <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+                    {`${dynamicCardCount} / ${totalCommitmentsCount}`}
+                  </h3>
+                </div>
+              </div>
+            </Link>
 
-        {/* Card 5: Harvests Released -> Links to COMPLETED Commitments */}
-        <Link href="/dashboard/commitments?status=COMPLETED" style={{ textDecoration: 'none', display: 'block' }}>
-          <div style={{
-            backgroundColor: '#000000',
-            border: '1px solid #1f2937',
-            borderRadius: '16px',
-            padding: '24px 28px',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: '20px',
-            minHeight: '130px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            transition: 'transform 0.15s ease, border-color 0.15s ease'
-          }} className="dashboard-interactive-card">
-            <div style={{
-              width: '52px', height: '52px', borderRadius: '12px',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-            }}>
-              <Gift size={28} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-                Harvests Released
-              </span>
-              <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                £{harvestReleasedTotal.toFixed(2)}
-              </h3>
-            </div>
-          </div>
-        </Link>
+            {/* Card 5: Harvests Released -> Links to COMPLETED Commitments */}
+            <Link href="/dashboard/commitments?status=COMPLETED" style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{
+                backgroundColor: '#000000',
+                border: '1px solid #1f2937',
+                borderRadius: '16px',
+                padding: '24px 28px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: '20px',
+                minHeight: '130px',
+                color: '#ffffff',
+                cursor: 'pointer',
+                transition: 'transform 0.15s ease, border-color 0.15s ease'
+              }} className="dashboard-interactive-card">
+                <div style={{
+                  width: '52px', height: '52px', borderRadius: '12px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}>
+                  <Gift size={28} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+                    Harvests Released
+                  </span>
+                  <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+                    £{harvestReleasedTotal.toFixed(2)}
+                  </h3>
+                </div>
+              </div>
+            </Link>
 
-        {/* Card 5: Active vs Invited -> Links to Manage Users */}
-        <Link href="/dashboard/users" style={{ textDecoration: 'none', display: 'block' }}>
-          <div style={{
-            backgroundColor: '#000000',
-            border: '1px solid #1f2937',
-            borderRadius: '16px',
-            padding: '24px 28px',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: '20px',
-            minHeight: '130px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            transition: 'transform 0.15s ease, border-color 0.15s ease'
-          }} className="dashboard-interactive-card">
+            {/* Card 6: Active vs Invited -> Links to Manage Users */}
+            <Link href="/dashboard/users" style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{
+                backgroundColor: '#000000',
+                border: '1px solid #1f2937',
+                borderRadius: '16px',
+                padding: '24px 28px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: '20px',
+                minHeight: '130px',
+                color: '#ffffff',
+                cursor: 'pointer',
+                transition: 'transform 0.15s ease, border-color 0.15s ease'
+              }} className="dashboard-interactive-card">
+                <div style={{
+                  width: '52px', height: '52px', borderRadius: '12px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}>
+                  <Users size={28} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
+                    Active vs Invited
+                  </span>
+                  <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
+                    {`${activeUsersCount} / ${invitedUsersCount}`}
+                  </h3>
+                </div>
+              </div>
+            </Link>
+          </>
+        ) : (
+          <>
+            {/* MEMBER CARDS */}
+            <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{
+                backgroundColor: '#000000', border: '1px solid #1f2937', borderRadius: '16px', padding: '24px 28px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'row', alignItems: 'center',
+                gap: '20px', minHeight: '130px', color: '#ffffff', cursor: 'pointer', transition: 'transform 0.15s ease, border-color 0.15s ease'
+              }} className="dashboard-interactive-card">
+                <div style={{ width: '52px', height: '52px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <TrendingUp size={28} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Savings Count</span>
+                  <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0 }}>{totalCommitmentsCount}</h3>
+                </div>
+              </div>
+            </Link>
+
+            <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{
+                backgroundColor: '#000000', border: '1px solid #1f2937', borderRadius: '16px', padding: '24px 28px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'row', alignItems: 'center',
+                gap: '20px', minHeight: '130px', color: '#ffffff', cursor: 'pointer', transition: 'transform 0.15s ease, border-color 0.15s ease'
+              }} className="dashboard-interactive-card">
+                <div style={{ width: '52px', height: '52px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <PoundSterling size={28} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Savings Amount</span>
+                  <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0 }}>
+                    £{Number((global as any).__memberLatestAmount || 0).toFixed(2)}
+                  </h3>
+                </div>
+              </div>
+            </Link>
+
+            <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{
+                backgroundColor: '#000000', border: '1px solid #1f2937', borderRadius: '16px', padding: '24px 28px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'row', alignItems: 'center',
+                gap: '20px', minHeight: '130px', color: '#ffffff', cursor: 'pointer', transition: 'transform 0.15s ease, border-color 0.15s ease'
+              }} className="dashboard-interactive-card">
+                <div style={{ width: '52px', height: '52px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <CheckCircle size={28} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Savings Goal</span>
+                  <h3 style={{ fontSize: '1.5rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {(global as any).__memberLatestGoal}
+                  </h3>
+                </div>
+              </div>
+            </Link>
+
+            <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{
+                backgroundColor: '#000000', border: '1px solid #1f2937', borderRadius: '16px', padding: '24px 28px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'row', alignItems: 'center',
+                gap: '20px', minHeight: '130px', color: '#ffffff', cursor: 'pointer', transition: 'transform 0.15s ease, border-color 0.15s ease'
+              }} className="dashboard-interactive-card">
+                <div style={{ width: '52px', height: '52px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Clock size={28} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Collection Month</span>
+                  <h3 style={{ fontSize: '1.5rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0 }}>
+                    {(global as any).__memberLatestMonth}
+                  </h3>
+                </div>
+              </div>
+            </Link>
+
             <div style={{
-              width: '52px', height: '52px', borderRadius: '12px',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-            }}>
-              <Users size={28} />
+              backgroundColor: '#000000', border: '1px solid #1f2937', borderRadius: '16px', padding: '24px 28px',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'row', alignItems: 'center',
+              gap: '20px', minHeight: '130px', color: '#ffffff'
+            }} className="dashboard-interactive-card">
+              <div style={{ width: '52px', height: '52px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Users size={28} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Total Invitations</span>
+                <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0 }}>{invitedUsersCount}</h3>
+              </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>
-                Active vs Invited
-              </span>
-              <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#ffffff', margin: 0 }}>
-                {`${activeUsersCount} / ${invitedUsersCount}`}
-              </h3>
+
+            <div style={{
+              backgroundColor: '#000000', border: '1px solid #1f2937', borderRadius: '16px', padding: '24px 28px',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'row', alignItems: 'center',
+              gap: '20px', minHeight: '130px', color: '#ffffff'
+            }} className="dashboard-interactive-card">
+              <div style={{ width: '52px', height: '52px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Gift size={28} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Harvest to Date</span>
+                <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0 }}>£{harvestReleasedTotal.toFixed(2)}</h3>
+              </div>
             </div>
-          </div>
-        </Link>
+
+            <div style={{
+              backgroundColor: '#000000', border: '1px solid #1f2937', borderRadius: '16px', padding: '24px 28px',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'row', alignItems: 'center',
+              gap: '20px', minHeight: '130px', color: '#ffffff'
+            }} className="dashboard-interactive-card">
+              <div style={{ width: '52px', height: '52px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <PiggyBank size={28} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Total Saved to Date</span>
+                <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0 }}>£{allTimeRevenue.toFixed(2)}</h3>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Monthly Revenue Chart Panel */}
