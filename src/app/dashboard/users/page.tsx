@@ -52,8 +52,8 @@ export default function ManageUsersPage() {
   const [membershipAgreement, setMembershipAgreement] = useState('');
   const [feeSchedule, setFeeSchedule] = useState('');
 
-  const [feeBase, setFeeBase] = useState('200');
-  const [feeAdmin, setFeeAdmin] = useState('30');
+  const [feeBase, setFeeBase] = useState('35.99');
+  const [feeAdmin, setFeeAdmin] = useState('0');
   const [feeYear, setFeeYear] = useState(String(new Date().getFullYear()));
   const [feePaidAmount, setFeePaidAmount] = useState('230');
   const [feePaidDate, setFeePaidDate] = useState(new Date().toISOString().split('T')[0]);
@@ -372,8 +372,8 @@ export default function ManageUsersPage() {
 
   const handleOpenRequestFeeModal = (user: User) => {
     setSelectedUser(user);
-    setFeeBase('200');
-    setFeeAdmin('30');
+    setFeeBase('35.99');
+    setFeeAdmin('0');
     setFeeYear(String(new Date().getFullYear()));
     setActiveModal('REQUEST_FEE');
     setOpenDropdownId(null);
@@ -391,12 +391,12 @@ export default function ManageUsersPage() {
         setUserFeeRecords(records);
         const pending = records.find((r: any) => r.status === 'PENDING') || records[0];
         if (pending) {
-          setFeeBase(String(pending.baseFee || 200));
-          setFeeAdmin(String(pending.adminFee || 30));
+          setFeeBase(String(pending.baseFee || 35.99));
+          setFeeAdmin(String(pending.adminFee || 0));
           setFeeYear(String(pending.year || new Date().getFullYear()));
         } else {
-          setFeeBase('200');
-          setFeeAdmin('30');
+          setFeeBase('35.99');
+          setFeeAdmin('0');
           setFeeYear(String(new Date().getFullYear()));
         }
       } else {
@@ -404,8 +404,8 @@ export default function ManageUsersPage() {
       }
     } catch (err) {
       setUserFeeRecords([]);
-      setFeeBase('200');
-      setFeeAdmin('30');
+      setFeeBase('35.99');
+      setFeeAdmin('0');
       setFeeYear(String(new Date().getFullYear()));
     }
     setActiveModal('CONFIRM_FEE_FORM');
@@ -419,8 +419,8 @@ export default function ManageUsersPage() {
 
   const handleStartEditRecord = (rec: any) => {
     setEditingRecordId(rec.id);
-    setEditBaseFee(String(rec.baseFee || 200));
-    setEditAdminFee(String(rec.adminFee || 30));
+    setEditBaseFee(String(rec.baseFee || 35.99));
+    setEditAdminFee(String(rec.adminFee || 0));
     setEditYear(String(rec.year || new Date().getFullYear()));
   };
 
@@ -1818,7 +1818,7 @@ export default function ManageUsersPage() {
                     type="number"
                     value={feeBase}
                     onChange={(e) => setFeeBase(e.target.value)}
-                    placeholder="Enter base membership fee"
+                    placeholder="e.g. 35.99"
                     className="form-input"
                     style={{ backgroundColor: '#ffffff', borderColor: '#d1d5db', borderRadius: '8px', padding: '10px 14px' }}
                   />
@@ -2036,6 +2036,7 @@ export default function ManageUsersPage() {
             <h3 style={{ fontSize: '1.35rem', fontWeight: 700, marginBottom: '12px', color: '#1f2937', fontFamily: 'var(--font-family-title)' }}>
               Confirm Membership Fee
             </h3>
+            {errorMsg && <p style={{ color: '#dc2626', backgroundColor: '#fef2f2', border: '1px solid #fecaca', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center', fontWeight: 600 }}>{errorMsg}</p>}
             <p style={{ color: '#4b5563', fontSize: '0.925rem', marginBottom: '24px', lineHeight: 1.5 }}>
               Are you sure you want to confirm membership fee payment of £{((parseFloat(feeBase) || 0) + (parseFloat(feeAdmin) || 0)).toFixed(2)} for {selectedUser.name} and send receipt email?
             </p>
