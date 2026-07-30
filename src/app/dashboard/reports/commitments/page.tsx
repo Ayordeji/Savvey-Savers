@@ -16,6 +16,7 @@ interface Commitment {
   endDate: string;
   status: 'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'NOT_YET_STARTED';
   payments?: Payment[];
+  harvestReleasedAt?: string | null;
   createdAt: string;
 }
 
@@ -113,8 +114,8 @@ function CommitmentsReportContent() {
   // Filter Logic
   // (Assuming PaymentConfirmedFilter requires querying payments if strictly applied, but to keep it simple, we filter based on standard status properties first)
   const filteredCommitments = commitments.filter((c) => {
-    // Determine harvest status (Yes = COMPLETED)
-    const isHarvestYes = c.status === 'COMPLETED';
+    // Determine harvest status (Yes = harvestReleasedAt is set)
+    const isHarvestYes = c.harvestReleasedAt !== null && c.harvestReleasedAt !== undefined;
     
     // Determine payment status (Yes = has CONFIRMED payment)
     const isPaymentYes = c.payments && c.payments.some((p: any) => p.status === 'CONFIRMED');
