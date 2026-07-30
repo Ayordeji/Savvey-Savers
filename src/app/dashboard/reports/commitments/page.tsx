@@ -44,6 +44,7 @@ function CommitmentsReportContent() {
 
   // Filters
   const [statusFilter, setStatusFilter] = useState('');
+  const [paymentConfirmedFilter, setPaymentConfirmedFilter] = useState('');
   const [periodFilter, setPeriodFilter] = useState('');
 
   // Pagination
@@ -104,6 +105,7 @@ function CommitmentsReportContent() {
 
   const handleResetFilters = () => {
     setStatusFilter('');
+    setPaymentConfirmedFilter('');
     setPeriodFilter('');
     setCurrentPage(1);
   };
@@ -117,10 +119,13 @@ function CommitmentsReportContent() {
     // Determine payment status (Yes = has CONFIRMED payment)
     const isPaymentYes = c.payments && c.payments.some((p: any) => p.status === 'CONFIRMED');
 
-    if (statusFilter === 'YES_HARVEST_YES_PAYMENT' && (!isHarvestYes || !isPaymentYes)) return false;
-    if (statusFilter === 'YES_HARVEST_NO_PAYMENT' && (!isHarvestYes || isPaymentYes)) return false;
-    if (statusFilter === 'NO_HARVEST_YES_PAYMENT' && (isHarvestYes || !isPaymentYes)) return false;
-    if (statusFilter === 'NO_HARVEST_NO_PAYMENT' && (isHarvestYes || isPaymentYes)) return false;
+    // Filter by Harvest Status
+    if (statusFilter === 'YES' && !isHarvestYes) return false;
+    if (statusFilter === 'NO' && isHarvestYes) return false;
+
+    // Filter by Payment Confirmed
+    if (paymentConfirmedFilter === 'YES' && !isPaymentYes) return false;
+    if (paymentConfirmedFilter === 'NO' && isPaymentYes) return false;
     
     if (periodFilter && String(c.collectionYear) !== periodFilter) return false;
     
@@ -202,11 +207,15 @@ function CommitmentsReportContent() {
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           
           <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className="form-select" style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', minWidth: '150px' }}>
-            <option value="">Harvest & Payment Status</option>
-            <option value="YES_HARVEST_YES_PAYMENT">Yes Harvest Yes Payment</option>
-            <option value="YES_HARVEST_NO_PAYMENT">Yes Harvest No Payment</option>
-            <option value="NO_HARVEST_YES_PAYMENT">No Harvest Yes Payment</option>
-            <option value="NO_HARVEST_NO_PAYMENT">No Harvest No Payment</option>
+            <option value="">Harvest status</option>
+            <option value="YES">Yes</option>
+            <option value="NO">No</option>
+          </select>
+
+          <select value={paymentConfirmedFilter} onChange={(e) => { setPaymentConfirmedFilter(e.target.value); setCurrentPage(1); }} className="form-select" style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', minWidth: '160px' }}>
+            <option value="">Payment Confirmed</option>
+            <option value="YES">Yes</option>
+            <option value="NO">No</option>
           </select>
 
           <select value={periodFilter} onChange={(e) => { setPeriodFilter(e.target.value); setCurrentPage(1); }} className="form-select" style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', minWidth: '150px' }}>
