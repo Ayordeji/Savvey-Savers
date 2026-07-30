@@ -154,6 +154,45 @@ export async function POST(request: Request) {
     // Remove prospect from waiting list
     await db.waitingList.delete({ where: { id: waitingListId } });
 
+    // Send Welcome Email
+    const host = request.headers.get('host') || 'savvey-savers.vercel.app';
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const origin = `${protocol}://${host}`;
+    const activationLink = `${origin}/activate?invite=${invitationId}`;
+    
+    // First try the template (using ID "2" which is used for Account Creation)
+    const templateRes = await sendTemplatedEmail("2", entry.email, {
+      name: entry.name,
+      memberName: entry.name,
+      first_name: entry.name.split(' ')[0] || '',
+      email: entry.email,
+      reacturl: activationLink,
+      url: activationLink,
+      loginUrl: activationLink,
+    });
+
+    // Fallback if template doesn't exist or is not set up
+    if (!templateRes || !templateRes.success) {
+      await sendEmail({
+        to: entry.email,
+        subject: "Welcome to Savvey Savers - Your Account is Ready!",
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+            <h2 style="color: #6366f1;">Welcome to Savvey Savers!</h2>
+            <p>Hi ${entry.name},</p>
+            <p>Great news! Your request to join the Savvey Savers waiting list has been approved.</p>
+            <p>Your account has been created and you can now activate it to get started.</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${activationLink}" style="background-color: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Activate Your Account</a>
+            </div>
+            <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #6366f1;">${activationLink}</p>
+            <p>Welcome aboard!<br>The Savvey Savers Team</p>
+          </div>
+        `
+      });
+    }
+
     // Admin notification
     await db.notification.create({ data: {
       userId: adminId,
@@ -199,6 +238,14 @@ export async function DELETE(request: Request) {
     if (!entry) {
       return NextResponse.json({ error: 'Entry not found.' }, { status: 404 });
     }
+
+    // Create a backup in Deleted Records
+    await db.deletedRecord.create({
+      data: {
+        type: 'WAITING_LIST',
+        originalData: JSON.parse(JSON.stringify(entry))
+      }
+    });
 
     // Delete prospect
     await db.waitingList.delete({ where: { id } });
