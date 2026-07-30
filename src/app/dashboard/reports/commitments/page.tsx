@@ -112,7 +112,8 @@ function CommitmentsReportContent() {
   // Filter Logic
   // (Assuming PaymentConfirmedFilter requires querying payments if strictly applied, but to keep it simple, we filter based on standard status properties first)
   const filteredCommitments = commitments.filter((c) => {
-    if (statusFilter && c.status.toLowerCase() !== statusFilter.toLowerCase()) return false;
+    if (statusFilter === 'YES' && c.status !== 'COMPLETED') return false;
+    if (statusFilter === 'NO' && c.status === 'COMPLETED') return false;
     if (periodFilter && String(c.collectionYear) !== periodFilter) return false;
     
     // Note: Payment Confirmed would technically require joining payments. For now we will allow visual filtering.
@@ -197,9 +198,8 @@ function CommitmentsReportContent() {
           
           <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className="form-select" style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', minWidth: '150px' }}>
             <option value="">Harvest status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="PENDING">Pending</option>
-            <option value="COMPLETED">Completed</option>
+            <option value="YES">Yes</option>
+            <option value="NO">No</option>
           </select>
 
           <select value={paymentConfirmedFilter} onChange={(e) => { setPaymentConfirmedFilter(e.target.value); setCurrentPage(1); }} className="form-select" style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', minWidth: '160px' }}>
