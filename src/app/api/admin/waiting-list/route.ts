@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, sendTemplatedEmail } from '@/lib/email';
 import { cookies } from 'next/headers';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 
@@ -176,7 +176,7 @@ export async function POST(request: Request) {
       await sendEmail({
         to: entry.email,
         subject: "Welcome to Savvey Savers - Your Account is Ready!",
-        html: `
+        body: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
             <h2 style="color: #6366f1;">Welcome to Savvey Savers!</h2>
             <p>Hi ${entry.name},</p>

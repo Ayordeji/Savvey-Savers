@@ -200,7 +200,7 @@ export async function POST(request: Request) {
     if (commitmentAmount && parseFloat(commitmentAmount) > 0) {
       const amtNum = parseFloat(commitmentAmount);
       await db.commitment.create({ data: {
-        memberId: uid,
+        memberId: newUser.id,
         memberName: name,
         
         amount: amtNum,

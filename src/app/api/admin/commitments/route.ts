@@ -21,10 +21,15 @@ export async function GET() {
   // Get commitments
   let commitments = [];
   if (session.role === 'ADMIN') {
-    commitments = await db.commitment.findMany();
+    commitments = await db.commitment.findMany({
+      include: { payments: true }
+    });
   } else {
     // Member: own commitments only
-    commitments = await db.commitment.findMany({ where: { memberId: session.id } });
+    commitments = await db.commitment.findMany({ 
+      where: { memberId: session.id },
+      include: { payments: true }
+    });
   }
 
   const currentYear = new Date().getFullYear();
