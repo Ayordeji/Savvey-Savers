@@ -100,8 +100,8 @@ export async function GET() {
       if (c.collectionYear < currentYear) {
         status = 'COMPLETED';
       } else if (c.collectionYear > currentYear) {
-        status = 'PENDING';
-      } else if (!status || status === 'COMPLETED') {
+        status = 'NOT_YET_STARTED';
+      } else if (!status || status === 'COMPLETED' || status === 'NOT_YET_STARTED') {
         status = 'ACTIVE';
       }
     }
@@ -154,7 +154,14 @@ export async function POST(request: Request) {
     const startYear = parseInt(collectionYear) || new Date().getFullYear();
 
     const currentYear = new Date().getFullYear();
-    const status = startYear < currentYear ? 'COMPLETED' : (requestCollection ? 'PENDING' : 'ACTIVE');
+    let status = 'ACTIVE';
+    if (startYear < currentYear) {
+      status = 'COMPLETED';
+    } else if (startYear > currentYear) {
+      status = 'NOT_YET_STARTED';
+    } else if (requestCollection) {
+      status = 'PENDING';
+    }
 
     // Generate sequential SC-XXXXX displayId
     const existingCommitments = await db.commitment.findMany({

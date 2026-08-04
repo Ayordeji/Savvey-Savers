@@ -44,7 +44,8 @@ function CommitmentsReportContent() {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [statusFilter, setStatusFilter] = useState('');
+  const [harvestFilter, setHarvestFilter] = useState('');
+  const [commitmentStatusFilter, setCommitmentStatusFilter] = useState('');
   const [paymentConfirmedFilter, setPaymentConfirmedFilter] = useState('');
   const [periodFilter, setPeriodFilter] = useState('');
 
@@ -105,7 +106,8 @@ function CommitmentsReportContent() {
   };
 
   const handleResetFilters = () => {
-    setStatusFilter('');
+    setHarvestFilter('');
+    setCommitmentStatusFilter('');
     setPaymentConfirmedFilter('');
     setPeriodFilter('');
     setCurrentPage(1);
@@ -120,9 +122,12 @@ function CommitmentsReportContent() {
     // Determine payment status (Yes = has CONFIRMED payment)
     const isPaymentYes = c.payments && c.payments.some((p: any) => p.status === 'CONFIRMED');
 
+    // Filter by Commitment Status
+    if (commitmentStatusFilter && c.status.toLowerCase() !== commitmentStatusFilter.toLowerCase()) return false;
+
     // Filter by Harvest Status
-    if (statusFilter === 'YES' && !isHarvestYes) return false;
-    if (statusFilter === 'NO' && isHarvestYes) return false;
+    if (harvestFilter === 'YES' && !isHarvestYes) return false;
+    if (harvestFilter === 'NO' && isHarvestYes) return false;
 
     // Filter by Payment Confirmed
     if (paymentConfirmedFilter === 'YES' && !isPaymentYes) return false;
@@ -207,7 +212,15 @@ function CommitmentsReportContent() {
       <div className={styles.controlsBar} style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           
-          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }} className="form-select" style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', minWidth: '150px' }}>
+          <select value={commitmentStatusFilter} onChange={(e) => { setCommitmentStatusFilter(e.target.value); setCurrentPage(1); }} className="form-select" style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', minWidth: '150px' }}>
+            <option value="">Commitment Status</option>
+            <option value="ACTIVE">Active</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="NOT_YET_STARTED">Not Yet Started</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+
+          <select value={harvestFilter} onChange={(e) => { setHarvestFilter(e.target.value); setCurrentPage(1); }} className="form-select" style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', minWidth: '150px' }}>
             <option value="">Harvest status</option>
             <option value="YES">Yes</option>
             <option value="NO">No</option>
@@ -322,7 +335,7 @@ function CommitmentsReportContent() {
                   <td className={styles.dateCell}>{cmt.collectionYear}</td>
                   <td>
                     <span className={`status-pill ${cmt.status.toLowerCase().replace(/_/g, '-')}`}>
-                      {cmt.status === 'PENDING' ? 'Pending' : cmt.status.charAt(0).toUpperCase() + cmt.status.slice(1).toLowerCase()}
+                      {cmt.status === 'NOT_YET_STARTED' ? 'Not Yet Started' : cmt.status.charAt(0).toUpperCase() + cmt.status.slice(1).toLowerCase()}
                     </span>
                   </td>
                 </tr>

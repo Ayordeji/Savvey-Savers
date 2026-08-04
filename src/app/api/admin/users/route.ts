@@ -334,7 +334,7 @@ export async function PUT(request: Request) {
       });
 
       if (!mailRes.success) {
-        return NextResponse.json({ error: `Failed to send email: ${mailRes.error}` }, { status: 500 });
+        return NextResponse.json({ error: `Failed to send email: ${'error' in mailRes ? mailRes.error : 'Unknown error'}` }, { status: 500 });
       }
 
       return NextResponse.json({
