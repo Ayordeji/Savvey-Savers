@@ -95,9 +95,21 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       // 2. All-Time Revenue = sum of all CONFIRMED savings commitment payments
       allTimeRevenue = allPayments.reduce((acc, p) => acc + p.amount, 0);
 
-      // 3. Filter commitments by selected collection year
+      // 3. Filter commitments by selected collection year and apply dynamic status overrides
       const selectedYearInt = parseInt(selectedYear, 10) || currentRealYear;
-      const yearCommitments = allCommitments.filter((c) => Number(c.collectionYear) === selectedYearInt);
+      const yearCommitments = allCommitments.filter((c) => Number(c.collectionYear) === selectedYearInt).map(c => {
+        let dynamicStatus = c.status;
+        if (dynamicStatus !== 'CANCELLED') {
+          if (c.collectionYear < currentRealYear) {
+            dynamicStatus = 'COMPLETED';
+          } else if (c.collectionYear > currentRealYear) {
+            dynamicStatus = 'NOT_YET_STARTED';
+          } else if (!dynamicStatus || dynamicStatus === 'COMPLETED' || dynamicStatus === 'NOT_YET_STARTED') {
+            dynamicStatus = 'ACTIVE';
+          }
+        }
+        return { ...c, status: dynamicStatus };
+      });
       totalCommitmentsCount = yearCommitments.length;
 
       // 4. Status counts for selected year
@@ -107,7 +119,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
       // Harvest Released Total — sum of actual harvestAmount from all released commitments
       harvestReleasedTotal = allCommitments
-        .filter((c) => c.status === 'COMPLETED' && (c as any).harvestAmount)
+        .filter((c) => c.harvestReleasedAt !== null && c.harvestReleasedAt !== undefined && (c as any).harvestAmount)
         .reduce((acc, c) => acc + ((c as any).harvestAmount || 0), 0);
 
       // 5. Revenue for selected year = confirmed payments on commitments in that year
@@ -117,7 +129,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
       // 6. Monthly Distribution — confirmed payments by month for selected year
       months.forEach((m, idx) => {
-        const monthPayments = yearPayments.filter((p) => (p as any).month === m);
+        const monthPayments = yearPayments.filter((p) => (p as any).month.trim() === m);
         monthlyData[idx] = monthPayments.reduce((acc, p) => acc + p.amount, 0);
       });
     } catch (err) {
@@ -132,7 +144,19 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       totalCommitmentsCount = memberCommitments.length;
 
       // Find the most recent active commitment for Amount, Goal, and Month
-      const activeCommitments = memberCommitments.filter(c => c.status === 'ACTIVE' || c.status === 'PENDING');
+      const activeCommitments = memberCommitments.map(c => {
+        let dynamicStatus = c.status;
+        if (dynamicStatus !== 'CANCELLED') {
+          if (c.collectionYear < currentRealYear) {
+            dynamicStatus = 'COMPLETED';
+          } else if (c.collectionYear > currentRealYear) {
+            dynamicStatus = 'NOT_YET_STARTED';
+          } else if (!dynamicStatus || dynamicStatus === 'COMPLETED' || dynamicStatus === 'NOT_YET_STARTED') {
+            dynamicStatus = 'ACTIVE';
+          }
+        }
+        return { ...c, status: dynamicStatus };
+      }).filter(c => c.status === 'ACTIVE' || c.status === 'PENDING');
       activeCommitments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       
       // Pass all active commitments to the carousel
@@ -149,7 +173,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
       // Harvest to Date
       harvestReleasedTotal = memberCommitments
-        .filter((c) => c.status === 'COMPLETED' && (c as any).harvestAmount)
+        .filter((c) => c.harvestReleasedAt !== null && c.harvestReleasedAt !== undefined && (c as any).harvestAmount)
         .reduce((acc, c) => acc + ((c as any).harvestAmount || 0), 0);
 
       // Total Saved to Date
