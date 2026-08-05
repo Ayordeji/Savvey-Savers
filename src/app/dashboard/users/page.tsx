@@ -39,6 +39,12 @@ export default function ManageUsersPage() {
   const searchParams = useSearchParams();
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setUserStatusFilter('');
+    setUsersPage(1);
+  };
   const [loading, setLoading] = useState(true);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
@@ -1033,6 +1039,11 @@ export default function ManageUsersPage() {
             <option value="ACTIVE">Active Users</option>
             <option value="INVITED">Invited Users</option>
           </select>
+          
+          <button onClick={handleResetFilters} style={{ padding: '8px 16px', fontSize: '0.85rem', borderRadius: '8px', border: 'none', backgroundColor: '#e2e8f0', color: '#1e293b', cursor: 'pointer', fontWeight: 600 }}>
+            Reset
+          </button>
+          
           {selectedUserIds.length > 0 && (
             <button
               onClick={() => { setErrorMsg(''); setActiveModal('BULK_DELETE_CONFIRM'); }}

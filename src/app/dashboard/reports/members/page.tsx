@@ -37,6 +37,11 @@ function MemberReportContent() {
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [statusFilter, setStatusFilter] = useState(''); // 'Active' or 'Inactive'
+  
+  const handleResetFilters = () => {
+    setStatusFilter('');
+    setCurrentPage(1);
+  };
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -179,6 +184,10 @@ function MemberReportContent() {
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
           </select>
+
+          <button onClick={handleResetFilters} style={{ padding: '8px 16px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}>
+            Reset
+          </button>
 
           <div className={styles.searchWrapper} style={{ minWidth: '250px' }}>
             <Search size={16} className={styles.searchIcon} />

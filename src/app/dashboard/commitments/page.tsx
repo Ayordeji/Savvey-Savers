@@ -61,6 +61,14 @@ function CommitmentsContent() {
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('');
+    setMonthFilter('');
+    setYearFilter('');
+    setCurrentPage(1);
+  };
   const [yearFilter, setYearFilter] = useState('');
   const [loading, setLoading] = useState(true);
 
