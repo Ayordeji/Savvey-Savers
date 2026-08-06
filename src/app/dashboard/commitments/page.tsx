@@ -612,11 +612,27 @@ function CommitmentsContent() {
       c.goal.toLowerCase().includes(q) ||
       c.id.toLowerCase().includes(q);
 
-    const matchesYear = !yearFilter || c.collectionYear.toString() === yearFilter;
-    const matchesMonth = !monthFilter || c.collectionMonth === monthFilter;
+    let matchesMonthYear = true;
+    if (monthFilter || yearFilter) {
+      const cmtPayments = paymentsMap[c.id] || [];
+      const hasMatchingPayment = cmtPayments.some(p => {
+        if (p.status !== 'CONFIRMED') return false;
+        
+        const pYear = p.year.toString();
+        const pMonth = p.month;
+        
+        if (monthFilter && yearFilter) return pMonth === monthFilter && pYear === yearFilter;
+        if (monthFilter && !yearFilter) return pMonth === monthFilter;
+        if (!monthFilter && yearFilter) return pYear === yearFilter;
+        
+        return false;
+      });
+      matchesMonthYear = hasMatchingPayment;
+    }
+
     const matchesStatus = !statusFilter || c.status === statusFilter;
 
-    return matchesSearch && matchesYear && matchesMonth && matchesStatus;
+    return matchesSearch && matchesMonthYear && matchesStatus;
   });
 
   const sortedCommitments = [...filteredCommitments].sort((a, b) => {
