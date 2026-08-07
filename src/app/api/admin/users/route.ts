@@ -37,10 +37,26 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
-  // Get all members and admins (exclude sensitive hashes in response)
-  const rawUsers = await db.user.findMany({
-    include: { membershipFeeRecords: true }
-  });
+  let rawUsers;
+
+  if (session.role === 'ADMIN') {
+    // Admins get everyone
+    rawUsers = await db.user.findMany({
+      include: { membershipFeeRecords: true }
+    });
+  } else {
+    // Members only get themselves and their direct referrals
+    rawUsers = await db.user.findMany({
+      where: {
+        OR: [
+          { id: session.id },
+          { invitedBy: session.id },
+          { invitedBy: session.invitationId || 'N/A' }
+        ]
+      },
+      include: { membershipFeeRecords: true }
+    });
+  }
 
   // Strict deduplication by email & invitationId to eliminate duplicates
   const uniqueUserMap = new Map<string, any>();

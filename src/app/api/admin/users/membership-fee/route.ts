@@ -12,9 +12,28 @@ async function checkAdmin() {
   return payload?.role === 'ADMIN';
 }
 
+async function getUserSession() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  if (!token) return null;
+  return await verifyToken(token);
+}
+
 export async function GET(request: Request) {
+  const session = await getUserSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId');
+
+  if (session.role !== 'ADMIN') {
+    // If a member is requesting, they must provide a userId, and it must be their own
+    if (!userId || userId !== session.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+  }
 
   if (userId) {
     const records = await db.membershipFeeRecord.findMany({ where: { userId } });
@@ -22,6 +41,7 @@ export async function GET(request: Request) {
     return NextResponse.json(sorted);
   }
 
+  // Only admins can get all records
   const allRecords = await db.membershipFeeRecord.findMany();
   return NextResponse.json(allRecords);
 }
