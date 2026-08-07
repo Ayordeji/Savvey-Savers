@@ -50,7 +50,7 @@ export default function SavingsCommitmentsPage() {
 function CommitmentsContent() {
   const searchParams = useSearchParams();
   const dialog = useDialog();
-  const [currentUser, setCurrentUser] = useState<{ id: string; role: 'ADMIN' | 'MEMBER' } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; role: 'ADMIN' | 'MEMBER'; displayId?: string; email?: string; name?: string; } | null>(null);
   const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [paymentsMap, setPaymentsMap] = useState<Record<string, Payment[]>>({});
   const [users, setUsers] = useState<User[]>([]);

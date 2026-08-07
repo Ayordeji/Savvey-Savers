@@ -11,6 +11,7 @@ import {
   Trash2,
   LogOut,
   UserCheck,
+  UserPlus,
   Bell,
   X,
   ClipboardList,
@@ -18,6 +19,7 @@ import {
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
+
 import styles from './layout.module.css';
 
 

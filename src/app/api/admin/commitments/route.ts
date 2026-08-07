@@ -101,9 +101,23 @@ export async function GET() {
     })();
   }
 
+  // Fetch all users to join member names (admin gets all, member gets their own)
+  let allUsers: any[] = [];
+  try {
+    if (session.role === 'ADMIN') {
+      allUsers = await db.user.findMany({ select: { id: true, name: true, email: true, displayId: true, invitationId: true } });
+    } else {
+      const dbUser2 = await db.user.findUnique({ where: { id: session.id } });
+      if (dbUser2) allUsers = [dbUser2];
+    }
+  } catch (e) {
+    allUsers = [];
+  }
+
   // Join member name & evaluate status based on cycle length
   const formatted = commitments.map((c) => {
     const member = allUsers.find((u) =>
+
       u.id === c.memberId ||
       (u.invitationId && c.memberId && u.invitationId.toLowerCase() === c.memberId.toLowerCase()) ||
       (u.name && c.memberName && u.name.toLowerCase().trim() === c.memberName.toLowerCase().trim())

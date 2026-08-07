@@ -18,6 +18,7 @@ interface User {
   membershipFeeConfirmed?: boolean;
   createdAt: string;
   invitationId?: string;
+  invitedBy?: string;
 }
 
 export default function MyInvitationsPage() {
