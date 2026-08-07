@@ -23,9 +23,18 @@ interface PageProps {
 }
 
 export default async function DashboardPage({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const selectedYear = typeof params.year === 'string' ? params.year : '2026';
-  const selectedYearNum = parseInt(selectedYear, 10);
+  let selectedYear = '2026';
+  try {
+    const params = searchParams ? await searchParams : {};
+    if (params && typeof params.year === 'string') {
+      selectedYear = params.year;
+    }
+  } catch (err: any) {
+    if (err?.digest === 'DYNAMIC_SERVER_USAGE' || err?.message?.includes('DYNAMIC_SERVER_USAGE')) {
+      throw err;
+    }
+  }
+  const selectedYearNum = parseInt(selectedYear, 10) || 2026;
 
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
@@ -42,7 +51,13 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   let user: Awaited<ReturnType<typeof db.user.findUnique>> = null;
   try {
     user = await db.user.findUnique({ where: { id: payload.id } });
-  } catch (dbErr) {
+    if (!user && payload.email) {
+      user = await db.user.findUnique({ where: { email: payload.email } });
+    }
+  } catch (dbErr: any) {
+    if (dbErr?.digest === 'NEXT_REDIRECT' || dbErr?.message?.includes('NEXT_REDIRECT')) {
+      throw dbErr;
+    }
     console.error('Dashboard: DB error fetching user', dbErr);
     redirect('/');
   }
@@ -63,6 +78,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   let activeUsersCount = 0;
   let invitedUsersCount = 0;
   let harvestReleasedTotal = 0; // Total £ amount of all released harvests
+  let memberActiveCommitmentsList: any[] = [];
 
   // Monthly values for chart (Jan - Dec)
   const months = [
@@ -134,7 +150,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       });
     } catch (err) {
       console.error('Dashboard metrics error:', err);
-      // Fallback: page still renders, just with zero stats
     }
   } else {
     try {
@@ -160,7 +175,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       activeCommitments.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       
       // Pass all active commitments to the carousel
-      (global as any).__memberActiveCommitments = activeCommitments.map(c => ({
+      memberActiveCommitmentsList = activeCommitments.map(c => ({
         id: c.id,
         amount: c.amount,
         goal: c.goal,
@@ -169,7 +184,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       }));
 
       // Total Invitations
-      invitedUsersCount = await db.user.count({ where: { invitedBy: user.id } });
+      const userKeys = [user.id, user.displayId, user.invitationId, user.email].filter(Boolean);
+      invitedUsersCount = await db.user.count({ where: { invitedBy: { in: userKeys as string[] } } });
 
       // Harvest to Date
       harvestReleasedTotal = memberCommitments
@@ -184,9 +200,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
     } catch (err) {
       console.error('Member dashboard metrics error:', err);
-      (global as any).__memberLatestAmount = 0;
-      (global as any).__memberLatestGoal = 'N/A';
-      (global as any).__memberLatestMonth = 'N/A';
     }
   }
 
@@ -430,7 +443,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <>
             {/* MEMBER CARDS */}
             <Link href="/dashboard/commitments" style={{ textDecoration: 'none', display: 'block' }}>
-              <MemberCommitmentsCarousel commitments={(global as any).__memberActiveCommitments || []} />
+              <MemberCommitmentsCarousel commitments={memberActiveCommitmentsList} />
             </Link>
 
             <div style={{
