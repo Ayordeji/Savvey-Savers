@@ -223,7 +223,10 @@ export default function MyInvitationsPage() {
   const filteredUsers = users.filter((u) => {
     // If current user is a MEMBER, only show users they invited
     if (currentUser?.role === 'MEMBER') {
-      const isMyInvite = u.invitedBy === currentUser.id || u.invitedBy === currentUser.invitationId;
+      const isMyInvite = u.invitedBy && (
+        u.invitedBy === currentUser.id || 
+        (currentUser.invitationId && u.invitedBy === currentUser.invitationId)
+      );
       if (!isMyInvite) return false;
     }
 
