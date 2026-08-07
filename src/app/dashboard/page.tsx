@@ -356,8 +356,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               </div>
             </Link>
 
-            {/* Card 5: Harvests Released -> Links to COMPLETED Commitments */}
-            <Link href="/dashboard/commitments?status=COMPLETED" style={{ textDecoration: 'none', display: 'block' }}>
+            {/* Card 5: Harvests Released -> Links to reports where harvest is pending */}
+            <Link href="/dashboard/reports/commitments?harvest=NO" style={{ textDecoration: 'none', display: 'block' }}>
               <div style={{
                 backgroundColor: '#000000',
                 border: '1px solid #1f2937',

@@ -73,10 +73,33 @@ export default function MyInvitationsPage() {
 
       // Fetch users
       const usersRes = await fetch('/api/admin/users');
+      let allUsers = [];
       if (usersRes.ok) {
-        const data = await usersRes.json();
-        setUsers(data);
+        allUsers = await usersRes.json();
       }
+
+      // Fetch waiting list (will return referrals if member, or all if admin)
+      const wlRes = await fetch('/api/admin/waiting-list');
+      if (wlRes.ok) {
+        const wlData = await wlRes.json();
+        // Merge waitlist entries as pseudo-users
+        const wlUsers = wlData.map((w: any) => ({
+          id: w.id,
+          displayId: 'WL-' + w.id.substring(0, 6).toUpperCase(),
+          name: w.name,
+          email: w.email,
+          phone: w.phone,
+          role: 'MEMBER',
+          isActive: false, // Pending Approval
+          createdAt: w.createdAt,
+          invitedBy: w.referredBy,
+          // Attach intended commitment info if needed
+          _isWaitlist: true
+        }));
+        allUsers = [...allUsers, ...wlUsers];
+      }
+      
+      setUsers(allUsers);
 
       // Fetch commitments
       const cmtRes = await fetch('/api/admin/commitments');
@@ -165,26 +188,15 @@ export default function MyInvitationsPage() {
     setFormSubmitting(true);
 
     try {
-      const res = await fetch('/api/admin/users', {
+      const res = await fetch('/api/waiting-list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          firstName: formFirstName.trim(),
-          lastName: formLastName.trim(),
+          name: formFirstName.trim() + ' ' + formLastName.trim(),
           email: formEmail.trim(),
           phone: formPhone.trim(),
-          role: 'MEMBER',
-          membership: formMembership,
-          inviteMode: 'EMAIL',
-          invitedByMember: true,
-          addressLine1: formAddressLine1,
-          addressLine2: formAddressLine2,
-          city: formCity,
-          postCode: formPostCode,
-          country: formCountry,
-          commitmentAmount: formAmount,
-          collectionMonth: formMonth,
-          collectionYear: formYear
+          monthlySavingsCommitment: formAmount,
+          referredBy: currentUser?.id
         }),
       });
 
@@ -207,8 +219,14 @@ export default function MyInvitationsPage() {
     }
   };
 
-  // Filter users by search query
+  // Filter users by search query and ownership
   const filteredUsers = users.filter((u) => {
+    // If current user is a MEMBER, only show users they invited
+    if (currentUser?.role === 'MEMBER') {
+      const isMyInvite = u.invitedBy === currentUser.id || u.invitedBy === currentUser.invitationId;
+      if (!isMyInvite) return false;
+    }
+
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
     return (
@@ -474,16 +492,7 @@ export default function MyInvitationsPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Membership Tier</label>
-                  <select value={formMembership} onChange={(e) => setFormMembership(e.target.value)} className="form-select">
-                    <option value="Standard Saver">Standard Saver</option>
-                    <option value="Premium Saver">Premium Saver</option>
-                    <option value="VIP Saver">VIP Saver</option>
-                  </select>
-                </div>
-
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Savings Commitment Amount (£)</label>
                   <select value={formAmount} onChange={(e) => setFormAmount(e.target.value)} className="form-select">

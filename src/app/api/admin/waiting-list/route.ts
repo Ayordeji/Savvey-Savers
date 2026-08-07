@@ -4,20 +4,38 @@ import { sendEmail, sendTemplatedEmail } from '@/lib/email';
 import { cookies } from 'next/headers';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 
-async function checkAdmin() {
+async function getSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return false;
-  const payload = await verifyToken(token);
-  return payload?.role === 'ADMIN';
+  if (!token) return null;
+  return await verifyToken(token);
+}
+
+async function checkAdmin() {
+  const session = await getSession();
+  return session?.role === 'ADMIN';
 }
 
 export async function GET() {
-  if (!(await checkAdmin())) {
+  const session = await getSession();
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
-  const entries = (await db.waitingList.findMany()).sort(
+  let entries = [];
+  if (session.role === 'ADMIN') {
+    entries = await db.waitingList.findMany();
+  } else {
+    // If member, only return entries they referred
+    const memberId = session.id;
+    entries = await db.waitingList.findMany({
+      where: {
+        referredBy: memberId
+      }
+    });
+  }
+
+  entries.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
   return NextResponse.json(entries);

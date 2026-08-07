@@ -742,6 +742,7 @@ function CommitmentsContent() {
             <option value="ACTIVE">Active</option>
             <option value="COMPLETED">Completed</option>
             <option value="PENDING">Pending</option>
+            <option value="CANCELLED">Cancelled</option>
           </select>
 
           <select

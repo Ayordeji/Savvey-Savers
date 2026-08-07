@@ -630,29 +630,29 @@ export default function Home() {
                   </div>
 
                   <div className="form-group" style={{ margin: 0 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', fontWeight: 500, fontSize: '0.9rem' }}>
-                      <input
-                        type="checkbox"
-                        checked={hasReferrer}
-                        onChange={(e) => {
-                          setHasReferrer(e.target.checked);
-                          if (!e.target.checked) setWaitReferrer('');
-                        }}
-                        style={{ width: '16px', height: '16px', accentColor: 'var(--primary)', cursor: 'pointer' }}
-                      />
-                      <span>Referred by a Member? Enter their name below.</span>
-                    </label>
-
-                    {hasReferrer && (
-                      <div style={{ position: 'relative', marginTop: '10px' }}>
-                        <User size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', fontWeight: 500, fontSize: '0.9rem' }}>
                         <input
-                          type="text"
-                          required
-                          value={waitReferrer}
-                          onChange={(e) => setWaitReferrer(e.target.value)}
-                          placeholder="Enter member's name"
-                          className="form-input"
+                          type="checkbox"
+                          checked={hasReferrer}
+                          onChange={(e) => {
+                            setHasReferrer(e.target.checked);
+                            if (!e.target.checked) setWaitReferrer('');
+                          }}
+                          style={{ width: '16px', height: '16px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                        />
+                        <span>Referred by a Member? Enter their Member ID below.</span>
+                      </label>
+
+                      {hasReferrer && (
+                        <div style={{ position: 'relative', marginTop: '10px' }}>
+                          <User size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
+                          <input
+                            type="text"
+                            required
+                            value={waitReferrer}
+                            onChange={(e) => setWaitReferrer(e.target.value)}
+                            placeholder="Enter member's ID (e.g. M-001234)"
+                            className="form-input"
                           style={{
                             paddingLeft: '38px',
                             backgroundColor: 'var(--bg-main)',

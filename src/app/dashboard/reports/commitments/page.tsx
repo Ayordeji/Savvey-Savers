@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { Search, Download, ExternalLink, X, PoundSterling, Filter, RotateCcw } from 'lucide-react';
 import styles from '../../commitments/commitments.module.css';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import PaginationControls from '../../PaginationControls';
 interface Commitment {
   id: string;
@@ -40,6 +40,7 @@ export default function SavingsCommitmentReportPage() {
 
 function CommitmentsReportContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -68,8 +69,12 @@ function CommitmentsReportContent() {
   const [viewCmtLoading, setViewCmtLoading] = useState(false);
 
   useEffect(() => {
+    const h = searchParams.get('harvest');
+    if (h) {
+      setHarvestFilter(h);
+    }
     fetchCommitments();
-  }, []);
+  }, [searchParams]);
 
   const fetchCommitments = async () => {
     try {
