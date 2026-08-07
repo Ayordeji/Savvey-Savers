@@ -27,21 +27,33 @@ export default async function DashboardLayout({
     redirect('/');
   }
 
-  let user = await db.user.findUnique({ where: { id: payload.id } });
-  
-  if (!user && payload.email) {
-    user = await db.user.findUnique({ where: { email: payload.email } });
+  let user: any = null;
+  let unreadCount = 0;
+
+  try {
+    user = await db.user.findUnique({ where: { id: payload.id } });
+    if (!user && payload.email) {
+      user = await db.user.findUnique({ where: { email: payload.email } });
+    }
+  } catch (dbErr: any) {
+    if (dbErr?.digest === 'NEXT_REDIRECT' || dbErr?.message?.includes('NEXT_REDIRECT')) {
+      throw dbErr;
+    }
+    console.error('DashboardLayout user query error:', dbErr);
   }
 
   if (!user) {
     redirect('/');
   }
 
-  // Count unread notifications
-  const unreadNotifications = await db.notification.findMany({
-    where: { userId: user.id, isRead: false }
-  });
-  const unreadCount = unreadNotifications.length;
+  try {
+    const unreadNotifications = await db.notification.findMany({
+      where: { userId: user.id, isRead: false }
+    });
+    unreadCount = unreadNotifications.length;
+  } catch (notifErr) {
+    console.warn('DashboardLayout notification query error:', notifErr);
+  }
 
   return (
     <div className={styles.dashboardContainer}>
