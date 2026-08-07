@@ -46,20 +46,25 @@ export async function GET() {
     });
   } else {
     // Members only get themselves and their direct referrals
-    const dbUser = await db.user.findUnique({ where: { id: session.id } });
+    const dbUser = (await db.user.findUnique({ where: { id: session.id } })) ||
+      (session.email ? await db.user.findUnique({ where: { email: session.email } }) : null);
+
     const userKeys = Array.from(new Set([
       session.id,
+      session.email,
+      dbUser?.id,
       dbUser?.displayId,
       dbUser?.invitationId,
       dbUser?.email
-    ].filter(Boolean)));
+    ].filter((k): k is string => typeof k === 'string' && k.trim().length > 0)));
+
+    const orConditions: any[] = [{ id: session.id }];
+    if (dbUser?.id) orConditions.push({ id: dbUser.id });
+    userKeys.forEach(k => orConditions.push({ invitedBy: k }));
 
     rawUsers = await db.user.findMany({
       where: {
-        OR: [
-          { id: session.id },
-          ...userKeys.map(k => ({ invitedBy: k }))
-        ]
+        OR: orConditions
       },
       include: { membershipFeeRecords: true }
     });

@@ -27,13 +27,17 @@ export async function GET() {
     entries = await db.waitingList.findMany();
   } else {
     // If member, only return entries they referred (match any of member's keys)
-    const dbUser = await db.user.findUnique({ where: { id: session.id } });
+    const dbUser = (await db.user.findUnique({ where: { id: session.id } })) ||
+      (session.email ? await db.user.findUnique({ where: { email: session.email } }) : null);
+
     const userKeys = Array.from(new Set([
       session.id,
+      session.email,
+      dbUser?.id,
       dbUser?.displayId,
       dbUser?.invitationId,
       dbUser?.email
-    ].filter(Boolean).map(k => String(k).toLowerCase().trim())));
+    ].filter((k): k is string => typeof k === 'string' && k.trim().length > 0).map(k => k.toLowerCase().trim())));
 
     const allWl = await db.waitingList.findMany();
     entries = allWl.filter(w => w.referredBy && userKeys.includes(String(w.referredBy).toLowerCase().trim()));

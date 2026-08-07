@@ -11,38 +11,43 @@ async function getUserSession() {
 }
 
 export async function GET() {
-  const session = await getUserSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-  }
+  try {
+    const session = await getUserSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
 
-  const allUsers = await db.user.findMany();
+    // Get commitments
+    let commitments = [];
+    if (session.role === 'ADMIN') {
+      commitments = await db.commitment.findMany({
+        include: { payments: true }
+      });
+    } else {
+      // Member: own commitments only
+      const dbUser = (await db.user.findUnique({ where: { id: session.id } })) ||
+        (session.email ? await db.user.findUnique({ where: { email: session.email } }) : null);
 
-  // Get commitments
-  let commitments = [];
-  if (session.role === 'ADMIN') {
-    commitments = await db.commitment.findMany({
-      include: { payments: true }
-    });
-  } else {
-    // Member: own commitments only
-    const dbUser = await db.user.findUnique({ where: { id: session.id } });
-    const userKeys = Array.from(new Set([
-      session.id,
-      dbUser?.displayId,
-      dbUser?.email
-    ].filter(Boolean)));
+      const userKeys = Array.from(new Set([
+        session.id,
+        session.email,
+        dbUser?.id,
+        dbUser?.displayId,
+        dbUser?.email
+      ].filter((k): k is string => typeof k === 'string' && k.trim().length > 0)));
 
-    commitments = await db.commitment.findMany({ 
-      where: {
-        OR: [
-          ...userKeys.map(k => ({ memberId: k as string })),
-          { memberName: dbUser?.name || 'N/A' }
-        ]
-      },
-      include: { payments: true }
-    });
-  }
+      const orConditions: any[] = userKeys.map(k => ({ memberId: k }));
+      if (dbUser?.name) {
+        orConditions.push({ memberName: dbUser.name });
+      }
+
+      commitments = await db.commitment.findMany({ 
+        where: {
+          OR: orConditions.length > 0 ? orConditions : [{ memberId: session.id }]
+        },
+        include: { payments: true }
+      });
+    }
 
   const currentYear = new Date().getFullYear();
 
@@ -131,7 +136,11 @@ export async function GET() {
     };
   });
 
-  return NextResponse.json(formatted);
+    return NextResponse.json(formatted);
+  } catch (err) {
+    console.error('Error fetching commitments:', err);
+    return NextResponse.json({ error: 'Failed to fetch commitments' }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
