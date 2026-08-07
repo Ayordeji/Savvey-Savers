@@ -120,7 +120,8 @@ export async function GET() {
       city: u.city,
       postCode: u.postCode,
       country: u.country,
-      permissions: u.permissions
+      permissions: u.permissions,
+      invitedBy: u.invitedBy
     };
   });
 
