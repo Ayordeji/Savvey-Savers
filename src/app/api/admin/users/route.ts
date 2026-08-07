@@ -405,7 +405,7 @@ export async function PUT(request: Request) {
 
       isRoleChanging = role && role !== user.role;
 
-      if (!email || !phone) {
+      if (!approveRequest && (!email || !phone)) {
         return NextResponse.json({ error: 'Email and phone are required.' }, { status: 400 });
       }
 
@@ -421,8 +421,8 @@ export async function PUT(request: Request) {
         name,
         firstName: firstName || user.firstName || name.split(' ')[0] || '',
         lastName: lastName || user.lastName || name.split(' ').slice(1).join(' ') || '',
-        email: email.toLowerCase().trim(),
-        phone,
+        email: email ? email.toLowerCase().trim() : user.email,
+        phone: phone || user.phone,
         membership: membership || undefined,
         role: role || undefined,
         addressLine1: addressLine1 ?? user.addressLine1,
@@ -449,7 +449,7 @@ export async function PUT(request: Request) {
           await sendEmail({
             to: superAdminEmail,
             subject: 'Super Admin Access Request - Confirmation Required',
-            body: `Hello Super Admin,\n\nAn administrator (${reqUser?.name || 'Admin'}) has requested to promote user ${user.name} (${user.email}) to Super Admin role.\n\nPlease click the link below to accept and approve this request:\n${approvalLink}\n\nBest regards,\nSavvey Savers Platform`
+            body: `Hello Super Admin,\n\nAn administrator (${reqUser?.name || 'Admin'}) has requested to promote user ${user.name} (${user.email}) to Super Admin role.\n\nPlease click the link below to accept and approve this request:\n<a href="${approvalLink}">${approvalLink}</a>\n\nBest regards,\nSavvey Savers Platform`
           });
 
           await db.notification.create({ data: {

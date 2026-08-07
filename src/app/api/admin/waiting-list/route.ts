@@ -104,7 +104,8 @@ export async function POST(request: Request) {
       invitationId,
       invitationExpiresAt,
       membershipFeeConfirmed: false,
-      termsAccepted: false
+      termsAccepted: false,
+      invitedBy: entry.referredBy
     } });
 
     // 3. Create active commitment based on their waiting list promise

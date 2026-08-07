@@ -499,12 +499,18 @@ function CommitmentsContent() {
     }
   };
 
-  const handleDeleteCommitment = async (cmtId: string) => {
+  const handleDeleteCommitment = async (cmt: Commitment) => {
     setOpenDropdownId(null);
-    if (!(await dialog.confirm('Cancel Savings Commitment', 'Are you sure you want to cancel this savings commitment? The record will be safely archived.'))) return;
+    const isCancelled = cmt.status === 'CANCELLED';
+    
+    if (isCancelled) {
+      if (!(await dialog.confirm('Permanently Delete Commitment', 'Are you sure you want to PERMANENTLY delete this savings commitment? This action cannot be undone and it will be removed from all records.'))) return;
+    } else {
+      if (!(await dialog.confirm('Cancel Savings Commitment', 'Are you sure you want to cancel this savings commitment? The record will be safely archived.'))) return;
+    }
 
     try {
-      const res = await fetch(`/api/admin/commitments?id=${cmtId}`, {
+      const res = await fetch(`/api/admin/commitments?id=${cmt.id}`, {
         method: 'DELETE'
       });
 
@@ -515,7 +521,7 @@ function CommitmentsContent() {
           setCommitments(await res2.json());
         }
         router.refresh();
-        await dialog.alert('Success', 'Commitment cancelled successfully.');
+        await dialog.alert('Success', isCancelled ? 'Commitment permanently deleted.' : 'Commitment cancelled successfully.');
       } else {
         const data = await res.json();
         await dialog.alert('Delete Failed', data.error || 'Failed to delete commitment.');
@@ -991,12 +997,12 @@ function CommitmentsContent() {
                                       </button>
                                     )}
 
-                                    {c.status !== 'CANCELLED' && (
-                                      <button onClick={() => handleDeleteCommitment(c.id)} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
-                                        <X size={14} color="#dc2626" />
-                                        <span style={{ color: '#dc2626' }}>Cancel</span>
-                                      </button>
-                                    )}
+                                    <button onClick={() => handleDeleteCommitment(c)} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
+                                      <X size={14} color="#dc2626" />
+                                      <span style={{ color: '#dc2626' }}>
+                                        {c.status === 'CANCELLED' ? 'Delete Permanently' : 'Cancel'}
+                                      </span>
+                                    </button>
                                   </>
                                 )}
                               </div>

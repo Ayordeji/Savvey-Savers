@@ -338,17 +338,30 @@ export async function DELETE(request: Request) {
       const finalCmt = found;
       resolvedId = found.id; // use the actual UUID for DB updates
 
-      // Archive by setting status to CANCELLED instead of deleting permanently
-      await db.commitment.update({ 
-        where: { id: resolvedId },
-        data: { status: 'CANCELLED' }
-      });
+      if (finalCmt.status === 'CANCELLED') {
+        // Hard delete
+        await db.commitment.delete({
+          where: { id: resolvedId }
+        });
+        
+        await db.auditLog.create({ data: {
+          action: 'ADMIN_COMMITMENT_DELETE',
+          details: `Admin permanently deleted savings commitment ${resolvedId} for member ${finalCmt.memberId}.`,
+          userId: session.id
+        } });
+      } else {
+        // Archive by setting status to CANCELLED instead of deleting permanently
+        await db.commitment.update({ 
+          where: { id: resolvedId },
+          data: { status: 'CANCELLED' }
+        });
 
-      await db.auditLog.create({ data: {
-        action: 'ADMIN_COMMITMENT_CANCEL',
-        details: `Admin deleted and archived savings commitment ${resolvedId} for member ${finalCmt.memberId}.`,
-        userId: session.id
-      } });
+        await db.auditLog.create({ data: {
+          action: 'ADMIN_COMMITMENT_CANCEL',
+          details: `Admin cancelled and archived savings commitment ${resolvedId} for member ${finalCmt.memberId}.`,
+          userId: session.id
+        } });
+      }
 
       // Admin Notification
       await db.notification.create({ data: {
