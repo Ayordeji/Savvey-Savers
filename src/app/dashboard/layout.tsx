@@ -22,10 +22,13 @@ export default async function DashboardLayout({
     redirect('/');
   }
 
-  const payload = await verifyToken(token);
+  const payload = await verifyToken(token!);
   if (!payload) {
+    // Delete the stale/invalid cookie so the browser doesn't loop
+    cookieStore.delete(COOKIE_NAME);
     redirect('/');
   }
+
 
   let user: any = null;
   let unreadCount = 0;
