@@ -12,7 +12,7 @@ export default function Home() {
       .then((res) => res.json())
       .then((data) => {
         if (data.loggedIn) {
-          router.push('/dashboard');
+          window.location.href = '/dashboard';
         }
       })
       .catch((err) => console.error('Session verify error:', err));
@@ -134,8 +134,11 @@ export default function Home() {
       const data = await res.json();
 
       if (res.ok) {
-        router.push('/dashboard');
-        router.refresh();
+        // Use hard redirect so the brand-new session cookie is sent with the
+        // full HTTP request to /dashboard, avoiding a Next.js RSC race condition
+        // where the soft-navigation may not carry the freshly-set cookie.
+        window.location.href = '/dashboard';
+
       } else {
         setLoginError(data.error || 'Login failed. Please try again.');
       }
