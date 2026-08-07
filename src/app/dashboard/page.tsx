@@ -223,7 +223,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       {/* Summary Cards Grid (6 Cards Interactive) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gridTemplateColumns: isAdmin ? 'repeat(auto-fit, minmax(280px, 1fr))' : 'repeat(2, 1fr)',
         gap: '16px',
         width: '100%'
       }} className="dashboard-cards-grid">
@@ -446,19 +446,21 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               <MemberCommitmentsCarousel commitments={memberActiveCommitmentsList} />
             </Link>
 
-            <div style={{
-              backgroundColor: '#000000', border: '1px solid #1f2937', borderRadius: '16px', padding: '24px 28px',
-              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'row', alignItems: 'center',
-              gap: '20px', minHeight: '130px', color: '#ffffff'
-            }} className="dashboard-interactive-card">
-              <div style={{ width: '52px', height: '52px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Users size={28} />
+            <Link href="/dashboard/invitations" style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{
+                backgroundColor: '#000000', border: '1px solid #1f2937', borderRadius: '16px', padding: '24px 28px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'row', alignItems: 'center',
+                gap: '20px', minHeight: '130px', color: '#ffffff'
+              }} className="dashboard-interactive-card">
+                <div style={{ width: '52px', height: '52px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Users size={28} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Total Invitations</span>
+                  <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0, color: '#ffffff' }}>{invitedUsersCount}</h3>
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '1rem', color: '#e2e8f0', fontWeight: 600, letterSpacing: '0.01em' }}>Total Invitations</span>
-                <h3 style={{ fontSize: '1.9rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', margin: 0, color: '#ffffff' }}>{invitedUsersCount}</h3>
-              </div>
-            </div>
+            </Link>
 
             <div style={{
               backgroundColor: '#000000', border: '1px solid #1f2937', borderRadius: '16px', padding: '24px 28px',

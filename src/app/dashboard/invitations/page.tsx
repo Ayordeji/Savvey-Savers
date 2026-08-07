@@ -139,6 +139,17 @@ export default function MyInvitationsPage() {
     fetchInitialData();
   }, []);
 
+  const [formRole, setFormRole] = useState<'MEMBER' | 'ADMIN' | 'SUPER_ADMIN'>('MEMBER');
+  const [formPermissions, setFormPermissions] = useState<string[]>(['INVITE_USER', 'ASSIGN_UNAVAILABLE_MONTH']);
+
+  const handlePermissionChange = (perm: string, checked: boolean) => {
+    if (checked) {
+      setFormPermissions((prev) => [...prev, perm]);
+    } else {
+      setFormPermissions((prev) => prev.filter((p) => p !== perm));
+    }
+  };
+
   const handleOpenInviteModal = () => {
     setErrorMsg('');
     setSuccessMsg('');
@@ -146,16 +157,86 @@ export default function MyInvitationsPage() {
     setFormLastName('');
     setFormEmail('');
     setFormPhone('');
+    setFormRole('MEMBER');
     setFormMembership('Standard Saver');
     setFormAddressLine1('');
     setFormAddressLine2('');
     setFormCity('');
     setFormPostCode('');
     setFormCountry('United Kingdom');
+    setFormPermissions(['INVITE_USER', 'ASSIGN_UNAVAILABLE_MONTH']);
     if (enabledAmounts.length > 0) {
       setFormAmount(enabledAmounts[0].amount.toString());
     }
     setIsInviteModalOpen(true);
+  };
+
+  const handleAddSubmit = async (inviteMode: 'SAVE' | 'SAVE_INVITE') => {
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    if (!formFirstName.trim()) {
+      setErrorMsg('First Name is required.');
+      return;
+    }
+    if (!formEmail.trim() || !formPhone.trim()) {
+      setErrorMsg('Email and phone number are required.');
+      return;
+    }
+
+    const validateUkPhoneNumber = (phoneStr: string) => {
+      if (!phoneStr) return false;
+      const cleaned = phoneStr.replace(/[\s\-\(\)]/g, '');
+      if (/^\+44\d{10}$/.test(cleaned)) return true;
+      if (/^0\d{10}$/.test(cleaned)) return true;
+      if (/^44\d{10}$/.test(cleaned)) return true;
+      return false;
+    };
+
+    if (!validateUkPhoneNumber(formPhone)) {
+      setErrorMsg('Only valid UK phone numbers (e.g. +44 7700 900022 or 07700900022) are accepted.');
+      return;
+    }
+
+    setFormSubmitting(true);
+
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: formFirstName.trim(),
+          lastName: formLastName.trim(),
+          email: formEmail.trim(),
+          phone: formPhone.trim(),
+          role: formRole,
+          membership: formMembership,
+          addressLine1: formAddressLine1.trim(),
+          addressLine2: formAddressLine2.trim(),
+          city: formCity.trim(),
+          postCode: formPostCode.trim(),
+          country: formCountry.trim(),
+          permissions: formPermissions,
+          inviteMode,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSuccessMsg(inviteMode === 'SAVE' ? 'User added successfully!' : 'User added and invitation email sent successfully!');
+        fetchInitialData();
+        setTimeout(() => {
+          setIsInviteModalOpen(false);
+        }, 2000);
+      } else {
+        setErrorMsg(data.error || 'Failed to add user.');
+      }
+    } catch (err) {
+      setErrorMsg('A network error occurred while adding user.');
+    } finally {
+      setFormSubmitting(false);
+    }
   };
 
   const handleInviteSubmit = async (e: React.FormEvent) => {
@@ -276,8 +357,17 @@ export default function MyInvitationsPage() {
           className="btn btn-primary"
           style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '10px', fontWeight: 600 }}
         >
-          <UserPlus size={18} />
-          <span>Invite Member</span>
+          {currentUser?.role === 'ADMIN' ? (
+            <>
+              <Plus size={18} />
+              <span>Add User</span>
+            </>
+          ) : (
+            <>
+              <UserPlus size={18} />
+              <span>Invite Member</span>
+            </>
+          )}
         </button>
       </div>
 
@@ -421,177 +511,329 @@ export default function MyInvitationsPage() {
         </>
       )}
 
-      {/* --- INVITE MEMBER MODAL --- */}
+      {/* --- INVITE / ADD MEMBER MODAL --- */}
       {isInviteModalOpen && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsInviteModalOpen(false); }}>
-          <div className="modal-content" style={{ maxWidth: '580px', padding: '28px', position: 'relative' }}>
+          <div className="modal-content" style={{ maxWidth: currentUser?.role === 'ADMIN' ? '540px' : '580px', padding: '28px', position: 'relative' }}>
             <button onClick={() => setIsInviteModalOpen(false)} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
             </button>
 
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)', color: 'var(--text-main)' }}>
-              Invite New Member
-            </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
-              Fill out the member details below to submit a new member invitation for Admin approval.
-            </p>
+            {currentUser?.role === 'ADMIN' ? (
+              <>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)', color: 'var(--text-main)' }}>
+                  Add Member
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
+                  Create a new user profile with invitation controls.
+                </p>
 
-            {errorMsg && (
-              <div style={{ backgroundColor: 'var(--status-error-bg)', color: 'var(--status-error)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
-                {errorMsg}
-              </div>
+                {errorMsg && (
+                  <div style={{ backgroundColor: 'var(--status-error-bg)', color: 'var(--status-error)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
+                    {errorMsg}
+                  </div>
+                )}
+
+                {successMsg && (
+                  <div style={{ backgroundColor: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <CheckCircle2 size={18} />
+                    <span>{successMsg}</span>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">First Name *</label>
+                      <input type="text" value={formFirstName} onChange={(e) => setFormFirstName(e.target.value)} placeholder="Jane" className="form-input" />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Last Name</label>
+                      <input type="text" value={formLastName} onChange={(e) => setFormLastName(e.target.value)} placeholder="Smith" className="form-input" />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Email Address *</label>
+                      <input type="email" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="jane@example.com" className="form-input" />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Phone *</label>
+                      <input type="tel" value={formPhone} onChange={(e) => setFormPhone(e.target.value)} placeholder="+44 7700 900011" className="form-input" />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Address Line 1</label>
+                      <input type="text" value={formAddressLine1} onChange={(e) => setFormAddressLine1(e.target.value)} placeholder="10 Downing St" className="form-input" />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Address Line 2</label>
+                      <input type="text" value={formAddressLine2} onChange={(e) => setFormAddressLine2(e.target.value)} placeholder="Westminster" className="form-input" />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">City</label>
+                      <input type="text" value={formCity} onChange={(e) => setFormCity(e.target.value)} placeholder="London" className="form-input" />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Post Code</label>
+                      <input type="text" value={formPostCode} onChange={(e) => setFormPostCode(e.target.value)} placeholder="SW1A 2AA" className="form-input" />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Country</label>
+                      <input
+                        type="text"
+                        value="United Kingdom"
+                        disabled
+                        readOnly
+                        className="form-input"
+                        style={{ backgroundColor: 'rgba(0, 0, 0, 0.05)', color: 'var(--text-muted)', cursor: 'not-allowed' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group" style={{ margin: '0 0 16px 0' }}>
+                    <label className="form-label" style={{ fontWeight: 600, color: '#334155' }}>Select Role *</label>
+                    <select value={formRole} onChange={(e) => setFormRole(e.target.value as any)} className="form-select" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                      <option value="MEMBER">Savers</option>
+                      <option value="ADMIN">Admin</option>
+                      <option value="SUPER_ADMIN">Super Admin</option>
+                    </select>
+                  </div>
+
+                  {/* Permission Checklist */}
+                  <div style={{ marginTop: '12px', marginBottom: '16px' }}>
+                    <label className="form-label" style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.95rem', marginBottom: '8px', display: 'block' }}>
+                      Permission
+                    </label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#475569', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={formPermissions.includes('SETUP_ADMIN')} onChange={(e) => handlePermissionChange('SETUP_ADMIN', e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#1e293b' }} />
+                        <span>Setup Admin</span>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#475569', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={formPermissions.includes('INVITE_USER')} onChange={(e) => handlePermissionChange('INVITE_USER', e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#1e293b' }} />
+                        <span>Invite User</span>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#475569', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={formPermissions.includes('ASSIGN_UNAVAILABLE_MONTH')} onChange={(e) => handlePermissionChange('ASSIGN_UNAVAILABLE_MONTH', e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#1e293b' }} />
+                        <span>Assign Unavailable month to users</span>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#475569', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={formPermissions.includes('RECEIVE_UNAVAILABLE_APPROVAL')} onChange={(e) => handlePermissionChange('RECEIVE_UNAVAILABLE_APPROVAL', e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#1e293b' }} />
+                        <span>Receive Unavailable Month Approval Requests</span>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#475569', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={formPermissions.includes('SUSPEND_USER')} onChange={(e) => handlePermissionChange('SUSPEND_USER', e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#1e293b' }} />
+                        <span>Suspend User</span>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#475569', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={formPermissions.includes('DELETE_USER')} onChange={(e) => handlePermissionChange('DELETE_USER', e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#1e293b' }} />
+                        <span>Delete User</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setIsInviteModalOpen(false)}
+                      className="btn btn-secondary"
+                      style={{ flex: 1, backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px', fontWeight: 600 }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleAddSubmit('SAVE')}
+                      disabled={formSubmitting}
+                      className="btn btn-secondary"
+                      style={{ flex: 1.2, backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px', fontWeight: 600 }}
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => handleAddSubmit('SAVE_INVITE')}
+                      disabled={formSubmitting}
+                      className="btn btn-primary"
+                      style={{ flex: 1.5, backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px', fontWeight: 600 }}
+                    >
+                      Save & Invite
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)', color: 'var(--text-main)' }}>
+                  Invite New Member
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
+                  Fill out the member details below to submit a new member invitation for Admin approval.
+                </p>
+
+                {errorMsg && (
+                  <div style={{ backgroundColor: 'var(--status-error-bg)', color: 'var(--status-error)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
+                    {errorMsg}
+                  </div>
+                )}
+
+                {successMsg && (
+                  <div style={{ backgroundColor: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <CheckCircle2 size={18} />
+                    <span>{successMsg}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleInviteSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">First Name *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Priscilla"
+                        value={formFirstName}
+                        onChange={(e) => setFormFirstName(e.target.value)}
+                        className="form-input"
+                      />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Last Name *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Omole"
+                        value={formLastName}
+                        onChange={(e) => setFormLastName(e.target.value)}
+                        className="form-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Email Address *</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="e.g. priscilla@example.com"
+                        value={formEmail}
+                        onChange={(e) => setFormEmail(e.target.value)}
+                        className="form-input"
+                      />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Phone Number *</label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="e.g. +447123456789"
+                        value={formPhone}
+                        onChange={(e) => setFormPhone(e.target.value)}
+                        className="form-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Savings Commitment Amount (£)</label>
+                      <select value={formAmount} onChange={(e) => setFormAmount(e.target.value)} className="form-select">
+                        {enabledAmounts.map((a) => (
+                          <option key={a.amount} value={a.amount}>£{Number(a.amount).toFixed(2)}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Preferred Collection Month</label>
+                      <select value={formMonth} onChange={(e) => setFormMonth(e.target.value)} className="form-select">
+                        {months.map((m) => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Collection Year</label>
+                      <select value={formYear} onChange={(e) => setFormYear(e.target.value)} className="form-select">
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Address Line 1</label>
+                    <input
+                      type="text"
+                      placeholder="Street address"
+                      value={formAddressLine1}
+                      onChange={(e) => setFormAddressLine1(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">City</label>
+                      <input
+                        type="text"
+                        placeholder="City"
+                        value={formCity}
+                        onChange={(e) => setFormCity(e.target.value)}
+                        className="form-input"
+                      />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Post Code</label>
+                      <input
+                        type="text"
+                        placeholder="Post code"
+                        value={formPostCode}
+                        onChange={(e) => setFormPostCode(e.target.value)}
+                        className="form-input"
+                      />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Country</label>
+                      <input
+                        type="text"
+                        value={formCountry}
+                        onChange={(e) => setFormCountry(e.target.value)}
+                        className="form-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setIsInviteModalOpen(false)}
+                      disabled={formSubmitting}
+                      className="btn btn-secondary"
+                      style={{ borderRadius: '8px', padding: '10px 20px' }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={formSubmitting}
+                      className="btn btn-primary"
+                      style={{ borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}
+                    >
+                      {formSubmitting ? 'Submitting...' : 'Submit Invitation'}
+                    </button>
+                  </div>
+                </form>
+              </>
             )}
-
-            {successMsg && (
-              <div style={{ backgroundColor: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CheckCircle2 size={18} />
-                <span>{successMsg}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleInviteSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">First Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Priscilla"
-                    value={formFirstName}
-                    onChange={(e) => setFormFirstName(e.target.value)}
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Last Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Omole"
-                    value={formLastName}
-                    onChange={(e) => setFormLastName(e.target.value)}
-                    className="form-input"
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Email Address *</label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="e.g. priscilla@example.com"
-                    value={formEmail}
-                    onChange={(e) => setFormEmail(e.target.value)}
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Phone Number *</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="e.g. +447123456789"
-                    value={formPhone}
-                    onChange={(e) => setFormPhone(e.target.value)}
-                    className="form-input"
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Savings Commitment Amount (£)</label>
-                  <select value={formAmount} onChange={(e) => setFormAmount(e.target.value)} className="form-select">
-                    {enabledAmounts.map((a) => (
-                      <option key={a.amount} value={a.amount}>£{Number(a.amount).toFixed(2)}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Preferred Collection Month</label>
-                  <select value={formMonth} onChange={(e) => setFormMonth(e.target.value)} className="form-select">
-                    {months.map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Collection Year</label>
-                  <select value={formYear} onChange={(e) => setFormYear(e.target.value)} className="form-select">
-                    <option value="2026">2026</option>
-                    <option value="2027">2027</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Address Line 1</label>
-                <input
-                  type="text"
-                  placeholder="Street address"
-                  value={formAddressLine1}
-                  onChange={(e) => setFormAddressLine1(e.target.value)}
-                  className="form-input"
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">City</label>
-                  <input
-                    type="text"
-                    placeholder="City"
-                    value={formCity}
-                    onChange={(e) => setFormCity(e.target.value)}
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Post Code</label>
-                  <input
-                    type="text"
-                    placeholder="Post code"
-                    value={formPostCode}
-                    onChange={(e) => setFormPostCode(e.target.value)}
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Country</label>
-                  <input
-                    type="text"
-                    value={formCountry}
-                    onChange={(e) => setFormCountry(e.target.value)}
-                    className="form-input"
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
-                <button
-                  type="button"
-                  onClick={() => setIsInviteModalOpen(false)}
-                  disabled={formSubmitting}
-                  className="btn btn-secondary"
-                  style={{ borderRadius: '8px', padding: '10px 20px' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={formSubmitting}
-                  className="btn btn-primary"
-                  style={{ borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}
-                >
-                  {formSubmitting ? 'Submitting...' : 'Submit Invitation'}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
