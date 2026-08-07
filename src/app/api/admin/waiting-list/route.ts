@@ -26,13 +26,17 @@ export async function GET() {
   if (session.role === 'ADMIN') {
     entries = await db.waitingList.findMany();
   } else {
-    // If member, only return entries they referred
-    const memberId = session.id;
-    entries = await db.waitingList.findMany({
-      where: {
-        referredBy: memberId
-      }
-    });
+    // If member, only return entries they referred (match any of member's keys)
+    const dbUser = await db.user.findUnique({ where: { id: session.id } });
+    const userKeys = Array.from(new Set([
+      session.id,
+      dbUser?.displayId,
+      dbUser?.invitationId,
+      dbUser?.email
+    ].filter(Boolean).map(k => String(k).toLowerCase().trim())));
+
+    const allWl = await db.waitingList.findMany();
+    entries = allWl.filter(w => w.referredBy && userKeys.includes(String(w.referredBy).toLowerCase().trim()));
   }
 
   entries.sort(

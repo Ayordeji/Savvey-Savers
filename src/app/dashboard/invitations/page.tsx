@@ -219,14 +219,18 @@ export default function MyInvitationsPage() {
     }
   };
 
-  // Filter users by search query and ownership
+  // Filter users by search query and ownership (My Invitations shows people invited by the logged in user)
   const filteredUsers = users.filter((u) => {
-    // If current user is a MEMBER, only show users they invited
-    if (currentUser?.role === 'MEMBER') {
-      const isMyInvite = u.invitedBy && (
-        u.invitedBy === currentUser.id || 
-        (currentUser.invitationId && u.invitedBy === currentUser.invitationId)
-      );
+    if (currentUser) {
+      const myKeys = [
+        currentUser.id,
+        currentUser.displayId,
+        currentUser.invitationId,
+        currentUser.email
+      ].filter(Boolean).map(k => String(k).toLowerCase().trim());
+
+      const inviteKey = u.invitedBy ? String(u.invitedBy).toLowerCase().trim() : '';
+      const isMyInvite = inviteKey && myKeys.includes(inviteKey);
       if (!isMyInvite) return false;
     }
 

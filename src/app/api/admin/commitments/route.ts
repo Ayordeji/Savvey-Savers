@@ -26,8 +26,20 @@ export async function GET() {
     });
   } else {
     // Member: own commitments only
+    const dbUser = await db.user.findUnique({ where: { id: session.id } });
+    const userKeys = Array.from(new Set([
+      session.id,
+      dbUser?.displayId,
+      dbUser?.email
+    ].filter(Boolean)));
+
     commitments = await db.commitment.findMany({ 
-      where: { memberId: session.id },
+      where: {
+        OR: [
+          ...userKeys.map(k => ({ memberId: k as string })),
+          { memberName: dbUser?.name || 'N/A' }
+        ]
+      },
       include: { payments: true }
     });
   }

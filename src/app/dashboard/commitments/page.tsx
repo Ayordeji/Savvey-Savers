@@ -612,6 +612,21 @@ function CommitmentsContent() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const filteredCommitments = commitments.filter((c) => {
+    if (currentUser?.role === 'MEMBER') {
+      const myKeys = [
+        currentUser.id,
+        currentUser.displayId,
+        currentUser.email,
+        currentUser.name
+      ].filter(Boolean).map(k => String(k).toLowerCase().trim());
+
+      const cMemberId = c.memberId ? String(c.memberId).toLowerCase().trim() : '';
+      const cMemberName = c.memberName ? String(c.memberName).toLowerCase().trim() : '';
+
+      const isMyCmt = myKeys.includes(cMemberId) || myKeys.includes(cMemberName);
+      if (!isMyCmt) return false;
+    }
+
     const q = searchQuery.toLowerCase().trim();
     const matchesSearch = !q ||
       c.memberName.toLowerCase().includes(q) ||

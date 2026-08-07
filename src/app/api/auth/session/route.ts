@@ -52,6 +52,8 @@ export async function GET() {
       loggedIn: true,
       user: {
         id: user.id,
+        displayId: user.displayId || user.id,
+        invitationId: user.invitationId || undefined,
         name: user.name,
         email: user.email,
         role: user.role

@@ -76,13 +76,27 @@ export async function POST(request: Request) {
       );
     }
 
+    let finalReferredBy = referredBy ? String(referredBy).trim() : undefined;
+    if (finalReferredBy) {
+      const allUsers = await db.user.findMany();
+      const matchedUser = allUsers.find(u =>
+        u.id.toLowerCase() === finalReferredBy!.toLowerCase() ||
+        (u.displayId && u.displayId.toLowerCase() === finalReferredBy!.toLowerCase()) ||
+        (u.invitationId && u.invitationId.toLowerCase() === finalReferredBy!.toLowerCase()) ||
+        (u.email && u.email.toLowerCase() === finalReferredBy!.toLowerCase())
+      );
+      if (matchedUser) {
+        finalReferredBy = matchedUser.id;
+      }
+    }
+
     // Save waiting list entry
     const entry = await db.waitingList.create({ data: { name,
       email: normalizedEmail,
       phone,
       monthlySavingsCommitment: commitmentVal,
-      isReferred: !!referredBy,
-      referredBy: referredBy || undefined,
+      isReferred: !!finalReferredBy,
+      referredBy: finalReferredBy,
     } });
 
     // Create notifications for all admins and audit log (non-blocking side-effects)
