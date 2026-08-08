@@ -3,8 +3,11 @@ import { cookies } from 'next/headers';
 
 export const COOKIE_NAME = 'savvey-session';
 
-const secretKey = process.env.JWT_SECRET || 'super_secret_savvey_savers_key_2026_!@#$';
-const encodedKey = new TextEncoder().encode(secretKey);
+const secretKey = process.env.JWT_SECRET;
+if (!secretKey && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable is missing in production');
+}
+const encodedKey = new TextEncoder().encode(secretKey || 'dev-fallback-key-savvey-savers-2026');
 
 export async function createSessionCookie(payload: any): Promise<string> {
   const jwt = await new SignJWT(payload)

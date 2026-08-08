@@ -37,15 +37,17 @@ export async function POST(request: Request) {
 
     // Compare passwords
     let isValidPassword = false;
+    let needsRehash = false;
     
     // Check if the hash starts with $2 (bcrypt standard format)
     if (user.passwordHash && user.passwordHash.startsWith('$2')) {
        isValidPassword = await bcrypt.compare(password, user.passwordHash);
-    } else {
-       // Support raw password login for manually seeded users (like our script did 'Password123!')
+    } else if (user.passwordHash) {
+       // Support raw password check for manually seeded users, then schedule rehashing
        isValidPassword = password === user.passwordHash;
-       
-       // Note: in a production app, we would rehash the raw password here and update it.
+       if (isValidPassword) {
+         needsRehash = true;
+       }
     }
 
     if (!isValidPassword) {
@@ -55,14 +57,18 @@ export async function POST(request: Request) {
       );
     }
 
-    // Update lastLoginAt
+    // Update lastLoginAt and rehash legacy password if needed
     try {
+      const updateData: any = { lastLoginAt: new Date() };
+      if (needsRehash) {
+        updateData.passwordHash = await bcrypt.hash(password, 10);
+      }
       await db.user.update({
         where: { id: user.id },
-        data: { lastLoginAt: new Date() }
+        data: updateData
       });
     } catch (updateErr) {
-      console.warn('Failed to update lastLoginAt:', updateErr);
+      console.warn('Failed to update user login details:', updateErr);
     }
 
     // Generate JWT Session Cookie

@@ -45,7 +45,9 @@ export default async function DashboardLayout({
     console.error('DashboardLayout user query error:', dbErr);
   }
 
-  if (!user) {
+  if (!user || !user.isActive) {
+    // Delete stale or inactive cookie
+    cookieStore.delete(COOKIE_NAME);
     redirect('/');
   }
 
