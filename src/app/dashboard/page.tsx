@@ -96,14 +96,24 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       const allPayments = await db.payment.findMany({ where: { status: 'CONFIRMED' } });
       const rawUsers = await db.user.findMany();
 
-      // 1. Deduplicate members for user counts
-      const uniqueMap = new Map<string, any>();
-      rawUsers.forEach((u) => {
-        if (!u) return;
-        const k = u.email ? u.email.toLowerCase().trim() : (u.invitationId?.trim() || u.id);
-        if (!uniqueMap.has(k) || u.role === 'ADMIN') uniqueMap.set(k, u);
-      });
-      const memberUsers = Array.from(uniqueMap.values()).filter((u) => u.role === 'MEMBER' || !u.isSuperAdmin);
+      // 1. Deduplicate members using the exact same logic as /api/admin/users route
+      const uniqueUserMap = new Map<string, any>();
+      for (const u of rawUsers) {
+        if (!u || u.id === 'usr_admin') continue;
+        const emailKey = u.email ? u.email.toLowerCase().trim() : '';
+        const memberKey = u.invitationId ? u.invitationId.trim() : '';
+        const primaryKey = emailKey || memberKey || u.id;
+
+        if (!uniqueUserMap.has(primaryKey)) {
+          uniqueUserMap.set(primaryKey, u);
+        } else {
+          const existing = uniqueUserMap.get(primaryKey);
+          if (u.isSuperAdmin || u.role === 'ADMIN') {
+            uniqueUserMap.set(primaryKey, { ...existing, ...u });
+          }
+        }
+      }
+      const memberUsers = Array.from(uniqueUserMap.values());
 
       activeUsersCount = memberUsers.filter((u) => u.isActive).length;
       invitedUsersCount = memberUsers.filter((u) => !u.isActive).length;
