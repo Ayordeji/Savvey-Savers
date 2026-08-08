@@ -14,7 +14,7 @@ export async function GET() {
   try {
     const session = await getUserSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
     }
 
     // Get commitments
@@ -160,7 +160,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const session = await getUserSession();
   if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
   }
 
   try {
@@ -298,8 +298,11 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   // Admin only edit details
   const session = await getUserSession();
-  if (!session || session.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+  }
+  if (session.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   try {
@@ -339,8 +342,11 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   // Admin only cancel/delete commitment
   const session = await getUserSession();
-  if (!session || session.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+  }
+  if (session.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   try {

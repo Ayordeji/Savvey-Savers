@@ -208,7 +208,7 @@ export async function POST(request: Request) {
       lastName: lastName || name.split(' ').slice(1).join(' ') || '',
       email: normalizedEmail,
       phone,
-      role: role || 'MEMBER',
+      role: isMemberInvite ? 'MEMBER' : (role || 'MEMBER'),
       membership: membership || 'Standard Saver',
       isActive: !isMemberInvite, // Inactive / pending approval if invited by a member
       passwordHash: 'pending_activation',
@@ -220,7 +220,7 @@ export async function POST(request: Request) {
       city: city || '',
       postCode: postCode || '',
       country: country || 'United Kingdom',
-      permissions: permissions || [],
+      permissions: isMemberInvite ? [] : (permissions || []),
       membershipFeeConfirmed: false,
       termsAccepted: true
     } });
