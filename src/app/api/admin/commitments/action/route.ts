@@ -160,6 +160,13 @@ export async function POST(request: Request) {
 
       // Compute total confirmed payout amount (total payments received)
       const relatedPayments = await db.payment.findMany({ where: { commitmentId, status: 'CONFIRMED' } });
+      
+      if (relatedPayments.length === 0) {
+        return NextResponse.json({
+          error: "The user's payment has not yet been confirmed, hence there is no harvest to release."
+        }, { status: 400 });
+      }
+
       const harvestAmount = relatedPayments.reduce((acc, p) => acc + p.amount, 0);
 
       // Update commitment status to COMPLETED and record the harvest amount

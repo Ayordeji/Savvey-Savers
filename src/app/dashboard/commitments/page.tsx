@@ -493,9 +493,13 @@ function CommitmentsContent() {
         }
         router.refresh();
         await dialog.alert('Success', 'Harvest payout released and member notified.');
+      } else {
+        const data = await res.json();
+        await dialog.alert('Cannot Release Harvest', data.error || 'Failed to release harvest payout.');
       }
     } catch (err) {
       console.error('Error releasing harvest:', err);
+      await dialog.alert('Error', 'A network error occurred while releasing harvest.');
     }
   };
 
