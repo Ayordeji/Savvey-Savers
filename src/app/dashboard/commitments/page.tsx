@@ -635,6 +635,12 @@ function CommitmentsContent() {
 
     let matchesMonthYear = true;
     if (monthFilter || yearFilter) {
+      // Check if commitment collection settings match directly
+      const matchesCmtDirect =
+        (!monthFilter || c.collectionMonth === monthFilter) &&
+        (!yearFilter || c.collectionYear.toString() === yearFilter);
+
+      // Check if there is any matching confirmed payment
       const cmtPayments = paymentsMap[c.id] || [];
       const hasMatchingPayment = cmtPayments.some(p => {
         if (p.status !== 'CONFIRMED') return false;
@@ -648,7 +654,7 @@ function CommitmentsContent() {
         
         return false;
       });
-      matchesMonthYear = hasMatchingPayment;
+      matchesMonthYear = matchesCmtDirect || hasMatchingPayment;
     }
 
     const matchesStatus = !statusFilter || c.status === statusFilter;
