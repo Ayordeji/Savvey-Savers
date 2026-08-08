@@ -299,6 +299,22 @@ function CommitmentsReportContent() {
                     </span>
                   </div>
                 </th>
+                <th onClick={() => requestSort('harvestAmount')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>Harvest Amount (£)</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'harvestAmount' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
+                <th onClick={() => requestSort('harvestReleasedAt')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span>Harvest Date</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
+                      {sortConfig?.key === 'harvestReleasedAt' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
+                    </span>
+                  </div>
+                </th>
                 <th onClick={() => requestSort('status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     <span>Status</span>
@@ -325,6 +341,12 @@ function CommitmentsReportContent() {
                   
                   <td className={styles.dateCell}>{cmt.collectionMonth} {cmt.collectionYear}</td>
                   <td className={styles.dateCell}>{cmt.collectionYear}</td>
+                  <td style={{ fontWeight: 600, color: '#2563eb' }}>
+                    {cmt.harvestAmount !== null && cmt.harvestAmount !== undefined ? `£${Number(cmt.harvestAmount).toFixed(2)}` : '—'}
+                  </td>
+                  <td className={styles.dateCell}>
+                    {cmt.harvestReleasedAt ? new Date(cmt.harvestReleasedAt).toLocaleDateString('en-GB') : '—'}
+                  </td>
                   <td>
                     <span className={`status-pill ${cmt.status.toLowerCase().replace(/_/g, '-')}`}>
                       {cmt.status === 'NOT_YET_STARTED' ? 'Not Yet Started' : cmt.status.charAt(0).toUpperCase() + cmt.status.slice(1).toLowerCase()}
@@ -334,7 +356,7 @@ function CommitmentsReportContent() {
               ))}
               {currentCommitments.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>
+                  <td colSpan={10} style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>
                     No savings commitments match your filters.
                   </td>
                 </tr>
