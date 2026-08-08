@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail, ArrowRight, User, Phone, CheckCircle2, X, Star } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, ArrowRight, User, Phone, CheckCircle2, X, Star, Menu } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/session')
@@ -229,8 +230,9 @@ export default function Home() {
         justifyContent: 'space-between',
         borderBottom: '1px solid var(--border-color)',
         backgroundColor: 'var(--bg-card)',
-        boxShadow: 'var(--shadow-sm)'
-      }}>
+        boxShadow: 'var(--shadow-sm)',
+        position: 'relative'
+      }} className="landing-header">
         <a href="https://savveysavers.crevianstudios.com/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} title="Savvey Savers Main Site">
           <img
             src="/logo_new-removebg-preview.png"
@@ -240,38 +242,82 @@ export default function Home() {
         </a>
 
         {/* Navigation Links linking back to main site */}
-        <nav style={{ display: 'flex', gap: '24px', alignItems: 'center' }} className="hidden-mobile">
+        <nav className="landing-nav">
           <a href="https://savveysavers.crevianstudios.com/" style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-main)'}>Home</a>
           <a href="https://savveysavers.crevianstudios.com/about-us" style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-main)'}>About Us</a>
           <a href="https://savveysavers.crevianstudios.com/faqs" style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-main)'}>FAQs</a>
         </nav>
 
-        <a
-          href="https://savveysavers.crevianstudios.com/"
-          style={{
-            borderRadius: '9999px',
-            border: '1px solid var(--primary)',
-            color: 'var(--primary)',
-            backgroundColor: 'transparent',
-            fontWeight: 600,
-            fontSize: '0.875rem',
-            textDecoration: 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            padding: '10px 22px',
-            transition: 'background-color 0.2s, color 0.2s'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--primary)';
-            e.currentTarget.style.color = '#ffffff';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.color = 'var(--primary)';
-          }}
-        >
-          Back to Website
-        </a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <a
+            href="https://savveysavers.crevianstudios.com/"
+            className="landing-back-btn"
+            style={{
+              borderRadius: '9999px',
+              border: '1px solid var(--primary)',
+              color: 'var(--primary)',
+              backgroundColor: 'transparent',
+              fontWeight: 600,
+              fontSize: '0.875rem',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '10px 22px',
+              transition: 'background-color 0.2s, color 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--primary)';
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--primary)';
+            }}
+          >
+            Back to Website
+          </a>
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="landing-hamburger-btn"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--text-main)',
+              padding: '8px',
+              display: 'none',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(0, 0, 0, 0.03)'
+            }}
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="landing-mobile-menu" style={{
+            position: 'absolute',
+            top: '80px',
+            left: 0,
+            right: 0,
+            backgroundColor: 'var(--bg-card)',
+            borderBottom: '1px solid var(--border-color)',
+            boxShadow: 'var(--shadow-md)',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '16px 40px',
+            gap: '16px',
+            zIndex: 100
+          }}>
+            <a href="https://savveysavers.crevianstudios.com/" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none', padding: '8px 0' }}>Home</a>
+            <a href="https://savveysavers.crevianstudios.com/about-us" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none', padding: '8px 0' }}>About Us</a>
+            <a href="https://savveysavers.crevianstudios.com/faqs" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none', padding: '8px 0' }}>FAQs</a>
+          </div>
+        )}
       </header>
 
       {/* Hero Body */}

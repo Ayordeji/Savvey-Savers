@@ -626,3 +626,33 @@ button {
   }
 }
 
+/* Landing Page Header Responsive Styles */
+.landing-nav {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+@media (max-width: 991px) {
+  .landing-header {
+    padding: 0 20px !important;
+  }
+  .landing-nav {
+    display: none !important;
+  }
+  .landing-hamburger-btn {
+    display: inline-flex !important;
+  }
+  .landing-mobile-menu {
+    padding: 16px 20px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-back-btn {
+    padding: 8px 14px !important;
+    font-size: 0.8rem !important;
+  }
+}
+
+
