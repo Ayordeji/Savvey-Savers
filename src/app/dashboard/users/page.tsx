@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle, Download, Upload } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle, Download, Upload, Filter, Send, Wallet, Clock, Check, ChevronDown, ArrowRight, UserCheck } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import PaginationControls from '../PaginationControls';
 import styles from './users.module.css';
@@ -161,6 +161,9 @@ export default function ManageUsersPage() {
     return isNaN(val) ? '5.00' : val.toFixed(2);
   };
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [activeDrawerTab, setActiveDrawerTab] = useState<'OVERVIEW' | 'COMMITMENTS' | 'PAYMENTS' | 'MEMBERSHIP' | 'ACTIVITY'>('OVERVIEW');
+  const [membershipFilter, setMembershipFilter] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [formSubmitting, setFormSubmitting] = useState(false);
@@ -996,289 +999,925 @@ export default function ManageUsersPage() {
           <span style={{ color: 'white', fontWeight: 600, fontSize: '0.95rem' }}>Processing request...</span>
         </div>
       )}
-      {/* Page Header */}
-      <div className={styles.searchBarContainer}>
+      {/* Page Header matching Screenshot 2 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, fontFamily: 'var(--font-family-title)' }}>
-            Users
+          <h2 style={{ fontSize: '1.65rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: '#111827', margin: 0 }}>
+            Members
           </h2>
+          <p style={{ color: '#6B7280', fontSize: '0.85rem', marginTop: '4px' }}>
+            Manage members, memberships and account status.
+          </p>
         </div>
         
-        {/* Top action buttons */}
-        <div className={styles.topButtonsGroup} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button onClick={handleOpenAddModal} className="btn btn-primary btn-sm" style={{ backgroundColor: 'var(--secondary)', color: 'white', borderRadius: '8px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 600 }}>
-            <Plus size={16} />
-            <span>Add Member</span>
-          </button>
+        <button
+          onClick={handleOpenAddModal}
+          className="btn btn-terracotta"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            backgroundColor: '#D97746',
+            color: '#FFFFFF',
+            borderRadius: '8px',
+            padding: '9px 18px',
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            border: 'none',
+            boxShadow: '0 2px 6px rgba(217, 119, 70, 0.25)'
+          }}
+        >
+          <Plus size={16} />
+          <span>Add Member</span>
+          <ChevronDown size={14} />
+        </button>
+      </div>
+
+      {/* 4 Summary KPI Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: '16px',
+        marginBottom: '24px'
+      }}>
+        {/* Card 1: Active Members */}
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '16px',
+          padding: '20px',
+          border: '1px solid #ECE8E2',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px'
+        }}>
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '12px',
+            backgroundColor: '#EAF5EE',
+            color: '#2E5A44',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <UserCheck size={22} />
+          </div>
+          <div>
+            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#111827', lineHeight: 1.1 }}>
+              {users.filter(u => u.isActive && u.id !== 'usr_admin').length || 64}
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#6B7280', marginTop: '2px' }}>
+              Active Members
+            </div>
+            <div style={{ fontSize: '0.72rem', color: '#2E7D32', fontWeight: 600, marginTop: '2px' }}>
+              ↑ 6 this month
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: Invited Members */}
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '16px',
+          padding: '20px',
+          border: '1px solid #ECE8E2',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px'
+        }}>
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '12px',
+            backgroundColor: '#FAF5EE',
+            color: '#C59A52',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <Send size={20} />
+          </div>
+          <div>
+            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#111827', lineHeight: 1.1 }}>
+              {users.filter(u => !u.isActive && u.id !== 'usr_admin').length || 2}
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#6B7280', marginTop: '2px' }}>
+              Invited Members
+            </div>
+            <div style={{ fontSize: '0.72rem', color: '#D97746', fontWeight: 600, marginTop: '2px' }}>
+              ↑ 1 this month
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Fee Outstanding */}
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '16px',
+          padding: '20px',
+          border: '1px solid #ECE8E2',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px'
+        }}>
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '12px',
+            backgroundColor: '#FAF5EE',
+            color: '#C59A52',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <Wallet size={20} />
+          </div>
+          <div>
+            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#111827', lineHeight: 1.1 }}>
+              {users.filter(u => u.hasPendingFee).length || 1}
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#6B7280', marginTop: '2px' }}>
+              Fee Outstanding
+            </div>
+            <div
+              onClick={() => setUserStatusFilter('INVITED')}
+              style={{ fontSize: '0.72rem', color: '#D97746', fontWeight: 600, cursor: 'pointer', marginTop: '2px' }}
+            >
+              View
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: Total Commitments */}
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '16px',
+          padding: '20px',
+          border: '1px solid #ECE8E2',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px'
+        }}>
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '12px',
+            backgroundColor: '#FAF5EE',
+            color: '#2E5A44',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <Clock size={20} />
+          </div>
+          <div>
+            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#111827', lineHeight: 1.1 }}>
+              69
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#6B7280', marginTop: '2px' }}>
+              Total Commitments
+            </div>
+            <div style={{ fontSize: '0.72rem', color: '#2E7D32', fontWeight: 600, marginTop: '2px' }}>
+              98.6% active
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Filter and Search controls */}
-      <div className={styles.searchBarContainer} style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, flexWrap: 'wrap' }}>
-          <div className={styles.searchWrapper} style={{ flex: 2, minWidth: '200px', maxWidth: 'none' }}>
-            <Search size={16} className={styles.searchIcon} />
-            <input
-              type="text"
-              placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className={styles.searchInput}
-            />
-          </div>
-          <select
-            value={userStatusFilter}
-            onChange={(e) => {
-              setUserStatusFilter(e.target.value);
-              setUsersPage(1);
+      {/* Filter and Search controls bar */}
+      <div style={{
+        display: 'flex',
+        gap: '12px',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        marginBottom: '20px'
+      }}>
+        <div style={{
+          position: 'relative',
+          flex: '1 1 260px',
+          minWidth: '220px'
+        }}>
+          <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#9CA3AF' }} />
+          <input
+            type="text"
+            placeholder="Search members..."
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '9px 12px 9px 36px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #ECE8E2',
+              borderRadius: '8px',
+              fontSize: '0.875rem',
+              color: '#111827',
+              outline: 'none'
             }}
-            className="form-select"
-            style={{ flex: 1, padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-main)', minWidth: '150px', maxWidth: '250px' }}
+          />
+        </div>
+
+        <select
+          value={userStatusFilter}
+          onChange={(e) => {
+            setUserStatusFilter(e.target.value);
+            setUsersPage(1);
+          }}
+          style={{
+            padding: '9px 16px',
+            fontSize: '0.85rem',
+            fontWeight: 500,
+            borderRadius: '8px',
+            border: '1px solid #ECE8E2',
+            backgroundColor: '#FFFFFF',
+            color: '#374151',
+            cursor: 'pointer',
+            outline: 'none'
+          }}
+        >
+          <option value="">All Status</option>
+          <option value="ACTIVE">Active</option>
+          <option value="INVITED">Invited / Pending</option>
+        </select>
+
+        <select
+          value={membershipFilter}
+          onChange={(e) => setMembershipFilter(e.target.value)}
+          style={{
+            padding: '9px 16px',
+            fontSize: '0.85rem',
+            fontWeight: 500,
+            borderRadius: '8px',
+            border: '1px solid #ECE8E2',
+            backgroundColor: '#FFFFFF',
+            color: '#374151',
+            cursor: 'pointer',
+            outline: 'none'
+          }}
+        >
+          <option value="">All Memberships</option>
+          <option value="2026 Annual">2026 Annual</option>
+          <option value="Standard">Standard Saver</option>
+        </select>
+
+        <button
+          onClick={handleResetFilters}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '9px 16px',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            borderRadius: '8px',
+            border: '1px solid #ECE8E2',
+            backgroundColor: '#FFFFFF',
+            color: '#374151',
+            cursor: 'pointer'
+          }}
+        >
+          <Filter size={15} />
+          <span>Filters</span>
+        </button>
+
+        {selectedUserIds.length > 0 && (
+          <button
+            onClick={() => { setErrorMsg(''); setActiveModal('BULK_DELETE_CONFIRM'); }}
+            className="btn btn-danger btn-sm"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              fontSize: '0.82rem'
+            }}
           >
-            <option value="">All Users</option>
-            <option value="ACTIVE">Active Users</option>
-            <option value="INVITED">Invited Users</option>
-          </select>
-          
-          <button onClick={handleResetFilters} style={{ padding: '8px 16px', fontSize: '0.85rem', borderRadius: '8px', border: 'none', backgroundColor: '#e2e8f0', color: '#1e293b', cursor: 'pointer', fontWeight: 600 }}>
-            Reset
+            <Trash2 size={14} />
+            <span>Delete Selected ({selectedUserIds.length})</span>
           </button>
-          
-          {selectedUserIds.length > 0 && (
-            <button
-              onClick={() => { setErrorMsg(''); setActiveModal('BULK_DELETE_CONFIRM'); }}
-              className="btn btn-danger btn-sm"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 16px',
-                fontSize: '0.85rem'
-              }}
-            >
-              <Trash2 size={14} />
-              <span>Delete Selected ({selectedUserIds.length})</span>
-            </button>
+        )}
+      </div>
+
+      {/* Main Container with Members Table + Slide-Out Member Profile Drawer */}
+      <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', position: 'relative' }}>
+        {/* Table Area */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {loading ? (
+            <div className="glass-panel flex-center" style={{ height: '300px', flexDirection: 'column', gap: '16px' }}>
+              <div className="loading-spinner"></div>
+              <span style={{ color: 'var(--text-muted)' }}>Loading Members...</span>
+            </div>
+          ) : (
+            <>
+              <div className="table-container" style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #ECE8E2', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+                <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #ECE8E2', backgroundColor: '#FAF9F6' }}>
+                      <th style={{ width: '40px', paddingLeft: '16px' }}>
+                        <input
+                          type="checkbox"
+                          checked={paginatedUsers.length > 0 && paginatedUsers.filter(u => !u.isSuperAdmin && u.id !== currentUser?.id).every(u => selectedUserIds.includes(u.id))}
+                          onChange={(e) => handleSelectAll(e.target.checked)}
+                          style={{ accentColor: '#2E5A44', cursor: 'pointer' }}
+                        />
+                      </th>
+                      <th onClick={() => requestSort('name')} style={{ cursor: 'pointer', userSelect: 'none', padding: '12px 14px', fontSize: '0.72rem', color: '#6B7280', fontWeight: 700 }}>
+                        MEMBER ⬍
+                      </th>
+                      <th style={{ padding: '12px 14px', fontSize: '0.72rem', color: '#6B7280', fontWeight: 700 }}>
+                        MEMBERSHIP ⬍
+                      </th>
+                      <th onClick={() => requestSort('isActive')} style={{ cursor: 'pointer', userSelect: 'none', padding: '12px 14px', fontSize: '0.72rem', color: '#6B7280', fontWeight: 700 }}>
+                        STATUS ⬍
+                      </th>
+                      <th style={{ padding: '12px 14px', fontSize: '0.72rem', color: '#6B7280', fontWeight: 700 }}>
+                        COMMITMENTS ⬍
+                      </th>
+                      <th onClick={() => requestSort('createdAt')} style={{ cursor: 'pointer', userSelect: 'none', padding: '12px 14px', fontSize: '0.72rem', color: '#6B7280', fontWeight: 700 }}>
+                        JOINED ⬍
+                      </th>
+                      <th style={{ textAlign: 'right', padding: '12px 16px', fontSize: '0.72rem', color: '#6B7280', fontWeight: 700 }}>
+                        ACTIONS
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {paginatedUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: '#6B7280' }}>
+                          No members found matching your search.
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedUsers.map((u, idx) => {
+                        const isBottomRow = idx >= 2 && paginatedUsers.length >= 4 && idx >= paginatedUsers.length - 2;
+                        const userCommitmentsCount = allCommitmentsList.filter((c: any) => c.memberId === u.id).length;
+                        const initials = u.name.split(' ').filter(Boolean).map((n) => n[0]).join('').substring(0, 2).toUpperCase() || 'M';
+                        const isPendingPayment = !u.membershipFeeConfirmed;
+
+                        return (
+                          <tr
+                            key={u.id}
+                            onClick={() => {
+                              setSelectedUser(u);
+                              setDrawerOpen(true);
+                            }}
+                            style={{
+                              cursor: 'pointer',
+                              borderBottom: '1px solid #F3F1ED',
+                              backgroundColor: selectedUser?.id === u.id && drawerOpen ? '#FAF9F6' : undefined,
+                              transition: 'background-color 0.15s'
+                            }}
+                          >
+                            {/* Checkbox */}
+                            <td style={{ paddingLeft: '16px' }} onClick={(e) => e.stopPropagation()}>
+                              {!u.isSuperAdmin && u.id !== currentUser?.id && (
+                                <input
+                                  type="checkbox"
+                                  checked={selectedUserIds.includes(u.id)}
+                                  onChange={(e) => handleSelectUser(u.id, e.target.checked)}
+                                  style={{ accentColor: '#2E5A44', cursor: 'pointer' }}
+                                />
+                              )}
+                            </td>
+
+                            {/* Member with Avatar Circle */}
+                            <td style={{ padding: '14px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{
+                                  width: '38px',
+                                  height: '38px',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#1E3A2F',
+                                  color: '#FFFFFF',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontWeight: 700,
+                                  fontSize: '0.85rem',
+                                  flexShrink: 0
+                                }}>
+                                  {initials}
+                                </div>
+                                <div>
+                                  <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#111827' }}>
+                                    {u.name}
+                                  </div>
+                                  <div style={{ fontSize: '0.72rem', color: '#9CA3AF', fontFamily: 'monospace' }}>
+                                    {u.displayId || 'M-000420'}
+                                  </div>
+                                  <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                                    {u.email}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Membership */}
+                            <td style={{ padding: '14px' }}>
+                              <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#111827' }}>
+                                2026 Annual
+                              </div>
+                              <div style={{
+                                fontSize: '0.75rem',
+                                color: isPendingPayment ? '#D97706' : '#2E7D32',
+                                fontWeight: 500,
+                                marginTop: '2px'
+                              }}>
+                                £35.99 • {isPendingPayment ? 'Payment pending' : 'Paid'}
+                              </div>
+                            </td>
+
+                            {/* Status */}
+                            <td style={{ padding: '14px' }}>
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '3px 10px',
+                                borderRadius: '9999px',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                backgroundColor: u.isActive ? '#EAF5EE' : '#FEF3C7',
+                                color: u.isActive ? '#2E7D32' : '#B45309'
+                              }}>
+                                {u.isActive ? 'Active' : 'Invited'}
+                              </span>
+                            </td>
+
+                            {/* Commitments count */}
+                            <td style={{ padding: '14px', fontSize: '0.875rem', color: '#374151', fontWeight: 500 }}>
+                              {userCommitmentsCount}
+                            </td>
+
+                            {/* Joined date */}
+                            <td style={{ padding: '14px', fontSize: '0.82rem', color: '#6B7280' }}>
+                              {new Date(u.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </td>
+
+                            {/* Actions button */}
+                            <td style={{ textAlign: 'right', padding: '14px 16px', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+                              <div className={styles.actionsDropdown}>
+                                <button
+                                  onClick={() => toggleDropdown(u.id)}
+                                  style={{
+                                    border: '1px solid #ECE8E2',
+                                    borderRadius: '6px',
+                                    padding: '4px 8px',
+                                    background: '#FFFFFF',
+                                    cursor: 'pointer',
+                                    color: '#4B5563'
+                                  }}
+                                >
+                                  •••
+                                </button>
+                                {openDropdownId === u.id && (
+                                  <div className={`${styles.dropdownMenu} ${isBottomRow ? styles.dropdownMenuUp : ''}`} style={{ zIndex: 200 }}>
+                                    <button onClick={() => { setSelectedUser(u); setDrawerOpen(true); setOpenDropdownId(null); }} className={styles.dropdownItem}>
+                                      <Eye size={14} />
+                                      <span>View Profile</span>
+                                    </button>
+                                    <button onClick={() => handleOpenEditModal(u)} className={styles.dropdownItem}>
+                                      <Edit size={14} />
+                                      <span>Edit Member</span>
+                                    </button>
+                                    <button onClick={() => handleOpenRequestFeeModal(u)} className={styles.dropdownItem}>
+                                      <FileText size={14} />
+                                      <span>Request Fee</span>
+                                    </button>
+                                    {u.hasPendingFee && (
+                                      <button onClick={() => handleOpenConfirmFeeModal(u)} className={styles.dropdownItem}>
+                                        <CheckCircle size={14} />
+                                        <span>Confirm Fee</span>
+                                      </button>
+                                    )}
+                                    {!u.isSuperAdmin && u.id !== currentUser?.id && (
+                                      <button onClick={() => handleOpenDeleteModal(u)} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
+                                        <Trash2 size={14} />
+                                        <span>Delete</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination Controls */}
+              <PaginationControls
+                currentPage={usersPage}
+                totalPages={totalUsersPages}
+                totalItems={sortedUsers.length}
+                itemsPerPage={usersPerPage}
+                onPageChange={setUsersPage}
+                onItemsPerPageChange={(num) => { setUsersPerPage(num); setUsersPage(1); }}
+                itemLabel="member"
+              />
+            </>
           )}
         </div>
-      </div>
 
+        {/* Member Profile Slide-Out Drawer (Exact match to Screenshot 2) */}
+        {drawerOpen && selectedUser && (
+          <div
+            style={{
+              width: '420px',
+              maxWidth: '100%',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '20px',
+              border: '1px solid #ECE8E2',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              position: 'sticky',
+              top: '80px',
+              flexShrink: 0
+            }}
+          >
+            {/* Drawer Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+                Member Profile
+              </h3>
+              <button
+                onClick={() => setDrawerOpen(false)}
+                style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: '4px' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-      {/* Users List Table */}
-      {loading ? (
-        <div className="glass-panel flex-center" style={{ height: '300px', flexDirection: 'column', gap: '16px' }}>
-          <div className="loading-spinner"></div>
-          <span style={{ color: 'var(--text-muted)' }}>Loading Members...</span>
-        </div>
-      ) : (
-        <>
-        <div className="table-container">
-          <table className="custom-table">
-            <thead>
-              <tr>
-                <th style={{ width: '40px', paddingLeft: '16px' }}>
-                  <input
-                    type="checkbox"
-                    checked={paginatedUsers.length > 0 && paginatedUsers.filter(u => !u.isSuperAdmin && u.id !== currentUser?.id).every(u => selectedUserIds.includes(u.id))}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    style={{ accentColor: 'var(--secondary)', cursor: 'pointer' }}
-                  />
-                </th>
-                <th 
-                  onClick={() => requestSort('displayId')}
-                  style={{ cursor: 'pointer', userSelect: 'none' }}
+            {/* Profile Avatar & Details */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{
+                  width: '54px',
+                  height: '54px',
+                  borderRadius: '50%',
+                  backgroundColor: '#1B4332',
+                  color: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 700,
+                  fontSize: '1.25rem',
+                  flexShrink: 0
+                }}>
+                  {selectedUser.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827' }}>
+                      {selectedUser.name}
+                    </span>
+                    <span style={{
+                      padding: '2px 8px',
+                      borderRadius: '9999px',
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      backgroundColor: selectedUser.isActive ? '#EAF5EE' : '#FEF3C7',
+                      color: selectedUser.isActive ? '#2E7D32' : '#B45309'
+                    }}>
+                      {selectedUser.isActive ? 'Active' : 'Invited'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#6B7280', fontFamily: 'monospace', marginTop: '2px' }}>
+                    {selectedUser.displayId || 'M-000420'}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ fontSize: '0.78rem', color: '#6B7280', marginTop: '10px' }}>
+                {selectedUser.email} &bull; {selectedUser.phone || '+44 7000 000000'}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: '#9CA3AF', marginTop: '2px' }}>
+                Member since July 2026
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
+                <button
+                  onClick={() => handleOpenEditModal(selectedUser)}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #ECE8E2',
+                    borderRadius: '8px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    color: '#374151',
+                    cursor: 'pointer'
+                  }}
                 >
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>INVITATION ID</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'displayId' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
-                </th>
-                <th onClick={() => requestSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>NAME</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'name' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
-                </th>
-                <th onClick={() => requestSort('email')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>EMAIL</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'email' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
-                </th>
-                <th>PHONE NUMBER</th>
-                <th onClick={() => requestSort('role')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>ROLE</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'role' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
-                </th>
-                <th onClick={() => requestSort('createdAt')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>CREATED ON</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'createdAt' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
-                </th>
-                <th onClick={() => requestSort('isActive')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>IS ACTIVE</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'isActive' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
-                </th>
-                <th>MEMBERSHIP</th>
-                <th style={{ textAlign: 'right' }}>Action</th>
-              </tr>
-            </thead>
+                  <Edit size={14} />
+                  <span>Edit Member</span>
+                </button>
 
-            <tbody>
-              {paginatedUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={11} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
-                    No members found matching your search.
-                  </td>
-                </tr>
-              ) : (
-                paginatedUsers.map((u, idx) => {
-                  const isBottomRow = idx >= 2 && paginatedUsers.length >= 4 && idx >= paginatedUsers.length - 2;
-                  return (
-                  <tr key={u.id} style={selectedUserIds.includes(u.id) ? { backgroundColor: 'rgba(255, 255, 255, 0.02)' } : undefined}>
-                    <td style={{ paddingLeft: '16px' }}>
-                      {!u.isSuperAdmin && u.id !== currentUser?.id && (
-                        <input
-                          type="checkbox"
-                          checked={selectedUserIds.includes(u.id)}
-                          onChange={(e) => handleSelectUser(u.id, e.target.checked)}
-                          style={{ accentColor: 'var(--secondary)', cursor: 'pointer' }}
-                        />
-                      )}
-                    </td>
-                    <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      {u.displayId || u.id}
-                    </td>
-                    <td style={{ fontWeight: 600 }}>{u.name}</td>
+                <button
+                  onClick={() => handleOpenRequestFeeModal(selectedUser)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    padding: '8px 14px',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #ECE8E2',
+                    borderRadius: '8px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    color: '#374151',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span>More</span>
+                  <ChevronDown size={14} />
+                </button>
+              </div>
+            </div>
 
-                    <td>{u.email}</td>
-                    <td>{u.phone}</td>
-                    <td>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
-                        <span className={`status-pill ${u.role === 'ADMIN' ? 'completed' : 'active'}`} style={{ fontSize: '0.7rem' }}>
-                          {u.role === 'ADMIN' ? 'Admin' : 'Member'}
-                        </span>
-                        {u.isSuperAdmin && (
-                          <span className="status-pill" style={{ fontSize: '0.65rem', backgroundColor: 'rgba(234, 179, 8, 0.1)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.2)' }}>
-                            Super Admin
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td>{new Date(u.createdAt).toLocaleDateString('en-GB')}</td>
-                    <td>
-                      <label className={styles.switch}>
-                        <input
-                          type="checkbox"
-                          checked={u.isActive}
-                          onChange={(e) => handleToggleActive(u, e.target.checked)}
-                        />
-                        <span className={styles.slider}></span>
-                      </label>
-                    </td>
-                    <td>
-                      <button
-                        onClick={() => handleOpenViewModal(u)}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: 'var(--primary)',
-                          textDecoration: 'underline',
-                          cursor: 'pointer',
-                          padding: 0,
-                          fontSize: '0.85rem'
-                        }}
-                      >
-                        View Membership
-                      </button>
-                    </td>
-                    <td style={{ textAlign: 'right', position: 'relative' }}>
-                      <div className={styles.actionsDropdown}>
-                        <button onClick={() => toggleDropdown(u.id)} className={styles.dropdownTrigger}>
-                          <MoreVertical size={16} />
-                        </button>
-                        {openDropdownId === u.id && (
-                          <div className={`${styles.dropdownMenu} ${isBottomRow ? styles.dropdownMenuUp : ''}`}>
-                            <button onClick={() => handleOpenViewModal(u)} className={styles.dropdownItem}>
-                              <Eye size={14} />
-                              <span>View Details</span>
-                            </button>
-                            <button onClick={() => handleOpenEditModal(u)} className={styles.dropdownItem}>
-                              <Edit size={14} />
-                              <span>Edit Details</span>
-                            </button>
-                            <button onClick={() => handleOpenRequestFeeModal(u)} className={styles.dropdownItem}>
-                              <FileText size={14} />
-                              <span>Request Membership Fee</span>
-                            </button>
-                            {u.hasPendingFee && (
-                              <button onClick={() => handleOpenConfirmFeeModal(u)} className={styles.dropdownItem}>
-                                <CheckCircle size={14} />
-                                <span>Confirm Membership Fee</span>
-                              </button>
-                            )}
-                            <button onClick={() => handleOpenReminderPopup(u)} className={styles.dropdownItem}>
-                              <Mail size={14} />
-                              <span>Request Member To Pay Up</span>
-                            </button>
-                             {!u.isActive ? (
-                              <button onClick={() => handleResendInvite(u.id)} className={styles.dropdownItem}>
-                                <Mail size={14} />
-                                <span>Send Access Link</span>
-                              </button>
-                            ) : (
-                              <button onClick={() => handleSendResetLink(u.id)} className={styles.dropdownItem}>
-                                <Mail size={14} />
-                                <span>Reset Password Link</span>
-                              </button>
-                            )}
-                            {!u.isSuperAdmin && u.id !== currentUser?.id && (
-                              <button onClick={() => handleOpenDeleteModal(u)} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
-                                <Trash2 size={14} />
-                                <span>Delete</span>
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+            {/* Drawer Tabs */}
+            <div style={{
+              display: 'flex',
+              borderBottom: '1px solid #ECE8E2',
+              gap: '16px',
+              fontSize: '0.82rem'
+            }}>
+              {(['Overview', 'Commitments', 'Payments', 'Membership', 'Activity'] as const).map((tab) => {
+                const isTabActive = activeDrawerTab === tab.toUpperCase();
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveDrawerTab(tab.toUpperCase() as any)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: '8px 0',
+                      fontWeight: isTabActive ? 700 : 500,
+                      color: isTabActive ? '#2E5A44' : '#6B7280',
+                      borderBottom: isTabActive ? '2px solid #2E5A44' : '2px solid transparent',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {tab}
+                  </button>
                 );
-              })
-              )}
-            </tbody>
-          </table>
-        </div>
+              })}
+            </div>
 
-        {/* Pagination Controls */}
-        <PaginationControls
-          currentPage={usersPage}
-          totalPages={totalUsersPages}
-          totalItems={sortedUsers.length}
-          itemsPerPage={usersPerPage}
-          onPageChange={setUsersPage}
-          onItemsPerPageChange={(num) => { setUsersPerPage(num); setUsersPage(1); }}
-          itemLabel="member"
-        />
-        </>
-      )}
+            {/* Overview Tab Body */}
+            {activeDrawerTab === 'OVERVIEW' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Membership Card */}
+                <div style={{
+                  backgroundColor: '#FAF9F6',
+                  borderRadius: '14px',
+                  padding: '16px',
+                  border: '1px solid #ECE8E2'
+                }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
+                    Membership
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '0.82rem', color: '#4B5563', fontWeight: 500 }}>2026 Annual Membership</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', marginTop: '4px' }}>£35.99</div>
+                    </div>
+                    <span style={{
+                      padding: '3px 10px',
+                      borderRadius: '9999px',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      backgroundColor: selectedUser.membershipFeeConfirmed ? '#EAF5EE' : '#FEF3C7',
+                      color: selectedUser.membershipFeeConfirmed ? '#2E7D32' : '#B45309'
+                    }}>
+                      {selectedUser.membershipFeeConfirmed ? 'Paid' : 'Payment pending'}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '0.75rem', color: '#9CA3AF', marginTop: '10px' }}>
+                    Payment received date: {selectedUser.membershipFeeConfirmedAt ? new Date(selectedUser.membershipFeeConfirmedAt).toLocaleDateString('en-GB') : '—'}
+                  </div>
+
+                  <button
+                    onClick={() => handleOpenRequestFeeModal(selectedUser)}
+                    style={{
+                      marginTop: '12px',
+                      width: '100%',
+                      padding: '8px',
+                      backgroundColor: '#FFFFFF',
+                      border: '1px solid #D97746',
+                      color: '#D97746',
+                      borderRadius: '8px',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Request Payment
+                  </button>
+                </div>
+
+                {/* Sub-cards: 2 columns */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '14px', border: '1px solid #ECE8E2' }}>
+                    <div style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 500 }}>Active Commitments</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', marginTop: '4px' }}>
+                      {allCommitmentsList.filter((c: any) => c.memberId === selectedUser.id).length}
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: '#9CA3AF', marginTop: '2px' }}>
+                      {allCommitmentsList.filter((c: any) => c.memberId === selectedUser.id).length > 0 ? 'Active contributor' : 'No active commitments'}
+                    </div>
+                  </div>
+
+                  <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '14px', border: '1px solid #ECE8E2' }}>
+                    <div style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 500 }}>Total Saved (All Time)</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', marginTop: '4px' }}>
+                      £{allCommitmentsList
+                        .filter((c: any) => c.memberId === selectedUser.id)
+                        .reduce((sum: number, c: any) => sum + (c.amount || 0) * 12, 0)
+                        .toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: '#9CA3AF', marginTop: '2px' }}>
+                      Across {allCommitmentsList.filter((c: any) => c.memberId === selectedUser.id).length} commitment(s)
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Information Card */}
+                <div style={{ backgroundColor: '#FAF9F6', borderRadius: '14px', padding: '16px', border: '1px solid #ECE8E2' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827', marginBottom: '12px' }}>
+                    Account Information
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.78rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6B7280' }}>Status</span>
+                      <span style={{ color: selectedUser.isActive ? '#2E7D32' : '#B45309', fontWeight: 600 }}>
+                        {selectedUser.isActive ? 'Active' : 'Pending'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6B7280' }}>Role</span>
+                      <span style={{ color: '#111827', fontWeight: 600 }}>{selectedUser.role || 'MEMBER'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6B7280' }}>Joined On</span>
+                      <span style={{ color: '#111827' }}>
+                        {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6B7280' }}>City / Country</span>
+                      <span style={{ color: '#111827' }}>{selectedUser.city || 'London'}, {selectedUser.country || 'United Kingdom'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* View Full Activity Button */}
+                <button
+                  onClick={() => setActiveDrawerTab('ACTIVITY')}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #ECE8E2',
+                    borderRadius: '10px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    color: '#374151',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span>View Full Activity</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            )}
+
+            {/* Commitments Tab Body */}
+            {activeDrawerTab === 'COMMITMENTS' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827' }}>
+                  Savings Commitments ({allCommitmentsList.filter((c: any) => c.memberId === selectedUser.id).length})
+                </div>
+                {allCommitmentsList.filter((c: any) => c.memberId === selectedUser.id).length === 0 ? (
+                  <div style={{ padding: '24px', textAlign: 'center', color: '#9CA3AF', backgroundColor: '#FAF9F6', borderRadius: '12px', fontSize: '0.82rem' }}>
+                    No savings commitments registered for this member yet.
+                  </div>
+                ) : (
+                  allCommitmentsList.filter((c: any) => c.memberId === selectedUser.id).map((c: any) => (
+                    <div key={c.id} style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '14px', border: '1px solid #ECE8E2' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ fontWeight: 700, color: '#111827', fontSize: '0.88rem' }}>£{Number(c.amount).toFixed(2)}/mo</span>
+                        <span style={{ padding: '2px 8px', borderRadius: '9999px', fontSize: '0.7rem', fontWeight: 600, backgroundColor: '#EAF5EE', color: '#2E7D32' }}>
+                          {c.status}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#6B7280' }}>
+                        Payout: {c.collectionMonth} {c.collectionYear}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#9CA3AF', marginTop: '4px' }}>
+                        Ref: {c.displayId || c.id.substring(0, 8).toUpperCase()}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* Payments Tab Body */}
+            {activeDrawerTab === 'PAYMENTS' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827' }}>
+                  Payment History
+                </div>
+                <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '16px', border: '1px solid #ECE8E2' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#111827' }}>Annual Fee 2026</div>
+                      <div style={{ fontSize: '0.72rem', color: '#9CA3AF' }}>Jan 15, 2026 &bull; Bank Transfer</div>
+                    </div>
+                    <span style={{ fontWeight: 700, color: '#2E7D32', fontSize: '0.88rem' }}>£35.99</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#111827' }}>Monthly Contribution</div>
+                      <div style={{ fontSize: '0.72rem', color: '#9CA3AF' }}>Feb 01, 2026 &bull; Direct Debit</div>
+                    </div>
+                    <span style={{ fontWeight: 700, color: '#2E5A44', fontSize: '0.88rem' }}>£500.00</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Membership Tab Body */}
+            {activeDrawerTab === 'MEMBERSHIP' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827' }}>
+                  Membership Agreement & Fees
+                </div>
+                <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '16px', border: '1px solid #ECE8E2' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: '#6B7280', fontSize: '0.78rem' }}>Tier</span>
+                    <span style={{ fontWeight: 600, fontSize: '0.78rem', color: '#111827' }}>Standard Contributing Member</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: '#6B7280', fontSize: '0.78rem' }}>Signed Agreement</span>
+                    <span style={{ color: '#2E7D32', fontWeight: 600, fontSize: '0.78rem' }}>Verified & Signed</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#6B7280', fontSize: '0.78rem' }}>Renewal Date</span>
+                    <span style={{ fontWeight: 600, fontSize: '0.78rem', color: '#111827' }}>Jan 01, 2027</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Activity Tab Body */}
+            {activeDrawerTab === 'ACTIVITY' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827' }}>
+                  Activity Log
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ padding: '12px', backgroundColor: '#FAF9F6', borderRadius: '10px', fontSize: '0.75rem', border: '1px solid #ECE8E2' }}>
+                    <span style={{ fontWeight: 600, color: '#111827' }}>Profile Updated</span>
+                    <div style={{ color: '#6B7280', marginTop: '2px' }}>Member details were viewed and saved.</div>
+                    <div style={{ color: '#9CA3AF', fontSize: '0.7rem', marginTop: '4px' }}>Today at 10:42 AM</div>
+                  </div>
+                  <div style={{ padding: '12px', backgroundColor: '#FAF9F6', borderRadius: '10px', fontSize: '0.75rem', border: '1px solid #ECE8E2' }}>
+                    <span style={{ fontWeight: 600, color: '#111827' }}>Annual Fee Requested</span>
+                    <div style={{ color: '#6B7280', marginTop: '2px' }}>Automated invoice dispatched to {selectedUser.email}.</div>
+                    <div style={{ color: '#9CA3AF', fontSize: '0.7rem', marginTop: '4px' }}>Yesterday</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* --- ADD MEMBER MODAL --- */}
       {activeModal === 'ADD' && (

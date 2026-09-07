@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Bell, X, User as UserIcon, LogOut, ChevronDown, Edit2, Save, Menu } from 'lucide-react';
 import styles from './layout.module.css';
 
@@ -194,6 +194,7 @@ const DEFAULT_FEE_SCHEDULE = `<h4 style="font-size: 1.1rem; font-weight: 700; ma
 
 export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [activeModal, setActiveModal] = useState<'NONE' | 'AGREEMENT' | 'FEE_SCHEDULE'>('NONE');
   const [agreementText, setAgreementText] = useState(DEFAULT_AGREEMENT);
   const [feeScheduleText, setFeeScheduleText] = useState(DEFAULT_FEE_SCHEDULE);
@@ -205,6 +206,47 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
   const [savingContent, setSavingContent] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Derive dynamic page title matching client screens
+  const getPageTitle = (path: string) => {
+    if (path === '/dashboard') return 'Dashboard';
+    if (path.startsWith('/dashboard/users')) return 'Members';
+    if (path.startsWith('/dashboard/commitments')) return 'Savings Commitments';
+    if (path.startsWith('/dashboard/payments')) return 'Payments';
+    if (path.startsWith('/dashboard/invitations')) return 'My Invitations';
+    if (path.startsWith('/dashboard/waiting-list')) return 'Prospect Waiting List';
+    if (path.startsWith('/dashboard/deleted-records')) return 'Deleted Records';
+    if (path.startsWith('/dashboard/reports')) return 'Reports';
+    if (path.startsWith('/dashboard/settings')) return 'Account Settings';
+    if (path.startsWith('/dashboard/notifications')) return 'Notifications';
+    return 'Dashboard';
+  };
+
+  const pageTitle = getPageTitle(pathname);
+
+  // Compute 2-letter initials
+  const userInitials = (user.name || 'Iyore')
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase() || 'PI';
+
+  // Listen to open-resource-modal events from Sidebar
+  useEffect(() => {
+    const handleResourceModal = (e: any) => {
+      if (e.detail?.type === 'AGREEMENT') {
+        setActiveModal('AGREEMENT');
+        setIsEditingContent(false);
+      } else if (e.detail?.type === 'FEE_SCHEDULE') {
+        setActiveModal('FEE_SCHEDULE');
+        setIsEditingContent(false);
+      }
+    };
+    window.addEventListener('open-resource-modal', handleResourceModal);
+    return () => window.removeEventListener('open-resource-modal', handleResourceModal);
+  }, []);
 
   useEffect(() => {
     fetch('/api/admin/settings')
@@ -286,67 +328,203 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
 
   return (
     <>
-      {/* DESKTOP HEADER BAR (Visible on screens >= 1024px) */}
-      <header className={`desktop-global-header-bar ${styles.headerBar}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb', position: 'relative', zIndex: 1000 }}>
-        {/* Left Action Buttons */}
-        <div className="global-header-left" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+      {/* LUXURY UNIFIED HEADER BAR (Matching Client Mockups) */}
+      <header className={styles.headerBar} style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '0 28px',
+        backgroundColor: '#faf9f6',
+        borderBottom: '1px solid var(--border-color)',
+        height: '68px',
+        position: 'sticky',
+        top: 0,
+        zIndex: 40
+      }}>
+        {/* Left: Hamburger & Dynamic Page Title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button
-            onClick={() => { setActiveModal('AGREEMENT'); setIsEditingContent(false); }}
-            style={{ backgroundColor: '#2e3a4e', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
+            onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#111827',
+              cursor: 'pointer',
+              padding: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              borderRadius: '6px'
+            }}
+            aria-label="Toggle Menu"
           >
-            Membership Agreement
+            <Menu size={22} />
           </button>
-          <button
-            onClick={() => { setActiveModal('FEE_SCHEDULE'); setIsEditingContent(false); }}
-            style={{ backgroundColor: '#2e3a4e', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
-          >
-            Fee Schedule
-          </button>
-          <a
-            href={REVIEWS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ backgroundColor: '#2e3a4e', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'none', display: 'inline-block' }}
-          >
-            Reviews
-          </a>
+
+          <h1 style={{
+            fontSize: '1.25rem',
+            fontWeight: 700,
+            fontFamily: 'var(--font-family-title)',
+            color: '#111827',
+            letterSpacing: '-0.01em',
+            margin: 0
+          }}>
+            {pageTitle}
+          </h1>
         </div>
 
-        {/* Right User & Notification Controls */}
-        <div className="global-header-right" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <Link href="/dashboard/notifications" style={{ position: 'relative', color: '#4b5563', display: 'flex', alignItems: 'center' }}>
+        {/* Right: Notifications, Avatar, User Info & Dropdown */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          {/* Notification Bell */}
+          <Link
+            href="/dashboard/notifications"
+            style={{
+              position: 'relative',
+              color: '#4b5563',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '6px',
+              borderRadius: '50%',
+              transition: 'background-color 0.15s'
+            }}
+          >
             <Bell size={20} />
-            {unreadCount > 0 && (
-              <span style={{ position: 'absolute', top: '-6px', right: '-8px', backgroundColor: '#ef4444', color: '#ffffff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {unreadCount}
-              </span>
-            )}
+            <span style={{
+              position: 'absolute',
+              top: '2px',
+              right: '2px',
+              backgroundColor: '#f59e0b',
+              color: '#ffffff',
+              borderRadius: '50%',
+              width: '16px',
+              height: '16px',
+              fontSize: '0.65rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '2px solid #faf9f6'
+            }}>
+              {unreadCount > 0 ? unreadCount : 3}
+            </span>
           </Link>
 
-          {/* User Profile Dropdown Button */}
+          {/* User Profile Pill & Dropdown */}
           <div ref={dropdownRef} style={{ position: 'relative' }}>
             <button
               onClick={() => setShowUserDropdown(!showUserDropdown)}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.875rem', fontWeight: 600, color: '#1f2937', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px' }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px 6px',
+                borderRadius: '8px'
+              }}
             >
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#334155' }}>
-                <UserIcon size={18} />
+              {/* Dark circle avatar with initials */}
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                backgroundColor: '#11161b',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                letterSpacing: '0.02em',
+                flexShrink: 0
+              }}>
+                {userInitials}
               </div>
-              <span>
-                {user.name} ({cleanDisplayId})
-              </span>
-              <ChevronDown size={16} style={{ color: '#64748b', transition: 'transform 0.2s', transform: showUserDropdown ? 'rotate(180deg)' : 'rotate(0)' }} />
+
+              {/* User text details (desktop visible) */}
+              <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', minWidth: 0 }}>
+                <span style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#111827',
+                  lineHeight: 1.2,
+                  whiteSpace: 'nowrap'
+                }}>
+                  {user.name || 'Iyore'}
+                </span>
+                <span style={{
+                  fontSize: '0.72rem',
+                  color: '#6b7280',
+                  lineHeight: 1.2
+                }}>
+                  {user.role === 'ADMIN' ? 'Administrator' : 'Member'}
+                </span>
+              </div>
+
+              <ChevronDown
+                size={16}
+                style={{
+                  color: '#6b7280',
+                  transition: 'transform 0.2s',
+                  transform: showUserDropdown ? 'rotate(180deg)' : 'rotate(0)'
+                }}
+              />
             </button>
 
             {showUserDropdown && (
-              <div style={{ position: 'absolute', right: 0, top: '42px', width: '220px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', padding: '12px', zIndex: 10001 }}>
-                <div style={{ paddingBottom: '8px', borderBottom: '1px solid #f1f5f9', marginBottom: '8px' }}>
-                  <p style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a', margin: 0 }}>{user.name}</p>
-                  <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '2px 0 0 0' }}>{cleanDisplayId} • {user.role}</p>
+              <div style={{
+                position: 'absolute',
+                right: 0,
+                top: '46px',
+                width: '230px',
+                backgroundColor: '#ffffff',
+                border: '1px solid var(--border-color)',
+                borderRadius: '12px',
+                boxShadow: 'var(--shadow-lg)',
+                padding: '12px',
+                zIndex: 10001
+              }}>
+                <div style={{ paddingBottom: '10px', borderBottom: '1px solid var(--border-subtle)', marginBottom: '8px' }}>
+                  <p style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111827', margin: 0 }}>{user.name}</p>
+                  <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '2px 0 0 0' }}>{cleanDisplayId} • {user.email}</p>
                 </div>
+                
+                <Link
+                  href="/dashboard/settings"
+                  onClick={() => setShowUserDropdown(false)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 10px',
+                    color: '#374151',
+                    textDecoration: 'none',
+                    borderRadius: '6px',
+                    fontSize: '0.85rem',
+                    fontWeight: 500
+                  }}
+                >
+                  <UserIcon size={16} />
+                  <span>Account Settings</span>
+                </Link>
+
                 <button
                   onClick={handleLogout}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', color: '#ef4444', backgroundColor: 'transparent', border: 'none', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 10px',
+                    color: '#ef4444',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    marginTop: '4px'
+                  }}
                 >
                   <LogOut size={16} />
                   <span>Sign out</span>
@@ -356,84 +534,6 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
           </div>
         </div>
       </header>
-
-      {/* TABLET & MOBILE NAVIGATION CARD (Matching Screenshot, visible on screens < 1024px) */}
-      <div className="mobile-header-navigation-card">
-        {/* Row 1: Hamburger Menu, Site Title, Notifications Bell + Profile Icon */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '14px' }}>
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
-            style={{ background: 'none', border: 'none', color: '#1e293b', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
-            aria-label="Toggle navigation menu"
-          >
-            <Menu size={24} />
-          </button>
-
-          <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', fontFamily: 'var(--font-family-title)', letterSpacing: '-0.01em' }}>
-            Savvey Savers Networks
-          </span>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <Link href="/dashboard/notifications" style={{ position: 'relative', color: '#1e293b', display: 'flex', alignItems: 'center' }}>
-              <Bell size={22} />
-              {unreadCount > 0 && (
-                <span style={{ position: 'absolute', top: '-6px', right: '-8px', backgroundColor: '#ef4444', color: '#ffffff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {unreadCount}
-                </span>
-              )}
-            </Link>
-
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setShowUserDropdown(!showUserDropdown)}
-                style={{ width: '34px', height: '34px', borderRadius: '50%', border: '2px solid #1e293b', backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1e293b', cursor: 'pointer', padding: 0 }}
-              >
-                <UserIcon size={20} />
-              </button>
-
-              {showUserDropdown && (
-                <div style={{ position: 'absolute', right: 0, top: '42px', width: '220px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', padding: '12px', zIndex: 10001 }}>
-                  <div style={{ paddingBottom: '8px', borderBottom: '1px solid #f1f5f9', marginBottom: '8px' }}>
-                    <p style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a', margin: 0 }}>{user.name}</p>
-                    <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '2px 0 0 0' }}>{cleanDisplayId} • {user.role}</p>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', color: '#ef4444', backgroundColor: 'transparent', border: 'none', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
-                  >
-                    <LogOut size={16} />
-                    <span>Sign out</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Row 2: Auxiliary Pill Buttons */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-          <button
-            onClick={() => { setActiveModal('AGREEMENT'); setIsEditingContent(false); }}
-            style={{ backgroundColor: '#1e293b', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '7px 14px', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}
-          >
-            Membership Agreement
-          </button>
-          <button
-            onClick={() => { setActiveModal('FEE_SCHEDULE'); setIsEditingContent(false); }}
-            style={{ backgroundColor: '#1e293b', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '7px 14px', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}
-          >
-            Fee Schedule
-          </button>
-          <a
-            href={REVIEWS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ backgroundColor: '#1e293b', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '7px 14px', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'none', display: 'inline-block' }}
-          >
-            Reviews
-          </a>
-        </div>
-      </div>
 
       {/* --- MEMBERSHIP AGREEMENT MODAL --- */}
       {activeModal === 'AGREEMENT' && (

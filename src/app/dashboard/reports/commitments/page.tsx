@@ -16,6 +16,7 @@ interface Commitment {
   endDate: string;
   status: 'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'NOT_YET_STARTED';
   payments?: Payment[];
+  harvestAmount?: number | null;
   harvestReleasedAt?: string | null;
   createdAt: string;
 }

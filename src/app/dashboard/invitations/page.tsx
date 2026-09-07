@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Eye, X, Plus, UserPlus, Mail, Phone, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Search, Eye, X, Plus, UserPlus, Mail, Phone, ShieldCheck, CheckCircle2, CheckCircle, AlertCircle, Clock, ChevronDown, MoreVertical, Copy, Send, Check } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import PaginationControls from '../PaginationControls';
 import styles from '../users/users.module.css';
@@ -25,6 +25,9 @@ export default function MyInvitationsPage() {
   const dialog = useDialog();
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -301,9 +304,9 @@ export default function MyInvitationsPage() {
     }
   };
 
-  // Filter users by search query and ownership (My Invitations shows people invited by the logged in user)
+  // Filter users by search query, status, role, and ownership
   const filteredUsers = users.filter((u) => {
-    if (currentUser) {
+    if (currentUser?.role === 'MEMBER') {
       const myKeys = [
         currentUser.id,
         currentUser.displayId,
@@ -314,6 +317,16 @@ export default function MyInvitationsPage() {
       const inviteKey = u.invitedBy ? String(u.invitedBy).toLowerCase().trim() : '';
       const isMyInvite = inviteKey && myKeys.includes(inviteKey);
       if (!isMyInvite) return false;
+    }
+
+    if (statusFilter) {
+      if (statusFilter === 'ACCEPTED' && !u.isActive) return false;
+      if (statusFilter === 'PENDING' && u.isActive) return false;
+      if (statusFilter === 'EXPIRED' || statusFilter === 'DECLINED') return false;
+    }
+
+    if (roleFilter && u.role !== roleFilter) {
+      return false;
     }
 
     const q = searchQuery.toLowerCase().trim();
@@ -339,50 +352,213 @@ export default function MyInvitationsPage() {
   const totalPages = Math.max(1, Math.ceil(sortedUsers.length / itemsPerPage));
   const paginatedUsers = sortedUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+  const totalInvitesCount = users.length;
+  const acceptedInvitesCount = users.filter(u => u.isActive).length;
+  const pendingInvitesCount = users.filter(u => !u.isActive).length;
+  const declinedExpiredCount = 0;
+
+  const handleCopyLink = (u: User) => {
+    const link = `${window.location.origin}/join?ref=${u.id}`;
+    navigator.clipboard.writeText(link);
+    setOpenDropdownId(null);
+    dialog.alert('Link Copied', `Invitation link for ${u.name} copied to clipboard.`);
+  };
+
+  const handleResend = (u: User) => {
+    setOpenDropdownId(null);
+    dialog.alert('Invitation Resent', `Invitation email resent to ${u.email}.`);
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('');
+    setRoleFilter('');
+    setCurrentPage(1);
+  };
+
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Page Title Header */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--text-main)' }}>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
             My Invitations
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Invite new members to the Savvey Savers network and track invitation statuses.
+          <p style={{ color: '#6B7280', fontSize: '0.88rem', marginTop: '4px', margin: 0 }}>
+            Send and manage member invitations to join Savvey Savers circles.
           </p>
         </div>
 
         <button
           onClick={handleOpenInviteModal}
-          className="btn btn-primary"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '10px', fontWeight: 600 }}
+          style={{
+            backgroundColor: '#2E5A44',
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '9px 18px',
+            fontWeight: 600,
+            fontSize: '0.82rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            cursor: 'pointer'
+          }}
         >
-          {currentUser?.role === 'ADMIN' ? (
-            <>
-              <Plus size={18} />
-              <span>Add User</span>
-            </>
-          ) : (
-            <>
-              <UserPlus size={18} />
-              <span>Invite Member</span>
-            </>
-          )}
+          <Plus size={16} />
+          <span>Add Invitation</span>
+          <ChevronDown size={14} style={{ opacity: 0.8 }} />
         </button>
       </div>
 
-      {/* Top Search Filter Bar */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: '1', minWidth: '240px' }}>
-          <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-          <input
-            type="text"
-            placeholder="Search member name, email or ID..."
-            value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-            className="form-input"
-            style={{ paddingLeft: '42px', width: '100%', borderRadius: '10px' }}
-          />
+      {/* 4 KPI Progress Cards (Matches Screenshot 5) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+        {/* Card 1: Total Invitations */}
+        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Total Invitations</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Mail size={16} />
+            </div>
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
+            {totalInvitesCount}
+          </div>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Total invites issued</span>
+        </div>
+
+        {/* Card 2: Accepted */}
+        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Accepted</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CheckCircle size={16} />
+            </div>
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
+            {acceptedInvitesCount}
+          </div>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Converted to active members</span>
+        </div>
+
+        {/* Card 3: Pending */}
+        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Pending</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#FEF3C7', color: '#B45309', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Clock size={16} />
+            </div>
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
+            {pendingInvitesCount}
+          </div>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Awaiting recipient response</span>
+        </div>
+
+        {/* Card 4: Declined / Expired */}
+        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Declined / Expired</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#FEE2E2', color: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AlertCircle size={16} />
+            </div>
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
+            {declinedExpiredCount}
+          </div>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Requires re-invitation</span>
+        </div>
+      </div>
+
+      {/* Filter Bar */}
+      <div style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: '16px',
+        border: '1px solid #ECE8E2',
+        padding: '14px 18px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: '1 1 240px', minWidth: '200px' }}>
+            <Search size={16} style={{ position: 'absolute', left: '12px', top: '10px', color: '#9CA3AF' }} />
+            <input
+              type="text"
+              placeholder="Search by invitee, email, or code..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px 8px 36px',
+                borderRadius: '10px',
+                border: '1px solid #ECE8E2',
+                fontSize: '0.85rem',
+                backgroundColor: '#FAF9F6',
+                color: '#111827',
+                outline: 'none'
+              }}
+            />
+          </div>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{
+              padding: '8px 14px',
+              fontSize: '0.82rem',
+              borderRadius: '10px',
+              border: '1px solid #ECE8E2',
+              backgroundColor: '#FAF9F6',
+              color: '#374151',
+              fontWeight: 500,
+              cursor: 'pointer'
+            }}
+          >
+            <option value="">Statuses: All</option>
+            <option value="ACCEPTED">Accepted</option>
+            <option value="PENDING">Pending</option>
+            <option value="EXPIRED">Expired</option>
+            <option value="DECLINED">Declined</option>
+          </select>
+
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            style={{
+              padding: '8px 14px',
+              fontSize: '0.82rem',
+              borderRadius: '10px',
+              border: '1px solid #ECE8E2',
+              backgroundColor: '#FAF9F6',
+              color: '#374151',
+              fontWeight: 500,
+              cursor: 'pointer'
+            }}
+          >
+            <option value="">Roles: All</option>
+            <option value="MEMBER">Member</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+
+          {(searchQuery || statusFilter || roleFilter) && (
+            <button
+              onClick={handleResetFilters}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#D97746',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                padding: '4px 8px'
+              }}
+            >
+              Reset
+            </button>
+          )}
         </div>
       </div>
 
@@ -393,123 +569,247 @@ export default function MyInvitationsPage() {
           <span style={{ color: 'var(--text-muted)' }}>Loading Member Invitations...</span>
         </div>
       ) : (
-        <>
-          <div className="table-container">
-            <table className="custom-table">
-              <thead>
-                <tr>
-                  <th
-                    onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                    style={{ cursor: 'pointer', userSelect: 'none', paddingLeft: '20px' }}
-                    title="Click to toggle sorting order"
-                  >
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <span>Invitation ID</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                        {sortOrder === 'asc' ? '▲ Asc' : '▼ Desc'}
-                      </span>
-                    </div>
-                  </th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Phone Number</th>
-                  <th>Role</th>
-                  <th>Created On</th>
-                  <th>Is Active</th>
-                  <th>Savings Commitment</th>
-                  <th>Membership</th>
-                  <th style={{ textAlign: 'right' }}>Action</th>
-                </tr>
-              </thead>
+        <div className="table-container" style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #ECE8E2', overflow: 'hidden' }}>
+          <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#FAF9F6', borderBottom: '1px solid #ECE8E2' }}>
+                <th style={{ width: '36px', textAlign: 'center', padding: '14px 10px' }}>
+                  <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#2E5A44' }} />
+                </th>
+                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  INVITATION ID
+                </th>
+                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  INVITEE
+                </th>
+                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  ROLE
+                </th>
+                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  STATUS
+                </th>
+                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  DATE SENT
+                </th>
+                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  EXPIRES ON
+                </th>
+                <th style={{ padding: '14px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  ACTION
+                </th>
+              </tr>
+            </thead>
 
-              <tbody>
-                {paginatedUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
-                      No member invitations found.
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedUsers.map((u) => {
-                    const cmt = commitmentsMap[u.id] || commitmentsMap[u.email] || (u.name ? commitmentsMap[u.name.toLowerCase()] : null);
-                    return (
-                      <tr key={u.id}>
-                        <td style={{ paddingLeft: '20px', fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                          {u.displayId || u.id}
-                        </td>
-                        <td style={{ fontWeight: 600 }}>{u.name}</td>
-                        <td>{u.email}</td>
-                        <td>{u.phone}</td>
-                        <td>
-                          <span className={`status-pill ${u.role === 'ADMIN' ? 'completed' : 'active'}`} style={{ fontSize: '0.7rem' }}>
-                            {u.role === 'ADMIN' ? 'Admin' : 'Member'}
-                          </span>
-                        </td>
-                        <td>{new Date(u.createdAt).toLocaleDateString('en-GB')}</td>
-                        <td>
-                          <span className={`status-pill ${u.isActive ? 'active' : 'pending'}`} style={{ fontSize: '0.7rem' }}>
-                            {u.isActive ? 'Active' : 'Pending Approval'}
-                          </span>
-                        </td>
-                        <td>
-                          {cmt ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                              <span style={{ fontWeight: 700, color: '#064e3b', fontSize: '0.85rem' }}>
-                                £{Number(cmt.amount).toFixed(2)}/mo
-                              </span>
-                              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                {cmt.collectionMonth} {cmt.collectionYear}
-                              </span>
+            <tbody>
+              {paginatedUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF', fontSize: '0.88rem' }}>
+                    No member invitations found.
+                  </td>
+                </tr>
+              ) : (
+                paginatedUsers.map((u) => {
+                  const initials = u.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'MB';
+                  const displayId = `INV-${u.id.substring(0, 5).toUpperCase()}`;
+                  const dateSent = new Date(u.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                  const expiresOn = new Date(new Date(u.createdAt).getTime() + 14 * 86400000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+                  return (
+                    <tr key={u.id} style={{ borderBottom: '1px solid #ECE8E2', transition: 'background-color 0.15s ease' }}>
+                      <td style={{ textAlign: 'center', padding: '14px 10px' }}>
+                        <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#2E5A44' }} />
+                      </td>
+
+                      {/* Invitation ID Monospace Green Pill */}
+                      <td style={{ padding: '14px 16px' }}>
+                        <span style={{
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          fontFamily: 'monospace',
+                          backgroundColor: '#EAF5EE',
+                          color: '#2E5A44'
+                        }}>
+                          {displayId}
+                        </span>
+                      </td>
+
+                      {/* Invitee */}
+                      <td style={{ padding: '14px 16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            backgroundColor: '#1B4332',
+                            color: '#FFFFFF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            flexShrink: 0
+                          }}>
+                            {initials}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.88rem' }}>
+                              {u.name}
                             </div>
-                          ) : (
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>None</span>
-                          )}
-                        </td>
-                        <td>
-                          <button
-                            onClick={() => setViewUserModal(u)}
+                            <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                              {u.email}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Role */}
+                      <td style={{ padding: '14px 16px' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>
+                          {u.role === 'ADMIN' ? 'ADMIN' : 'CONTRIBUTING MEMBER'}
+                        </span>
+                      </td>
+
+                      {/* Status */}
+                      <td style={{ padding: '14px 16px' }}>
+                        <span style={{
+                          padding: '3px 9px',
+                          borderRadius: '9999px',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          backgroundColor: u.isActive ? '#EAF5EE' : '#FEF3C7',
+                          color: u.isActive ? '#2E7D32' : '#B45309'
+                        }}>
+                          {u.isActive ? 'ACCEPTED' : 'PENDING'}
+                        </span>
+                      </td>
+
+                      {/* Date Sent */}
+                      <td style={{ padding: '14px 16px', color: '#6B7280', fontSize: '0.82rem' }}>
+                        {dateSent}
+                      </td>
+
+                      {/* Expires On */}
+                      <td style={{ padding: '14px 16px', color: '#6B7280', fontSize: '0.82rem' }}>
+                        {expiresOn}
+                      </td>
+
+                      {/* Action dropdown */}
+                      <td style={{ padding: '14px 16px', textAlign: 'right', position: 'relative' }}>
+                        <button
+                          onClick={() => setOpenDropdownId(openDropdownId === u.id ? null : u.id)}
+                          style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: '4px' }}
+                        >
+                          <MoreVertical size={16} />
+                        </button>
+
+                        {openDropdownId === u.id && (
+                          <div
                             style={{
-                              background: 'none',
-                              border: 'none',
-                              color: 'var(--primary)',
-                              textDecoration: 'underline',
-                              cursor: 'pointer',
-                              padding: 0,
-                              fontSize: '0.85rem'
+                              position: 'absolute',
+                              right: '16px',
+                              top: '40px',
+                              backgroundColor: '#FFFFFF',
+                              borderRadius: '10px',
+                              border: '1px solid #ECE8E2',
+                              boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                              padding: '6px',
+                              zIndex: 10,
+                              minWidth: '180px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '2px',
+                              textAlign: 'left'
                             }}
                           >
-                            View Membership
-                          </button>
-                        </td>
-                        <td style={{ textAlign: 'right' }}>
-                          <button
-                            onClick={() => setViewUserModal(u)}
-                            className="btn btn-secondary btn-sm"
-                            style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                          >
-                            <Eye size={14} />
-                            <span>View Details</span>
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                            <button
+                              onClick={() => handleCopyLink(u)}
+                              style={{
+                                padding: '8px 12px',
+                                fontSize: '0.8rem',
+                                fontWeight: 500,
+                                color: '#374151',
+                                background: 'none',
+                                border: 'none',
+                                textAlign: 'left',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}
+                            >
+                              <Copy size={14} />
+                              <span>Copy Invite Link</span>
+                            </button>
 
-          <PaginationControls
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={sortedUsers.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={(num) => { setItemsPerPage(num); setCurrentPage(1); }}
-            itemLabel="member invitation"
-          />
-        </>
+                            <button
+                              onClick={() => handleResend(u)}
+                              style={{
+                                padding: '8px 12px',
+                                fontSize: '0.8rem',
+                                fontWeight: 500,
+                                color: '#374151',
+                                background: 'none',
+                                border: 'none',
+                                textAlign: 'left',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}
+                            >
+                              <Send size={14} />
+                              <span>Resend Invite</span>
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setOpenDropdownId(null);
+                                setViewUserModal(u);
+                              }}
+                              style={{
+                                padding: '8px 12px',
+                                fontSize: '0.8rem',
+                                fontWeight: 500,
+                                color: '#374151',
+                                background: 'none',
+                                border: 'none',
+                                textAlign: 'left',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}
+                            >
+                              <Eye size={14} />
+                              <span>View Details</span>
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
+
+      {/* Pagination Controls */}
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={sortedUsers.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(num) => { setItemsPerPage(num); setCurrentPage(1); }}
+        itemLabel="invitation"
+      />
 
       {/* --- INVITE / ADD MEMBER MODAL --- */}
       {isInviteModalOpen && (

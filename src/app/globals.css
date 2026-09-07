@@ -1,62 +1,70 @@
 /* Google Fonts import for Plus Jakarta Sans and Inter */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
 
 :root {
-  /* Design Tokens (Warm Cream & Forest Green Theme - Light Mode Default) */
-  --bg-main: #f4f0e6;          /* warm soft cream background matching live site */
-  --bg-surface: #eae5d8;       /* accent background for input fields, sidebars, panels */
-  --bg-card: #ffffff;          /* pure white cards stand out beautifully */
-  --bg-card-hover: #faf9f6;
-  --border-color: #dcd7ca;      /* distinct warm grey border */
-  --border-focus: #0c4e43;      /* deep forest green focus border */
+  /* Master Theme Tokens (Luxury Warm Off-White, Forest Green & Gold Palette) */
+  --bg-main: #f8f7f4;           /* soft warm off-white canvas */
+  --bg-surface: #faf9f6;        /* light cream surface for panels, filters, headers */
+  --bg-sidebar: #faf9f6;        /* light warm cream sidebar */
+  --bg-card: #ffffff;           /* pure clean white cards */
+  --bg-card-hover: #fcfbfa;
+  --card-dark: #11161b;         /* rich carbon dark for hero cards & glance widgets */
   
-  --text-main: #1a1a1a;        /* dark charcoal text */
-  --text-muted: #57655c;       /* high contrast sage grey text */
+  --border-color: #ece8e2;       /* subtle light stone grey border */
+  --border-subtle: #f0ece5;
+  --border-focus: #2e5a44;       /* deep forest green focus ring */
+  
+  --text-main: #111827;         /* deep slate charcoal primary text */
+  --text-muted: #6b7280;        /* neutral soft grey secondary text */
+  --text-light: #9ca3af;
   --text-inverse: #ffffff;
 
-  --primary: #0c4e43;          /* rich deep forest green matching live site */
-  --primary-hover: #083c33;
-  --primary-glow: rgba(12, 78, 67, 0.06);
+  --primary: #2e5a44;           /* deep forest green */
+  --primary-dark: #143d2b;      /* ultra deep hunter green for primary buttons */
+  --primary-hover: #1f4231;
+  --primary-glow: rgba(46, 90, 68, 0.12);
+  --primary-light: #eaf3ee;
   
-  --secondary: #d97746;        /* terracotta/rust orange accent */
-  --secondary-hover: #c26333;
-  --secondary-glow: rgba(217, 119, 70, 0.08);
+  --secondary: #d97746;         /* warm terracotta accent */
+  --secondary-hover: #c46435;
+  --secondary-glow: rgba(217, 119, 70, 0.1);
+  --secondary-light: #fdf2ec;
 
-  --accent: #d97746;           /* terracotta orange */
+  --accent-gold: #c59a52;       /* rich warm gold for monogram, sparklines, badge glow */
+  --accent-gold-light: #fbf5eb;
+  --accent-gold-glow: rgba(197, 154, 82, 0.2);
 
-  /* Sidebar Colors (In Light Mode, sidebar stays dark forest green for high contrast) */
-  --sidebar-bg: #090e0c;       /* deep forest black sidebar */
-  --sidebar-text: #e2ede5;     /* mint cream text */
-  --sidebar-active-bg: #111a14;
-  --sidebar-active-text: #ffffff;
-  --sidebar-border: #14241d;
-  --sidebar-primary: #d97746;  /* active indicator */
-  --sidebar-accent: #0c1210;
+  /* Status Badge Tokens */
+  --status-active-bg: #eaf5ee;
+  --status-active-text: #2e7d32;
+  --status-pending-bg: #fef3c7;
+  --status-pending-text: #b45309;
+  --status-overdue-bg: #fee2e2;
+  --status-overdue-text: #dc2626;
+  --status-completed-bg: #ede9fe;
+  --status-completed-text: #6d28d9;
+  --status-blue-bg: #ebf3ff;
+  --status-blue-text: #2563eb;
+  --status-purple-bg: #f3e8ff;
+  --status-purple-text: #9333ea;
 
-  /* Status Colors */
-  --status-success: #15803d;    /* forest green status */
-  --status-success-bg: rgba(21, 128, 61, 0.08);
-  --status-pending: #b45309;    /* warm amber */
-  --status-pending-bg: rgba(180, 83, 9, 0.08);
-  --status-error: #991b1b;      /* dark red */
-  --status-error-bg: rgba(153, 27, 27, 0.08);
-  --status-info: #1d4ed8;       /* royal blue */
-  --status-info-bg: rgba(29, 78, 216, 0.08);
-
-  /* Fonts */
-  --font-family-title: 'Polysanstrial median', 'Plus Jakarta Sans', 'Inter', sans-serif;
-  --font-family-body: 'Inter', sans-serif;
+  /* Typography */
+  --font-family-title: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family-serif: 'Playfair Display', Georgia, serif;
   
-  /* Spacing & Borders */
-  --radius-sm: 6px;
+  /* Borders & Shadows */
+  --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
+  --radius-xl: 20px;
   --radius-full: 9999px;
   
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
-  --shadow-glow: 0 0 20px rgba(12, 78, 67, 0.15);
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-sm: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 6px 16px -2px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 12px 28px -4px rgba(0, 0, 0, 0.08);
+  --shadow-drawer: -4px 0 30px rgba(0, 0, 0, 0.12);
 
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -179,11 +187,12 @@ button {
 
 .form-input {
   width: 100%;
-  background-color: rgba(17, 24, 39, 0.5);
+  background-color: #ffffff;
+  color: var(--text-main);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
-  font-size: 0.95rem;
+  font-size: 0.925rem;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -195,13 +204,14 @@ button {
 
 .form-select {
   width: 100%;
-  background-color: rgba(17, 24, 39, 0.5);
+  background-color: #ffffff;
+  color: var(--text-main);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
-  font-size: 0.95rem;
+  font-size: 0.925rem;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 16px;
@@ -226,6 +236,7 @@ button {
   width: 16px;
   height: 16px;
   accent-color: var(--primary);
+  border-radius: 4px;
 }
 
 /* Button UI */
@@ -234,52 +245,61 @@ button {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 18px;
-  font-weight: 500;
+  padding: 9px 16px;
+  font-weight: 600;
   border-radius: var(--radius-sm);
   transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
   user-select: none;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
+  cursor: pointer;
 }
 
 .btn-primary {
-  background-color: var(--primary);
+  background-color: var(--primary-dark);
   color: var(--text-inverse);
+  border: 1px solid transparent;
 }
 
 .btn-primary:hover {
-  background-color: var(--primary-hover);
-  box-shadow: 0 4px 12px rgba(20, 83, 45, 0.2);
-}
-
-.btn-primary:active {
-  transform: translateY(1px);
+  background-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(20, 61, 43, 0.2);
 }
 
 .btn-secondary {
-  background-color: transparent;
+  background-color: #ffffff;
   color: var(--text-main);
   border: 1px solid var(--border-color);
 }
 
 .btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-color: var(--text-muted);
+  background-color: var(--bg-surface);
+  border-color: #dcd6cb;
+}
+
+.btn-terracotta {
+  background-color: var(--secondary);
+  color: #ffffff;
+  border: none;
+}
+
+.btn-terracotta:hover {
+  background-color: var(--secondary-hover);
+  box-shadow: 0 4px 12px rgba(217, 119, 70, 0.25);
 }
 
 .btn-danger {
-  background-color: var(--status-error);
-  color: var(--text-inverse);
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
 }
 
 .btn-danger:hover {
-  background-color: #991b1b;
-  box-shadow: 0 4px 12px rgba(185, 28, 28, 0.25);
+  background-color: #fecaca;
 }
 
 .btn-sm {
   padding: 6px 12px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   border-radius: var(--radius-sm);
 }
 
