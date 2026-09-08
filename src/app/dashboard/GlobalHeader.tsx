@@ -271,13 +271,7 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
 
   // Calculate clean display ID
   const getCleanDisplayId = () => {
-    if (user.displayId && user.displayId.startsWith('M-')) {
-      return user.displayId;
-    }
-    if (user.id && (user.id.startsWith('usr_') || user.id.startsWith('M-'))) {
-      return user.id;
-    }
-    return `M-000417`;
+    return user.displayId || user.id || 'Member';
   };
 
   const cleanDisplayId = getCleanDisplayId();
@@ -388,24 +382,26 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
             }}
           >
             <Bell size={20} />
-            <span style={{
-              position: 'absolute',
-              top: '2px',
-              right: '2px',
-              backgroundColor: '#f59e0b',
-              color: '#ffffff',
-              borderRadius: '50%',
-              width: '16px',
-              height: '16px',
-              fontSize: '0.65rem',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: '2px solid #faf9f6'
-            }}>
-              {unreadCount > 0 ? unreadCount : 3}
-            </span>
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '2px',
+                right: '2px',
+                backgroundColor: 'var(--secondary)',
+                color: '#ffffff',
+                borderRadius: '50%',
+                width: '16px',
+                height: '16px',
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px solid var(--bg-surface)'
+              }}>
+                {unreadCount}
+              </span>
+            )}
           </Link>
 
           {/* User Profile Pill & Dropdown */}

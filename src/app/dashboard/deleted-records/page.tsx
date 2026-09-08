@@ -144,6 +144,10 @@ export default function DeletedRecordsPage() {
     return data?.name || data?.title || `${r.type} Record`;
   };
 
+  const getRecordDisplayId = (r: DeletedRecord) => {
+    return r.originalData?.displayId || r.originalData?.invitationId || r.originalData?.id || r.id;
+  };
+
   const getDaysRemaining = (deletedAt: string) => {
     const deletedTime = new Date(deletedAt).getTime();
     const expiryTime = deletedTime + 90 * 86400000;
@@ -183,7 +187,7 @@ export default function DeletedRecordsPage() {
       if (searchQuery) {
         const q = searchQuery.toLowerCase().trim();
         const title = getRecordTitle(r).toLowerCase();
-        const displayId = `del-${r.id.substring(0, 5).toLowerCase()}`;
+        const displayId = getRecordDisplayId(r).toLowerCase();
         if (!title.includes(q) && !displayId.includes(q) && !r.type.toLowerCase().includes(q)) {
           return false;
         }
@@ -414,7 +418,7 @@ export default function DeletedRecordsPage() {
                     </tr>
                   ) : (
                     paginatedRecords.map((r) => {
-                      const displayId = `DEL-${r.id.substring(0, 5).toUpperCase()}`;
+                      const displayId = getRecordDisplayId(r);
                       const typeStyle = getTypeStyle(r.type);
                       const recordTitle = getRecordTitle(r);
                       const isSelected = selectedRecord?.id === r.id && drawerOpen;
@@ -434,7 +438,7 @@ export default function DeletedRecordsPage() {
                           }}
                         >
                           <td style={{ textAlign: 'center', padding: '14px 10px' }} onClick={(e) => e.stopPropagation()}>
-                            <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#2E5A44' }} />
+                            <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#0c4e43' }} />
                           </td>
 
                           {/* Record ID Monospace Pill */}
@@ -446,7 +450,7 @@ export default function DeletedRecordsPage() {
                               fontWeight: 700,
                               fontFamily: 'monospace',
                               backgroundColor: '#EAF5EE',
-                              color: '#2E5A44'
+                              color: '#0c4e43'
                             }}>
                               {displayId}
                             </span>
@@ -654,8 +658,8 @@ export default function DeletedRecordsPage() {
                 }}>
                   {getTypeStyle(selectedRecord.type).label}
                 </span>
-                <span style={{ fontFamily: 'monospace', fontSize: '0.78rem', fontWeight: 700, backgroundColor: '#EAF5EE', color: '#2E5A44', padding: '2px 6px', borderRadius: '4px' }}>
-                  DEL-{selectedRecord.id.substring(0, 5).toUpperCase()}
+                <span style={{ fontFamily: 'monospace', fontSize: '0.78rem', fontWeight: 700, backgroundColor: '#EAF5EE', color: '#0c4e43', padding: '2px 6px', borderRadius: '4px' }}>
+                  {getRecordDisplayId(selectedRecord)}
                 </span>
               </div>
               <h4 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#111827', margin: 0 }}>

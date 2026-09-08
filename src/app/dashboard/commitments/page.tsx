@@ -1147,9 +1147,9 @@ function CommitmentsContent() {
                                 fontWeight: 700,
                                 fontFamily: 'monospace',
                                 backgroundColor: '#EAF5EE',
-                                color: '#2E5A44'
+                                color: '#0c4e43'
                               }}>
-                                {c.displayId || `SC-${c.id.substring(0, 5).toUpperCase()}`}
+                                {c.displayId || c.id}
                               </span>
                             </td>
 
@@ -1356,8 +1356,8 @@ function CommitmentsContent() {
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                    <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#2E5A44', fontWeight: 700, backgroundColor: '#EAF5EE', padding: '1px 6px', borderRadius: '4px' }}>
-                      {selectedCmt.displayId || `SC-${selectedCmt.id.substring(0, 5).toUpperCase()}`}
+                    <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#0c4e43', fontWeight: 700, backgroundColor: '#EAF5EE', padding: '1px 6px', borderRadius: '4px' }}>
+                      {selectedCmt.displayId || selectedCmt.id}
                     </span>
                     <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
                       &bull; Goal: {selectedCmt.goal || 'General Savings'}

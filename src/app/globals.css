@@ -2,43 +2,56 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
 
 :root {
-  /* Master Theme Tokens (Luxury Warm Off-White, Forest Green & Gold Palette) */
-  --bg-main: #f8f7f4;           /* soft warm off-white canvas */
-  --bg-surface: #faf9f6;        /* light cream surface for panels, filters, headers */
-  --bg-sidebar: #faf9f6;        /* light warm cream sidebar */
+  /* Master Theme Tokens (Savvey Savers Official Warm Cream, Forest Green & Terracotta Palette) */
+  --bg-main: #f4f0e6;           /* warm soft cream background matching live site */
+  --bg-surface: #eae5d8;        /* light warm cream surface for panels, filters, headers */
+  --bg-sidebar: #090e0c;        /* deep forest black sidebar */
+  --sidebar-bg: #090e0c;        /* deep forest black sidebar */
+  --sidebar-text: #e2ede5;      /* mint cream text */
+  --sidebar-active-bg: #d97746; /* warm terracotta active */
+  --sidebar-active-text: #ffffff;
+  --sidebar-border: #14241d;
+  --sidebar-primary: #d97746;
+  --sidebar-accent: #111a14;
   --bg-card: #ffffff;           /* pure clean white cards */
-  --bg-card-hover: #fcfbfa;
-  --card-dark: #11161b;         /* rich carbon dark for hero cards & glance widgets */
+  --bg-card-hover: #faf9f6;
+  --card-dark: #0c4e43;         /* rich forest green for dark hero cards */
   
-  --border-color: #ece8e2;       /* subtle light stone grey border */
-  --border-subtle: #f0ece5;
-  --border-focus: #2e5a44;       /* deep forest green focus ring */
+  --border-color: #dcd7ca;       /* distinct warm grey border */
+  --border-subtle: #e6e1d5;
+  --border-focus: #0c4e43;       /* deep forest green focus ring */
   
-  --text-main: #111827;         /* deep slate charcoal primary text */
-  --text-muted: #6b7280;        /* neutral soft grey secondary text */
-  --text-light: #9ca3af;
+  --text-main: #1a1a1a;         /* dark charcoal text */
+  --text-muted: #57655c;        /* high contrast sage grey text */
+  --text-light: #8a968f;
   --text-inverse: #ffffff;
 
-  --primary: #2e5a44;           /* deep forest green */
-  --primary-dark: #143d2b;      /* ultra deep hunter green for primary buttons */
-  --primary-hover: #1f4231;
-  --primary-glow: rgba(46, 90, 68, 0.12);
-  --primary-light: #eaf3ee;
+  --primary: #0c4e43;           /* rich deep forest green matching live site */
+  --primary-dark: #083c33;      /* ultra deep hunter green for primary buttons */
+  --primary-hover: #083c33;
+  --primary-glow: rgba(12, 78, 67, 0.12);
+  --primary-light: #e6f0ee;
   
   --secondary: #d97746;         /* warm terracotta accent */
-  --secondary-hover: #c46435;
-  --secondary-glow: rgba(217, 119, 70, 0.1);
+  --secondary-hover: #c26333;
+  --secondary-glow: rgba(217, 119, 70, 0.12);
   --secondary-light: #fdf2ec;
 
-  --accent-gold: #c59a52;       /* rich warm gold for monogram, sparklines, badge glow */
+  --accent: #d97746;           /* terracotta orange */
+  --accent-gold: #c59a52;       /* rich warm gold */
   --accent-gold-light: #fbf5eb;
   --accent-gold-glow: rgba(197, 154, 82, 0.2);
 
   /* Status Badge Tokens */
+  --status-success: #15803d;
+  --status-success-bg: rgba(21, 128, 61, 0.08);
   --status-active-bg: #eaf5ee;
-  --status-active-text: #2e7d32;
+  --status-active-text: #0c4e43;
+  --status-pending: #b45309;
   --status-pending-bg: #fef3c7;
   --status-pending-text: #b45309;
+  --status-error: #991b1b;
+  --status-error-bg: #fee2e2;
   --status-overdue-bg: #fee2e2;
   --status-overdue-text: #dc2626;
   --status-completed-bg: #ede9fe;
@@ -64,7 +77,7 @@
   --shadow-sm: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
   --shadow-md: 0 6px 16px -2px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 12px 28px -4px rgba(0, 0, 0, 0.08);
-  --shadow-drawer: -4px 0 30px rgba(0, 0, 0, 0.12);
+  --shadow-drawer: -4px 0 30px rgba(0, 0, 0, 0.25);
 
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);

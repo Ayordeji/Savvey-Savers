@@ -139,10 +139,11 @@ function PaymentsContent() {
     const cmt = cmtMap.get(p.commitmentId);
     const memberName = cmt?.memberName || 'Member';
     const memberUser = users.find(u => u.id === cmt?.memberId || u.name.toLowerCase() === memberName.toLowerCase());
-    const memberEmail = memberUser?.email || `${memberName.toLowerCase().replace(/\s+/g, '.')}@savveysavers.com`;
+    const memberEmail = memberUser?.email || '';
+    const memberDisplayId = (memberUser as any)?.displayId || (memberUser as any)?.invitationId || '';
     const initials = memberName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'MB';
     const commitmentTag = cmt ? `${cmt.collectionMonth} - ${cmt.goal || 'Savings Pool'} (£${Number(cmt.amount).toFixed(0)})` : 'Savings Pool';
-    const displayId = `PMT-${p.id.substring(0, 5).toUpperCase()}`;
+    const displayId = (p as any).displayId || (p as any).reference || p.id;
 
     // Status: RECEIVED (CONFIRMED), PENDING, or OVERDUE
     let statusLabel: 'RECEIVED' | 'PENDING' | 'OVERDUE' = p.status === 'CONFIRMED' ? 'RECEIVED' : 'PENDING';
@@ -150,6 +151,7 @@ function PaymentsContent() {
     return {
       memberName,
       memberEmail,
+      memberDisplayId,
       initials,
       commitmentTag,
       displayId,
@@ -540,7 +542,7 @@ function PaymentsContent() {
                       return (
                         <tr key={p.id} style={{ borderBottom: '1px solid #ECE8E2', transition: 'background-color 0.15s ease' }}>
                           <td style={{ textAlign: 'center', padding: '14px 10px' }}>
-                            <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#2E5A44' }} />
+                            <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#0c4e43' }} />
                           </td>
 
                           {/* Payment ID Monospace Pill */}
@@ -552,7 +554,7 @@ function PaymentsContent() {
                               fontWeight: 700,
                               fontFamily: 'monospace',
                               backgroundColor: '#EAF5EE',
-                              color: '#2E5A44'
+                              color: '#0c4e43'
                             }}>
                               {d.displayId}
                             </span>
@@ -565,7 +567,7 @@ function PaymentsContent() {
                                 width: '36px',
                                 height: '36px',
                                 borderRadius: '50%',
-                                backgroundColor: '#1B4332',
+                                backgroundColor: '#0c4e43',
                                 color: '#FFFFFF',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -578,11 +580,13 @@ function PaymentsContent() {
                               </div>
                               <div>
                                 <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.88rem' }}>
-                                  {d.memberName}
+                                  {d.memberName} {d.memberDisplayId ? <span style={{ fontSize: '0.72rem', color: '#57655c', fontFamily: 'monospace' }}>({d.memberDisplayId})</span> : null}
                                 </div>
-                                <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                                  {d.memberEmail}
-                                </div>
+                                {d.memberEmail ? (
+                                  <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                                    {d.memberEmail}
+                                  </div>
+                                ) : null}
                               </div>
                             </div>
                           </td>

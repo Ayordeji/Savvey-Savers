@@ -7,9 +7,9 @@
 
 /* Sidebar Styling */
 .sidebar {
-  width: 250px;
-  background-color: var(--bg-sidebar);
-  border-right: 1px solid var(--border-color);
+  width: 255px;
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -20,15 +20,16 @@
 }
 
 .sidebarHeader {
-  padding: 24px 20px 20px 20px;
+  padding: 22px 20px 18px 20px;
   display: flex;
   align-items: center;
   gap: 12px;
+  border-bottom: 1px solid var(--sidebar-border);
 }
 
 .navSection {
   flex: 1;
-  padding: 8px 16px 20px 16px;
+  padding: 12px 14px 20px 14px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -36,11 +37,11 @@
 }
 
 .navSectionHeader {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-light);
+  letter-spacing: 0.09em;
+  color: #577063;
   padding: 16px 12px 6px 12px;
 }
 
@@ -48,9 +49,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 9px 12px;
-  border-radius: 10px;
-  color: #4b5563;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--sidebar-text);
   font-weight: 500;
   font-size: 0.875rem;
   transition: all var(--transition-fast);
@@ -59,21 +60,23 @@
 }
 
 .navItem:hover {
-  background-color: rgba(0, 0, 0, 0.03);
-  color: var(--text-main);
+  background-color: var(--sidebar-accent);
+  color: var(--sidebar-active-text);
 }
 
 .activeNavItem {
-  background-color: #efece6 !important;
-  color: #111827 !important;
+  background-color: var(--sidebar-active-bg) !important;
+  color: var(--sidebar-active-text) !important;
   font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(217, 119, 70, 0.35);
 }
 
 .sidebarHelpCard {
-  margin: 12px 16px 20px 16px;
+  margin: 12px 14px 20px 14px;
   padding: 16px;
-  background-color: #f2ede4;
-  border-radius: 14px;
+  background-color: #111a14;
+  border: 1px solid #1a2a20;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -82,12 +85,12 @@
 .sidebarHelpTitle {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #111827;
+  color: #ffffff;
 }
 
 .sidebarHelpText {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #8da496;
   line-height: 1.4;
 }
 
@@ -98,18 +101,19 @@
   justify-content: center;
   gap: 6px;
   padding: 7px 14px;
-  background-color: #e4ddd1;
-  color: #111827;
+  background-color: #1a2c22;
+  color: #ffffff;
   border-radius: 9999px;
   font-size: 0.8rem;
   font-weight: 600;
-  border: none;
+  border: 1px solid #284435;
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .sidebarHelpBtn:hover {
-  background-color: #d8d0c2;
+  background-color: #243d2f;
+  border-color: #355b46;
 }
 
 .sidebarFooter {

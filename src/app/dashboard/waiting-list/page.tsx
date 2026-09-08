@@ -183,13 +183,15 @@ export default function WaitingListPage() {
     }
   };
 
+  const getProspectDisplayId = (e: WaitingListEntry) => (e as any).displayId || e.id;
+
   const handleExport = () => {
     const csvRows = [
       ['Prospect ID', 'Name', 'Email', 'Phone', 'Commitment', 'Date Added'].join(',')
     ];
     entries.forEach(e => {
       csvRows.push([
-        `PR-${e.id.substring(0, 5).toUpperCase()}`,
+        getProspectDisplayId(e),
         `"${e.name}"`,
         `"${e.email}"`,
         `"${e.phone}"`,
@@ -206,18 +208,18 @@ export default function WaitingListPage() {
     URL.revokeObjectURL(url);
   };
 
-  // KPI Calculations
+  // KPI Calculations strictly from database records
   const totalProspects = entries.length;
-  const newProspects = Math.max(1, Math.ceil(totalProspects * 0.4));
-  const contactedProspects = Math.max(1, Math.floor(totalProspects * 0.35));
-  const convertedProspects = Math.max(0, totalProspects - newProspects - contactedProspects);
+  const newProspects = entries.filter(e => !e.status || e.status === 'NEW' || e.status === 'PENDING').length;
+  const contactedProspects = entries.filter(e => e.status === 'CONTACTED').length;
+  const convertedProspects = entries.filter(e => e.status === 'CONVERTED').length;
 
   // Filter entries
   const filteredEntries = useMemo(() => {
     return entries.filter(e => {
       if (searchQuery) {
         const q = searchQuery.toLowerCase().trim();
-        const displayId = `pr-${e.id.substring(0, 5).toLowerCase()}`;
+        const displayId = getProspectDisplayId(e).toLowerCase();
         const matches =
           e.name.toLowerCase().includes(q) ||
           e.email.toLowerCase().includes(q) ||
@@ -472,17 +474,17 @@ export default function WaitingListPage() {
                   </td>
                 </tr>
               ) : (
-                paginatedEntries.map((e, idx) => {
+                paginatedEntries.map((e) => {
                   const initials = e.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'PR';
-                  const displayId = `PR-${e.id.substring(0, 5).toUpperCase()}`;
-                  const poolName = e.intendedPool || 'July - High Yield (£1,000)';
-                  const targetMonth = e.targetMonth || 'July 2026';
-                  const status = idx === 0 ? 'NEW' : idx % 2 === 0 ? 'CONTACTED' : 'FOLLOW UP';
+                  const displayId = getProspectDisplayId(e);
+                  const poolName = e.intendedPool || (e.monthlySavingsCommitment ? `£${Number(e.monthlySavingsCommitment).toFixed(0)}/mo Commitment` : 'Standard Pool');
+                  const targetMonth = e.targetMonth || 'Open Cycle';
+                  const status = e.status || (e.isReferred ? 'REFERRED' : 'PENDING');
 
                   return (
                     <tr key={e.id} style={{ borderBottom: '1px solid #ECE8E2', transition: 'background-color 0.15s ease' }}>
                       <td style={{ textAlign: 'center', padding: '14px 10px' }}>
-                        <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#2E5A44' }} />
+                        <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#0c4e43' }} />
                       </td>
 
                       {/* Prospect ID Monospace Pill */}
@@ -494,7 +496,7 @@ export default function WaitingListPage() {
                           fontWeight: 700,
                           fontFamily: 'monospace',
                           backgroundColor: '#EAF5EE',
-                          color: '#2E5A44'
+                          color: '#0c4e43'
                         }}>
                           {displayId}
                         </span>

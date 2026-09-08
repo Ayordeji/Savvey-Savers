@@ -49,7 +49,7 @@ export default function CommitmentDonutChart({
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="#2E5A44"
+            stroke="#0c4e43"
             strokeWidth={strokeWidth}
             strokeDasharray={`${activeDash} ${circumference - activeDash}`}
             strokeDashoffset={0}
@@ -57,14 +57,14 @@ export default function CommitmentDonutChart({
             style={{ transition: 'stroke-dasharray 0.5s ease' }}
           />
 
-          {/* Pending Segment (Warm Amber, if any) */}
+          {/* Pending Segment (Warm Terracotta, if any) */}
           {pending > 0 && (
             <circle
               cx={size / 2}
               cy={size / 2}
               r={radius}
               fill="none"
-              stroke="#D97706"
+              stroke="#d97746"
               strokeWidth={strokeWidth}
               strokeDasharray={`${pendingDash} ${circumference - pendingDash}`}
               strokeDashoffset={-activeDash}
@@ -133,13 +133,13 @@ export default function CommitmentDonutChart({
         flexWrap: 'wrap'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#2E5A44' }} />
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#0c4e43' }} />
           <span>Active</span>
           <span style={{ color: '#6B7280' }}>{active} ({activePercent.toFixed(1)}%)</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#D97706' }} />
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#d97746' }} />
           <span>Pending</span>
           <span style={{ color: '#6B7280' }}>{pending} ({pendingPercent.toFixed(0)}%)</span>
         </div>

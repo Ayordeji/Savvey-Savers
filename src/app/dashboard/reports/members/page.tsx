@@ -289,7 +289,7 @@ function MemberReportContent() {
               {currentUsers.map((u) => (
                 <tr key={u.id} className={styles.tableRow}>
                   <td className={styles.idCell} style={{ fontWeight: 600 }}>
-                    {u.displayId || u.invitationId || u.id.slice(0,8)}
+                    {u.displayId || u.invitationId || u.id}
                   </td>
                   <td>
                     <div className={styles.userNameWrap}>

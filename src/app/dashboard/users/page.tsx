@@ -1408,7 +1408,7 @@ export default function ManageUsersPage() {
                                     {u.name}
                                   </div>
                                   <div style={{ fontSize: '0.72rem', color: '#9CA3AF', fontFamily: 'monospace' }}>
-                                    {u.displayId || 'M-000420'}
+                                    {u.displayId || u.invitationId || u.id}
                                   </div>
                                   <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
                                     {u.email}
@@ -1593,16 +1593,16 @@ export default function ManageUsersPage() {
                     </span>
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#6B7280', fontFamily: 'monospace', marginTop: '2px' }}>
-                    {selectedUser.displayId || 'M-000420'}
+                    {selectedUser.displayId || selectedUser.invitationId || selectedUser.id}
                   </div>
                 </div>
               </div>
 
               <div style={{ fontSize: '0.78rem', color: '#6B7280', marginTop: '10px' }}>
-                {selectedUser.email} &bull; {selectedUser.phone || '+44 7000 000000'}
+                {selectedUser.email} {selectedUser.phone ? `• ${selectedUser.phone}` : ''}
               </div>
               <div style={{ fontSize: '0.72rem', color: '#9CA3AF', marginTop: '2px' }}>
-                Member since July 2026
+                {selectedUser.createdAt ? `Member since ${new Date(selectedUser.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}` : ''}
               </div>
 
               {/* Action Buttons */}

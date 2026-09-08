@@ -89,7 +89,7 @@ export default function MyInvitationsPage() {
         // Merge waitlist entries as pseudo-users
         const wlUsers = wlData.map((w: any) => ({
           id: w.id,
-          displayId: 'WL-' + w.id.substring(0, 6).toUpperCase(),
+          displayId: w.displayId || w.id,
           name: w.name,
           email: w.email,
           phone: w.phone,
@@ -610,14 +610,14 @@ export default function MyInvitationsPage() {
               ) : (
                 paginatedUsers.map((u) => {
                   const initials = u.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'MB';
-                  const displayId = `INV-${u.id.substring(0, 5).toUpperCase()}`;
+                  const displayId = u.displayId || u.invitationId || u.id;
                   const dateSent = new Date(u.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
                   const expiresOn = new Date(new Date(u.createdAt).getTime() + 14 * 86400000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
                   return (
                     <tr key={u.id} style={{ borderBottom: '1px solid #ECE8E2', transition: 'background-color 0.15s ease' }}>
                       <td style={{ textAlign: 'center', padding: '14px 10px' }}>
-                        <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#2E5A44' }} />
+                        <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#0c4e43' }} />
                       </td>
 
                       {/* Invitation ID Monospace Green Pill */}
@@ -629,7 +629,7 @@ export default function MyInvitationsPage() {
                           fontWeight: 700,
                           fontFamily: 'monospace',
                           backgroundColor: '#EAF5EE',
-                          color: '#2E5A44'
+                          color: '#0c4e43'
                         }}>
                           {displayId}
                         </span>
