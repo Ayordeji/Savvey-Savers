@@ -337,22 +337,24 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
       }}>
         {/* Left: Hamburger & Dynamic Page Title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#111827',
-              cursor: 'pointer',
-              padding: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              borderRadius: '6px'
-            }}
-            aria-label="Toggle Menu"
-          >
-            <Menu size={22} />
-          </button>
+          <div className="mobile-only" style={{ alignItems: 'center' }}>
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#111827',
+                cursor: 'pointer',
+                padding: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                borderRadius: '6px'
+              }}
+              aria-label="Toggle Menu"
+            >
+              <Menu size={22} />
+            </button>
+          </div>
 
           <h1 style={{
             fontSize: '1.25rem',

@@ -689,3 +689,12 @@ button {
 }
 
 
+/* ── Responsive utility: hide on desktop, show only on mobile/tablet ── */
+.mobile-only {
+  display: none !important;
+}
+@media (max-width: 768px) {
+  .mobile-only {
+    display: flex !important;
+  }
+}
