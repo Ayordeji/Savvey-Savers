@@ -638,7 +638,7 @@ function SettingsContent() {
                     <span>🕐</span>
                     <span><strong>Recently Updated</strong> — Security questions configuration</span>
                   </div>
-                  <button style={{ background: 'none', border: 'none', fontSize: '0.8rem', fontWeight: 600, color: '#c27a3a', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <button disabled title="Audit log page is coming soon" style={{ background: 'none', border: 'none', fontSize: '0.8rem', fontWeight: 600, color: '#9ca3af', cursor: 'not-allowed', display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.6 }}>
                     View Audit Log →
                   </button>
                 </div>
@@ -1000,7 +1000,7 @@ function SettingsContent() {
                     <span>🕐</span>
                     <span><strong>Recently Updated</strong> — Commitment settings</span>
                   </div>
-                  <button style={{ background: 'none', border: 'none', fontSize: '0.8rem', fontWeight: 600, color: '#c27a3a', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <button disabled title="Audit log page is coming soon" style={{ background: 'none', border: 'none', fontSize: '0.8rem', fontWeight: 600, color: '#9ca3af', cursor: 'not-allowed', display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.6 }}>
                     View Audit Log →
                   </button>
                 </div>
@@ -1108,7 +1108,7 @@ function SettingsContent() {
                     <span>🕐</span>
                     <span><strong>Recently Updated</strong> — Email templates</span>
                   </div>
-                  <button style={{ background: 'none', border: 'none', fontSize: '0.8rem', fontWeight: 600, color: '#c27a3a', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <button disabled title="Audit log page is coming soon" style={{ background: 'none', border: 'none', fontSize: '0.8rem', fontWeight: 600, color: '#9ca3af', cursor: 'not-allowed', display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.6 }}>
                     View Audit Log →
                   </button>
                 </div>

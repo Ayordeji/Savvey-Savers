@@ -1023,6 +1023,7 @@ function CommitmentsContent() {
                         <input
                           type="checkbox"
                           checked={selectedIds.length > 0 && selectedIds.length === filteredCommitments.length}
+                          ref={el => { if (el) el.indeterminate = selectedIds.length > 0 && selectedIds.length < filteredCommitments.length; }}
                           onChange={(e) => handleSelectAll(e.target.checked)}
                           style={{ width: '16px', height: '16px', accentColor: '#2E5A44', cursor: 'pointer' }}
                         />

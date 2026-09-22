@@ -42,6 +42,9 @@ export default function DeletedRecordsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  // Selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   const fetchRecords = async () => {
     try {
       const res = await fetch('/api/admin/deleted-records');
@@ -200,6 +203,23 @@ export default function DeletedRecordsPage() {
   const paginatedRecords = useMemo(() => {
     return filteredRecords.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   }, [filteredRecords, currentPage, itemsPerPage]);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(paginatedRecords.map(r => r.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -384,7 +404,13 @@ export default function DeletedRecordsPage() {
                 <thead>
                   <tr style={{ backgroundColor: '#FAF9F6', borderBottom: '1px solid #ECE8E2' }}>
                     <th style={{ width: '36px', textAlign: 'center', padding: '14px 10px' }}>
-                      <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#2E5A44' }} />
+                      <input
+                        type="checkbox"
+                        checked={paginatedRecords.length > 0 && paginatedRecords.every(r => selectedIds.has(r.id))}
+                        ref={el => { if (el) el.indeterminate = paginatedRecords.some(r => selectedIds.has(r.id)) && !paginatedRecords.every(r => selectedIds.has(r.id)); }}
+                        onChange={e => handleSelectAll(e.target.checked)}
+                        style={{ width: '16px', height: '16px', accentColor: '#2E5A44', cursor: 'pointer' }}
+                      />
                     </th>
                     <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       RECORD ID
@@ -438,7 +464,12 @@ export default function DeletedRecordsPage() {
                           }}
                         >
                           <td style={{ textAlign: 'center', padding: '14px 10px' }} onClick={(e) => e.stopPropagation()}>
-                            <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#0c4e43' }} />
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(r.id)}
+                              onChange={e => handleSelectRow(r.id, e.target.checked)}
+                              style={{ width: '16px', height: '16px', accentColor: '#0c4e43', cursor: 'pointer' }}
+                            />
                           </td>
 
                           {/* Record ID Monospace Pill */}

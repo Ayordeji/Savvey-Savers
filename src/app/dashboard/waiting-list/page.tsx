@@ -64,6 +64,9 @@ export default function WaitingListPage() {
   const [addAmount, setAddAmount] = useState('100');
   const [addPool, setAddPool] = useState('July - High Yield');
 
+  // Selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     if (errorMsg) {
       const timer = setTimeout(() => setErrorMsg(''), 5000);
@@ -150,6 +153,7 @@ export default function WaitingListPage() {
       setErrorMsg('Name, email, and phone are required.');
       return;
     }
+    setErrorMsg('');
     setSubmitting(true);
     try {
       const res = await fetch('/api/admin/waiting-list/add', {
@@ -160,28 +164,30 @@ export default function WaitingListPage() {
           email: addEmail,
           phone: addPhone,
           monthlySavingsCommitment: parseFloat(addAmount) || 100,
-          intendedPool: addPool
         })
       });
 
-      if (res.ok) {
+      const data = await res.json();
+
+      if (res.ok && data.success) {
         setAddModalOpen(false);
         setAddName('');
         setAddEmail('');
         setAddPhone('');
-        fetchEntries();
-        await dialog.alert('Prospect Added', 'New prospect registered on the waiting list.');
+        setAddAmount('100');
+        await fetchEntries();
+        await dialog.alert('Prospect Added', `${addName} has been registered on the waiting list.`);
       } else {
-        // Fallback: reload entries
-        fetchEntries();
-        setAddModalOpen(false);
+        setErrorMsg(data.error || 'Failed to add prospect. Please try again.');
       }
     } catch (err) {
       console.error('Error adding prospect:', err);
+      setErrorMsg('A network error occurred. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
+
 
   const getProspectDisplayId = (e: WaitingListEntry) => (e as any).displayId || e.id;
 
@@ -236,6 +242,23 @@ export default function WaitingListPage() {
     return filteredEntries.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   }, [filteredEntries, currentPage, itemsPerPage]);
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(paginatedEntries.map(e => e.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header (Matches Screenshot 6) */}
@@ -272,7 +295,7 @@ export default function WaitingListPage() {
           </button>
 
           <button
-            onClick={() => setAddModalOpen(true)}
+            onClick={() => { setErrorMsg(''); setAddModalOpen(true); }}
             style={{
               backgroundColor: '#2E5A44',
               color: '#FFFFFF',
@@ -438,7 +461,13 @@ export default function WaitingListPage() {
             <thead>
               <tr style={{ backgroundColor: '#FAF9F6', borderBottom: '1px solid #ECE8E2' }}>
                 <th style={{ width: '36px', textAlign: 'center', padding: '14px 10px' }}>
-                  <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#2E5A44' }} />
+                  <input
+                    type="checkbox"
+                    checked={paginatedEntries.length > 0 && paginatedEntries.every(e => selectedIds.has(e.id))}
+                    ref={el => { if (el) el.indeterminate = paginatedEntries.some(e => selectedIds.has(e.id)) && !paginatedEntries.every(e => selectedIds.has(e.id)); }}
+                    onChange={e => handleSelectAll(e.target.checked)}
+                    style={{ width: '16px', height: '16px', accentColor: '#2E5A44', cursor: 'pointer' }}
+                  />
                 </th>
                 <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   PROSPECT ID
@@ -484,7 +513,12 @@ export default function WaitingListPage() {
                   return (
                     <tr key={e.id} style={{ borderBottom: '1px solid #ECE8E2', transition: 'background-color 0.15s ease' }}>
                       <td style={{ textAlign: 'center', padding: '14px 10px' }}>
-                        <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#0c4e43' }} />
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(e.id)}
+                          onChange={ev => handleSelectRow(e.id, ev.target.checked)}
+                          style={{ width: '16px', height: '16px', accentColor: '#0c4e43', cursor: 'pointer' }}
+                        />
                       </td>
 
                       {/* Prospect ID Monospace Pill */}
@@ -694,6 +728,24 @@ export default function WaitingListPage() {
             <p style={{ color: '#6B7280', fontSize: '0.85rem', margin: 0, marginBottom: '20px' }}>
               Register a prospective member expressing interest in joining.
             </p>
+
+            {errorMsg && (
+              <div style={{
+                padding: '10px 14px',
+                borderRadius: '8px',
+                backgroundColor: '#FEF2F2',
+                border: '1px solid #FCA5A5',
+                color: '#991B1B',
+                fontSize: '0.84rem',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                <span>{errorMsg}</span>
+              </div>
+            )}
 
             <form onSubmit={handleAddProspect} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div className="form-group" style={{ margin: 0 }}>

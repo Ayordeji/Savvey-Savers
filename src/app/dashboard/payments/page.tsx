@@ -81,6 +81,9 @@ function PaymentsContent() {
   // Dropdown states
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
+  // Selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -115,6 +118,21 @@ function PaymentsContent() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const idParam = searchParams.get('id');
+    const searchParam = searchParams.get('search');
+    const memberParam = searchParams.get('member');
+    if (idParam) {
+      setSearchQuery(idParam);
+      setOpenDropdownId(idParam);
+    } else if (searchParam) {
+      setSearchQuery(searchParam);
+    }
+    if (memberParam) {
+      setMemberFilter(memberParam);
+    }
+  }, [searchParams]);
+
   // Map commitments & users by id for fast lookups
   const cmtMap = useMemo(() => {
     const map = new Map<string, Commitment>();
@@ -143,7 +161,18 @@ function PaymentsContent() {
     const memberDisplayId = (memberUser as any)?.displayId || (memberUser as any)?.invitationId || '';
     const initials = memberName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'MB';
     const commitmentTag = cmt ? `${cmt.collectionMonth} - ${cmt.goal || 'Savings Pool'} (£${Number(cmt.amount).toFixed(0)})` : 'Savings Pool';
-    const displayId = (p as any).displayId || (p as any).reference || p.id;
+    const rawId = (p as any).displayId || (p as any).reference || p.id;
+    // Shorten any long IDs to PAY-XXXX...YYYY format
+    let displayId = rawId;
+    if (typeof rawId === 'string' && rawId.length > 14) {
+      if (rawId.startsWith('PAY-')) {
+        const rest = rawId.substring(4);
+        displayId = `PAY-${rest.slice(0, 4)}...${rest.slice(-4)}`;
+      } else {
+        const clean = rawId.replace(/[^a-zA-Z0-9]/g, '');
+        displayId = `PAY-${clean.slice(0, 4).toUpperCase()}...${clean.slice(-4).toUpperCase()}`;
+      }
+    }
 
     // Status: RECEIVED (CONFIRMED), PENDING, or OVERDUE
     let statusLabel: 'RECEIVED' | 'PENDING' | 'OVERDUE' = p.status === 'CONFIRMED' ? 'RECEIVED' : 'PENDING';
@@ -155,6 +184,7 @@ function PaymentsContent() {
       initials,
       commitmentTag,
       displayId,
+      rawId,
       statusLabel
     };
   };
@@ -168,6 +198,10 @@ function PaymentsContent() {
       if (searchQuery) {
         const q = searchQuery.toLowerCase().trim();
         const matches =
+          p.id.toLowerCase() === q ||
+          p.id.toLowerCase().includes(q) ||
+          (details.rawId && details.rawId.toLowerCase().includes(q)) ||
+          (p.userId && p.userId.toLowerCase().includes(q)) ||
           details.memberName.toLowerCase().includes(q) ||
           details.memberEmail.toLowerCase().includes(q) ||
           details.displayId.toLowerCase().includes(q) ||
@@ -214,7 +248,28 @@ function PaymentsContent() {
     .filter(c => c.status === 'ACTIVE')
     .reduce((sum, c) => sum + (Number(c.amount) || 0), 0) || totalCollectedThisMonth;
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(paginatedPayments.map(p => p.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const allPageSelected = paginatedPayments.length > 0 && paginatedPayments.every(p => selectedIds.has(p.id));
+  const somePageSelected = paginatedPayments.some(p => selectedIds.has(p.id)) && !allPageSelected;
+
   const handleResetFilters = () => {
+
     setSearchQuery('');
     setStatusFilter('');
     setMonthFilter('');
@@ -503,9 +558,15 @@ function PaymentsContent() {
                 <thead>
                   <tr style={{ backgroundColor: '#FAF9F6', borderBottom: '1px solid #ECE8E2' }}>
                     <th style={{ width: '36px', textAlign: 'center', padding: '14px 10px' }}>
-                      <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#2E5A44' }} />
+                      <input
+                        type="checkbox"
+                        checked={allPageSelected}
+                        ref={el => { if (el) el.indeterminate = somePageSelected; }}
+                        onChange={e => handleSelectAll(e.target.checked)}
+                        style={{ width: '16px', height: '16px', accentColor: '#2E5A44', cursor: 'pointer' }}
+                      />
                     </th>
-                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em', width: '130px', whiteSpace: 'nowrap' }}>
                       PAYMENT ID
                     </th>
                     <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -538,24 +599,47 @@ function PaymentsContent() {
                   ) : (
                     paginatedPayments.map((p) => {
                       const d = getPaymentDetails(p);
+                      const isDirectTarget = searchParams.get('id') === p.id;
 
                       return (
-                        <tr key={p.id} style={{ borderBottom: '1px solid #ECE8E2', transition: 'background-color 0.15s ease' }}>
+                        <tr
+                          key={p.id}
+                          style={{
+                            borderBottom: '1px solid #ECE8E2',
+                            transition: 'background-color 0.15s ease',
+                            backgroundColor: isDirectTarget ? '#F0FDF4' : undefined
+                          }}
+                        >
                           <td style={{ textAlign: 'center', padding: '14px 10px' }}>
-                            <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#0c4e43' }} />
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(p.id)}
+                              onChange={e => handleSelectRow(p.id, e.target.checked)}
+                              style={{ width: '16px', height: '16px', accentColor: '#0c4e43', cursor: 'pointer' }}
+                            />
                           </td>
 
                           {/* Payment ID Monospace Pill */}
-                          <td style={{ padding: '14px 16px' }}>
-                            <span style={{
-                              padding: '3px 8px',
-                              borderRadius: '6px',
-                              fontSize: '0.78rem',
-                              fontWeight: 700,
-                              fontFamily: 'monospace',
-                              backgroundColor: '#EAF5EE',
-                              color: '#0c4e43'
-                            }}>
+                          <td style={{ padding: '14px 16px', width: '130px', whiteSpace: 'nowrap' }}>
+                            <span
+                              title={`Payment ID: ${d.rawId} (Click to copy)`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(d.rawId);
+                                dialog.alert('Copied', `Payment ID ${d.rawId} copied to clipboard.`);
+                              }}
+                              style={{
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                                fontSize: '0.78rem',
+                                fontWeight: 700,
+                                fontFamily: 'monospace',
+                                backgroundColor: '#EAF5EE',
+                                color: '#0c4e43',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
                               {d.displayId}
                             </span>
                           </td>

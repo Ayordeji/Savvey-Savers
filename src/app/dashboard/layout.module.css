@@ -102,7 +102,7 @@
   gap: 6px;
   padding: 7px 14px;
   background-color: #1a2c22;
-  color: #ffffff;
+  color: #ffffff !important;
   border-radius: 9999px;
   font-size: 0.8rem;
   font-weight: 600;
@@ -111,9 +111,16 @@
   transition: all var(--transition-fast);
 }
 
-.sidebarHelpBtn:hover {
+.sidebarHelpBtn:hover,
+.sidebarHelpBtn:focus,
+.sidebarHelpBtn:active {
   background-color: #243d2f;
   border-color: #355b46;
+  color: #ffffff !important;
+}
+
+.sidebarHelpBtn span {
+  color: #ffffff !important;
 }
 
 .sidebarFooter {

@@ -204,19 +204,24 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         gap: '20px'
       }}>
         {/* Card 1: Total Savings Volume (Dark Forest Green Brand Card with Sparkline) */}
-        <div style={{
-          backgroundColor: '#0c4e43',
-          borderRadius: '18px',
-          padding: '24px',
-          color: '#FFFFFF',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '190px',
-          boxShadow: '0 10px 25px -4px rgba(12, 78, 67, 0.35)',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
+        <Link
+          href="/dashboard/commitments"
+          className="dashboard-clickable-card-dark"
+          title="View all savings commitments"
+          style={{
+            backgroundColor: '#0c4e43',
+            borderRadius: '18px',
+            padding: '24px',
+            color: '#FFFFFF',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            minHeight: '190px',
+            boxShadow: '0 10px 25px -4px rgba(12, 78, 67, 0.35)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        >
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#c2d6cf', fontSize: '0.85rem', fontWeight: 500 }}>
@@ -242,25 +247,30 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
 
             <div style={{ fontSize: '0.78rem', color: '#d97746', marginTop: '4px', fontWeight: 600 }}>
-              All-time confirmed savings pool
+              All-time confirmed savings pool →
             </div>
           </div>
 
           <SparklineChart />
-        </div>
+        </Link>
 
         {/* Card 2: Selected Year Savings Volume */}
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '18px',
-          padding: '24px',
-          border: '1px solid #dcd7ca',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '190px'
-        }}>
+        <Link
+          href={`/dashboard/commitments?year=${selectedYear}`}
+          className="dashboard-clickable-card"
+          title={`View ${selectedYear} commitments`}
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '18px',
+            padding: '24px',
+            border: '1px solid #dcd7ca',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            minHeight: '190px'
+          }}
+        >
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#57655c', fontSize: '0.85rem', fontWeight: 500 }}>
@@ -285,23 +295,28 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
 
             <div style={{ fontSize: '0.78rem', color: '#57655c', marginTop: '6px', fontWeight: 500 }}>
-              {selectedYearNum === 2026 ? 'Jan & Feb collections confirmed (£44,300/mo)' : `Confirmed collections for ${selectedYear}`}
+              {selectedYearNum === 2026 ? 'Jan & Feb collections confirmed (£44,300/mo)' : `Confirmed collections for ${selectedYear}`} →
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Card 3: Harvests Released */}
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '18px',
-          padding: '24px',
-          border: '1px solid #dcd7ca',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '190px'
-        }}>
+        <Link
+          href="/dashboard/reports/commitments"
+          className="dashboard-clickable-card"
+          title="View harvest reports"
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '18px',
+            padding: '24px',
+            border: '1px solid #dcd7ca',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            minHeight: '190px'
+          }}
+        >
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#57655c', fontSize: '0.85rem', fontWeight: 500 }}>
@@ -326,10 +341,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
 
             <div style={{ fontSize: '0.78rem', color: '#57655c', marginTop: '6px', fontWeight: 500 }}>
-              {completedHarvestsCount} completed harvest{completedHarvestsCount === 1 ? '' : 's'} recorded
+              {completedHarvestsCount} completed harvest{completedHarvestsCount === 1 ? '' : 's'} recorded →
             </div>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* 3. Four KPI Progress Cards */}
@@ -339,16 +354,21 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         gap: '16px'
       }}>
         {/* Active Commitments */}
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '16px',
-          padding: '20px',
-          border: '1px solid #dcd7ca',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '135px'
-        }}>
+        <Link
+          href={`/dashboard/commitments?status=ACTIVE&year=${selectedYear}`}
+          className="dashboard-clickable-card"
+          title={`View active commitments for ${selectedYear}`}
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '16px',
+            padding: '20px',
+            border: '1px solid #dcd7ca',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            minHeight: '135px'
+          }}
+        >
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Active Commitments</span>
@@ -366,19 +386,24 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <div style={{ width: '100%', height: '6px', backgroundColor: '#E5E7EB', borderRadius: '9999px', marginTop: '12px', overflow: 'hidden' }}>
             <div style={{ width: `${activeCommitmentPct}%`, height: '100%', backgroundColor: '#0c4e43', borderRadius: '9999px' }} />
           </div>
-        </div>
+        </Link>
 
         {/* Pending Commitments */}
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '16px',
-          padding: '20px',
-          border: '1px solid #dcd7ca',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '135px'
-        }}>
+        <Link
+          href={`/dashboard/commitments?status=PENDING&year=${selectedYear}`}
+          className="dashboard-clickable-card"
+          title={`View pending commitments for ${selectedYear}`}
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '16px',
+            padding: '20px',
+            border: '1px solid #dcd7ca',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            minHeight: '135px'
+          }}
+        >
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Pending Commitments</span>
@@ -393,19 +418,24 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               {pendingCommitmentsCount === 0 ? 'All commitments confirmed' : `${pendingCommitmentsCount} awaiting confirmation`}
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Active Members */}
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '16px',
-          padding: '20px',
-          border: '1px solid #dcd7ca',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '135px'
-        }}>
+        <Link
+          href="/dashboard/users?status=ACTIVE"
+          className="dashboard-clickable-card"
+          title="View active members"
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '16px',
+            padding: '20px',
+            border: '1px solid #dcd7ca',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            minHeight: '135px'
+          }}
+        >
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Active Members</span>
@@ -423,19 +453,24 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <div style={{ width: '100%', height: '6px', backgroundColor: '#E5E7EB', borderRadius: '9999px', marginTop: '12px', overflow: 'hidden' }}>
             <div style={{ width: `${Math.min(100, Math.round((activeUsersCount / (activeUsersCount + invitedUsersCount || 1)) * 100))}%`, height: '100%', backgroundColor: '#0c4e43', borderRadius: '9999px' }} />
           </div>
-        </div>
+        </Link>
 
         {/* Invited Members */}
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '16px',
-          padding: '20px',
-          border: '1px solid #dcd7ca',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '135px'
-        }}>
+        <Link
+          href="/dashboard/invitations"
+          className="dashboard-clickable-card"
+          title="View invited members"
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '16px',
+            padding: '20px',
+            border: '1px solid #dcd7ca',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            minHeight: '135px'
+          }}
+        >
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Invited Members</span>
@@ -450,7 +485,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               {invitedUsersCount > 0 ? 'Pending platform activation' : 'No pending invitations'}
             </div>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* 4. Visuals: Savings Volume Over Time + At a Glance */}
@@ -668,7 +703,21 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 });
 
                 return (
-                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid #F5F3EF' }}>
+                  <Link
+                    key={p.id}
+                    href={`/dashboard/payments?id=${p.id}`}
+                    className="activity-item-link"
+                    title={`View payment record for ${memberName}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 10px',
+                      borderRadius: '10px',
+                      borderBottom: '1px solid #F5F3EF',
+                      cursor: 'pointer'
+                    }}
+                  >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                       <div style={{
                         width: '36px',
@@ -698,7 +747,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                         + £{Number(p.amount).toFixed(2)}
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 );
               })
             )}

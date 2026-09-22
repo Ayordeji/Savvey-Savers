@@ -1,10 +1,22 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { Search, Download, ExternalLink, X, PoundSterling, Filter, RotateCcw } from 'lucide-react';
-import styles from '../../commitments/commitments.module.css';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import {
+  Download,
+  ExternalLink,
+  X,
+  PoundSterling,
+  RotateCcw,
+  ChevronDown,
+  FileText,
+  TrendingUp,
+  CheckCircle,
+  Clock,
+  Filter,
+} from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PaginationControls from '../../PaginationControls';
+
 interface Commitment {
   id: string;
   memberId: string;
@@ -33,7 +45,7 @@ interface Payment {
 
 export default function SavingsCommitmentReportPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '20px', color: 'var(--text-muted)' }}>Loading report...</div>}>
+    <Suspense fallback={<div style={{ padding: '20px', color: '#6B7280' }}>Loading report...</div>}>
       <CommitmentsReportContent />
     </Suspense>
   );
@@ -45,15 +57,18 @@ function CommitmentsReportContent() {
   const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Filters
   const [harvestFilter, setHarvestFilter] = useState('');
   const [paymentConfirmedFilter, setPaymentConfirmedFilter] = useState('');
   const [periodFilter, setPeriodFilter] = useState('');
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'id', direction: 'desc' });
+
+  const [activeModal, setActiveModal] = useState<'NONE' | 'VIEW_COMMITMENT'>('NONE');
+  const [selectedCmt, setSelectedCmt] = useState<Commitment | null>(null);
+  const [viewCmtPayments, setViewCmtPayments] = useState<Payment[]>([]);
+  const [viewCmtLoading, setViewCmtLoading] = useState(false);
 
   const requestSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -63,17 +78,9 @@ function CommitmentsReportContent() {
     setSortConfig({ key, direction });
   };
 
-  // View Modal
-  const [activeModal, setActiveModal] = useState<'NONE' | 'VIEW_COMMITMENT'>('NONE');
-  const [selectedCmt, setSelectedCmt] = useState<Commitment | null>(null);
-  const [viewCmtPayments, setViewCmtPayments] = useState<Payment[]>([]);
-  const [viewCmtLoading, setViewCmtLoading] = useState(false);
-
   useEffect(() => {
     const h = searchParams.get('harvest');
-    if (h) {
-      setHarvestFilter(h);
-    }
+    if (h) setHarvestFilter(h);
     fetchCommitments();
   }, [searchParams]);
 
@@ -82,7 +89,6 @@ function CommitmentsReportContent() {
       const res = await fetch('/api/admin/commitments');
       if (res.ok) {
         const data = await res.json();
-        // ensure it's an array
         setCommitments(Array.isArray(data) ? data : []);
       }
     } catch (err) {
@@ -117,56 +123,42 @@ function CommitmentsReportContent() {
     setCurrentPage(1);
   };
 
-  // Filter Logic
-  // (Assuming PaymentConfirmedFilter requires querying payments if strictly applied, but to keep it simple, we filter based on standard status properties first)
-  const filteredCommitments = commitments.filter((c) => {
-    // Determine harvest status (Yes = harvestReleasedAt is set)
+  const filteredCommitments = useMemo(() => commitments.filter((c) => {
     const isHarvestYes = c.harvestReleasedAt !== null && c.harvestReleasedAt !== undefined;
-    
-    // Determine payment status (Yes = has CONFIRMED payment)
-    const isPaymentYes = c.payments && c.payments.some((p: any) => p.status === 'CONFIRMED');
-
-    // Filter by Harvest Status
     if (harvestFilter === 'YES' && !isHarvestYes) return false;
     if (harvestFilter === 'NO' && isHarvestYes) return false;
-
-    // Filter by Payment Confirmed (acts as a status filter per user rules)
     if (paymentConfirmedFilter === 'YES' && c.status !== 'COMPLETED') return false;
     if (paymentConfirmedFilter === 'NO' && c.status === 'COMPLETED') return false;
-    
     if (periodFilter && String(c.collectionYear) !== periodFilter) return false;
-    
     return true;
-  });
+  }), [commitments, harvestFilter, paymentConfirmedFilter, periodFilter]);
 
-  const sortedCommitments = [...filteredCommitments].sort((a, b) => {
+  const sortedCommitments = useMemo(() => [...filteredCommitments].sort((a, b) => {
     if (!sortConfig) return 0;
     const { key, direction } = sortConfig;
-    
     let aVal: any = a[key as keyof typeof a];
     let bVal: any = b[key as keyof typeof b];
-
-    if (key === 'id') {
-      aVal = a.id || '';
-      bVal = b.id || '';
-    }
-    
     if (typeof aVal === 'string' && typeof bVal === 'string') {
-      return direction === 'asc' 
+      return direction === 'asc'
         ? aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' })
         : bVal.localeCompare(aVal, undefined, { numeric: true, sensitivity: 'base' });
     }
-    
     if (aVal < bVal) return direction === 'asc' ? -1 : 1;
     if (aVal > bVal) return direction === 'asc' ? 1 : -1;
     return 0;
-  });
+  }), [filteredCommitments, sortConfig]);
 
   const totalPages = Math.max(1, Math.ceil(sortedCommitments.length / itemsPerPage));
   const currentCommitments = sortedCommitments.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  // KPI summaries
+  const totalHarvested = commitments.filter(c => c.harvestReleasedAt).length;
+  const totalActive = commitments.filter(c => c.status === 'ACTIVE').length;
+  const totalCompleted = commitments.filter(c => c.status === 'COMPLETED').length;
+  const totalAmount = commitments.reduce((s, c) => s + Number(c.amount), 0);
 
   const handleExportCSV = () => {
     if (filteredCommitments.length === 0) return;
@@ -175,177 +167,232 @@ function CommitmentsReportContent() {
       `"${c.id}"`,
       `"${c.memberName.replace(/"/g, '""')}"`,
       `"${c.amount}"`,
-      `"${c.goal}"`,
       `"${c.collectionMonth} ${c.collectionYear}"`,
-      `"${c.endDate}"`,
+      `"${c.collectionYear}"`,
       `"${c.status}"`
     ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `savings_commitments_report_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `savings_commitments_report_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const sortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) return <span style={{ fontSize: '0.7rem', color: '#9CA3AF' }}>⇕</span>;
+    return <span style={{ fontSize: '0.7rem', color: '#2E5A44' }}>{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>;
   };
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 0' }}>
-        <div className={styles.spinner} style={{ width: '40px', height: '40px', border: '3px solid var(--border-color)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-        <p style={{ marginTop: '16px', color: 'var(--text-muted)' }}>Loading report...</p>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 0', gap: '16px' }}>
+        <div style={{ width: '36px', height: '36px', border: '3px solid #ECE8E2', borderTopColor: '#2E5A44', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <p style={{ color: '#6B7280', fontSize: '0.88rem' }}>Loading report...</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className={styles.filterContainer}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+      {/* Page Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, fontFamily: 'var(--font-family-title)' }}>
-            Savings Commitments Report
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+            Harvest &amp; Reports
           </h2>
+          <p style={{ color: '#6B7280', fontSize: '0.88rem', marginTop: '4px', margin: 0 }}>
+            View savings commitments, harvest records, and payment history across all members.
+          </p>
+        </div>
+        <button
+          onClick={handleExportCSV}
+          style={{
+            backgroundColor: '#FFFFFF',
+            color: '#374151',
+            border: '1px solid #ECE8E2',
+            borderRadius: '10px',
+            padding: '9px 16px',
+            fontWeight: 600,
+            fontSize: '0.82rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            cursor: 'pointer'
+          }}
+        >
+          <Download size={15} />
+          <span>Export CSV</span>
+          <ChevronDown size={14} style={{ opacity: 0.7 }} />
+        </button>
+      </div>
+
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Total Commitments</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <FileText size={16} />
+            </div>
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>{commitments.length}</div>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>All time records</span>
+        </div>
+
+        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Active</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <TrendingUp size={16} />
+            </div>
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>{totalActive}</div>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Currently saving</span>
+        </div>
+
+        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Harvested</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#FEF3C7', color: '#B45309', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CheckCircle size={16} />
+            </div>
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>{totalHarvested}</div>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Harvest released</span>
+        </div>
+
+        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Total Pool Value</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <PoundSterling size={16} />
+            </div>
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>£{totalAmount.toLocaleString('en-GB', { minimumFractionDigits: 0 })}</div>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Monthly commitment sum</span>
         </div>
       </div>
 
-      {/* Filter and Search controls */}
-      <div className={styles.controlsBar} style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-          
-          <select value={harvestFilter} onChange={(e) => { setHarvestFilter(e.target.value); setCurrentPage(1); }} className="form-select" style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', minWidth: '150px' }}>
-            <option value="">Harvest status</option>
-            <option value="YES">Yes</option>
-            <option value="NO">No</option>
+      {/* Filter Bar */}
+      <div style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: '16px',
+        border: '1px solid #ECE8E2',
+        padding: '14px 18px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#374151' }}>
+            <Filter size={15} />
+            Filters:
+          </div>
+          <select
+            value={harvestFilter}
+            onChange={e => { setHarvestFilter(e.target.value); setCurrentPage(1); }}
+            style={{ padding: '7px 12px', fontSize: '0.82rem', borderRadius: '8px', border: '1px solid #ECE8E2', backgroundColor: '#FAF9F6', color: '#374151', fontWeight: 500, cursor: 'pointer', minWidth: '140px' }}
+          >
+            <option value="">Harvest Status</option>
+            <option value="YES">Harvested</option>
+            <option value="NO">Not Harvested</option>
           </select>
 
-          <select value={paymentConfirmedFilter} onChange={(e) => { setPaymentConfirmedFilter(e.target.value); setCurrentPage(1); }} className="form-select" style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', minWidth: '160px' }}>
-            <option value="">Payment Confirmed</option>
-            <option value="YES">Yes</option>
-            <option value="NO">No</option>
+          <select
+            value={paymentConfirmedFilter}
+            onChange={e => { setPaymentConfirmedFilter(e.target.value); setCurrentPage(1); }}
+            style={{ padding: '7px 12px', fontSize: '0.82rem', borderRadius: '8px', border: '1px solid #ECE8E2', backgroundColor: '#FAF9F6', color: '#374151', fontWeight: 500, cursor: 'pointer', minWidth: '155px' }}
+          >
+            <option value="">Payment Status</option>
+            <option value="YES">Completed</option>
+            <option value="NO">Not Completed</option>
           </select>
 
-          <select value={periodFilter} onChange={(e) => { setPeriodFilter(e.target.value); setCurrentPage(1); }} className="form-select" style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-surface)', minWidth: '150px' }}>
-            <option value="">Period (Year)</option>
+          <select
+            value={periodFilter}
+            onChange={e => { setPeriodFilter(e.target.value); setCurrentPage(1); }}
+            style={{ padding: '7px 12px', fontSize: '0.82rem', borderRadius: '8px', border: '1px solid #ECE8E2', backgroundColor: '#FAF9F6', color: '#374151', fontWeight: 500, cursor: 'pointer', minWidth: '130px' }}
+          >
+            <option value="">Year</option>
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
             <option value="2026">2026</option>
             <option value="2027">2027</option>
             <option value="2028">2028</option>
           </select>
 
-          <button onClick={() => setCurrentPage(1)} className="btn btn-primary btn-sm" style={{ backgroundColor: '#1e293b', color: 'white', borderRadius: '8px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 600 }}>
-            Filter
-          </button>
-          
-          <button onClick={handleResetFilters} className="btn btn-secondary btn-sm" style={{ borderRadius: '8px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 600 }}>
-            Reset
-          </button>
+          {(harvestFilter || paymentConfirmedFilter || periodFilter) && (
+            <button
+              onClick={handleResetFilters}
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', fontSize: '0.8rem', color: '#6B7280', cursor: 'pointer', fontWeight: 500 }}
+            >
+              <RotateCcw size={13} /> Reset
+            </button>
+          )}
         </div>
 
-        <button onClick={handleExportCSV} className="btn btn-secondary btn-sm" style={{ backgroundColor: '#1e293b', color: 'white', borderRadius: '8px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 600, border: 'none' }}>
-          <Download size={15} style={{ marginRight: '6px' }} />
-          Export
-        </button>
+        <span style={{ fontSize: '0.8rem', color: '#6B7280' }}>
+          {filteredCommitments.length} record{filteredCommitments.length !== 1 ? 's' : ''}
+        </span>
       </div>
 
-      <div className="table-container">
-          <table className="custom-table">
+      {/* Table Card */}
+      <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="custom-table" style={{ width: '100%' }}>
             <thead>
               <tr>
                 <th onClick={() => requestSort('id')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>Record ID</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'id' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>Record ID {sortIcon('id')}</div>
                 </th>
                 <th onClick={() => requestSort('memberName')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>Member Name</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'memberName' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>Member Name {sortIcon('memberName')}</div>
                 </th>
                 <th onClick={() => requestSort('amount')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>Savings Amount (£)</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'amount' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>Savings Amount {sortIcon('amount')}</div>
                 </th>
                 <th onClick={() => requestSort('goal')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>Savings Goal</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'goal' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>Goal {sortIcon('goal')}</div>
                 </th>
-                
                 <th onClick={() => requestSort('collectionMonth')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>Collection Month</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'collectionMonth' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
-                </th>
-                <th onClick={() => requestSort('endDate')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>Collection Year</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'endDate' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>Collection Period {sortIcon('collectionMonth')}</div>
                 </th>
                 <th onClick={() => requestSort('harvestAmount')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>Harvest Amount (£)</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'harvestAmount' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>Harvest Amount {sortIcon('harvestAmount')}</div>
                 </th>
                 <th onClick={() => requestSort('harvestReleasedAt')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>Harvest Date</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'harvestReleasedAt' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>Harvest Date {sortIcon('harvestReleasedAt')}</div>
                 </th>
                 <th onClick={() => requestSort('status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span>Status</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--secondary)', fontWeight: 700 }}>
-                      {sortConfig?.key === 'status' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '⇕'}
-                    </span>
-                  </div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>Status {sortIcon('status')}</div>
                 </th>
               </tr>
             </thead>
             <tbody>
               {currentCommitments.map((cmt) => (
-                <tr key={cmt.id} className={styles.tableRow}>
-                  <td className={styles.idCell} style={{ fontWeight: 600, cursor: 'pointer', color: 'var(--primary)', textDecoration: 'underline' }} onClick={() => handleOpenViewModal(cmt)}>
-                    {cmt.id}
-                  </td>
+                <tr key={cmt.id}>
                   <td>
-                    <div className={styles.userNameWrap}>
-                      <span className={styles.userName}>{cmt.memberName}</span>
-                    </div>
+                    <button
+                      onClick={() => handleOpenViewModal(cmt)}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 700, color: '#2E5A44', fontFamily: 'monospace', fontSize: '0.82rem', textDecoration: 'underline', textUnderlineOffset: '3px' }}
+                    >
+                      {cmt.id}
+                    </button>
                   </td>
-                  <td style={{ fontWeight: 600, color: '#16a34a' }}>£{Number(cmt.amount).toFixed(2)}</td>
-                  <td>{cmt.goal || 'Savings Goal'}</td>
-                  
-                  <td className={styles.dateCell}>{cmt.collectionMonth} {cmt.collectionYear}</td>
-                  <td className={styles.dateCell}>{cmt.collectionYear}</td>
+                  <td style={{ fontWeight: 600, color: '#111827' }}>{cmt.memberName}</td>
+                  <td style={{ fontWeight: 700, color: '#16a34a' }}>£{Number(cmt.amount).toFixed(2)}</td>
+                  <td style={{ color: '#374151', fontSize: '0.85rem' }}>{cmt.goal || 'Savings Goal'}</td>
+                  <td style={{ color: '#374151' }}>{cmt.collectionMonth} {cmt.collectionYear}</td>
                   <td style={{ fontWeight: 600, color: '#2563eb' }}>
                     {cmt.harvestAmount !== null && cmt.harvestAmount !== undefined ? `£${Number(cmt.harvestAmount).toFixed(2)}` : '—'}
                   </td>
-                  <td className={styles.dateCell}>
+                  <td style={{ color: '#6B7280', fontSize: '0.85rem' }}>
                     {cmt.harvestReleasedAt ? new Date(cmt.harvestReleasedAt).toLocaleDateString('en-GB') : '—'}
                   </td>
                   <td>
@@ -357,7 +404,7 @@ function CommitmentsReportContent() {
               ))}
               {currentCommitments.length === 0 && (
                 <tr>
-                  <td colSpan={10} style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: '#9CA3AF' }}>
                     No savings commitments match your filters.
                   </td>
                 </tr>
@@ -365,47 +412,45 @@ function CommitmentsReportContent() {
             </tbody>
           </table>
         </div>
+      </div>
 
-        <PaginationControls
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={sortedCommitments.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(num) => { setItemsPerPage(num); setCurrentPage(1); }}
-          itemLabel="commitment"
-        />
-      {/* --- VIEW COMMITMENT DETAILS MODAL --- */}
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={sortedCommitments.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(num) => { setItemsPerPage(num); setCurrentPage(1); }}
+        itemLabel="commitment"
+      />
+
+      {/* View Commitment Details Modal */}
       {activeModal === 'VIEW_COMMITMENT' && selectedCmt && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content" style={{ maxWidth: '640px', padding: '28px', position: 'relative' }}>
-            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={20} />
             </button>
 
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                <PoundSterling size={20} style={{ color: 'var(--primary)' }} />
+                <PoundSterling size={20} style={{ color: '#2E5A44' }} />
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', margin: 0 }}>Saving Commitment</h3>
               </div>
-              <div style={{ fontFamily: 'monospace', fontSize: '1rem', fontWeight: 700, color: 'var(--primary)', paddingLeft: '30px' }}>{selectedCmt.id}</div>
+              <div style={{ fontFamily: 'monospace', fontSize: '0.9rem', fontWeight: 700, color: '#2E5A44', paddingLeft: '30px' }}>{selectedCmt.id}</div>
             </div>
 
-            {/* Info Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px', backgroundColor: 'var(--bg-subtle, #f8fafc)', borderRadius: '12px', padding: '16px', border: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px', backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '16px', border: '1px solid #ECE8E2' }}>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Record ID</span>
-                <div style={{ fontWeight: 700, color: 'var(--text-main)', fontFamily: 'monospace', marginTop: '4px', fontSize: '0.85rem' }}>{selectedCmt.id}</div>
+                <span style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Record ID</span>
+                <div style={{ fontWeight: 700, color: '#111827', fontFamily: 'monospace', marginTop: '4px', fontSize: '0.85rem' }}>{selectedCmt.id}</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Member Name</span>
+                <span style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Member Name</span>
                 <div style={{ marginTop: '4px' }}>
                   <button
-                    onClick={() => {
-                      router.push(`/dashboard/users?search=${encodeURIComponent(selectedCmt.memberName)}`);
-                      setActiveModal('NONE');
-                    }}
-                    style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: '0.9rem', textDecoration: 'underline', textUnderlineOffset: '3px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    onClick={() => { router.push(`/dashboard/users?search=${encodeURIComponent(selectedCmt.memberName)}`); setActiveModal('NONE'); }}
+                    style={{ background: 'none', border: 'none', color: '#2E5A44', fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: '0.9rem', textDecoration: 'underline', textUnderlineOffset: '3px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                     title="Go to Manage Users"
                   >
                     {selectedCmt.memberName}
@@ -414,53 +459,57 @@ function CommitmentsReportContent() {
                 </div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Collection Month</span>
-                <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>{selectedCmt.collectionMonth} {selectedCmt.collectionYear}</div>
+                <span style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Collection Period</span>
+                <div style={{ fontWeight: 600, color: '#111827', marginTop: '4px' }}>{selectedCmt.collectionMonth} {selectedCmt.collectionYear}</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Savings Amount (£)</span>
+                <span style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Savings Amount</span>
                 <div style={{ fontWeight: 700, color: '#16a34a', marginTop: '4px', fontSize: '1rem' }}>£{Number(selectedCmt.amount).toFixed(2)}</div>
               </div>
-              
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</span>
+                <span style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</span>
                 <div style={{ marginTop: '4px' }}>
                   <span className={`status-pill ${selectedCmt.status.toLowerCase().replace(/_/g, '-')}`} style={{ fontSize: '0.72rem' }}>
-                    {selectedCmt.status === 'PENDING' ? 'Pending' : selectedCmt.status.charAt(0).toUpperCase() + selectedCmt.status.slice(1).toLowerCase()}
+                    {selectedCmt.status === 'NOT_YET_STARTED' ? 'Not Yet Started' : selectedCmt.status.charAt(0).toUpperCase() + selectedCmt.status.slice(1).toLowerCase()}
                   </span>
                 </div>
               </div>
+              {selectedCmt.harvestAmount != null && (
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Harvest Amount</span>
+                  <div style={{ fontWeight: 700, color: '#2563eb', marginTop: '4px' }}>£{Number(selectedCmt.harvestAmount).toFixed(2)}</div>
+                </div>
+              )}
             </div>
 
-            {/* Payment History Table */}
-            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '12px', color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment History</h4>
+            <h4 style={{ fontSize: '0.82rem', fontWeight: 700, marginBottom: '12px', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment History</h4>
             {viewCmtLoading ? (
-              <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>Loading payments...</div>
+              <div style={{ textAlign: 'center', padding: '24px', color: '#6B7280' }}>Loading payments...</div>
             ) : viewCmtPayments.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '0.85rem', backgroundColor: 'var(--bg-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <div style={{ textAlign: 'center', padding: '20px', color: '#6B7280', fontSize: '0.85rem', backgroundColor: '#FAF9F6', borderRadius: '8px', border: '1px solid #ECE8E2' }}>
                 No payments logged yet for this commitment.
               </div>
             ) : (
-              <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid #ECE8E2' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                   <thead>
-                    <tr style={{ backgroundColor: 'var(--bg-subtle, #f1f5f9)', borderBottom: '2px solid var(--border-color)' }}>
-                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>SR.NO.</th>
-                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment Month</th>
-                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment Year</th>
-                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment Date</th>
-                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amount</th>
-                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
+                    <tr style={{ backgroundColor: '#FAF9F6', borderBottom: '2px solid #ECE8E2' }}>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#6B7280', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>#</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#6B7280', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Month</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#6B7280', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Year</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#6B7280', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#6B7280', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amount</th>
+                      <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#6B7280', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {viewCmtPayments.map((pay, i) => (
-                      <tr key={pay.id} style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: i % 2 === 0 ? 'transparent' : 'var(--bg-subtle, #fafafa)' }}>
-                        <td style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--text-muted)' }}>{i + 1}</td>
+                      <tr key={pay.id} style={{ borderBottom: '1px solid #ECE8E2', backgroundColor: i % 2 === 0 ? 'transparent' : '#FAF9F6' }}>
+                        <td style={{ padding: '10px 14px', fontWeight: 600, color: '#6B7280' }}>{i + 1}</td>
                         <td style={{ padding: '10px 14px', fontWeight: 600 }}>{pay.month}</td>
                         <td style={{ padding: '10px 14px' }}>{pay.year}</td>
-                        <td style={{ padding: '10px 14px', color: 'var(--text-muted)' }}>
-                          {pay.createdAt ? new Date(pay.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
+                        <td style={{ padding: '10px 14px', color: '#6B7280' }}>
+                          {pay.createdAt ? new Date(pay.createdAt).toLocaleDateString('en-GB') : '—'}
                         </td>
                         <td style={{ padding: '10px 14px', fontWeight: 700, color: '#16a34a' }}>£{Number(pay.amount).toFixed(2)}</td>
                         <td style={{ padding: '10px 14px' }}>
@@ -476,7 +525,12 @@ function CommitmentsReportContent() {
             )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-              <button onClick={() => setActiveModal('NONE')} className="btn btn-secondary" style={{ borderRadius: '8px', padding: '8px 22px' }}>Close</button>
+              <button
+                onClick={() => setActiveModal('NONE')}
+                style={{ backgroundColor: '#FFFFFF', color: '#374151', border: '1px solid #ECE8E2', borderRadius: '8px', padding: '8px 22px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

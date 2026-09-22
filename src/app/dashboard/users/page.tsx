@@ -255,6 +255,10 @@ export default function ManageUsersPage() {
     if (searchParam) {
       setSearchQuery(searchParam);
     }
+    const statusParam = searchParams.get('status');
+    if (statusParam) {
+      setUserStatusFilter(statusParam.toUpperCase());
+    }
     const approveId = searchParams.get('approveSuperAdmin');
     if (approveId && users.length > 0) {
       const targetUser = users.find((u) => u.id === approveId);
@@ -1320,6 +1324,12 @@ export default function ManageUsersPage() {
                         <input
                           type="checkbox"
                           checked={paginatedUsers.length > 0 && paginatedUsers.filter(u => !u.isSuperAdmin && u.id !== currentUser?.id).every(u => selectedUserIds.includes(u.id))}
+                          ref={el => {
+                            if (el) {
+                              const deletable = paginatedUsers.filter(u => !u.isSuperAdmin && u.id !== currentUser?.id);
+                              el.indeterminate = deletable.some(u => selectedUserIds.includes(u.id)) && !deletable.every(u => selectedUserIds.includes(u.id));
+                            }
+                          }}
                           onChange={(e) => handleSelectAll(e.target.checked)}
                           style={{ accentColor: '#2E5A44', cursor: 'pointer' }}
                         />

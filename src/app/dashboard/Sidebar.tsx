@@ -208,10 +208,10 @@ export default function Sidebar({ user }: SidebarProps) {
         <a
           href="mailto:support@savveysavers.com"
           className={styles.sidebarHelpBtn}
-          style={{ textDecoration: 'none' }}
+          style={{ textDecoration: 'none', color: '#ffffff' }}
         >
-          <Headphones size={15} />
-          <span>Get Support</span>
+          <Headphones size={15} style={{ color: '#ffffff' }} />
+          <span style={{ color: '#ffffff' }}>Get Support</span>
         </a>
       </div>
     </>
