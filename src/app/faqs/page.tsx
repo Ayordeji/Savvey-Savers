@@ -81,7 +81,7 @@ export default function FaqsPage() {
         onOpenWaitlist={() => setWaitlistModalOpen(true)}
       />
 
-      <main style={{ flex: 1 }}>
+      <main className="marketing-main" style={{ flex: 1, padding: 0, margin: 0, width: '100%' }}>
         {/* ============================================================ */}
         {/* 1. FAQS HERO (container: #F4F1E8)                           */}
         {/* ============================================================ */}
