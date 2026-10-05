@@ -6,6 +6,7 @@ import MarketingFooter from '@/components/marketing/MarketingFooter';
 import AuthModal from '@/components/marketing/AuthModal';
 import WaitlistModal from '@/components/marketing/WaitlistModal';
 import {
+  Check,
   CheckCircle2,
   XCircle,
   Settings,
@@ -106,6 +107,43 @@ export default function AboutUsPage() {
               >
                 What began as small, member-led savings cycles has grown into a well-established network where individuals come together to support one another through disciplined saving and shared accountability.
               </p>
+
+              {/* 4 Trust Pills matching previous site */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '12px',
+                  marginTop: '32px',
+                }}
+              >
+                {[
+                  'UK Residents Only',
+                  'Referral-Based',
+                  'Interest-Free',
+                  'GDPR Aligned',
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      backgroundColor: 'transparent',
+                      border: '1.5px solid #0E4F45',
+                      borderRadius: '360px',
+                      padding: '8px 20px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#0E4F45',
+                      letterSpacing: '0.02em',
+                    }}
+                  >
+                    <Check size={16} strokeWidth={2.5} style={{ color: '#0E4F45', flexShrink: 0 }} />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Right Column: Hero Image (Width 80% container on desktop) */}

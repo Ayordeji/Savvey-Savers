@@ -210,41 +210,7 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              {/* 4 Trust Pills */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                  gap: '12px',
-                  maxWidth: '520px',
-                }}
-              >
-                {[
-                  'Vetted members',
-                  'Structured governance',
-                  'Transparent tracking',
-                  'GDPR-Compliant',
-                ].map((item, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      backgroundColor: 'transparent',
-                      border: '1.5px solid rgba(14, 79, 69, 0.3)',
-                      borderRadius: '360px',
-                      padding: '8px 16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
-                      color: '#1A1A1A',
-                    }}
-                  >
-                    <Check size={16} strokeWidth={2.5} style={{ color: '#0E4F45', flexShrink: 0 }} />
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
+
             </div>
 
             {/* Right Column: Hero Image */}
