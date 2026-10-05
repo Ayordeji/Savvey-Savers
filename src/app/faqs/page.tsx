@@ -44,7 +44,7 @@ export default function FaqsPage() {
     },
     {
       q: 'Can I change my monthly contribution amount?',
-      a: 'Contribution amounts may be adjusted before a new cycle begins, provided there is a cycle with matching contribution levels. Once a cycle has started, contribution amounts cannot be changed.',
+      a: 'To avoid disruption to our cycles, contribution amounts cannot be changed after a cycle has commenced.',
     },
     {
       q: 'How are payout months assigned?',
