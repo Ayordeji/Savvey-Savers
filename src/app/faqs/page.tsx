@@ -16,7 +16,7 @@ export default function FaqsPage() {
   const faqItems = [
     {
       q: 'What is Savvey Savers Collective?',
-      a: 'Savvey Savers Collective is a structured, referral-based savings network where members participate in trusted savings cycles. Members make regular contributions and receive pooled contributions in their assigned month. The collective is designed to support members in achieving financial goals through shared accountability and disciplined saving.',
+      a: 'Savvey Savers Collective is a structured, referral-based savings network where members participate in trusted savings cycles. Members make regular contributions and receive pooled contributions in their assigned month. The collective is designed to support members in achieving financial goals through shared accountability and a  disciplined approach to saving.',
     },
     {
       q: 'How do savings cycles work?',
@@ -24,11 +24,11 @@ export default function FaqsPage() {
     },
     {
       q: 'Who can join the Collective?',
-      a: 'Membership is currently open to UK residents and is by referral and approval only. This approach helps maintain trust, accountability, and the integrity of each savings cycle.',
+      a: 'Membership is currently open to UK residents only, by referral and approval only. This approach helps maintain trust, accountability, and the integrity of each savings cycle.',
     },
     {
       q: 'Can members invite others?',
-      a: 'Yes. Members may refer trusted friends, family, or colleagues. All referrals undergo verification and approval before joining a savings cycle.',
+      a: 'Yes, members may refer trusted friends, family, or colleagues. However, this does not guarantee automatic acceptance to the Collective, as all referrals must undergo strict verification and approval before being accepted and added to a savings cycle.',
     },
     {
       q: 'How are members verified?',
@@ -40,7 +40,7 @@ export default function FaqsPage() {
     },
     {
       q: 'Are there fees to join or participate?',
-      a: 'Savvey Savers facilitates administrative coordination and governance. Any administrative or membership platform fees are transparently communicated to members prior to cycle initiation with no hidden charges.',
+      a: 'Yes, we charge membership fees for the administration of the Collective and cover operating expenses. However, the fees are only payable after successful verification and onboarding checks are completed.',
     },
     {
       q: 'Can I change my monthly contribution amount?',
@@ -93,19 +93,6 @@ export default function FaqsPage() {
           className="responsive-section-padding"
         >
           <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
-            <div
-              style={{
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                fontStyle: 'italic',
-                color: '#0E4F45',
-                letterSpacing: '0.06em',
-                marginBottom: '14px',
-              }}
-            >
-              You ask we answer
-            </div>
             <h1
               style={{
                 fontSize: 'clamp(2.4rem, 3.8vw, 3.8rem)',
