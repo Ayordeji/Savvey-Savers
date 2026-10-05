@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Search, Eye, X, Plus, UserPlus, Mail, Phone, ShieldCheck, CheckCircle2, CheckCircle, AlertCircle, Clock, ChevronDown, MoreVertical, Copy, Send, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { Search, Eye, X, Plus, UserPlus, Mail, Phone, ShieldCheck, CheckCircle2, CheckCircle, AlertCircle, Clock, ChevronDown, MoreVertical, Copy, Send, Check, ArrowRight, ExternalLink, Receipt } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import PaginationControls from '../PaginationControls';
-import styles from '../users/users.module.css';
 
 interface User {
   id: string;
@@ -22,6 +22,7 @@ interface User {
 }
 
 export default function MyInvitationsPage() {
+  const router = useRouter();
   const dialog = useDialog();
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,6 +36,21 @@ export default function MyInvitationsPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [commitmentsMap, setCommitmentsMap] = useState<Record<string, any>>({});
   const [enabledAmounts, setEnabledAmounts] = useState<any[]>([]);
+
+  // Drawer States
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  const handleRowClick = (u: User) => {
+    setSelectedUser(u);
+    setDrawerOpen(true);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        drawerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+    }
+  };
 
   // Selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -582,265 +598,605 @@ export default function MyInvitationsPage() {
         </div>
       </div>
 
-      {/* Members & Invitations Table */}
-      {loading ? (
-        <div className="glass-panel flex-center" style={{ height: '300px', flexDirection: 'column', gap: '16px' }}>
-          <div className="loading-spinner"></div>
-          <span style={{ color: 'var(--text-muted)' }}>Loading Member Invitations...</span>
-        </div>
-      ) : (
-        <div className="table-container" style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #ECE8E2', overflow: 'hidden' }}>
-          <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#FAF9F6', borderBottom: '1px solid #ECE8E2' }}>
-                <th style={{ width: '36px', textAlign: 'center', padding: '14px 10px' }}>
-                  <input
-                    type="checkbox"
-                    checked={paginatedUsers.length > 0 && paginatedUsers.every(u => selectedIds.has(u.id))}
-                    ref={el => { if (el) el.indeterminate = paginatedUsers.some(u => selectedIds.has(u.id)) && !paginatedUsers.every(u => selectedIds.has(u.id)); }}
-                    onChange={e => handleSelectAll(e.target.checked)}
-                    style={{ width: '16px', height: '16px', accentColor: '#2E5A44', cursor: 'pointer' }}
-                  />
-                </th>
-                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  INVITATION ID
-                </th>
-                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  INVITEE
-                </th>
-                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  ROLE
-                </th>
-                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  STATUS
-                </th>
-                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  DATE SENT
-                </th>
-                <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  EXPIRES ON
-                </th>
-                <th style={{ padding: '14px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  ACTION
-                </th>
-              </tr>
-            </thead>
+      {/* Members & Invitations Table with Slide Drawer Container */}
+      <div className="dashboard-table-drawer-container" style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+        {/* Left Side: Table & Pagination */}
+        <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
+          {loading ? (
+            <div className="glass-panel flex-center" style={{ height: '300px', flexDirection: 'column', gap: '16px' }}>
+              <div className="loading-spinner"></div>
+              <span style={{ color: 'var(--text-muted)' }}>Loading Member Invitations...</span>
+            </div>
+          ) : (
+            <div className="table-container" style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #ECE8E2', overflow: 'hidden' }}>
+              <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#FAF9F6', borderBottom: '1px solid #ECE8E2' }}>
+                    <th style={{ width: '36px', textAlign: 'center', padding: '14px 10px' }}>
+                      <input
+                        type="checkbox"
+                        checked={paginatedUsers.length > 0 && paginatedUsers.every(u => selectedIds.has(u.id))}
+                        ref={el => { if (el) el.indeterminate = paginatedUsers.some(u => selectedIds.has(u.id)) && !paginatedUsers.every(u => selectedIds.has(u.id)); }}
+                        onChange={e => handleSelectAll(e.target.checked)}
+                        style={{ width: '16px', height: '16px', accentColor: '#2E5A44', cursor: 'pointer' }}
+                      />
+                    </th>
+                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      INVITATION ID
+                    </th>
+                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      INVITEE
+                    </th>
+                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      ROLE
+                    </th>
+                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      STATUS
+                    </th>
+                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      DATE SENT
+                    </th>
+                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      EXPIRES ON
+                    </th>
+                    <th style={{ padding: '14px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      ACTION
+                    </th>
+                  </tr>
+                </thead>
 
-            <tbody>
-              {paginatedUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF', fontSize: '0.88rem' }}>
-                    No member invitations found.
-                  </td>
-                </tr>
-              ) : (
-                paginatedUsers.map((u) => {
-                  const initials = u.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'MB';
-                  const displayId = u.displayId || u.invitationId || u.id;
-                  const dateSent = new Date(u.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-                  const expiresOn = new Date(new Date(u.createdAt).getTime() + 14 * 86400000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-
-                  return (
-                    <tr key={u.id} style={{ borderBottom: '1px solid #ECE8E2', transition: 'background-color 0.15s ease' }}>
-                      <td style={{ textAlign: 'center', padding: '14px 10px' }}>
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(u.id)}
-                          onChange={e => handleSelectRow(u.id, e.target.checked)}
-                          style={{ width: '16px', height: '16px', accentColor: '#0c4e43', cursor: 'pointer' }}
-                        />
+                <tbody>
+                  {paginatedUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF', fontSize: '0.88rem' }}>
+                        No member invitations found.
                       </td>
+                    </tr>
+                  ) : (
+                    paginatedUsers.map((u) => {
+                      const initials = u.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'MB';
+                      const displayId = u.displayId || u.invitationId || u.id;
+                      const dateSent = new Date(u.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                      const expiresOn = new Date(new Date(u.createdAt).getTime() + 14 * 86400000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                      const isRowSelected = selectedUser?.id === u.id && drawerOpen;
 
-                      {/* Invitation ID Monospace Green Pill */}
-                      <td style={{ padding: '14px 16px' }}>
+                      return (
+                        <tr
+                          key={u.id}
+                          onClick={() => handleRowClick(u)}
+                          style={{
+                            cursor: 'pointer',
+                            borderBottom: '1px solid #ECE8E2',
+                            transition: 'background-color 0.15s ease',
+                            backgroundColor: isRowSelected ? '#FAF9F6' : undefined
+                          }}
+                        >
+                          <td style={{ textAlign: 'center', padding: '14px 10px' }} onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(u.id)}
+                              onChange={e => handleSelectRow(u.id, e.target.checked)}
+                              style={{ width: '16px', height: '16px', accentColor: '#0c4e43', cursor: 'pointer' }}
+                            />
+                          </td>
+
+                          {/* Invitation ID Monospace Green Pill */}
+                          <td style={{ padding: '14px 16px' }}>
+                            <span
+                              title={`Invitation ID: ${displayId} (Click to copy)`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(displayId);
+                                dialog.alert('Copied', `Invitation ID ${displayId} copied to clipboard.`);
+                              }}
+                              style={{
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                                fontSize: '0.78rem',
+                                fontWeight: 700,
+                                fontFamily: 'monospace',
+                                backgroundColor: '#EAF5EE',
+                                color: '#0c4e43',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {displayId}
+                            </span>
+                          </td>
+
+                          {/* Invitee */}
+                          <td style={{ padding: '14px 16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <div style={{
+                                width: '36px',
+                                height: '36px',
+                                borderRadius: '50%',
+                                backgroundColor: '#1B4332',
+                                color: '#FFFFFF',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: 700,
+                                fontSize: '0.85rem',
+                                flexShrink: 0
+                              }}>
+                                {initials}
+                              </div>
+                              <div>
+                                <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.88rem' }}>
+                                  {u.name}
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                                  {u.email}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Role */}
+                          <td style={{ padding: '14px 16px' }}>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>
+                              {u.role === 'ADMIN' ? 'ADMIN' : 'CONTRIBUTING MEMBER'}
+                            </span>
+                          </td>
+
+                          {/* Status */}
+                          <td style={{ padding: '14px 16px' }}>
+                            <span style={{
+                              padding: '3px 9px',
+                              borderRadius: '9999px',
+                              fontSize: '0.72rem',
+                              fontWeight: 600,
+                              backgroundColor: u.isActive ? '#EAF5EE' : '#FEF3C7',
+                              color: u.isActive ? '#2E7D32' : '#B45309'
+                            }}>
+                              {u.isActive ? 'ACCEPTED' : 'PENDING'}
+                            </span>
+                          </td>
+
+                          {/* Date Sent */}
+                          <td style={{ padding: '14px 16px', color: '#6B7280', fontSize: '0.82rem' }}>
+                            {dateSent}
+                          </td>
+
+                          {/* Expires On */}
+                          <td style={{ padding: '14px 16px', color: '#6B7280', fontSize: '0.82rem' }}>
+                            {expiresOn}
+                          </td>
+
+                          {/* Action dropdown */}
+                          <td style={{ padding: '14px 16px', textAlign: 'right', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => setOpenDropdownId(openDropdownId === u.id ? null : u.id)}
+                              style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: '4px' }}
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+
+                            {openDropdownId === u.id && (
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  right: '16px',
+                                  top: '40px',
+                                  backgroundColor: '#FFFFFF',
+                                  borderRadius: '10px',
+                                  border: '1px solid #ECE8E2',
+                                  boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                                  padding: '6px',
+                                  zIndex: 10,
+                                  minWidth: '180px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '2px',
+                                  textAlign: 'left'
+                                }}
+                              >
+                                <button
+                                  onClick={() => handleCopyLink(u)}
+                                  style={{
+                                    padding: '8px 12px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 500,
+                                    color: '#374151',
+                                    background: 'none',
+                                    border: 'none',
+                                    textAlign: 'left',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                  }}
+                                >
+                                  <Copy size={14} />
+                                  <span>Copy Invite Link</span>
+                                </button>
+
+                                <button
+                                  onClick={() => handleResend(u)}
+                                  style={{
+                                    padding: '8px 12px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 500,
+                                    color: '#374151',
+                                    background: 'none',
+                                    border: 'none',
+                                    textAlign: 'left',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                  }}
+                                >
+                                  <Send size={14} />
+                                  <span>Resend Invite</span>
+                                </button>
+
+                                <button
+                                  onClick={() => {
+                                    setOpenDropdownId(null);
+                                    handleRowClick(u);
+                                  }}
+                                  style={{
+                                    padding: '8px 12px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 500,
+                                    color: '#374151',
+                                    background: 'none',
+                                    border: 'none',
+                                    textAlign: 'left',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                  }}
+                                >
+                                  <Eye size={14} />
+                                  <span>View Details</span>
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          <div style={{ marginTop: '16px' }}>
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={sortedUsers.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={(num) => { setItemsPerPage(num); setCurrentPage(1); }}
+              itemLabel="invitation"
+            />
+          </div>
+        </div>
+
+        {/* Right Side: Invitation Details Slide Drawer Box (Matches Members, Commitments, Payments, Harvest) */}
+        {drawerOpen && selectedUser && (
+          <div
+            ref={drawerRef}
+            id="invitation-details-drawer"
+            className="dashboard-drawer"
+            style={{
+              width: '420px',
+              maxWidth: '100%',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '20px',
+              border: '1px solid #ECE8E2',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              position: 'sticky',
+              top: '80px',
+              flexShrink: 0
+            }}
+          >
+            {(() => {
+              const initials = selectedUser.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'MB';
+              const displayId = selectedUser.displayId || selectedUser.invitationId || selectedUser.id;
+              const dateSent = new Date(selectedUser.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+              const expiryDate = new Date(new Date(selectedUser.createdAt).getTime() + 14 * 86400000);
+              const expiresOn = expiryDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+              const daysLeft = Math.max(0, Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+              const cmt = commitmentsMap[selectedUser.id] || commitmentsMap[selectedUser.email] || commitmentsMap[selectedUser.name.toLowerCase()];
+
+              return (
+                <>
+                  {/* Drawer Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+                      Invitation Details
+                    </h3>
+                    <button
+                      onClick={() => { setDrawerOpen(false); setSelectedUser(null); }}
+                      aria-label="Close details"
+                      style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  {/* Invitee Summary Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', paddingBottom: '16px', borderBottom: '1px solid #F3F4F6' }}>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '50%',
+                      backgroundColor: '#1B4332',
+                      color: '#FFFFFF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 700,
+                      fontSize: '1.15rem',
+                      flexShrink: 0
+                    }}>
+                      {initials}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#111827' }}>
+                          {selectedUser.name}
+                        </span>
                         <span style={{
-                          padding: '3px 8px',
-                          borderRadius: '6px',
-                          fontSize: '0.78rem',
-                          fontWeight: 700,
-                          fontFamily: 'monospace',
-                          backgroundColor: '#EAF5EE',
-                          color: '#0c4e43'
+                          padding: '2px 8px',
+                          borderRadius: '9999px',
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          backgroundColor: selectedUser.isActive ? '#EAF5EE' : '#FEF3C7',
+                          color: selectedUser.isActive ? '#2E7D32' : '#B45309'
                         }}>
+                          {selectedUser.isActive ? 'Accepted' : 'Pending'}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#0c4e43', fontWeight: 700, backgroundColor: '#EAF5EE', padding: '1px 6px', borderRadius: '4px' }}>
                           {displayId}
                         </span>
-                      </td>
+                        <span style={{ fontSize: '0.72rem', color: '#6B7280' }}>
+                          • {selectedUser.role === 'ADMIN' ? 'Admin' : 'Contributing Member'}
+                        </span>
+                      </div>
+                      {selectedUser.email && (
+                        <div style={{ fontSize: '0.78rem', color: '#6B7280', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Mail size={12} />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedUser.email}</span>
+                        </div>
+                      )}
+                      {selectedUser.phone && (
+                        <div style={{ fontSize: '0.78rem', color: '#6B7280', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Phone size={12} />
+                          <span>{selectedUser.phone}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-                      {/* Invitee */}
-                      <td style={{ padding: '14px 16px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <div style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '50%',
-                            backgroundColor: '#1B4332',
-                            color: '#FFFFFF',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 700,
-                            fontSize: '0.85rem',
-                            flexShrink: 0
-                          }}>
-                            {initials}
-                          </div>
-                          <div>
-                            <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.88rem' }}>
-                              {u.name}
+                  {/* Primary Actions Card (Actions possible on this page) */}
+                  <div style={{
+                    backgroundColor: '#F8FAF8',
+                    border: '1.5px solid #D5E5DB',
+                    borderRadius: '16px',
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px'
+                  }}>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#0c4e43' }}>
+                      INVITATION ACTIONS
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <button
+                        onClick={() => handleCopyLink(selectedUser)}
+                        style={{
+                          width: '100%',
+                          backgroundColor: '#1B4332',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '10px',
+                          padding: '10px 16px',
+                          fontWeight: 700,
+                          fontSize: '0.84rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          transition: 'background-color 0.15s ease',
+                          boxShadow: '0 2px 8px rgba(27, 67, 50, 0.2)'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0c4e43'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1B4332'}
+                      >
+                        <Copy size={15} />
+                        <span>Copy Join &amp; Invite Link</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleResend(selectedUser)}
+                        style={{
+                          width: '100%',
+                          backgroundColor: '#FFFFFF',
+                          color: '#2E5A44',
+                          border: '1px solid #D5E5DB',
+                          borderRadius: '10px',
+                          padding: '10px 16px',
+                          fontWeight: 600,
+                          fontSize: '0.84rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          transition: 'background-color 0.15s ease'
+                        }}
+                      >
+                        <Send size={15} />
+                        <span>Resend Invitation Email</span>
+                      </button>
+                    </div>
+
+                    <div style={{ fontSize: '0.75rem', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #D5E5DB', paddingTop: '10px', marginTop: '2px' }}>
+                      <span>Link Validity:</span>
+                      <span style={{ fontWeight: 600, color: daysLeft > 0 ? '#2E7D32' : '#DC2626' }}>
+                        {daysLeft > 0 ? `${daysLeft} days remaining` : 'Expired'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Linked Savings Commitment (if exists or intended) */}
+                  <div style={{
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #ECE8E2',
+                    borderRadius: '16px',
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        SAVINGS COMMITMENT
+                      </span>
+                      {cmt && (
+                        <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#2E7D32', backgroundColor: '#EAF5EE', padding: '2px 8px', borderRadius: '9999px' }}>
+                          {cmt.status}
+                        </span>
+                      )}
+                    </div>
+
+                    {cmt ? (
+                      <>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', fontSize: '0.78rem' }}>
+                          <div style={{ backgroundColor: '#FAF9F6', padding: '8px 10px', borderRadius: '8px', border: '1px solid #ECE8E2' }}>
+                            <div style={{ color: '#6B7280', fontSize: '0.7rem' }}>Monthly Amount</div>
+                            <div style={{ fontWeight: 700, color: '#111827', marginTop: '2px' }}>
+                              £{Number(cmt.amount).toFixed(2)}/mo
                             </div>
-                            <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                              {u.email}
+                          </div>
+                          <div style={{ backgroundColor: '#FAF9F6', padding: '8px 10px', borderRadius: '8px', border: '1px solid #ECE8E2' }}>
+                            <div style={{ color: '#6B7280', fontSize: '0.7rem' }}>Target Harvest</div>
+                            <div style={{ fontWeight: 700, color: '#111827', marginTop: '2px' }}>
+                              {cmt.collectionMonth} {cmt.collectionYear}
                             </div>
                           </div>
                         </div>
-                      </td>
 
-                      {/* Role */}
-                      <td style={{ padding: '14px 16px' }}>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>
-                          {u.role === 'ADMIN' ? 'ADMIN' : 'CONTRIBUTING MEMBER'}
-                        </span>
-                      </td>
-
-                      {/* Status */}
-                      <td style={{ padding: '14px 16px' }}>
-                        <span style={{
-                          padding: '3px 9px',
-                          borderRadius: '9999px',
-                          fontSize: '0.72rem',
-                          fontWeight: 600,
-                          backgroundColor: u.isActive ? '#EAF5EE' : '#FEF3C7',
-                          color: u.isActive ? '#2E7D32' : '#B45309'
-                        }}>
-                          {u.isActive ? 'ACCEPTED' : 'PENDING'}
-                        </span>
-                      </td>
-
-                      {/* Date Sent */}
-                      <td style={{ padding: '14px 16px', color: '#6B7280', fontSize: '0.82rem' }}>
-                        {dateSent}
-                      </td>
-
-                      {/* Expires On */}
-                      <td style={{ padding: '14px 16px', color: '#6B7280', fontSize: '0.82rem' }}>
-                        {expiresOn}
-                      </td>
-
-                      {/* Action dropdown */}
-                      <td style={{ padding: '14px 16px', textAlign: 'right', position: 'relative' }}>
                         <button
-                          onClick={() => setOpenDropdownId(openDropdownId === u.id ? null : u.id)}
-                          style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: '4px' }}
+                          onClick={() => router.push(`/dashboard/commitments?id=${encodeURIComponent(cmt.id)}`)}
+                          style={{
+                            width: '100%',
+                            backgroundColor: '#FAF9F6',
+                            color: '#111827',
+                            border: '1px solid #ECE8E2',
+                            borderRadius: '10px',
+                            padding: '9px 14px',
+                            fontWeight: 600,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px'
+                          }}
                         >
-                          <MoreVertical size={16} />
+                          <Receipt size={14} />
+                          <span>View Commitment Details</span>
+                          <ArrowRight size={13} color="#6B7280" />
                         </button>
+                      </>
+                    ) : (
+                      <div style={{ backgroundColor: '#FAF9F6', borderRadius: '10px', padding: '12px', border: '1px solid #ECE8E2', fontSize: '0.8rem', color: '#6B7280', lineHeight: 1.4 }}>
+                        Awaiting recipient acceptance and circle slot confirmation.
+                      </div>
+                    )}
+                  </div>
 
-                        {openDropdownId === u.id && (
-                          <div
-                            style={{
-                              position: 'absolute',
-                              right: '16px',
-                              top: '40px',
-                              backgroundColor: '#FFFFFF',
-                              borderRadius: '10px',
-                              border: '1px solid #ECE8E2',
-                              boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                              padding: '6px',
-                              zIndex: 10,
-                              minWidth: '180px',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '2px',
-                              textAlign: 'left'
-                            }}
-                          >
-                            <button
-                              onClick={() => handleCopyLink(u)}
-                              style={{
-                                padding: '8px 12px',
-                                fontSize: '0.8rem',
-                                fontWeight: 500,
-                                color: '#374151',
-                                background: 'none',
-                                border: 'none',
-                                textAlign: 'left',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px'
-                              }}
-                            >
-                              <Copy size={14} />
-                              <span>Copy Invite Link</span>
-                            </button>
+                  {/* Invitation Metadata & Specifications */}
+                  <div style={{
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #ECE8E2',
+                    borderRadius: '16px',
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    fontSize: '0.82rem'
+                  }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
+                      INVITATION TIMELINE
+                    </div>
 
-                            <button
-                              onClick={() => handleResend(u)}
-                              style={{
-                                padding: '8px 12px',
-                                fontSize: '0.8rem',
-                                fontWeight: 500,
-                                color: '#374151',
-                                background: 'none',
-                                border: 'none',
-                                textAlign: 'left',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px'
-                              }}
-                            >
-                              <Send size={14} />
-                              <span>Resend Invite</span>
-                            </button>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#6B7280' }}>Date Sent:</span>
+                      <span style={{ fontWeight: 500, color: '#111827' }}>{dateSent}</span>
+                    </div>
 
-                            <button
-                              onClick={() => {
-                                setOpenDropdownId(null);
-                                setViewUserModal(u);
-                              }}
-                              style={{
-                                padding: '8px 12px',
-                                fontSize: '0.8rem',
-                                fontWeight: 500,
-                                color: '#374151',
-                                background: 'none',
-                                border: 'none',
-                                textAlign: 'left',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px'
-                              }}
-                            >
-                              <Eye size={14} />
-                              <span>View Details</span>
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#6B7280' }}>Expires On:</span>
+                      <span style={{ fontWeight: 500, color: '#111827' }}>{expiresOn}</span>
+                    </div>
 
-      {/* Pagination Controls */}
-      <PaginationControls
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={sortedUsers.length}
-        itemsPerPage={itemsPerPage}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={(num) => { setItemsPerPage(num); setCurrentPage(1); }}
-        itemLabel="invitation"
-      />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#6B7280' }}>Membership Tier:</span>
+                      <span style={{ fontWeight: 600, color: '#111827' }}>{selectedUser.membership || 'Standard Saver'}</span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#6B7280' }}>Referred / Invited By:</span>
+                      <span style={{ fontWeight: 500, color: '#374151' }}>
+                        {selectedUser.invitedBy ? selectedUser.invitedBy : 'Admin'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Navigation to Full Member Profile if Accepted */}
+                  {selectedUser.isActive && (
+                    <button
+                      onClick={() => {
+                        router.push(`/dashboard/users?search=${encodeURIComponent(selectedUser.name)}`);
+                      }}
+                      style={{
+                        width: '100%',
+                        backgroundColor: '#FAF9F6',
+                        color: '#374151',
+                        border: '1px solid #ECE8E2',
+                        borderRadius: '10px',
+                        padding: '10px 14px',
+                        fontWeight: 600,
+                        fontSize: '0.82rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <ExternalLink size={14} />
+                      <span>View Member Profile</span>
+                    </button>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        )}
+      </div>
 
       {/* --- INVITE / ADD MEMBER MODAL --- */}
       {isInviteModalOpen && (
