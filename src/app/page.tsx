@@ -1,13 +1,34 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail, ArrowRight, User, Phone, CheckCircle2, X, Star, Menu } from 'lucide-react';
+import Link from 'next/link';
+import MarketingHeader from '@/components/marketing/MarketingHeader';
+import MarketingFooter from '@/components/marketing/MarketingFooter';
+import AuthModal from '@/components/marketing/AuthModal';
+import WaitlistModal from '@/components/marketing/WaitlistModal';
+import {
+  ShieldCheck,
+  CheckCircle2,
+  ArrowRight,
+  Users,
+  Coins,
+  CalendarCheck,
+  TrendingUp,
+  Building,
+  GraduationCap,
+  Briefcase,
+  Globe2,
+  HeartHandshake,
+  Star,
+  Lock,
+  ChevronRight,
+} from 'lucide-react';
 
 export default function Home() {
-  const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [waitlistModalOpen, setWaitlistModalOpen] = useState(false);
 
+  // Check if already logged in -> redirect to dashboard
   useEffect(() => {
     fetch('/api/auth/session')
       .then((res) => res.json())
@@ -17,1046 +38,1092 @@ export default function Home() {
         }
       })
       .catch((err) => console.error('Session verify error:', err));
-
-    fetch('/api/admin/settings')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.membershipAgreement) setMembershipAgreement(data.membershipAgreement);
-        if (data.feeSchedule) setFeeSchedule(data.feeSchedule);
-      })
-      .catch((err) => console.error('Settings fetch error:', err));
-  }, [router]);
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [landingModal, setLandingModal] = useState<'NONE' | 'AGREEMENT' | 'SCHEDULE' | 'REVIEWS'>('NONE');
-  const [membershipAgreement, setMembershipAgreement] = useState('');
-  const [feeSchedule, setFeeSchedule] = useState('');
-
-  // Auth Mode State
-  const [isSignUp, setIsSignUp] = useState(false);
-
-  // Login states
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [loginError, setLoginError] = useState('');
-
-
-
-  // Google OAuth states
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [googleError, setGoogleError] = useState('');
-  const [showGoogleSimulator, setShowGoogleSimulator] = useState(false);
-  const [simulatorEmail, setSimulatorEmail] = useState('');
-  const [simulatorName, setSimulatorName] = useState('');
-
-  // Forgot Password States
-  const [showResetModal, setShowResetModal] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetLoading, setResetLoading] = useState(false);
-  const [resetMessage, setResetMessage] = useState('');
-  const [resetError, setResetError] = useState('');
-
-  // Waiting list states
-  const [waitName, setWaitName] = useState('');
-  const [waitEmail, setWaitEmail] = useState('');
-  const [waitPhone, setWaitPhone] = useState('');
-  const [waitAmount, setWaitAmount] = useState('');
-  const [hasReferrer, setHasReferrer] = useState(false);
-  const [waitReferrer, setWaitReferrer] = useState('');
-  const [waitLoading, setWaitLoading] = useState(false);
-  const [waitSuccess, setWaitSuccess] = useState(false);
-  const [waitError, setWaitError] = useState('');
-
-  // Auto-dismiss errors and status messages after 5 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (loginError) setLoginError('');
-      if (resetError) setResetError('');
-      if (resetMessage) setResetMessage('');
-      if (googleError) setGoogleError('');
-      if (waitError) setWaitError('');
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, [loginError, resetError, resetMessage, googleError, waitError]);
-
-  useEffect(() => {
-    if (waitSuccess) {
-      const timer = setTimeout(() => setWaitSuccess(false), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [waitSuccess]);
-
-  const handleForgotPassword = () => {
-    setShowResetModal(true);
-    setResetEmail('');
-    setResetMessage('');
-    setResetError('');
-  };
-
-  const handleSendPasswordReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setResetLoading(true);
-    setResetError('');
-    setResetMessage('');
-
-    try {
-      const res = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: resetEmail })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setResetMessage(data.message || `A password reset link has been successfully sent to ${resetEmail}.`);
-      } else {
-        setResetError(data.error || 'Failed to send password reset email.');
-      }
-    } catch (err: any) {
-      console.error('Password reset error:', err);
-      setResetError('A network error occurred. Please try again.');
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginLoading(true);
-    setLoginError('');
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        // Use hard redirect so the brand-new session cookie is sent with the
-        // full HTTP request to /dashboard, avoiding a Next.js RSC race condition
-        // where the soft-navigation may not carry the freshly-set cookie.
-        window.location.href = '/dashboard';
-
-      } else {
-        setLoginError(data.error || 'Login failed. Please try again.');
-      }
-    } catch (err: any) {
-      console.error('Login Error:', err);
-      setLoginError('A network error occurred. Please try again.');
-    } finally {
-      setLoginLoading(false);
-    }
-  };
-
-
-
-  const handleGoogleLogin = async () => {
-     setGoogleError('Google sign in is currently disabled during system upgrade.');
-  };
-
-  const handleWaitingList = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setWaitLoading(true);
-    setWaitError('');
-    setWaitSuccess(false);
-
-    const validateUkPhoneNumber = (phoneStr: string) => {
-      if (!phoneStr) return false;
-      const cleaned = phoneStr.replace(/[\s\-\(\)]/g, '');
-      if (/^\+44\d{10}$/.test(cleaned)) return true;
-      if (/^0\d{10}$/.test(cleaned)) return true;
-      if (/^44\d{10}$/.test(cleaned)) return true;
-      return false;
-    };
-
-    if (!validateUkPhoneNumber(waitPhone)) {
-      setWaitError('Only valid UK phone numbers (e.g. +44 7700 900022 or 07700900022) are accepted.');
-      setWaitLoading(false);
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/waiting-list', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: waitName,
-          email: waitEmail,
-          phone: waitPhone,
-          monthlySavingsCommitment: waitAmount,
-          referredBy: hasReferrer ? waitReferrer : '',
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setWaitSuccess(true);
-        setWaitName('');
-        setWaitEmail('');
-        setWaitPhone('');
-        setWaitAmount('');
-        setWaitReferrer('');
-        setHasReferrer(false);
-      } else {
-        setWaitError(data.error || 'Failed to submit. Please try again.');
-      }
-    } catch (err) {
-      setWaitError('A network error occurred. Please check your connection.');
-    } finally {
-      setWaitLoading(false);
-    }
-  };
+  }, []);
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundColor: 'var(--bg-main)',
-      fontFamily: 'var(--font-family-body)',
-      color: 'var(--text-main)',
-      transition: 'background-color 0.3s ease'
-    }}>
-      {/* Navbar Header */}
-      <header style={{
-        height: '80px',
-        padding: '0 40px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottom: '1px solid var(--border-color)',
-        backgroundColor: 'var(--bg-card)',
-        boxShadow: 'var(--shadow-sm)',
-        position: 'relative'
-      }} className="landing-header">
-        <a href="https://savveysavers.crevianstudios.com/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} title="Savvey Savers Main Site">
-          <img
-            src="/logo_new-removebg-preview.png"
-            alt="Savvey Savers"
-            style={{ height: '48px', objectFit: 'contain', cursor: 'pointer' }}
-          />
-        </a>
-
-        {/* Navigation Links linking back to main site */}
-        <nav className="landing-nav">
-          <a href="https://savveysavers.crevianstudios.com/" style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-main)'}>Home</a>
-          <a href="https://savveysavers.crevianstudios.com/about-us" style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-main)'}>About Us</a>
-          <a href="https://savveysavers.crevianstudios.com/faqs" style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-main)'}>FAQs</a>
-        </nav>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <a
-            href="https://savveysavers.crevianstudios.com/"
-            className="landing-back-btn"
-            style={{
-              borderRadius: '9999px',
-              border: '1px solid var(--primary)',
-              color: 'var(--primary)',
-              backgroundColor: 'transparent',
-              fontWeight: 600,
-              fontSize: '0.875rem',
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              padding: '10px 22px',
-              transition: 'background-color 0.2s, color 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--primary)';
-              e.currentTarget.style.color = '#ffffff';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = 'var(--primary)';
-            }}
-          >
-            Back to Website
-          </a>
-
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="landing-hamburger-btn"
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--text-main)',
-              padding: '8px',
-              display: 'none',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(0, 0, 0, 0.03)'
-            }}
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-
-        {/* Mobile Dropdown Menu */}
-        {mobileMenuOpen && (
-          <div className="landing-mobile-menu" style={{
-            position: 'absolute',
-            top: '80px',
-            left: 0,
-            right: 0,
-            backgroundColor: 'var(--bg-card)',
-            borderBottom: '1px solid var(--border-color)',
-            boxShadow: 'var(--shadow-md)',
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '16px 40px',
-            gap: '16px',
-            zIndex: 100
-          }}>
-            <a href="https://savveysavers.crevianstudios.com/" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none', padding: '8px 0' }}>Home</a>
-            <a href="https://savveysavers.crevianstudios.com/about-us" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none', padding: '8px 0' }}>About Us</a>
-            <a href="https://savveysavers.crevianstudios.com/faqs" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none', padding: '8px 0' }}>FAQs</a>
-          </div>
-        )}
-      </header>
-
-      {/* Hero Body */}
-      <main style={{
-        flex: 1,
-        maxWidth: '540px',
-        width: '100%',
-        margin: '0 auto',
-        padding: '50px 24px',
+    <div
+      style={{
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        gap: '32px',
-      }}>
-        {/* Hero Text */}
-        <div style={{ textAlign: 'center' }}>
-          <span style={{
-            color: 'var(--primary)',
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.15em',
-            display: 'inline-block',
-            marginBottom: '12px'
-          }}>
-            SAVVEY SAVERS DASHBOARD PORTAL
-          </span>
-          <h1 style={{
-            fontSize: '2.2rem',
-            fontWeight: 800,
-            fontFamily: 'var(--font-family-title)',
-            lineHeight: 1.15,
-            color: 'var(--primary)',
-            marginBottom: '16px',
-            letterSpacing: '-0.02em'
-          }}>
-            Savvey Savers Collective Member Portal
-          </h1>
-          <p style={{ color: 'var(--text-muted)', lineHeight: 1.6, fontSize: '0.95rem' }}>
-            If you are already a member, enter you login credentials below to access your personal dashboard and more.
-          </p>
-        </div>
+        backgroundColor: 'var(--bg-main)',
+        fontFamily: 'var(--font-family-body)',
+        color: 'var(--text-main)',
+      }}
+    >
+      <MarketingHeader
+        activePath="/"
+        onOpenLogin={() => setAuthModalOpen(true)}
+        onOpenWaitlist={() => setWaitlistModalOpen(true)}
+      />
 
-        {/* Auth Form Panel */}
-        <div className="glass-panel" style={{ padding: '32px', backgroundColor: '#ffffff', borderColor: 'var(--border-color)', boxShadow: 'var(--shadow-md)', borderRadius: 'var(--radius-lg)' }}>
-          {/* Tab Toggles */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', backgroundColor: 'var(--bg-main)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-            <button
-              onClick={() => { setIsSignUp(false); setLoginError(''); }}
+      <main style={{ flex: 1 }}>
+        {/* ============================================================ */}
+        {/* SECTION 1: HERO SECTION                                      */}
+        {/* ============================================================ */}
+        <section
+          style={{
+            padding: '60px 24px 80px',
+            maxWidth: '1280px',
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+            gap: '48px',
+            alignItems: 'center',
+          }}
+        >
+          {/* Left Column: Copy & CTAs */}
+          <div>
+            {/* Pill Badge */}
+            <div
               style={{
-                flex: 1,
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: 'none',
-                backgroundColor: !isSignUp ? 'var(--primary)' : 'transparent',
-                color: !isSignUp ? '#ffffff' : 'var(--text-muted)',
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s, color 0.2s'
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '7px 16px',
+                borderRadius: '9999px',
+                backgroundColor: 'rgba(12, 78, 67, 0.08)',
+                border: '1px solid rgba(12, 78, 67, 0.18)',
+                color: 'var(--primary)',
+                fontSize: '0.8125rem',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                marginBottom: '20px',
               }}
             >
-              Sign In
-            </button>
-            <button
-              onClick={() => { setIsSignUp(true); setLoginError(''); }}
+              <ShieldCheck size={16} />
+              <span>UK RESIDENTS ONLY, BY REFERRAL & APPROVAL</span>
+            </div>
+
+            <h1
               style={{
-                flex: 1,
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: 'none',
-                backgroundColor: isSignUp ? 'var(--primary)' : 'transparent',
-                color: isSignUp ? '#ffffff' : 'var(--text-muted)',
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s, color 0.2s'
+                fontSize: 'clamp(2.4rem, 4.5vw, 3.6rem)',
+                fontWeight: 800,
+                fontFamily: 'var(--font-family-title)',
+                lineHeight: 1.12,
+                color: 'var(--text-main)',
+                margin: '0 0 20px 0',
+                letterSpacing: '-0.02em',
               }}
             >
-              Waiting List
-            </button>
+              Build Wealth Through a{' '}
+              <span style={{ color: 'var(--primary)', position: 'relative' }}>
+                Trusted Savings Community
+              </span>
+            </h1>
+
+            <p
+              style={{
+                fontSize: 'clamp(1.05rem, 1.6vw, 1.2rem)',
+                lineHeight: 1.65,
+                color: 'var(--text-muted)',
+                marginBottom: '32px',
+                maxWidth: '560px',
+              }}
+            >
+              A structured, referral-based savings collective that enables members to work towards property ownership and other major life goals, including education, through a trusted, interest-free community saving model.
+            </p>
+
+            {/* CTAs */}
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '14px',
+                alignItems: 'center',
+                marginBottom: '36px',
+              }}
+            >
+              <button
+                onClick={() => setWaitlistModalOpen(true)}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  backgroundColor: 'var(--secondary)',
+                  color: '#ffffff',
+                  fontFamily: 'var(--font-family-title)',
+                  fontWeight: 700,
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  boxShadow: '0 6px 18px var(--secondary-glow)',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--secondary-hover)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--secondary)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <span>Join the Waiting List</span>
+                <ArrowRight size={18} />
+              </button>
+
+              <Link
+                href="/about-us"
+                style={{
+                  padding: '13px 26px',
+                  borderRadius: '10px',
+                  border: '1.5px solid var(--border-color)',
+                  backgroundColor: '#ffffff',
+                  color: 'var(--text-main)',
+                  fontFamily: 'var(--font-family-title)',
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--primary)';
+                  e.currentTarget.style.color = 'var(--primary)';
+                  e.currentTarget.style.backgroundColor = 'var(--primary-light)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-color)';
+                  e.currentTarget.style.color = 'var(--text-main)';
+                  e.currentTarget.style.backgroundColor = '#ffffff';
+                }}
+              >
+                <span>Learn More</span>
+                <ChevronRight size={16} />
+              </Link>
+            </div>
+
+            {/* Trust Checkmarks */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, minmax(140px, 1fr))',
+                gap: '12px',
+                paddingTop: '20px',
+                borderTop: '1px solid var(--border-color)',
+              }}
+            >
+              {[
+                'Vetted members',
+                'Structured governance',
+                'Transparent tracking',
+                'GDPR-Compliant',
+              ].map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <CheckCircle2 size={16} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                    {item}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '24px', fontFamily: 'var(--font-family-title)' }}>
-            {isSignUp ? 'Join the Waiting List' : 'Sign In to Your Dashboard'}
-          </h2>
-
-          {/* Error notifications */}
-          {loginError && !isSignUp && (
-            <div style={{
-              backgroundColor: 'var(--status-error-bg)',
-              color: 'var(--status-error)',
-              border: '1px solid rgba(153, 27, 27, 0.2)',
-              padding: '12px',
-              borderRadius: '6px',
-              fontSize: '0.875rem',
-              marginBottom: '16px'
-            }}>
-              {loginError}
-            </div>
-          )}
-
-          {googleError && (
-            <div style={{
-              backgroundColor: 'var(--status-error-bg)',
-              color: 'var(--status-error)',
-              border: '1px solid rgba(153, 27, 27, 0.2)',
-              padding: '12px',
-              borderRadius: '6px',
-              fontSize: '0.875rem',
-              marginBottom: '16px'
-            }}>
-              {googleError}
-            </div>
-          )}
-
-          {!isSignUp ? (
-            /* SIGN IN FORM */
-            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Email Address</label>
-                <div style={{ position: 'relative' }}>
-                  <Mail size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                  <input
-                    type="email"
-                    required
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    placeholder="admin@savveysavers.com"
-                    className="form-input"
-                    style={{
-                      paddingLeft: '38px',
-                      backgroundColor: 'var(--bg-main)',
-                      borderColor: 'var(--border-color)',
-                      color: 'var(--text-main)',
-                      borderRadius: 'var(--radius-md)'
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Password</label>
-                <div style={{ position: 'relative' }}>
-                  <Lock size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="form-input"
-                    style={{
-                      paddingLeft: '38px',
-                      paddingRight: '40px',
-                      backgroundColor: 'var(--bg-main)',
-                      borderColor: 'var(--border-color)',
-                      color: 'var(--text-main)',
-                      borderRadius: 'var(--radius-md)'
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '12px',
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--text-muted)',
-                      cursor: 'pointer',
-                      padding: '2px'
-                    }}
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--primary)',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    textDecoration: 'underline',
-                    padding: 0
-                  }}
-                >
-                  Forgot Password?
-                </button>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loginLoading || googleLoading}
-                className="btn"
+          {/* Right Column: Hero Graphic with Floating Badges */}
+          <div style={{ position: 'relative' }}>
+            <div
+              style={{
+                borderRadius: '24px',
+                overflow: 'hidden',
+                boxShadow: '0 25px 50px -12px rgba(12, 78, 67, 0.25)',
+                border: '1px solid var(--border-color)',
+                position: 'relative',
+              }}
+            >
+              <img
+                src="/images/hero-image.webp"
+                alt="Savvey Savers Community and Wealth Building"
                 style={{
                   width: '100%',
-                  marginTop: '8px',
-                  backgroundColor: 'var(--primary)',
-                  color: '#ffffff',
-                  fontWeight: 600,
-                  borderRadius: '9999px',
-                  border: 'none',
-                  cursor: 'pointer',
+                  height: 'auto',
+                  maxHeight: '520px',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+              />
+            </div>
+
+            {/* Floating Badge 1: 12+ Years Impact */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '20px',
+                left: '-16px',
+                backgroundColor: '#ffffff',
+                padding: '12px 18px',
+                borderRadius: '12px',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.12)',
+                border: '1px solid var(--border-color)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+              }}
+            >
+              <div
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '8px',
+                  backgroundColor: 'var(--primary-light)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  height: '46px',
-                  transition: 'background-color 0.2s'
+                  color: 'var(--primary)',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--primary-hover)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--primary)'}
               >
-                {loginLoading ? 'Authenticating...' : 'Sign In'}
-                {!loginLoading && <ArrowRight size={16} style={{ marginLeft: '8px' }} />}
-              </button>
-            </form>
-          ) : (
-            /* WAITING LIST FORM */
-            <>
-              {waitSuccess ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
-                  <div style={{
-                    width: '56px',
-                    height: '56px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--status-success-bg)',
-                    color: 'var(--status-success)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <CheckCircle2 size={32} />
-                  </div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-main)', fontFamily: 'var(--font-family-title)' }}>
-                    You are on the Waiting List!
-                  </h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-                    Thank you for expressing interest. Our administrators will review your application and send an invitation email with dashboard access links if approved.
-                  </p>
-                  <button
-                    onClick={() => setWaitSuccess(false)}
-                    className="btn btn-secondary"
-                    style={{ marginTop: '16px', borderRadius: '9999px', width: '100%' }}
-                  >
-                    Submit another request
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleWaitingList} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {waitError && (
-                    <div style={{
-                      backgroundColor: 'var(--status-error-bg)',
-                      color: 'var(--status-error)',
-                      border: '1px solid rgba(153, 27, 27, 0.2)',
-                      padding: '12px',
-                      borderRadius: '6px',
-                      fontSize: '0.875rem',
-                      marginBottom: '8px'
-                    }}>
-                      ⚠️ {waitError}
-                    </div>
-                  )}
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Full Name</label>
-                    <div style={{ position: 'relative' }}>
-                      <User size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                      <input
-                        type="text"
-                        required
-                        value={waitName}
-                        onChange={(e) => setWaitName(e.target.value)}
-                        placeholder="Jane Smith"
-                        className="form-input"
-                        style={{
-                          paddingLeft: '38px',
-                          backgroundColor: 'var(--bg-main)',
-                          borderColor: 'var(--border-color)',
-                          color: 'var(--text-main)',
-                          borderRadius: 'var(--radius-md)'
-                        }}
-                      />
-                    </div>
-                  </div>
+                <TrendingUp size={20} />
+              </div>
+              <div>
+                <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--primary)' }}>
+                  12+ Years
+                </strong>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Impact & Trust
+                </span>
+              </div>
+            </div>
 
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Email Address</label>
-                    <div style={{ position: 'relative' }}>
-                      <Mail size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                      <input
-                        type="email"
-                        required
-                        value={waitEmail}
-                        onChange={(e) => setWaitEmail(e.target.value)}
-                        placeholder="jane@example.com"
-                        className="form-input"
-                        style={{
-                          paddingLeft: '38px',
-                          backgroundColor: 'var(--bg-main)',
-                          borderColor: 'var(--border-color)',
-                          color: 'var(--text-main)',
-                          borderRadius: 'var(--radius-md)'
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Phone Number</label>
-                    <div style={{ position: 'relative' }}>
-                      <Phone size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                      <input
-                        type="tel"
-                        required
-                        value={waitPhone}
-                        onChange={(e) => setWaitPhone(e.target.value)}
-                        placeholder="+44 7700 900022"
-                        className="form-input"
-                        style={{
-                          paddingLeft: '38px',
-                          backgroundColor: 'var(--bg-main)',
-                          borderColor: 'var(--border-color)',
-                          color: 'var(--text-main)',
-                          borderRadius: 'var(--radius-md)'
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Target Monthly Savings (£)</label>
-                    <select
-                      required
-                      value={waitAmount}
-                      onChange={(e) => setWaitAmount(e.target.value)}
-                      className="form-input"
-                      style={{
-                        paddingLeft: '14px',
-                        backgroundColor: 'var(--bg-main)',
-                        borderColor: 'var(--border-color)',
-                        color: 'var(--text-main)',
-                        borderRadius: 'var(--radius-md)'
-                      }}
-                    >
-                      <option value="">Select target amount...</option>
-                      <option value="250">£250</option>
-                      <option value="500">£500</option>
-                      <option value="750">£750</option>
-                      <option value="1000">£1000</option>
-                      <option value="1000+">£1000+</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group" style={{ margin: 0 }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', fontWeight: 500, fontSize: '0.9rem' }}>
-                        <input
-                          type="checkbox"
-                          checked={hasReferrer}
-                          onChange={(e) => {
-                            setHasReferrer(e.target.checked);
-                            if (!e.target.checked) setWaitReferrer('');
-                          }}
-                          style={{ width: '16px', height: '16px', accentColor: 'var(--primary)', cursor: 'pointer' }}
-                        />
-                        <span>Referred by a Member? Enter their Member ID below.</span>
-                      </label>
-
-                      {hasReferrer && (
-                        <div style={{ position: 'relative', marginTop: '10px' }}>
-                          <User size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                          <input
-                            type="text"
-                            required
-                            value={waitReferrer}
-                            onChange={(e) => setWaitReferrer(e.target.value)}
-                            placeholder="Enter member's ID (e.g. M-001234)"
-                            className="form-input"
-                          style={{
-                            paddingLeft: '38px',
-                            backgroundColor: 'var(--bg-main)',
-                            borderColor: 'var(--border-color)',
-                            color: 'var(--text-main)',
-                            borderRadius: 'var(--radius-md)'
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={waitLoading}
-                    className="btn"
-                    style={{
-                      width: '100%',
-                      marginTop: '8px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid var(--primary)',
-                      color: 'var(--primary)',
-                      fontWeight: 600,
-                      borderRadius: '9999px',
-                      cursor: 'pointer',
-                      height: '44px',
-                      transition: 'background-color 0.2s, color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--primary)';
-                      e.currentTarget.style.color = '#ffffff';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = 'var(--primary)';
-                    }}
-                  >
-                    {waitLoading ? 'Submitting Application...' : 'Register for Waiting List'}
-                  </button>
-                </form>
-              )}
-            </>
-          )}
-
-        </div>
-      </main>
-
-      <footer style={{
-        padding: '32px 24px',
-        borderTop: '1px solid var(--border-color)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '4px',
-        color: 'var(--text-muted)',
-        fontSize: '0.8rem',
-        maxWidth: '540px',
-        width: '100%',
-        margin: '0 auto',
-        lineHeight: 1.5,
-        textAlign: 'center'
-      }}>
-        <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-main)' }}>© 2026 Savvey Savers Collective.</p>
-        <p style={{ margin: 0, opacity: 0.8, fontSize: '0.75rem' }}>We protect your personal data in accordance with GDPR and applicable data protection laws.</p>
-      </footer>
-
-      {/* Reset Password Modal */}
-      {showResetModal && (
-        <div className="modal-overlay" style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.4)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 9999,
-          backdropFilter: 'blur(4px)'
-        }}>
-          <div className="glass-panel" style={{
-            width: '100%',
-            maxWidth: '400px',
-            padding: '32px',
-            backgroundColor: '#ffffff',
-            borderColor: 'var(--border-color)',
-            boxShadow: 'var(--shadow-lg)',
-            borderRadius: 'var(--radius-lg)',
-            position: 'relative'
-          }}>
-            <button
-              type="button"
-              onClick={() => {
-                setShowResetModal(false);
-                setResetEmail('');
-                setResetMessage('');
-                setResetError('');
-              }}
+            {/* Floating Badge 2: Governed Circles */}
+            <div
               style={{
                 position: 'absolute',
-                right: '20px',
-                top: '20px',
-                color: 'var(--text-muted)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '1.2rem'
+                bottom: '24px',
+                right: '-16px',
+                backgroundColor: '#ffffff',
+                padding: '12px 18px',
+                borderRadius: '12px',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.12)',
+                border: '1px solid var(--border-color)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
               }}
             >
-              ✕
-            </button>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-main)', fontFamily: 'var(--font-family-title)' }}>
-              Reset Password
-            </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
-              Enter your email address and we'll send you a link to reset your password.
-            </p>
-
-            {resetError && (
-              <div style={{ backgroundColor: 'var(--status-error-bg)', color: 'var(--status-error)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '10px', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '16px' }}>
-                {resetError}
+              <div
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '8px',
+                  backgroundColor: 'var(--secondary-light)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--secondary)',
+                }}
+              >
+                <ShieldCheck size={20} />
               </div>
-            )}
-
-            {resetMessage && (
-              <div style={{ backgroundColor: 'var(--status-success-bg)', color: 'var(--status-success)', border: '1px solid rgba(52, 211, 153, 0.2)', padding: '10px', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '16px' }}>
-                {resetMessage}
-              </div>
-            )}
-
-            <form onSubmit={handleSendPasswordReset} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ color: 'var(--text-main)', fontWeight: 500 }}>Email Address</label>
-                <div style={{ position: 'relative' }}>
-                  <Mail size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--primary)' }} />
-                  <input
-                    type="email"
-                    required
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                    placeholder="user@example.com"
-                    className="form-input"
-                    style={{
-                      paddingLeft: '38px',
-                      backgroundColor: 'var(--bg-main)',
-                      borderColor: 'var(--border-color)',
-                      color: 'var(--text-main)',
-                      borderRadius: 'var(--radius-md)'
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowResetModal(false);
-                    setResetEmail('');
-                    setResetMessage('');
-                    setResetError('');
-                  }}
-                  className="btn btn-secondary"
-                  style={{
-                    flex: 1,
-                    backgroundColor: 'transparent',
-                    borderColor: 'var(--border-color)',
-                    color: 'var(--text-main)',
-                    borderRadius: '9999px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={resetLoading}
-                  className="btn"
-                  style={{
-                    flex: 1,
-                    backgroundColor: 'var(--primary)',
-                    color: '#ffffff',
-                    fontWeight: 600,
-                    border: 'none',
-                    borderRadius: '9999px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '38px',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--primary-hover)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--primary)'}
-                >
-                  {resetLoading ? 'Sending...' : 'Send Link'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* --- MEMBERSHIP AGREEMENT MODAL --- */}
-      {landingModal === 'AGREEMENT' && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '600px', backgroundColor: '#ffffff' }}>
-            <button onClick={() => setLandingModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
-              <X size={20} />
-            </button>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)', color: 'var(--text-main)' }}>
-              Membership Agreement
-            </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
-              Group rotating savings terms and conditions.
-            </p>
-
-            <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', lineHeight: 1.6, maxHeight: '350px', overflowY: 'auto', paddingRight: '10px', whiteSpace: 'pre-wrap' }}>
-              {membershipAgreement || (
-                <>
-                  <p style={{ marginBottom: '12px' }}>
-                    <strong>1. Term of Agreement:</strong> This agreement regulates the guidelines of the Savvey Savers savings circle. By joining, members commit to a full collection rotation cycle.
-                  </p>
-                  <p style={{ marginBottom: '12px' }}>
-                    <strong>2. Payout Rotation Schedule:</strong> The schedule is generated dynamically at the cycle start. All payout requests must be approved by the circle Coordinator.
-                  </p>
-                  <p style={{ marginBottom: '12px' }}>
-                    <strong>3. Delinquency & Penalties:</strong> Late monthly deposits will trigger system notifications. Chronic delays will result in membership suspension and temporary payout deferral.
-                  </p>
-                  <p style={{ marginBottom: '12px' }}>
-                    <strong>4. Off-Platform Settlements:</strong> All cash transfers occur offline. The platform is solely a record-keeping system. No funds are stored on this digital server.
-                  </p>
-                </>
-              )}
-            </div>
-
-            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setLandingModal('NONE')} className="btn btn-secondary">
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- FEE SCHEDULE MODAL --- */}
-      {landingModal === 'SCHEDULE' && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '540px', backgroundColor: '#ffffff' }}>
-            <button onClick={() => setLandingModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
-              <X size={20} />
-            </button>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)', color: 'var(--text-main)' }}>
-              Fee Schedule
-            </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
-              Associated administrative charges by membership tier.
-            </p>
-
-            {feeSchedule ? (
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', lineHeight: 1.6, whiteSpace: 'pre-wrap', maxHeight: '350px', overflowY: 'auto' }}>
-                {feeSchedule}
-              </div>
-            ) : (
-              <table className="custom-table" style={{ fontSize: '0.85rem' }}>
-                <thead>
-                  <tr>
-                    <th>Membership Tier</th>
-                    <th>Monthly Admin Fee</th>
-                    <th>Payout Processing Fee</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style={{ fontWeight: 600 }}>Standard Saver</td>
-                    <td>£5.00</td>
-                    <td>0.5%</td>
-                  </tr>
-                  <tr>
-                    <td style={{ fontWeight: 600 }}>Premium Gold</td>
-                    <td>£10.00</td>
-                    <td>0.2%</td>
-                  </tr>
-                  <tr>
-                    <td style={{ fontWeight: 600 }}>VIP Elite</td>
-                    <td>£25.00</td>
-                    <td>0%</td>
-                  </tr>
-                </tbody>
-              </table>
-            )}
-
-            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setLandingModal('NONE')} className="btn btn-secondary">
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- REVIEWS MODAL --- */}
-      {landingModal === 'REVIEWS' && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '500px', backgroundColor: '#ffffff' }}>
-            <button onClick={() => setLandingModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
-              <X size={20} />
-            </button>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)', color: 'var(--text-main)' }}>
-              Reviews & Feedback
-            </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
-              Member experiences and community feedback.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '350px', overflowY: 'auto' }}>
-              <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                <div style={{ display: 'flex', gap: '4px', color: '#fbbf24', marginBottom: '4px' }}>
-                  <Star size={14} fill="#fbbf24" />
-                  <Star size={14} fill="#fbbf24" />
-                  <Star size={14} fill="#fbbf24" />
-                  <Star size={14} fill="#fbbf24" />
-                  <Star size={14} fill="#fbbf24" />
-                </div>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontStyle: 'italic' }}>
-                  "Platform makes our monthly rotations incredibly transparent. No more spreadsheet arguments!"
-                </p>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>- John D. (Premium Gold)</span>
-              </div>
-
               <div>
-                <div style={{ display: 'flex', gap: '4px', color: '#fbbf24', marginBottom: '4px' }}>
-                  <Star size={14} fill="#fbbf24" />
-                  <Star size={14} fill="#fbbf24" />
-                  <Star size={14} fill="#fbbf24" />
-                  <Star size={14} fill="#fbbf24" />
-                  <Star size={14} fill="#fbbf24" />
+                <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--secondary)' }}>
+                  Governed Circles
+                </strong>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Transparent Tracking
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/* SECTION 2: HOW THE COLLECTIVE WORKS                         */}
+        {/* ============================================================ */}
+        <section
+          style={{
+            padding: '80px 24px',
+            backgroundColor: 'var(--bg-surface)',
+            borderTop: '1px solid var(--border-color)',
+            borderBottom: '1px solid var(--border-color)',
+          }}
+        >
+          <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '50px' }}>
+              <span
+                style={{
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
+                  color: 'var(--primary)',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  display: 'block',
+                  marginBottom: '8px',
+                }}
+              >
+                The Process
+              </span>
+              <h2
+                style={{
+                  fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
+                  fontWeight: 800,
+                  fontFamily: 'var(--font-family-title)',
+                  color: 'var(--text-main)',
+                  margin: '0 0 12px 0',
+                }}
+              >
+                How the Collective Works
+              </h2>
+              <p
+                style={{
+                  fontSize: '1.05rem',
+                  color: 'var(--text-muted)',
+                  maxWidth: '600px',
+                  margin: '0 auto',
+                }}
+              >
+                Four simple steps to achieving your financial goals through community savings.
+              </p>
+            </div>
+
+            {/* 4 Steps Grid */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '24px',
+              }}
+            >
+              {[
+                {
+                  step: '01',
+                  icon: Users,
+                  title: 'Join a Vetted Circle',
+                  desc: 'Members are verified and placed into trusted savings circles through referrals and onboarding checks.',
+                },
+                {
+                  step: '02',
+                  icon: Coins,
+                  title: 'Contribute Monthly',
+                  desc: 'Members make structured monthly contributions that are tracked transparently on the member portal.',
+                },
+                {
+                  step: '03',
+                  icon: CalendarCheck,
+                  title: 'Receive Scheduled Disbursement',
+                  desc: 'Members receive pooled contributions in their assigned month according to the pre-agreed schedule.',
+                },
+                {
+                  step: '04',
+                  icon: HeartHandshake,
+                  title: 'Collective Accountability',
+                  desc: 'Ongoing contributions ensure every member completes their cycle and reaches their major financial goal.',
+                },
+              ].map((item, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: '16px',
+                    padding: '32px 24px',
+                    border: '1px solid var(--border-color)',
+                    boxShadow: 'var(--shadow-sm)',
+                    position: 'relative',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '20px',
+                      right: '24px',
+                      fontSize: '1.75rem',
+                      fontWeight: 800,
+                      fontFamily: 'var(--font-family-title)',
+                      color: 'var(--border-color)',
+                    }}
+                  >
+                    {item.step}
+                  </span>
+                  <div
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      backgroundColor: 'var(--primary-light)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--primary)',
+                      marginBottom: '20px',
+                    }}
+                  >
+                    <item.icon size={24} />
+                  </div>
+                  <h3
+                    style={{
+                      fontSize: '1.2rem',
+                      fontWeight: 700,
+                      fontFamily: 'var(--font-family-title)',
+                      color: 'var(--text-main)',
+                      margin: '0 0 10px 0',
+                    }}
+                  >
+                    {item.title}
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: '0.9rem',
+                      lineHeight: 1.6,
+                      color: 'var(--text-muted)',
+                      margin: 0,
+                    }}
+                  >
+                    {item.desc}
+                  </p>
                 </div>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontStyle: 'italic' }}>
-                  "Organizing rotating payouts with friends has never been so seamless and automated."
-                </p>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>- Sarah M. (Standard Saver)</span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/* SECTION 3: BUILT ON TRUST                                    */}
+        {/* ============================================================ */}
+        <section
+          style={{
+            padding: '90px 24px',
+            maxWidth: '1280px',
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: '50px',
+            alignItems: 'center',
+          }}
+        >
+          {/* Side Image */}
+          <div style={{ order: 2 }}>
+            <div
+              style={{
+                borderRadius: '20px',
+                overflow: 'hidden',
+                boxShadow: 'var(--shadow-xl)',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              <img
+                src="/images/savings.webp"
+                alt="Savings Safeguards & Governance"
+                style={{
+                  width: '100%',
+                  height: '460px',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Checklist Content */}
+          <div style={{ order: 1 }}>
+            <span
+              style={{
+                fontSize: '0.8125rem',
+                fontWeight: 700,
+                color: 'var(--secondary)',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                display: 'block',
+                marginBottom: '8px',
+              }}
+            >
+              Integrity & Governance
+            </span>
+            <h2
+              style={{
+                fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
+                fontWeight: 800,
+                fontFamily: 'var(--font-family-title)',
+                lineHeight: 1.2,
+                color: 'var(--text-main)',
+                margin: '0 0 16px 0',
+              }}
+            >
+              Built on Trust. Sustained by Shared Accountability.
+            </h2>
+            <p
+              style={{
+                fontSize: '1rem',
+                lineHeight: 1.65,
+                color: 'var(--text-muted)',
+                marginBottom: '28px',
+              }}
+            >
+              Savvey Savers facilitates and administers savings circles but does not hold or manage member funds. We safeguard member contributions through structured governance, transparent processes, and secure data practices designed to protect the integrity of every savings circle.
+            </p>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '14px',
+                marginBottom: '28px',
+              }}
+            >
+              {[
+                'Strict member verification protocols',
+                'Verified onboarding process',
+                'Structured disbursement schedules',
+                'Transparent contribution tracking',
+                'Clear dispute resolution processes',
+                'GDPR-aligned data protection',
+              ].map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <CheckCircle2 size={18} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '2px' }} />
+                  <span style={{ fontSize: '0.925rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                    {item}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setWaitlistModalOpen(true)}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: 'var(--primary)',
+                color: '#ffffff',
+                fontFamily: 'var(--font-family-title)',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <span>Apply for Vetted Membership</span>
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/* SECTION 4: WHY MEMBERS JOIN SAVVEY SAVERS                   */}
+        {/* ============================================================ */}
+        <section
+          style={{
+            padding: '80px 24px',
+            backgroundColor: 'var(--bg-surface)',
+            borderTop: '1px solid var(--border-color)',
+            borderBottom: '1px solid var(--border-color)',
+          }}
+        >
+          <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+              <span
+                style={{
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
+                  color: 'var(--secondary)',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  display: 'block',
+                  marginBottom: '8px',
+                }}
+              >
+                Financial Milestones
+              </span>
+              <h2
+                style={{
+                  fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
+                  fontWeight: 800,
+                  fontFamily: 'var(--font-family-title)',
+                  color: 'var(--text-main)',
+                  margin: '0 0 12px 0',
+                }}
+              >
+                Why Members Join Savvey Savers Collective
+              </h2>
+              <p
+                style={{
+                  fontSize: '1rem',
+                  color: 'var(--text-muted)',
+                  maxWidth: '650px',
+                  margin: '0 auto',
+                }}
+              >
+                Members utilize interest-free pooled disbursements to reach life-changing financial goals.
+              </p>
+            </div>
+
+            {/* 5 Goal Cards */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '20px',
+              }}
+            >
+              {[
+                {
+                  icon: Building,
+                  title: 'Property Deposits',
+                  desc: 'Accumulate lump-sum equity for home purchases and mortgage deposits without commercial borrowing.',
+                },
+                {
+                  icon: GraduationCap,
+                  title: 'Education Expenses',
+                  desc: 'Fund university tuition fees, career bootcamps, and professional development debt-free.',
+                },
+                {
+                  icon: Briefcase,
+                  title: 'Business Capital',
+                  desc: 'Bootstrap startup inventory, scale company equipment, and secure working capital.',
+                },
+                {
+                  icon: Globe2,
+                  title: 'Diaspora Wealth Planning',
+                  desc: 'Coordinate international investments, home country development, and long-term asset accumulation.',
+                },
+                {
+                  icon: Users,
+                  title: 'Family Financial Planning',
+                  desc: 'Achieve significant milestones, life events, and family financial stability through collective discipline.',
+                },
+              ].map((goal, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: '14px',
+                    padding: '28px 22px',
+                    border: '1px solid var(--border-color)',
+                    boxShadow: 'var(--shadow-sm)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '10px',
+                        backgroundColor: 'var(--secondary-light)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--secondary)',
+                        marginBottom: '16px',
+                      }}
+                    >
+                      <goal.icon size={22} />
+                    </div>
+                    <h3
+                      style={{
+                        fontSize: '1.15rem',
+                        fontWeight: 700,
+                        fontFamily: 'var(--font-family-title)',
+                        color: 'var(--text-main)',
+                        margin: '0 0 10px 0',
+                      }}
+                    >
+                      {goal.title}
+                    </h3>
+                    <p
+                      style={{
+                        fontSize: '0.875rem',
+                        lineHeight: 1.55,
+                        color: 'var(--text-muted)',
+                        margin: 0,
+                      }}
+                    >
+                      {goal.desc}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/* SECTION 5: WHY SAVVEY SAVERS COLLECTIVE                     */}
+        {/* ============================================================ */}
+        <section
+          style={{
+            padding: '90px 24px',
+            maxWidth: '1280px',
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: '50px',
+            alignItems: 'center',
+          }}
+        >
+          {/* Left: Differentiators */}
+          <div>
+            <span
+              style={{
+                fontSize: '0.8125rem',
+                fontWeight: 700,
+                color: 'var(--primary)',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                display: 'block',
+                marginBottom: '8px',
+              }}
+            >
+              The Savvey Advantage
+            </span>
+            <h2
+              style={{
+                fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
+                fontWeight: 800,
+                fontFamily: 'var(--font-family-title)',
+                lineHeight: 1.2,
+                color: 'var(--text-main)',
+                margin: '0 0 16px 0',
+              }}
+            >
+              Why Savvey Savers Collective
+            </h2>
+            <p
+              style={{
+                fontSize: '1.05rem',
+                lineHeight: 1.65,
+                color: 'var(--text-muted)',
+                marginBottom: '28px',
+              }}
+            >
+              We offer a structured community-driven alternative to traditional borrowing, built on shared trust and collective responsibility.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '32px' }}>
+              {[
+                { title: 'Achieve property deposit goals faster', desc: 'Accelerate timelines through scheduled pooled payouts.' },
+                { title: 'Receive pooled funds without borrowing', desc: 'Access capital that is 100% interest-free.' },
+                { title: 'No interest. No hidden fees', desc: 'Simple, transparent, zero hidden charges or penalty surcharges.' },
+                { title: 'Build lasting financial discipline', desc: 'Structured peer accountability fosters consistent monthly habits.' },
+                { title: 'A structured alternative to commercial credit', desc: 'Community empowerment replacing predatory debt.' },
+              ].map((diff, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                  <div
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      backgroundColor: 'var(--status-active-bg)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--primary)',
+                      flexShrink: 0,
+                      marginTop: '2px',
+                    }}
+                  >
+                    <CheckCircle2 size={16} />
+                  </div>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                      {diff.title}
+                    </strong>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      {diff.desc}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setWaitlistModalOpen(true)}
+              style={{
+                padding: '13px 26px',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: 'var(--secondary)',
+                color: '#ffffff',
+                fontFamily: 'var(--font-family-title)',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 14px var(--secondary-glow)',
+              }}
+            >
+              <span>Join a Savings Circle</span>
+              <ArrowRight size={16} />
+            </button>
+          </div>
+
+          {/* Right: Community Image */}
+          <div>
+            <div
+              style={{
+                borderRadius: '20px',
+                overflow: 'hidden',
+                boxShadow: 'var(--shadow-xl)',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              <img
+                src="/images/community.webp"
+                alt="Savvey Savers Collective Alternative"
+                style={{
+                  width: '100%',
+                  height: '460px',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/* SECTION 6: MEMBER TESTIMONIALS (GOOGLE REVIEWS)             */}
+        {/* ============================================================ */}
+        <section
+          style={{
+            padding: '80px 24px',
+            backgroundColor: 'var(--bg-surface)',
+            borderTop: '1px solid var(--border-color)',
+            borderBottom: '1px solid var(--border-color)',
+          }}
+        >
+          <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+              <span
+                style={{
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
+                  color: 'var(--primary)',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  display: 'block',
+                  marginBottom: '8px',
+                }}
+              >
+                Member Testimonials
+              </span>
+              <h2
+                style={{
+                  fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
+                  fontWeight: 800,
+                  fontFamily: 'var(--font-family-title)',
+                  color: 'var(--text-main)',
+                  margin: '0 0 12px 0',
+                }}
+              >
+                Real Impact, Real Communities
+              </h2>
+              <p
+                style={{
+                  fontSize: '1rem',
+                  color: 'var(--text-muted)',
+                  maxWidth: '600px',
+                  margin: '0 auto 24px',
+                }}
+              >
+                What our verified members say about saving with the collective on Google Reviews.
+              </p>
+
+              {/* Google Reviews Badge */}
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  backgroundColor: '#ffffff',
+                  padding: '10px 22px',
+                  borderRadius: '9999px',
+                  boxShadow: 'var(--shadow-sm)',
+                  border: '1px solid var(--border-color)',
+                }}
+              >
+                <div style={{ display: 'flex', gap: '3px', color: '#f59e0b' }}>
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={18} fill="#f59e0b" />
+                  ))}
+                </div>
+                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                  5.0 Rating on Google Reviews
+                </span>
+                <span style={{ color: 'var(--border-color)' }}>|</span>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Savvey Savers Network Limited
+                </span>
               </div>
             </div>
 
-            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setLandingModal('NONE')} className="btn btn-secondary">
-                Close
+            {/* Testimonials Grid */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: '24px',
+              }}
+            >
+              {[
+                {
+                  name: 'Judy Dominic',
+                  time: '2 years ago',
+                  quote:
+                    'My 1 years collection has just been deposited in my account.. yay!. This approach encourages financial discipline and helps me achieve my financial objectives faster. Highly recommend.',
+                },
+                {
+                  name: 'oronsaye Daniel',
+                  time: '2 years ago',
+                  quote:
+                    'A very trusted and reliable saving club, I couldn’t have achieved my saving goals if not for savvey savers . Many thanks to the dedicated minds behind this great platform.',
+                },
+                {
+                  name: 'Yori Gbadamosi',
+                  time: '3 years ago',
+                  quote:
+                    'Savvey Savers Network Limited offers a range of savings solutions with transparent terms. Their excellent customer service, user-friendly online platform, transparent fee structures, and commitment to security make them a reliable choice.',
+                },
+                {
+                  name: 'Simisola Adingupu',
+                  time: '1 year ago',
+                  quote:
+                    'Started using savvy savers this year, just received my first half payment. I totally recommend.',
+                },
+                {
+                  name: 'olowo busola',
+                  time: '11 months ago',
+                  quote:
+                    'Well organised...I have no regrets joining this group. Very transparent ledger and reliable disbursement.',
+                },
+                {
+                  name: 'Davidson Sunday',
+                  time: '2 years ago',
+                  quote:
+                    'It is so lovely and no stress, so Compliance and structured from start to finish.',
+                },
+              ].map((rev, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: '16px',
+                    padding: '28px',
+                    border: '1px solid var(--border-color)',
+                    boxShadow: 'var(--shadow-sm)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: '0.925rem',
+                      lineHeight: 1.65,
+                      color: 'var(--text-main)',
+                      margin: '0 0 20px 0',
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    "{rev.quote}"
+                  </p>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderTop: '1px solid var(--border-subtle)',
+                      paddingTop: '14px',
+                    }}
+                  >
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--primary)' }}>
+                        {rev.name}
+                      </strong>
+                      <span style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>
+                        {rev.time} · Google Verified Review
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '2px', color: '#f59e0b' }}>
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} size={14} fill="#f59e0b" />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/* SECTION 7: FINAL CTA BANNER                                  */}
+        {/* ============================================================ */}
+        <section
+          style={{
+            padding: '80px 24px',
+            backgroundColor: 'var(--primary-dark)',
+            color: '#ffffff',
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2
+              style={{
+                fontSize: 'clamp(2rem, 3.5vw, 2.8rem)',
+                fontWeight: 800,
+                fontFamily: 'var(--font-family-title)',
+                marginBottom: '16px',
+              }}
+            >
+              Start Your Journey with Savvey Savers
+            </h2>
+            <p
+              style={{
+                fontSize: '1.1rem',
+                color: '#c5d6cc',
+                lineHeight: 1.65,
+                marginBottom: '32px',
+              }}
+            >
+              Take control of your savings goals today. Join a community of disciplined savers working together towards home deposits, education, and long-term wealth.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setWaitlistModalOpen(true)}
+                style={{
+                  padding: '15px 32px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  backgroundColor: 'var(--secondary)',
+                  color: '#ffffff',
+                  fontFamily: 'var(--font-family-title)',
+                  fontWeight: 700,
+                  fontSize: '1.05rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  boxShadow: '0 6px 20px var(--secondary-glow)',
+                }}
+              >
+                <span>Join Our Waiting List</span>
+                <ArrowRight size={18} />
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </section>
+      </main>
+
+      <MarketingFooter
+        onOpenLogin={() => setAuthModalOpen(true)}
+        onOpenWaitlist={() => setWaitlistModalOpen(true)}
+      />
+
+      {/* Interactive Modals */}
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+      <WaitlistModal isOpen={waitlistModalOpen} onClose={() => setWaitlistModalOpen(false)} />
     </div>
   );
 }
