@@ -105,7 +105,7 @@ export default function AboutUsPage() {
                   margin: 0,
                 }}
               >
-                What began as small, member-led savings cycles has grown into a well-established network where individuals come together to support one another through disciplined saving and shared accountability.
+                What began with a handful of friends who wanted to to build a disciplined approach to saving has grown into a  well-established network, with individuals across the UK coming together to support one another through disciplined saving and shared accountability.
               </p>
 
               {/* 4 Trust Pills matching previous site */}
@@ -304,10 +304,21 @@ export default function AboutUsPage() {
                   fontSize: '1.05rem',
                   lineHeight: 1.7,
                   color: '#4a4a4a',
+                  marginBottom: '16px',
+                }}
+              >
+                We exist to provide a trusted, community-driven approach to achieving financial goals.
+              </p>
+
+              <p
+                style={{
+                  fontSize: '1.05rem',
+                  lineHeight: 1.7,
+                  color: '#4a4a4a',
                   marginBottom: '24px',
                 }}
               >
-                We exist to provide a trusted, community-driven approach to achieving financial goals. By bringing members together in structured savings cycles, Savvey helps individuals plan towards goals such as:
+                By bringing members together in structured savings cycles, being a part of the Collective helps members plan towards goals such as:
               </p>
 
               {/* 2-column checklist matching elementor layout */}
@@ -320,10 +331,10 @@ export default function AboutUsPage() {
                 }}
               >
                 {[
-                  'Property deposits.',
-                  'Education expenses.',
-                  'Business capital.',
-                  'Family financial planning.',
+                  'Property deposits',
+                  'Education expenses',
+                  'Business capital',
+                  'Family financial planning',
                 ].map((item, idx) => (
                   <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <CheckCircle2 size={18} style={{ color: '#0E4F45', flexShrink: 0 }} />
@@ -564,7 +575,7 @@ export default function AboutUsPage() {
                     paddingTop: '20px',
                   }}
                 >
-                  Savvey serves solely as the administrative and governance facilitator for member-driven savings cycles. Participation is based on shared responsibility among members.
+                  Savvey Savers serves solely as the administrative and governance facilitator for member-driven savings cycles. Participation is based on shared responsibility among members.
                 </p>
               </div>
             </div>
