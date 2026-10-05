@@ -1611,17 +1611,6 @@ function CommitmentsContent() {
         )}
       </div>
 
-      {/* Pagination Controls */}
-      <PaginationControls
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={sortedCommitments.length}
-        itemsPerPage={itemsPerPage}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={(num) => { setItemsPerPage(num); setCurrentPage(1); }}
-        itemLabel="savings commitment"
-      />
-
       {/* --- ADD COMMITMENT MODAL --- */}
       {activeModal === 'ADD' && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
