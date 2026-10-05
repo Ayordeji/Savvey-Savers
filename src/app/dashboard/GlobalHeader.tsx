@@ -327,17 +327,17 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '0 28px',
         backgroundColor: '#faf9f6',
         borderBottom: '1px solid var(--border-color)',
-        height: '68px',
         position: 'sticky',
         top: 0,
-        zIndex: 40
+        zIndex: 40,
+        width: '100%',
+        boxSizing: 'border-box'
       }}>
         {/* Left: Hamburger & Dynamic Page Title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div className="mobile-only" style={{ alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: '1 1 auto' }}>
+          <div className="mobile-only" style={{ alignItems: 'center', flexShrink: 0 }}>
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
               style={{
@@ -357,19 +357,22 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
           </div>
 
           <h1 style={{
-            fontSize: '1.25rem',
+            fontSize: 'clamp(1rem, 3.8vw, 1.25rem)',
             fontWeight: 700,
             fontFamily: 'var(--font-family-title)',
             color: '#111827',
             letterSpacing: '-0.01em',
-            margin: 0
+            margin: 0,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
           }}>
             {pageTitle}
           </h1>
         </div>
 
         {/* Right: Notifications, Avatar, User Info & Dropdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
           {/* Notification Bell */}
           <Link
             href="/dashboard/notifications"
@@ -440,7 +443,7 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
               </div>
 
               {/* User text details (desktop visible) */}
-              <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', minWidth: 0 }}>
+              <div className="desktop-user-details" style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', minWidth: 0 }}>
                 <span style={{
                   fontSize: '0.875rem',
                   fontWeight: 600,
@@ -461,6 +464,7 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
 
               <ChevronDown
                 size={16}
+                className="desktop-user-chevron"
                 style={{
                   color: '#6b7280',
                   transition: 'transform 0.2s',

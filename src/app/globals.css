@@ -691,14 +691,19 @@ button {
 
   div[class*="dashboardContainer"] main,
   main[class*="mainContent"] {
-    padding: 16px 12px !important;
-    gap: 16px !important;
-    max-width: 100vw !important;
-    overflow-x: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: clip !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   div[class*="dashboardContainer"] h1 {
-    font-size: 1.5rem !important;
+    font-size: 1.25rem !important;
   }
 
   /* Marketing pages: ensure full-bleed with zero outer padding/margin and no extra space */
@@ -748,16 +753,60 @@ button {
   }
 
   .modal-content {
-    max-width: 95vw !important;
-    width: 95vw !important;
-    padding: 16px !important;
+    max-width: calc(100% - 24px) !important;
+    width: calc(100% - 24px) !important;
+    padding: 18px 16px !important;
     box-sizing: border-box !important;
+    margin: 12px auto !important;
   }
 
   .custom-table th,
   .custom-table td {
     padding: 8px 10px !important;
     font-size: 0.8rem !important;
+  }
+
+  /* Dashboard multi-column grid collapses */
+  .dashboard-two-col-grid,
+  .dashboard-activity-grid,
+  .settings-two-col-grid,
+  div[style*="2fr 1fr"],
+  div[style*="1.6fr 1fr"],
+  div[style*="1fr 340px"] {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* Table + Slide drawer container stacking */
+  .dashboard-table-drawer-container {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .dashboard-table-drawer-container .dashboard-drawer,
+  .dashboard-table-drawer-container > div:last-child[style*="width: 420px"],
+  .dashboard-table-drawer-container > div:last-child[style*="width: 440px"],
+  .dashboard-table-drawer-container > div:last-child[style*="width: 400px"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    position: static !important;
+    margin-top: 16px !important;
+    box-sizing: border-box !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Header user text details hide on small mobile screens */
+  .desktop-user-details,
+  .desktop-user-chevron {
+    display: none !important;
+  }
+
+  /* Settings KPI 4-column overview */
+  .settings-kpi-grid,
+  div[style*="repeat(4, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
   }
 }
 
@@ -766,7 +815,8 @@ button {
   form div[style*="gridTemplateColumns"],
   div[style*="grid-template-columns"],
   section[style*="gridTemplateColumns"],
-  section[style*="grid-template-columns"] {
+  section[style*="grid-template-columns"],
+  div[style*="1fr 1fr"] {
     grid-template-columns: 1fr !important;
   }
 }

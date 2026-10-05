@@ -562,7 +562,7 @@ function SettingsContent() {
             {/* ─────────────────────────────── TAB 1: SECURITY QUESTION ─────────────────────────────── */}
             {activeTab === 'security' && (
               <>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
+                <div className="settings-two-col-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
                   {/* Main card */}
                   <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '28px' }}>
                     <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>Security Question Setup</h2>
@@ -659,7 +659,7 @@ function SettingsContent() {
                       ✓ {[goals.length > 0, amounts.length > 0, configuredCollectionMonthsCount > 0, enabledNotificationsCount > 0].filter(Boolean).length} / 4 Configured
                     </span>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                  <div className="settings-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
                     {[
                       { icon: '📁', count: goals.length, label: 'Goal Categories', sub: 'saving_goals' as CommitmentSubTab },
                       { icon: '£', count: amounts.length, label: 'Amount Tiers', sub: 'commitment_amounts' as CommitmentSubTab },

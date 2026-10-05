@@ -1306,9 +1306,9 @@ export default function ManageUsersPage() {
       </div>
 
       {/* Main Container with Members Table + Slide-Out Member Profile Drawer */}
-      <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', position: 'relative' }}>
+      <div className="dashboard-table-drawer-container" style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', position: 'relative' }}>
         {/* Table Area */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
           {loading ? (
             <div className="glass-panel flex-center" style={{ height: '300px', flexDirection: 'column', gap: '16px' }}>
               <div className="loading-spinner"></div>
@@ -1539,6 +1539,7 @@ export default function ManageUsersPage() {
         {/* Member Profile Slide-Out Drawer (Exact match to Screenshot 2) */}
         {drawerOpen && selectedUser && (
           <div
+            className="dashboard-drawer"
             style={{
               width: '420px',
               maxWidth: '100%',

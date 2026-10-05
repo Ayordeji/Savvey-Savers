@@ -390,9 +390,9 @@ export default function DeletedRecordsPage() {
       </div>
 
       {/* Main Content Area: Table + Slide-Out Drawer (Screenshot 7) */}
-      <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+      <div className="dashboard-table-drawer-container" style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
         {/* Left Side: Table */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
           {loading ? (
             <div className="glass-panel flex-center" style={{ height: '300px', flexDirection: 'column', gap: '16px' }}>
               <div className="loading-spinner"></div>
@@ -647,6 +647,7 @@ export default function DeletedRecordsPage() {
         {/* Right Side: Slide-Out View Deleted Record Drawer (Screenshot 7) */}
         {drawerOpen && selectedRecord && (
           <div
+            className="dashboard-drawer"
             style={{
               width: '420px',
               maxWidth: '100%',

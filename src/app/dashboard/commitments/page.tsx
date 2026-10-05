@@ -1005,9 +1005,9 @@ function CommitmentsContent() {
       </div>
 
       {/* Main Content Area: Table + Slide-Out Drawer */}
-      <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+      <div className="dashboard-table-drawer-container" style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
         {/* Left Side: Table */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
           {loading ? (
             <div className="glass-panel flex-center" style={{ height: '300px', flexDirection: 'column', gap: '16px' }}>
               <div className="loading-spinner"></div>
@@ -1293,6 +1293,7 @@ function CommitmentsContent() {
         {/* Right Side: Slide-Out Commitment Details Drawer (Matches Screenshot 3) */}
         {drawerOpen && selectedCmt && (
           <div
+            className="dashboard-drawer"
             style={{
               width: '440px',
               maxWidth: '100%',

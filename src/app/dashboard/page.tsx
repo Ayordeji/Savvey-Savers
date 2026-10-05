@@ -200,7 +200,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       {/* 2. Top 3 Hero Metric Cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
         gap: '20px'
       }}>
         {/* Card 1: Total Savings Volume (Dark Forest Green Brand Card with Sparkline) */}
@@ -350,7 +350,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       {/* 3. Four KPI Progress Cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
         gap: '16px'
       }}>
         {/* Active Commitments */}
@@ -489,7 +489,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       </div>
 
       {/* 4. Visuals: Savings Volume Over Time + At a Glance */}
-      <div style={{
+      <div className="dashboard-two-col-grid" style={{
         display: 'grid',
         gridTemplateColumns: '2fr 1fr',
         gap: '20px'
@@ -649,7 +649,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       </div>
 
       {/* 6. Recent Activity & Commitment Overview */}
-      <div style={{
+      <div className="dashboard-activity-grid" style={{
         display: 'grid',
         gridTemplateColumns: '1.6fr 1fr',
         gap: '20px'
