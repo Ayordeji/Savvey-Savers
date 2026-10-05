@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Fragment, Suspense } from 'react';
+import { useState, useEffect, useRef, Fragment, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, PoundSterling, Calendar, ChevronDown, ChevronUp, ExternalLink, Banknote, ReceiptText, FileText, CheckCircle, Wallet, ArrowRight, ShieldCheck, Mail, Send } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
@@ -84,6 +84,7 @@ function CommitmentsContent() {
   const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'REMINDER' | 'PAST_PAYMENT' | 'VIEW_COMMITMENT'>('NONE');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedCmt, setSelectedCmt] = useState<Commitment | null>(null);
+  const cmtDrawerRef = useRef<HTMLDivElement>(null);
   const [viewCmtPayments, setViewCmtPayments] = useState<Payment[]>([]);
   const [viewCmtLoading, setViewCmtLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -248,6 +249,11 @@ function CommitmentsContent() {
     setViewCmtPayments(paymentsMap[cmt.id] || []);
     setViewCmtLoading(true);
     setDrawerOpen(true);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        cmtDrawerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+    }
     try {
       const res = await fetch(`/api/admin/payments?commitmentId=${cmt.id}`);
       if (res.ok) {
@@ -1293,6 +1299,7 @@ function CommitmentsContent() {
         {/* Right Side: Slide-Out Commitment Details Drawer (Matches Screenshot 3) */}
         {drawerOpen && selectedCmt && (
           <div
+            ref={cmtDrawerRef}
             className="dashboard-drawer"
             style={{
               width: '440px',

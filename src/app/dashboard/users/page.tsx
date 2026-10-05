@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle, Download, Upload, Filter, Send, Wallet, Clock, Check, ChevronDown, ArrowRight, UserCheck } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
@@ -163,6 +163,18 @@ export default function ManageUsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeDrawerTab, setActiveDrawerTab] = useState<'OVERVIEW' | 'COMMITMENTS' | 'PAYMENTS' | 'MEMBERSHIP' | 'ACTIVITY'>('OVERVIEW');
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  const handleMemberRowClick = (u: User) => {
+    setSelectedUser(u);
+    setDrawerOpen(true);
+    // On mobile/tablet screens (< 1024px), smooth scroll to the member profile card so user immediately sees it
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        drawerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+    }
+  };
   const [membershipFilter, setMembershipFilter] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -1372,10 +1384,7 @@ export default function ManageUsersPage() {
                         return (
                           <tr
                             key={u.id}
-                            onClick={() => {
-                              setSelectedUser(u);
-                              setDrawerOpen(true);
-                            }}
+                            onClick={() => handleMemberRowClick(u)}
                             style={{
                               cursor: 'pointer',
                               borderBottom: '1px solid #F3F1ED',
@@ -1539,6 +1548,8 @@ export default function ManageUsersPage() {
         {/* Member Profile Slide-Out Drawer (Exact match to Screenshot 2) */}
         {drawerOpen && selectedUser && (
           <div
+            ref={drawerRef}
+            id="member-profile-drawer"
             className="dashboard-drawer"
             style={{
               width: '420px',
@@ -1663,12 +1674,20 @@ export default function ManageUsersPage() {
               </div>
             </div>
 
-            {/* Drawer Tabs */}
+            {/* Drawer Tabs Bar */}
             <div style={{
               display: 'flex',
+              alignItems: 'center',
               borderBottom: '1px solid #ECE8E2',
-              gap: '16px',
-              fontSize: '0.82rem'
+              gap: '12px',
+              overflowX: 'auto',
+              whiteSpace: 'nowrap',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch',
+              paddingBottom: '2px',
+              width: '100%',
+              maxWidth: '100%'
             }}>
               {(['Overview', 'Commitments', 'Payments', 'Membership', 'Activity'] as const).map((tab) => {
                 const isTabActive = activeDrawerTab === tab.toUpperCase();
@@ -1679,11 +1698,15 @@ export default function ManageUsersPage() {
                     style={{
                       background: 'none',
                       border: 'none',
-                      padding: '8px 0',
+                      padding: '8px 4px',
+                      fontSize: '0.82rem',
                       fontWeight: isTabActive ? 700 : 500,
-                      color: isTabActive ? '#2E5A44' : '#6B7280',
-                      borderBottom: isTabActive ? '2px solid #2E5A44' : '2px solid transparent',
-                      cursor: 'pointer'
+                      color: isTabActive ? '#0c4e43' : '#6B7280',
+                      borderBottom: isTabActive ? '2.5px solid #0c4e43' : '2.5px solid transparent',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      whiteSpace: 'nowrap',
+                      transition: 'color 0.15s, border-color 0.15s'
                     }}
                   >
                     {tab}
@@ -1886,22 +1909,104 @@ export default function ManageUsersPage() {
             {/* Membership Tab Body */}
             {activeDrawerTab === 'MEMBERSHIP' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827' }}>
-                  Membership Agreement & Fees
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#111827' }}>
+                    Membership & Governance
+                  </div>
+                  <span style={{
+                    padding: '3px 10px',
+                    borderRadius: '9999px',
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    backgroundColor: selectedUser.membershipFeeConfirmed ? '#EAF5EE' : '#FEF3C7',
+                    color: selectedUser.membershipFeeConfirmed ? '#2E7D32' : '#B45309'
+                  }}>
+                    {selectedUser.membershipFeeConfirmed ? 'Fee Paid' : 'Fee Pending'}
+                  </span>
                 </div>
-                <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '16px', border: '1px solid #ECE8E2' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ color: '#6B7280', fontSize: '0.78rem' }}>Tier</span>
-                    <span style={{ fontWeight: 600, fontSize: '0.78rem', color: '#111827' }}>Standard Contributing Member</span>
+
+                {/* Plan & Fee Details Card */}
+                <div style={{ backgroundColor: '#FAF9F6', borderRadius: '14px', padding: '16px', border: '1px solid #ECE8E2', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ fontSize: '0.72rem', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
+                        Current Tier
+                      </div>
+                      <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#111827', marginTop: '2px' }}>
+                        {selectedUser.membership || '2026 Annual Membership'}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '0.72rem', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
+                        Annual Fee
+                      </div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0c4e43', marginTop: '2px' }}>
+                        £35.99
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ color: '#6B7280', fontSize: '0.78rem' }}>Signed Agreement</span>
-                    <span style={{ color: '#2E7D32', fontWeight: 600, fontSize: '0.78rem' }}>Verified & Signed</span>
+
+                  <div style={{ borderTop: '1px solid #ECE8E2', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.78rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6B7280' }}>Member Reference</span>
+                      <span style={{ fontWeight: 600, color: '#111827', fontFamily: 'monospace' }}>
+                        {selectedUser.displayId || selectedUser.invitationId || selectedUser.id}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6B7280' }}>Signed Agreement</span>
+                      <span style={{ color: '#2E7D32', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Check size={13} /> Verified & Signed
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6B7280' }}>Payment Date</span>
+                      <span style={{ fontWeight: 500, color: '#111827' }}>
+                        {selectedUser.membershipFeeConfirmedAt
+                          ? new Date(selectedUser.membershipFeeConfirmedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                          : 'Pending confirmation'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#6B7280' }}>Renewal Cycle</span>
+                      <span style={{ fontWeight: 500, color: '#111827' }}>January 2027</span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6B7280', fontSize: '0.78rem' }}>Renewal Date</span>
-                    <span style={{ fontWeight: 600, fontSize: '0.78rem', color: '#111827' }}>Jan 01, 2027</span>
+
+                  {!selectedUser.membershipFeeConfirmed && (
+                    <button
+                      onClick={() => handleOpenRequestFeeModal(selectedUser)}
+                      style={{
+                        marginTop: '6px',
+                        width: '100%',
+                        padding: '9px',
+                        backgroundColor: '#0c4e43',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '0.82rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        transition: 'opacity 0.15s'
+                      }}
+                    >
+                      <Wallet size={14} />
+                      <span>Request Fee Payment</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Governance & Bylaws Notice */}
+                <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '14px', border: '1px solid #ECE8E2', fontSize: '0.75rem', color: '#6B7280', lineHeight: 1.5 }}>
+                  <div style={{ fontWeight: 600, color: '#111827', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ShieldAlert size={14} style={{ color: '#0c4e43' }} />
+                    <span>Governance & Compliance</span>
                   </div>
+                  Member is enrolled under Savvey Savers Network Limited Constitution and GDPR Data Processing Regulations.
                 </div>
               </div>
             )}
@@ -1909,19 +2014,59 @@ export default function ManageUsersPage() {
             {/* Activity Tab Body */}
             {activeDrawerTab === 'ACTIVITY' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827' }}>
-                  Activity Log
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ padding: '12px', backgroundColor: '#FAF9F6', borderRadius: '10px', fontSize: '0.75rem', border: '1px solid #ECE8E2' }}>
-                    <span style={{ fontWeight: 600, color: '#111827' }}>Profile Updated</span>
-                    <div style={{ color: '#6B7280', marginTop: '2px' }}>Member details were viewed and saved.</div>
-                    <div style={{ color: '#9CA3AF', fontSize: '0.7rem', marginTop: '4px' }}>Today at 10:42 AM</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#111827' }}>
+                    Activity History
                   </div>
-                  <div style={{ padding: '12px', backgroundColor: '#FAF9F6', borderRadius: '10px', fontSize: '0.75rem', border: '1px solid #ECE8E2' }}>
-                    <span style={{ fontWeight: 600, color: '#111827' }}>Annual Fee Requested</span>
-                    <div style={{ color: '#6B7280', marginTop: '2px' }}>Automated invoice dispatched to {selectedUser.email}.</div>
-                    <div style={{ color: '#9CA3AF', fontSize: '0.7rem', marginTop: '4px' }}>Yesterday</div>
+                  <span style={{ fontSize: '0.72rem', color: '#6B7280' }}>
+                    Latest audit events
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {/* Event 1: Member profile status */}
+                  <div style={{ padding: '12px 14px', backgroundColor: '#FAF9F6', borderRadius: '10px', fontSize: '0.78rem', border: '1px solid #ECE8E2' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 600, color: '#111827' }}>Account Verified</span>
+                      <span style={{ color: '#9CA3AF', fontSize: '0.7rem' }}>
+                        {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Recent'}
+                      </span>
+                    </div>
+                    <div style={{ color: '#57655c', marginTop: '3px', fontSize: '0.75rem' }}>
+                      Member registered with verified email {selectedUser.email}.
+                    </div>
+                  </div>
+
+                  {/* Event 2: Membership fee status */}
+                  <div style={{ padding: '12px 14px', backgroundColor: '#FAF9F6', borderRadius: '10px', fontSize: '0.78rem', border: '1px solid #ECE8E2' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 600, color: '#111827' }}>
+                        {selectedUser.membershipFeeConfirmed ? 'Membership Fee Confirmed' : 'Membership Fee Invoiced'}
+                      </span>
+                      <span style={{ color: '#9CA3AF', fontSize: '0.7rem' }}>
+                        {selectedUser.membershipFeeConfirmedAt
+                          ? new Date(selectedUser.membershipFeeConfirmedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                          : 'Jan 2026'}
+                      </span>
+                    </div>
+                    <div style={{ color: '#57655c', marginTop: '3px', fontSize: '0.75rem' }}>
+                      {selectedUser.membershipFeeConfirmed
+                        ? '£35.99 annual contribution confirmed to collective pool.'
+                        : 'Invoice dispatched awaiting member payment confirmation.'}
+                    </div>
+                  </div>
+
+                  {/* Event 3: Rotating Savings Commitments */}
+                  <div style={{ padding: '12px 14px', backgroundColor: '#FAF9F6', borderRadius: '10px', fontSize: '0.78rem', border: '1px solid #ECE8E2' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 600, color: '#111827' }}>Savings Commitments</span>
+                      <span style={{ color: '#9CA3AF', fontSize: '0.7rem' }}>2026 Cycle</span>
+                    </div>
+                    <div style={{ color: '#57655c', marginTop: '3px', fontSize: '0.75rem' }}>
+                      {allCommitmentsList.filter((c: any) => c.memberId === selectedUser.id).length > 0
+                        ? `${allCommitmentsList.filter((c: any) => c.memberId === selectedUser.id).length} active rotating savings commitment(s) registered.`
+                        : 'No active savings commitments assigned yet.'}
+                    </div>
                   </div>
                 </div>
               </div>
