@@ -25,6 +25,11 @@ import {
   CheckCircle,
   Building,
   Shield,
+  UserCheck,
+  BarChart3,
+  FileText,
+  Scale,
+  ExternalLink,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -82,7 +87,6 @@ export default function HomePage() {
           >
             {/* Left Column: Copy & Actions */}
             <div>
-              {/* Top Kicker matching old design */}
               <div
                 style={{
                   fontSize: '0.875rem',
@@ -98,7 +102,6 @@ export default function HomePage() {
                 UK RESIDENTS ONLY, BY REFERRAL & APPROVAL
               </div>
 
-              {/* Headline matching old design */}
               <h1
                 style={{
                   fontSize: 'clamp(2.4rem, 3.8vw, 3.8rem)',
@@ -124,7 +127,6 @@ export default function HomePage() {
                 Savings Community
               </h1>
 
-              {/* Description */}
               <p
                 style={{
                   fontSize: 'clamp(1rem, 1.15vw, 1.15rem)',
@@ -137,7 +139,6 @@ export default function HomePage() {
                 A structured, referral-based savings collective that enables members to work towards property ownership and other major life goals, including education, through a trusted, interest-free community saving model.
               </p>
 
-              {/* Action Buttons (exact pills) */}
               <div
                 style={{
                   display: 'flex',
@@ -208,7 +209,7 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              {/* 4 Trust Points (Pills matching old design) */}
+              {/* 4 Trust Pills */}
               <div
                 style={{
                   display: 'grid',
@@ -245,7 +246,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right Column: Hero Image matching old design */}
+            {/* Right Column: Hero Image */}
             <div style={{ position: 'relative' }}>
               <div
                 style={{
@@ -271,7 +272,7 @@ export default function HomePage() {
         </section>
 
         {/* ============================================================ */}
-        {/* 2. DARK GREEN HORIZONTAL TRUST STRIP (container ecd52b6)     */}
+        {/* 2. DARK GREEN HORIZONTAL TRUST STRIP                         */}
         {/* ============================================================ */}
         <section
           style={{
@@ -320,7 +321,7 @@ export default function HomePage() {
         </section>
 
         {/* ============================================================ */}
-        {/* 3. HOW THE COLLECTIVE WORKS (container 8d72461: #FFFDFA)     */}
+        {/* 3. HOW THE COLLECTIVE WORKS (background: #FFFDFA)            */}
         {/* ============================================================ */}
         <section
           style={{
@@ -355,7 +356,6 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* 4 Step Icon Boxes with connecting line */}
             <div
               style={{
                 display: 'grid',
@@ -363,7 +363,6 @@ export default function HomePage() {
                 gap: '32px',
                 position: 'relative',
               }}
-              className="steps-container"
             >
               {[
                 {
@@ -394,11 +393,8 @@ export default function HomePage() {
                     flexDirection: 'column',
                     alignItems: 'center',
                     textAlign: 'center',
-                    position: 'relative',
-                    zIndex: 1,
                   }}
                 >
-                  {/* Circular Step Icon */}
                   <div
                     style={{
                       width: '64px',
@@ -445,7 +441,7 @@ export default function HomePage() {
         </section>
 
         {/* ============================================================ */}
-        {/* 4. BUILT ON TRUST (container 85d16c3: #F4F1E8)               */}
+        {/* 4. BUILT ON TRUST (matching original 2-col 6-card layout!)   */}
         {/* ============================================================ */}
         <section
           style={{
@@ -464,7 +460,7 @@ export default function HomePage() {
               alignItems: 'center',
             }}
           >
-            {/* Left Column: Text & Checklist */}
+            {/* Left Column: Heading, Description, and 6 Cards Grid */}
             <div>
               <h2
                 style={{
@@ -483,13 +479,13 @@ export default function HomePage() {
                   fontSize: '1.05rem',
                   lineHeight: 1.7,
                   color: '#4a4a4a',
-                  marginBottom: '32px',
+                  marginBottom: '36px',
                 }}
               >
                 Savvey Savers facilitates and administers savings circles but does not hold or manage member funds. We safeguard member contributions through structured governance, transparent processes, and secure data practices designed to protect the integrity of every savings circle.
               </p>
 
-              {/* 6 Checklist Items */}
+              {/* 6 Cards Grid in 2 columns (exact match of previous site) */}
               <div
                 style={{
                   display: 'grid',
@@ -498,24 +494,60 @@ export default function HomePage() {
                 }}
               >
                 {[
-                  'Strict member verification protocols',
-                  'Verified onboarding process',
-                  'Structured disbursement schedules',
-                  'Transparent contribution tracking',
-                  'Clear dispute resolution processes',
-                  'GDPR-aligned data protection',
-                ].map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                    <CheckCircle2 size={20} style={{ color: '#0E4F45', flexShrink: 0, marginTop: '2px' }} />
-                    <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#1A1A1A' }}>
-                      {item}
+                  { title: 'Strict member verification protocols', icon: UserCheck },
+                  { title: 'Verified onboarding process', icon: CheckCircle2 },
+                  { title: 'Structured disbursement schedules', icon: BarChart3 },
+                  { title: 'Transparent contribution tracking', icon: FileText },
+                  { title: 'Clear dispute resolution processes', icon: Scale },
+                  { title: 'GDPR-aligned data protection', icon: ShieldCheck },
+                ].map((card, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      backgroundColor: '#FFFDFA',
+                      border: '2px solid rgba(14, 79, 69, 0.33)',
+                      borderRadius: '16px',
+                      padding: '12px 18px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '14px',
+                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)',
+                      transition: 'border-color 0.3s ease',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#0E4F45')}
+                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(14, 79, 69, 0.33)')}
+                  >
+                    <div
+                      style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '10px',
+                        backgroundColor: '#0E4F45',
+                        color: '#FFFDFA',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <card.icon size={20} />
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '0.925rem',
+                        fontWeight: 600,
+                        color: '#1A1A1A',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {card.title}
                     </span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Right Column: Image (community-scaled.webp) */}
+            {/* Right Column: Image (community.webp) */}
             <div>
               <div
                 style={{
@@ -541,11 +573,11 @@ export default function HomePage() {
         </section>
 
         {/* ============================================================ */}
-        {/* 5. WHY MEMBERS JOIN SAVVEY SAVERS (container e086504: sage)  */}
+        {/* 5. WHY MEMBERS JOIN SAVVEY SAVERS (container e086504)        */}
         {/* ============================================================ */}
         <section
           style={{
-            backgroundColor: 'rgba(14, 79, 69, 0.08)', // exact soft green tint
+            backgroundColor: 'rgba(14, 79, 69, 0.08)',
             padding: '90px 80px',
           }}
           className="responsive-section-padding"
@@ -565,7 +597,6 @@ export default function HomePage() {
               </h2>
             </div>
 
-            {/* 5 Milestone Cards */}
             <div
               style={{
                 display: 'grid',
@@ -629,7 +660,7 @@ export default function HomePage() {
         </section>
 
         {/* ============================================================ */}
-        {/* 6. WHY SAVVEY SAVERS COLLECTIVE (container a24f3c9: #F4F1E8) */}
+        {/* 6. WHY SAVVEY SAVERS COLLECTIVE (IMAGE ON THE LEFT!)         */}
         {/* ============================================================ */}
         <section
           style={{
@@ -648,8 +679,31 @@ export default function HomePage() {
               alignItems: 'center',
             }}
           >
-            {/* Left: Text & Checkmarks */}
-            <div>
+            {/* Left Column: Image (savings.webp) */}
+            <div style={{ order: 1 }}>
+              <div
+                style={{
+                  borderRadius: '24px',
+                  overflow: 'hidden',
+                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.12)',
+                }}
+              >
+                <img
+                  src="/images/savings.webp"
+                  alt="Why Savvey Savers Collective"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: '480px',
+                    objectFit: 'cover',
+                    display: 'block',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Right Column: Text & Differentiators */}
+            <div style={{ order: 2 }}>
               <h2
                 style={{
                   fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
@@ -711,34 +765,11 @@ export default function HomePage() {
                 <ArrowRight size={16} />
               </button>
             </div>
-
-            {/* Right: Image (savings-scaled.webp) */}
-            <div>
-              <div
-                style={{
-                  borderRadius: '24px',
-                  overflow: 'hidden',
-                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.12)',
-                }}
-              >
-                <img
-                  src="/images/savings.webp"
-                  alt="Why Savvey Savers Collective"
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    maxHeight: '480px',
-                    objectFit: 'cover',
-                    display: 'block',
-                  }}
-                />
-              </div>
-            </div>
           </div>
         </section>
 
         {/* ============================================================ */}
-        {/* 7. MEMBER TESTIMONIALS (container 31731c1: #FFFDFA)          */}
+        {/* 7. MEMBER TESTIMONIALS (WITH CLICKABLE GOOGLE REVIEWS LINKS!) */}
         {/* ============================================================ */}
         <section
           style={{
@@ -783,29 +814,68 @@ export default function HomePage() {
                 What our members say about saving with the collective.
               </p>
 
-              {/* Google Reviews Badge Header */}
+              {/* Clickable Google Reviews Badge Header */}
               <div
                 style={{
                   display: 'inline-flex',
+                  flexWrap: 'wrap',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '14px',
                   backgroundColor: '#f7f5ec',
-                  padding: '10px 24px',
+                  padding: '12px 28px',
                   borderRadius: '360px',
                   border: '1px solid rgba(14, 79, 69, 0.12)',
                 }}
               >
-                <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>Savvey Savers Network Limited</span>
+                <a
+                  href="https://maps.google.com/?cid=1723843643196866088&g_mp=CiVnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLkdldFBsYWNlEAIYBCAA"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontWeight: 700,
+                    fontSize: '0.95rem',
+                    color: '#0E4F45',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                  title="View Savvey Savers Network Limited on Google Maps"
+                >
+                  <span>Savvey Savers Network Limited</span>
+                  <ExternalLink size={14} />
+                </a>
+
                 <div style={{ display: 'flex', gap: '3px', color: '#f59e0b' }}>
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} size={16} fill="#f59e0b" />
                   ))}
                 </div>
-                <span style={{ fontSize: '0.9rem', color: '#555' }}>5.0 Rating on Google Reviews</span>
+
+                <span style={{ fontSize: '0.9rem', color: '#555' }}>
+                  5.0 Rating on Google Reviews
+                </span>
+
+                <span style={{ color: 'rgba(0,0,0,0.2)' }}>•</span>
+
+                <a
+                  href="https://search.google.com/local/writereview?placeid=ChIJYeDKARad2EcRKH4QAalS7Bc"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    color: '#0E4F45',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Review us on Google
+                </a>
               </div>
             </div>
 
-            {/* Testimonials Cards (exact soft cream background: #f7f5ec) */}
+            {/* Testimonials Cards with clickable reviewer profile links */}
             <div
               style={{
                 display: 'grid',
@@ -818,42 +888,49 @@ export default function HomePage() {
                   name: 'olowo busola',
                   time: '11 months ago',
                   quote: 'Well organised...I have no regrets joining this group',
+                  url: 'https://www.google.com/maps/contrib/113437094409393674440/reviews',
                 },
                 {
                   name: 'Simisola Adingupu',
                   time: '1 year ago',
                   quote: 'Started using savvy savers this year, just received my first half payment. I totally recommend.',
+                  url: 'https://www.google.com/maps/contrib/104751931945405316027/reviews',
                 },
                 {
                   name: 'Aganbi vera',
                   time: '2 years ago',
                   quote: 'It’s the best, very true and safe',
+                  url: 'https://www.google.com/maps/contrib/115969318329376491923/reviews',
                 },
                 {
                   name: 'Davidson Sunday',
                   time: '2 years ago',
                   quote: 'It is so lovely and no stress, so Compliance',
+                  url: 'https://www.google.com/maps/contrib/113400853848018484546/reviews',
                 },
                 {
                   name: 'oronsaye Daniel',
                   time: '2 years ago',
                   quote: 'A very trusted and reliable saving club, I couldn’t have achieved my saving goals if not for savvey savers . Many thanks to the dedicated minds behind this great platform.',
+                  url: 'https://www.google.com/maps/contrib/106355387814225712988/reviews',
                 },
                 {
                   name: 'Judy Dominic',
                   time: '2 years ago',
                   quote: 'My 1 years collection has just been deposited in my account.. yay!. This approach encourages financial discipline and helps me achieve my financial objectives faster. Highly recommend.',
+                  url: 'https://www.google.com/maps/contrib/101384919907585592950/reviews',
                 },
                 {
                   name: 'Yori Gbadamosi',
                   time: '3 years ago',
                   quote: 'Savvey Savers Network Limited offers a range of savings solutions with transparent terms. Their excellent customer service, user-friendly online platform, transparent fee structures, and commitment to security make them a reliable choice for individuals looking to grow their savings with confidence.',
+                  url: 'https://www.google.com/maps/contrib/109117831138508496340/reviews',
                 },
               ].map((rev, idx) => (
                 <div
                   key={idx}
                   style={{
-                    backgroundColor: '#f7f5ec', // exact --rev-color from WordPress widget
+                    backgroundColor: '#f7f5ec',
                     borderRadius: '16px',
                     padding: '28px',
                     border: '1px solid rgba(0, 0, 0, 0.05)',
@@ -883,11 +960,26 @@ export default function HomePage() {
                     }}
                   >
                     <div>
-                      <strong style={{ display: 'block', fontSize: '0.95rem', color: '#1A1A1A' }}>
-                        {rev.name}
-                      </strong>
-                      <span style={{ fontSize: '0.8rem', color: '#777' }}>
-                        {rev.time}
+                      <a
+                        href={rev.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '0.95rem',
+                          fontWeight: 700,
+                          color: '#0E4F45',
+                          textDecoration: 'none',
+                        }}
+                        title={`View ${rev.name}'s verified review on Google`}
+                      >
+                        <span>{rev.name}</span>
+                        <ExternalLink size={12} />
+                      </a>
+                      <span style={{ display: 'block', fontSize: '0.8rem', color: '#777', marginTop: '2px' }}>
+                        {rev.time} · Google Review
                       </span>
                     </div>
                     <div style={{ display: 'flex', gap: '2px', color: '#f59e0b' }}>
@@ -903,7 +995,7 @@ export default function HomePage() {
         </section>
 
         {/* ============================================================ */}
-        {/* 8. START YOUR JOURNEY CTA (container c1e859e: image + #0E4F45)*/}
+        {/* 8. START YOUR JOURNEY CTA                                    */}
         {/* ============================================================ */}
         <section
           style={{
@@ -913,7 +1005,6 @@ export default function HomePage() {
             backgroundColor: '#0E4F45',
           }}
         >
-          {/* Left Image: holding hands */}
           <div
             style={{
               backgroundImage: 'url(/images/holding-hands.webp)',
@@ -923,7 +1014,6 @@ export default function HomePage() {
             }}
           />
 
-          {/* Right Solid Green CTA content */}
           <div
             style={{
               backgroundColor: '#0E4F45',
