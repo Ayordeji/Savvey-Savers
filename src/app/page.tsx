@@ -272,49 +272,56 @@ export default function HomePage() {
         </section>
 
         {/* ============================================================ */}
-        {/* 2. DARK GREEN HORIZONTAL TRUST STRIP                         */}
+        {/* 2. DARK GREEN HORIZONTAL TRUST SLIDER (AUTOPLAY CAROUSEL)    */}
         {/* ============================================================ */}
         <section
           style={{
             backgroundColor: '#0E4F45',
             color: '#FFFDFA',
-            padding: '22px 80px',
-            overflowX: 'auto',
+            padding: '24px 0',
+            overflow: 'hidden',
+            position: 'relative',
+            width: '100%',
+            userSelect: 'none',
           }}
-          className="responsive-section-padding"
+          aria-label="Trust highlights slider"
         >
-          <div
-            style={{
-              maxWidth: '1440px',
-              margin: '0 auto',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '32px',
-              flexWrap: 'wrap',
-            }}
-          >
-            {[
-              { label: '12+ Years Impact', icon: CheckCircle },
-              { label: 'Governed Circles', icon: Bookmark },
-              { label: 'Verified Members', icon: CheckCircle2 },
-              { label: 'GDPR Protection', icon: ShieldCheck },
-              { label: 'Structured governance', icon: Building },
-              { label: 'GDPR-Compliant', icon: Shield },
-            ].map((item, idx) => (
+          <div className="trust-slider-track">
+            {/* 3 identical sets of the 6 items to ensure seamless infinite looping */}
+            {[0, 1, 2].map((setIndex) => (
               <div
-                key={idx}
+                key={setIndex}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
-                  fontSize: '0.95rem',
-                  fontWeight: 600,
-                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
-                <item.icon size={18} style={{ color: '#FFBC7D' }} />
-                <span>{item.label}</span>
+                {[
+                  { label: '12+ Years Impact', icon: CheckCircle },
+                  { label: 'Governed Circles', icon: Bookmark },
+                  { label: 'Verified Members', icon: CheckCircle2 },
+                  { label: 'GDPR Protection', icon: ShieldCheck },
+                  { label: 'Structured governance', icon: Building },
+                  { label: 'GDPR-Compliant', icon: Shield },
+                ].map((item, idx) => (
+                  <div
+                    key={`${setIndex}-${idx}`}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      padding: '0 40px',
+                      color: '#FFFDFA',
+                    }}
+                  >
+                    <item.icon size={20} style={{ color: '#FFBC7D', flexShrink: 0 }} />
+                    <span>{item.label}</span>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
@@ -1080,12 +1087,31 @@ export default function HomePage() {
       <WaitlistModal isOpen={waitlistModalOpen} onClose={() => setWaitlistModalOpen(false)} />
 
       <style jsx>{`
+        .trust-slider-track {
+          display: flex;
+          width: max-content;
+          animation: trustMarquee 26s linear infinite;
+        }
+        .trust-slider-track:hover {
+          animation-play-state: paused;
+        }
+        @keyframes trustMarquee {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(calc(-100% / 3));
+          }
+        }
         @media (max-width: 900px) {
           .responsive-section-padding {
             padding: 50px 24px !important;
           }
           .hidden-mobile {
             display: none !important;
+          }
+          .trust-slider-track {
+            animation-duration: 20s;
           }
         }
       `}</style>
