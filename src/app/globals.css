@@ -773,8 +773,19 @@ button {
   div[style*="2fr 1fr"],
   div[style*="1.6fr 1fr"],
   div[style*="1fr 340px"] {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .dashboard-two-col-grid > *,
+  .dashboard-activity-grid > *,
+  .settings-two-col-grid > * {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   /* Table + Slide drawer container stacking */

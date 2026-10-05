@@ -50,7 +50,16 @@ export default function MonthlyRevenueChart({
   const tooltipY = Math.max(30, chartHeight - barHeight + 5);
 
   return (
-    <div style={{ position: 'relative', width: '100%', overflowX: 'auto' }} onMouseLeave={() => setHoveredIdx(lastActiveIndex)}>
+    <div
+      style={{
+        position: 'relative',
+        width: '100%',
+        maxWidth: '100%',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch'
+      }}
+      onMouseLeave={() => setHoveredIdx(lastActiveIndex)}
+    >
       {/* Tooltip bubble */}
       {activeHover !== null && (
         <div

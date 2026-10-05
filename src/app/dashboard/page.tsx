@@ -500,7 +500,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           borderRadius: '18px',
           padding: '24px',
           border: '1px solid #dcd7ca',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)'
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+          minWidth: 0,
+          maxWidth: '100%',
+          overflow: 'hidden'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
@@ -542,7 +545,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           alignItems: 'center',
           justifyContent: 'space-between',
           textAlign: 'center',
-          boxShadow: '0 10px 25px -4px rgba(12, 78, 67, 0.35)'
+          boxShadow: '0 10px 25px -4px rgba(12, 78, 67, 0.35)',
+          minWidth: 0,
+          maxWidth: '100%',
+          boxSizing: 'border-box'
         }}>
           <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start' }}>
             <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>
@@ -660,7 +666,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           borderRadius: '18px',
           padding: '24px',
           border: '1px solid #dcd7ca',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)'
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+          minWidth: 0,
+          maxWidth: '100%',
+          overflow: 'hidden'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
@@ -763,7 +772,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          minWidth: 0,
+          maxWidth: '100%'
         }}>
           <div>
             <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1a1a1a', fontFamily: 'var(--font-family-title)', margin: 0 }}>
