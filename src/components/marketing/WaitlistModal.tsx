@@ -72,7 +72,7 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
     setName('');
     setEmail('');
     setPhone('');
-    setAmount('£500');
+    setAmount('£100 - £500');
     setReferrer('');
     setHasReferrer(false);
     setIsSuccess(false);

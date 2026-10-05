@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Fragment, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, PoundSterling, Calendar, ChevronDown, ChevronUp, ExternalLink, Banknote, DollarSign, ReceiptText, FileText, CheckCircle, Wallet, ArrowRight, ShieldCheck, Mail, Send } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, BellRing, Check, PoundSterling, Calendar, ChevronDown, ChevronUp, ExternalLink, Banknote, ReceiptText, FileText, CheckCircle, Wallet, ArrowRight, ShieldCheck, Mail, Send } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import PaginationControls from '../PaginationControls';
 import styles from './commitments.module.css';
@@ -861,7 +861,7 @@ function CommitmentsContent() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Total Collected</span>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <DollarSign size={16} />
+              <PoundSterling size={16} />
             </div>
           </div>
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
