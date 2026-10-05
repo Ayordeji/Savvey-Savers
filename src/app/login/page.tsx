@@ -161,7 +161,7 @@ export default function LoginPage() {
             >
               {isForgotPassword
                 ? 'Enter your registered email to receive reset instructions.'
-                : 'Access your savings circles, ledger, and contribution records.'}
+                : 'Access your savings cycles, ledger, and contribution records.'}
             </p>
           </div>
 

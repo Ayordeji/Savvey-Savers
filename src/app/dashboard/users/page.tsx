@@ -2785,7 +2785,7 @@ export default function ManageUsersPage() {
               {membershipAgreement || (
                 <>
                   <p style={{ marginBottom: '12px' }}>
-                    <strong>1. Term of Agreement:</strong> This agreement regulates the guidelines of the Savvey Savers savings circle. By joining, members commit to a full collection rotation cycle.
+                    <strong>1. Term of Agreement:</strong> This agreement regulates the guidelines of the Savvey Savers savings cycle. By joining, members commit to a full collection rotation cycle.
                   </p>
                   <p style={{ marginBottom: '12px' }}>
                     <strong>2. Payout Rotation Schedule:</strong> The schedule is generated dynamically at the cycle start. All payout requests must be approved by the circle Coordinator.

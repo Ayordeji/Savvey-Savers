@@ -8,6 +8,12 @@ import WaitlistModal from '@/components/marketing/WaitlistModal';
 import {
   CheckCircle2,
   XCircle,
+  Settings,
+  Ban,
+  UserCheck,
+  TrendingUp,
+  CalendarCheck,
+  Scale,
 } from 'lucide-react';
 
 export default function AboutUsPage() {
@@ -56,7 +62,7 @@ export default function AboutUsPage() {
             <div>
               <div
                 style={{
-                  fontSize: '0.875rem',
+                  fontSize: 'clamp(0.8rem, 0.8vw, 0.875rem)',
                   fontWeight: 600,
                   textTransform: 'uppercase',
                   fontStyle: 'italic',
@@ -72,7 +78,7 @@ export default function AboutUsPage() {
                   fontSize: 'clamp(2.4rem, 3.8vw, 3.8rem)',
                   fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
-                  lineHeight: 1.15,
+                  lineHeight: 1.2,
                   color: '#1A1A1A',
                   margin: '0 0 24px 0',
                 }}
@@ -98,15 +104,16 @@ export default function AboutUsPage() {
                   margin: 0,
                 }}
               >
-                What began as small, member-led savings circles has grown into a well-established network where individuals come together to support one another through disciplined saving and shared accountability.
+                What began as small, member-led savings cycles has grown into a well-established network where individuals come together to support one another through disciplined saving and shared accountability.
               </p>
             </div>
 
-            {/* Right Column: Hero Image */}
+            {/* Right Column: Hero Image (Width 80% container on desktop) */}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <div
                 style={{
                   width: '100%',
+                  maxWidth: '520px',
                   borderRadius: '32px',
                   overflow: 'hidden',
                   boxShadow: '0 20px 40px rgba(0, 0, 0, 0.08)',
@@ -135,16 +142,16 @@ export default function AboutUsPage() {
           style={{
             backgroundColor: '#0E4F45',
             color: '#FFFDFA',
-            padding: '24px 80px',
+            padding: '24px 120px',
           }}
-          className="responsive-section-padding"
+          className="responsive-stats-padding"
         >
           <div
             style={{
               maxWidth: '1280px',
               margin: '0 auto',
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
               gap: '32px',
               textAlign: 'center',
             }}
@@ -207,6 +214,7 @@ export default function AboutUsPage() {
               <div
                 style={{
                   width: '100%',
+                  maxWidth: '520px',
                   borderRadius: '32px',
                   overflow: 'hidden',
                   boxShadow: '0 20px 40px rgba(0, 0, 0, 0.08)',
@@ -230,7 +238,7 @@ export default function AboutUsPage() {
             <div>
               <div
                 style={{
-                  fontSize: '0.875rem',
+                  fontSize: 'clamp(0.8rem, 0.8vw, 0.875rem)',
                   fontWeight: 600,
                   textTransform: 'uppercase',
                   fontStyle: 'italic',
@@ -261,7 +269,7 @@ export default function AboutUsPage() {
                   marginBottom: '24px',
                 }}
               >
-                We exist to provide a trusted, community-driven approach to achieving financial goals. By bringing members together in structured savings circles, Savvey helps individuals plan towards goals such as:
+                We exist to provide a trusted, community-driven approach to achieving financial goals. By bringing members together in structured savings cycles, Savvey helps individuals plan towards goals such as:
               </p>
 
               {/* 2-column checklist matching elementor layout */}
@@ -316,7 +324,7 @@ export default function AboutUsPage() {
             <div style={{ textAlign: 'center', marginBottom: '56px' }}>
               <div
                 style={{
-                  fontSize: '0.875rem',
+                  fontSize: 'clamp(0.8rem, 0.8vw, 0.875rem)',
                   fontWeight: 600,
                   textTransform: 'uppercase',
                   fontStyle: 'italic',
@@ -373,19 +381,40 @@ export default function AboutUsPage() {
                 }}
               >
                 <div>
-                  <h3
-                    style={{
-                      fontSize: '1.5rem',
-                      fontWeight: 700,
-                      fontFamily: 'var(--font-family-title)',
-                      color: '#0E4F45',
-                      margin: '0 0 6px 0',
-                    }}
-                  >
-                    What We Do
-                  </h3>
-                  <div style={{ fontSize: '0.95rem', color: '#666', marginBottom: '24px' }}>
-                    Our role as facilitators
+                  {/* Header Row: circular icon badge + title & subtitle */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                    <div
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '50%',
+                        backgroundColor: '#0E4F45',
+                        color: '#FFFDFA',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Settings size={24} />
+                    </div>
+                    <div>
+                      <h3
+                        style={{
+                          fontSize: '1.45rem',
+                          fontWeight: 700,
+                          fontFamily: 'var(--font-family-title)',
+                          color: '#0E4F45',
+                          margin: 0,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        What We Do
+                      </h3>
+                      <div style={{ fontSize: '0.925rem', color: '#666', marginTop: '4px' }}>
+                        Our role as facilitators
+                      </div>
+                    </div>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '28px' }}>
@@ -415,7 +444,7 @@ export default function AboutUsPage() {
                     paddingTop: '20px',
                   }}
                 >
-                  These frameworks help ensure clarity, accountability, and consistency within each savings circle.
+                  These frameworks help ensure clarity, accountability, and consistency within each savings cycle.
                 </p>
               </div>
 
@@ -434,19 +463,40 @@ export default function AboutUsPage() {
                 }}
               >
                 <div>
-                  <h3
-                    style={{
-                      fontSize: '1.5rem',
-                      fontWeight: 700,
-                      fontFamily: 'var(--font-family-title)',
-                      color: '#1A1A1A',
-                      margin: '0 0 6px 0',
-                    }}
-                  >
-                    What We Do Not Do
-                  </h3>
-                  <div style={{ fontSize: '0.95rem', color: '#666', marginBottom: '24px' }}>
-                    We are not a bank or lender
+                  {/* Header Row: circular icon badge + title & subtitle */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                    <div
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '50%',
+                        backgroundColor: '#A46A3F',
+                        color: '#FFFDFA',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Ban size={24} />
+                    </div>
+                    <div>
+                      <h3
+                        style={{
+                          fontSize: '1.45rem',
+                          fontWeight: 700,
+                          fontFamily: 'var(--font-family-title)',
+                          color: '#1A1A1A',
+                          margin: 0,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        What We Do Not Do
+                      </h3>
+                      <div style={{ fontSize: '0.925rem', color: '#666', marginTop: '4px' }}>
+                        We are not a bank or lender
+                      </div>
+                    </div>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '28px' }}>
@@ -476,7 +526,7 @@ export default function AboutUsPage() {
                     paddingTop: '20px',
                   }}
                 >
-                  Savvey serves solely as the administrative and governance facilitator for member-driven savings circles. Participation is based on shared responsibility among members.
+                  Savvey serves solely as the administrative and governance facilitator for member-driven savings cycles. Participation is based on shared responsibility among members.
                 </p>
               </div>
             </div>
@@ -507,7 +557,7 @@ export default function AboutUsPage() {
             <div>
               <div
                 style={{
-                  fontSize: '0.875rem',
+                  fontSize: 'clamp(0.8rem, 0.8vw, 0.875rem)',
                   fontWeight: 600,
                   textTransform: 'uppercase',
                   fontStyle: 'italic',
@@ -541,7 +591,7 @@ export default function AboutUsPage() {
                 These measures help maintain trust, accountability, and transparency across the collective:
               </p>
 
-              {/* 2x2 Grid of 4 Safeguard Cards (ed5e22e) */}
+              {/* 2x2 Grid of 4 Safeguard Cards with icons matching original layout */}
               <div
                 style={{
                   display: 'grid',
@@ -551,18 +601,22 @@ export default function AboutUsPage() {
               >
                 {[
                   {
+                    icon: UserCheck,
                     title: 'Member Verification',
-                    desc: 'All members undergo checks before joining any circle.',
+                    desc: 'All members undergo checks before joining any cycle.',
                   },
                   {
+                    icon: TrendingUp,
                     title: 'Transparent Tracking',
                     desc: 'Contributions are tracked openly throughout each cycle.',
                   },
                   {
+                    icon: CalendarCheck,
                     title: 'Defined Cycles',
                     desc: 'Clearly structured timelines and disbursement schedules.',
                   },
                   {
+                    icon: Scale,
                     title: 'Dispute Resolution',
                     desc: 'A fair process for addressing any issues that arise.',
                   },
@@ -576,39 +630,49 @@ export default function AboutUsPage() {
                       padding: '16px 18px',
                       border: '2px solid rgba(14, 79, 69, 0.33)',
                       transition: 'border-color 0.3s ease, transform 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '14px',
                     }}
                   >
-                    <h3
-                      style={{
-                        fontSize: '1.05rem',
-                        fontWeight: 700,
-                        fontFamily: 'var(--font-family-title)',
-                        color: '#1A1A1A',
-                        margin: '0 0 6px 0',
-                      }}
-                    >
-                      {card.title}
-                    </h3>
-                    <p
-                      style={{
-                        fontSize: '0.875rem',
-                        lineHeight: 1.5,
-                        color: '#555',
-                        margin: 0,
-                      }}
-                    >
-                      {card.desc}
-                    </p>
+                    <div style={{ color: '#0E4F45', flexShrink: 0, marginTop: '2px' }}>
+                      <card.icon size={22} />
+                    </div>
+                    <div>
+                      <h3
+                        style={{
+                          fontSize: '1.05rem',
+                          fontWeight: 700,
+                          fontFamily: 'var(--font-family-title)',
+                          color: '#1A1A1A',
+                          margin: '0 0 4px 0',
+                          lineHeight: 1.25,
+                        }}
+                      >
+                        {card.title}
+                      </h3>
+                      <p
+                        style={{
+                          fontSize: '0.875rem',
+                          lineHeight: 1.5,
+                          color: '#555',
+                          margin: 0,
+                        }}
+                      >
+                        {card.desc}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Right Column: Governance Image */}
+            {/* Right Column: Governance Image (centered, width 85% container) */}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <div
                 style={{
-                  width: '90%',
+                  width: '100%',
+                  maxWidth: '500px',
                   borderRadius: '32px',
                   overflow: 'hidden',
                   boxShadow: '0 20px 40px rgba(0, 0, 0, 0.08)',
@@ -737,6 +801,9 @@ export default function AboutUsPage() {
         @media (max-width: 900px) {
           .responsive-section-padding {
             padding: 50px 24px !important;
+          }
+          .responsive-stats-padding {
+            padding: 24px 20px !important;
           }
         }
       `}</style>

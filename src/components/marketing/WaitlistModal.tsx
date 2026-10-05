@@ -243,7 +243,7 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
                   margin: 0,
                 }}
               >
-                Apply to join a governed savings circle. Places are assigned on rolling vetting and circle matching.
+                Apply to join a governed savings cycle. Places are assigned on rolling vetting and cycle matching.
               </p>
 
               {error && (

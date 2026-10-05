@@ -16,19 +16,19 @@ export default function FaqsPage() {
   const faqItems = [
     {
       q: 'What is Savvey Savers Collective?',
-      a: 'Savvey Savers Collective is a structured, referral-based savings network where members participate in trusted savings circles. Members make regular contributions and receive pooled contributions in their assigned month. The collective is designed to support members in achieving financial goals through shared accountability and disciplined saving.',
+      a: 'Savvey Savers Collective is a structured, referral-based savings network where members participate in trusted savings cycles. Members make regular contributions and receive pooled contributions in their assigned month. The collective is designed to support members in achieving financial goals through shared accountability and disciplined saving.',
     },
     {
-      q: 'How do savings circles work?',
-      a: 'Members join a vetted circle with a fixed monthly contribution. Each month, one member receives the pooled contributions according to a pre-agreed schedule. The cycle continues until all members have received their scheduled disbursement. Savvey Savers administers the process but does not hold or manage member funds.',
+      q: 'How do savings cycles work?',
+      a: 'Members join a vetted cycle with a fixed monthly contribution. Each month, one member receives the pooled contributions according to a pre-agreed schedule. The cycle continues until all members have received their scheduled disbursement. Savvey Savers administers the process but does not hold or manage member funds.',
     },
     {
       q: 'Who can join the Collective?',
-      a: 'Membership is currently open to UK residents and is by referral and approval only. This approach helps maintain trust, accountability, and the integrity of each savings circle.',
+      a: 'Membership is currently open to UK residents and is by referral and approval only. This approach helps maintain trust, accountability, and the integrity of each savings cycle.',
     },
     {
       q: 'Can members invite others?',
-      a: 'Yes. Members may refer trusted friends, family, or colleagues. All referrals undergo verification and approval before joining a savings circle.',
+      a: 'Yes. Members may refer trusted friends, family, or colleagues. All referrals undergo verification and approval before joining a savings cycle.',
     },
     {
       q: 'How are members verified?',
@@ -36,15 +36,15 @@ export default function FaqsPage() {
     },
     {
       q: 'What happens if a member misses a contribution?',
-      a: 'Savings circles operate on shared accountability. If a contribution is missed, our governance process is activated to address the situation and support the continuation of the cycle in a fair and transparent manner.',
+      a: 'Savings cycles operate on shared accountability. If a contribution is missed, our governance process is activated to address the situation and support the continuation of the cycle in a fair and transparent manner.',
     },
     {
       q: 'Are there fees to join or participate?',
-      a: 'Savvey Savers facilitates administrative coordination and governance. Any administrative or membership platform fees are transparently communicated to members prior to circle initiation with no hidden charges.',
+      a: 'Savvey Savers facilitates administrative coordination and governance. Any administrative or membership platform fees are transparently communicated to members prior to cycle initiation with no hidden charges.',
     },
     {
       q: 'Can I change my monthly contribution amount?',
-      a: 'Contribution amounts may be adjusted before a new cycle begins, provided there is a circle with matching contribution levels. Once a cycle has started, contribution amounts cannot be changed.',
+      a: 'Contribution amounts may be adjusted before a new cycle begins, provided there is a cycle with matching contribution levels. Once a cycle has started, contribution amounts cannot be changed.',
     },
     {
       q: 'How are payout months assigned?',
@@ -52,7 +52,7 @@ export default function FaqsPage() {
     },
     {
       q: 'Does Savvey Savers provide loans or financial services?',
-      a: 'No. Savvey Savers Collective facilitates structured savings circles. We do not provide loans, banking services, or regulated investment products.',
+      a: 'No. Savvey Savers Collective facilitates structured savings cycles. We do not provide loans, banking services, or regulated investment products.',
     },
     {
       q: 'How is my data protected?',

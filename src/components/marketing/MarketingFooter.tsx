@@ -297,7 +297,7 @@ export default function MarketingFooter({
           <strong style={{ color: '#e2ede5', display: 'block', marginBottom: '6px', fontSize: '0.925rem' }}>
             Important Notice:
           </strong>
-          Savvey Savers Collective provides structured savings circles to help members achieve financial goals through pooled contributions. We do not provide loans, banking services, or regulated investment products. Participation involves shared responsibility and adherence to community guidelines.
+          Savvey Savers Collective provides structured savings cycles to help members achieve financial goals through pooled contributions. We do not provide loans, banking services, or regulated investment products. Participation involves shared responsibility and adherence to community guidelines.
         </div>
 
         {/* Divider */}

@@ -374,8 +374,8 @@ export default function HomePage() {
               {[
                 {
                   icon: Users,
-                  title: 'Join a Vetted Circle',
-                  desc: 'Members are verified and placed into trusted savings circles through referrals and onboarding checks.',
+                  title: 'Join a Vetted Cycle',
+                  desc: 'Members are verified and placed into trusted savings cycles through referrals and onboarding checks.',
                 },
                 {
                   icon: Coins,
@@ -489,7 +489,7 @@ export default function HomePage() {
                   marginBottom: '36px',
                 }}
               >
-                Savvey Savers facilitates and administers savings circles but does not hold or manage member funds. We safeguard member contributions through structured governance, transparent processes, and secure data practices designed to protect the integrity of every savings circle.
+                Savvey Savers facilitates and administers savings cycles but does not hold or manage member funds. We safeguard member contributions through structured governance, transparent processes, and secure data practices designed to protect the integrity of every savings cycle.
               </p>
 
               {/* 6 Cards Grid in 2 columns (exact match of previous site) */}
@@ -768,7 +768,7 @@ export default function HomePage() {
                   gap: '8px',
                 }}
               >
-                <span>Join a Savings Circle</span>
+                <span>Join a Savings Cycle</span>
                 <ArrowRight size={16} />
               </button>
             </div>
