@@ -963,4 +963,37 @@ button {
   }
 }
 
+/* Settings Tab Navigation Bar Responsive Styles */
+.settings-tab-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 6px;
+  background-color: #FFFFFF;
+  border: 1px solid #ECE8E2;
+  border-radius: 14px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.settings-tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.settings-subtab-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px;
+  background-color: #FAF9F6;
+  border: 1px solid #ECE8E2;
+  border-radius: 12px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.settings-subtab-bar::-webkit-scrollbar {
+  display: none;
+}
+
 

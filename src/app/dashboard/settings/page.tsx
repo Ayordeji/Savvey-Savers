@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Settings, Plus, Save, Eye, Edit, Trash2, X, MoreVertical, FileText, CheckSquare, Bell } from 'lucide-react';
+import { Settings, Plus, Save, Eye, Edit, Trash2, X, MoreVertical, FileText, Bell, ShieldCheck, Database, Upload, Check, ChevronDown, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 
 interface SavingGoal {
@@ -119,8 +119,8 @@ function SettingsContent() {
     }
   }, [tabParam]);
 
-  // Inner Manage Commitment tab state: 'collection_month' | 'notifications' | 'saving_goals' | 'commitment_amounts'
-  const [commitmentTab, setCommitmentTab] = useState<'collection_month' | 'notifications' | 'saving_goals' | 'commitment_amounts'>('collection_month');
+  // Inner Manage Commitment tab state: 'overview' | 'collection_month' | 'notifications' | 'saving_goals' | 'commitment_amounts'
+  const [commitmentTab, setCommitmentTab] = useState<'overview' | 'collection_month' | 'notifications' | 'saving_goals' | 'commitment_amounts'>('collection_month');
 
   // Loading & Saving States
   const [loading, setLoading] = useState(true);
@@ -209,6 +209,7 @@ function SettingsContent() {
       });
       if (res.ok) {
         setSuccessMsg(`${label} saved successfully.`);
+        setTimeout(() => setSuccessMsg(''), 4000);
       } else {
         await dialog.alert('Save Failed', `Failed to save ${label}.`);
       }
@@ -298,7 +299,6 @@ function SettingsContent() {
     handleSaveSettingKey('savingGoals', updated, 'Saving Goals');
   };
 
-
   // --- Commitment Amounts Handlers ---
   const handleToggleAmount = (index: number) => {
     const updated = [...amounts];
@@ -368,965 +368,1358 @@ function SettingsContent() {
   const enabledNotificationsCount = Object.values(notificationSettings).filter(Boolean).length;
   const configuredCollectionMonthsCount = Object.keys(collectionMonthsMap).length;
 
-  // Section metadata for the left nav
   type MainTab = 'security' | 'commitment' | 'email-templates' | 'migration';
   type CommitmentSubTab = 'overview' | 'collection_month' | 'notifications' | 'saving_goals' | 'commitment_amounts';
 
   const sectionTitles: Record<MainTab, string> = {
-    security: 'Security Question',
-    commitment: 'Manage Commitment',
-    'email-templates': 'Email Template',
+    security: 'Security Questions',
+    commitment: 'Manage Commitments',
+    'email-templates': 'Email Templates',
     migration: 'Data Migration',
   };
 
   const sectionSubtitles: Record<MainTab, string> = {
-    security: 'Set the security questions that will be used to verify identity.',
-    commitment: 'Configure how savings commitments work on the platform.',
-    'email-templates': 'Create and manage email templates used for member communications.',
-    migration: 'Migrate legacy data records into the platform.',
+    security: 'Configure security verification questions used for administrative identity validation.',
+    commitment: 'Configure rotating savings cycle rules, collection availability, notifications, and commitment amounts.',
+    'email-templates': 'Customize and manage automated transactional emails sent to platform savers.',
+    migration: 'Import and synchronize legacy member accounts, commitments, and historical data.',
   };
 
   const commitmentSubTabLabels: Record<CommitmentSubTab, string> = {
     overview: 'Overview',
     collection_month: 'Collection Month',
-    notifications: 'Notification Settings',
-    saving_goals: 'Saving Commitment',
-    commitment_amounts: 'Commitment Amount',
+    notifications: 'Notification Triggers',
+    saving_goals: 'Saving Goals',
+    commitment_amounts: 'Commitment Tiers',
   };
-
-  // Nav icon colours
-  const navItemBase: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: '10px',
-    padding: '9px 12px', borderRadius: '8px',
-    fontSize: '0.875rem', fontWeight: 500,
-    cursor: 'pointer', border: 'none', background: 'none',
-    width: '100%', textAlign: 'left', textDecoration: 'none',
-    transition: 'background 0.15s ease',
-    color: '#334155',
-  };
-  const navItemActive: React.CSSProperties = {
-    ...navItemBase,
-    backgroundColor: '#f1f5f9',
-    color: '#1e293b',
-    fontWeight: 600,
-  };
-  const subNavItemBase: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: '8px',
-    padding: '7px 12px 7px 36px',
-    borderRadius: '6px',
-    fontSize: '0.825rem', fontWeight: 500,
-    cursor: 'pointer', border: 'none', background: 'none',
-    width: '100%', textAlign: 'left',
-    transition: 'background 0.15s ease',
-    color: '#64748b',
-  };
-  const subNavItemActive: React.CSSProperties = {
-    ...subNavItemBase,
-    color: '#c27a3a',
-    fontWeight: 600,
-  };
-
-  const isCommitmentOpen = activeTab === 'commitment';
 
   return (
-    <div style={{ display: 'flex', gap: '0', minHeight: 'calc(100vh - 102px)', margin: '-32px', overflow: 'hidden' }}>
-
-      {/* ── LEFT SETTINGS NAV ── */}
-      <aside style={{
-        width: '220px',
-        flexShrink: 0,
-        borderRight: '1px solid #e2e8f0',
-        backgroundColor: '#ffffff',
-        padding: '24px 12px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '2px',
-        overflowY: 'auto',
-      }}>
-        <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.09em', color: '#94a3b8', padding: '0 12px 10px 12px' }}>
-          Settings
-        </div>
-
-        {/* Security Question */}
-        <button
-          id="settings-nav-security"
-          onClick={() => setActiveTab('security')}
-          style={activeTab === 'security' ? navItemActive : navItemBase}
-        >
-          <span style={{ fontSize: '1rem' }}>🛡</span>
-          <span>Security Question</span>
-        </button>
-
-        {/* Manage Commitment (expandable) */}
-        <button
-          id="settings-nav-commitment"
-          onClick={() => { setActiveTab('commitment'); setCommitmentTab('saving_goals'); }}
-          style={isCommitmentOpen ? navItemActive : navItemBase}
-        >
-          <span style={{ fontSize: '1rem' }}>👥</span>
-          <span style={{ flex: 1 }}>Manage Commitment</span>
-          <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{isCommitmentOpen ? '▾' : '▸'}</span>
-        </button>
-
-        {/* Sub-nav items for Manage Commitment */}
-        {isCommitmentOpen && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', marginTop: '2px' }}>
-            {(['overview', 'saving_goals', 'commitment_amounts', 'collection_month', 'notifications'] as CommitmentSubTab[]).map((sub) => (
-              <button
-                key={sub}
-                id={`settings-nav-commitment-${sub}`}
-                onClick={() => setCommitmentTab(sub)}
-                style={commitmentTab === sub ? subNavItemActive : subNavItemBase}
-              >
-                {commitmentTab === sub && <span style={{ color: '#c27a3a', fontSize: '0.5rem' }}>●</span>}
-                {commitmentTab !== sub && <span style={{ width: '8px' }} />}
-                {commitmentSubTabLabels[sub]}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Email Template */}
-        <button
-          id="settings-nav-email-templates"
-          onClick={() => setActiveTab('email-templates')}
-          style={activeTab === 'email-templates' ? navItemActive : navItemBase}
-        >
-          <span style={{ fontSize: '1rem' }}>✉️</span>
-          <span>Email Template</span>
-        </button>
-
-        {/* Data Migration */}
-        <button
-          id="settings-nav-migration"
-          onClick={() => setActiveTab('migration')}
-          style={activeTab === 'migration' ? navItemActive : navItemBase}
-        >
-          <span style={{ fontSize: '1rem' }}>🗄</span>
-          <span>Data Migration</span>
-        </button>
-
-        {/* Help card */}
-        <div style={{ marginTop: 'auto', paddingTop: '24px' }}>
-          <div style={{ padding: '14px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e293b', marginBottom: '4px' }}>Need help?</div>
-            <div style={{ fontSize: '0.75rem', color: '#64748b', lineHeight: 1.4, marginBottom: '8px' }}>Learn how each setting works.</div>
-            <a
-              href="mailto:support@savveysavers.com"
-              style={{ fontSize: '0.75rem', fontWeight: 600, color: '#c27a3a', textDecoration: 'none' }}
-            >
-              View Help Guide ↗
-            </a>
-          </div>
-        </div>
-      </aside>
-
-      {/* ── RIGHT CONTENT AREA ── */}
-      <main style={{ flex: 1, padding: '32px', overflowY: 'auto', backgroundColor: '#f8fafc', minWidth: 0 }}>
-
-        {/* Page heading */}
-        <div style={{ marginBottom: '28px' }}>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-            {sectionTitles[activeTab as MainTab] || 'Settings'}
-          </h1>
-          <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '4px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* ── UNIFIED PAGE HEADER ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+            Account Settings
+          </h2>
+          <p style={{ color: '#6B7280', fontSize: '0.88rem', marginTop: '4px', margin: 0 }}>
             {sectionSubtitles[activeTab as MainTab]}
           </p>
         </div>
 
-        {/* Success banner */}
-        {successMsg && (
-          <div style={{
-            backgroundColor: '#f0fdf4',
-            color: '#166534',
-            border: '1px solid #bbf7d0',
-            padding: '12px 16px',
-            borderRadius: '8px',
-            fontSize: '0.875rem',
-            marginBottom: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}>
-            <span>✓</span> {successMsg}
-          </div>
-        )}
+        {/* Quick Guidelines Shortcuts */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setActiveTopModal('AGREEMENT')}
+            style={{
+              backgroundColor: '#FFFFFF',
+              color: '#374151',
+              border: '1px solid #ECE8E2',
+              borderRadius: '10px',
+              padding: '8px 14px',
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <FileText size={14} color="#6B7280" />
+            <span>Agreement</span>
+          </button>
 
-        {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px', flexDirection: 'column', gap: '16px' }}>
-            <div className="loading-spinner" />
-            <span style={{ color: '#64748b' }}>Loading Settings...</span>
-          </div>
-        ) : (
-          <>
-            {/* ─────────────────────────────── TAB 1: SECURITY QUESTION ─────────────────────────────── */}
-            {activeTab === 'security' && (
-              <>
-                <div className="settings-two-col-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
-                  {/* Main card */}
-                  <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '28px' }}>
-                    <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>Security Question Setup</h2>
-                    <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '24px' }}>
-                      Admins will be asked this question to confirm their identity when logging in from unrecognised devices or when sensitive actions are taken.
-                    </p>
+          <button
+            onClick={() => setActiveTopModal('FEE_SCHEDULE')}
+            style={{
+              backgroundColor: '#FFFFFF',
+              color: '#374151',
+              border: '1px solid #ECE8E2',
+              borderRadius: '10px',
+              padding: '8px 14px',
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <Settings size={14} color="#6B7280" />
+            <span>Fee Schedule</span>
+          </button>
+        </div>
+      </div>
 
-                    <div style={{ marginBottom: '16px' }}>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Security Question</label>
-                      <form onSubmit={handleAddSecurityQuestion} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <input
-                          type="text"
-                          placeholder="Enter new security question..."
-                          value={newSecurityQuestion}
-                          onChange={(e) => setNewSecurityQuestion(e.target.value)}
-                          className="form-input"
-                          style={{ flex: 1, minWidth: '200px', backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#0f172a', borderRadius: '8px' }}
-                        />
-                        <button type="submit" className="btn btn-primary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 20px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Plus size={15} />
-                          <span>Add Question</span>
+      {/* ── RESPONSIVE HORIZONTAL TAB NAVIGATION BAR ── */}
+      <div className="settings-tab-bar">
+        {[
+          { key: 'security' as const, label: 'Security Questions', icon: ShieldCheck },
+          { key: 'commitment' as const, label: 'Manage Commitments', icon: Settings },
+          { key: 'email-templates' as const, label: 'Email Templates', icon: FileText },
+          { key: 'migration' as const, label: 'Data Migration', icon: Database },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              id={`settings-tab-${tab.key}`}
+              onClick={() => setActiveTab(tab.key)}
+              style={{
+                backgroundColor: isActive ? '#1B4332' : 'transparent',
+                color: isActive ? '#FFFFFF' : '#6B7280',
+                border: 'none',
+                borderRadius: '10px',
+                padding: '10px 18px',
+                fontWeight: isActive ? 600 : 500,
+                fontSize: '0.86rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.15s ease',
+                boxShadow: isActive ? '0 2px 8px rgba(27, 67, 50, 0.2)' : 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) e.currentTarget.style.backgroundColor = '#FAF9F6';
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              <Icon size={16} color={isActive ? '#FFFFFF' : '#6B7280'} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Success Notification Alert */}
+      {successMsg && (
+        <div style={{
+          backgroundColor: '#EAF5EE',
+          color: '#1B4332',
+          border: '1px solid #D5E5DB',
+          padding: '12px 18px',
+          borderRadius: '12px',
+          fontSize: '0.86rem',
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+        }}>
+          <CheckCircle2 size={18} color="#2E7D32" />
+          <span>{successMsg}</span>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="glass-panel flex-center" style={{ height: '300px', flexDirection: 'column', gap: '16px' }}>
+          <div className="loading-spinner"></div>
+          <span style={{ color: 'var(--text-muted)' }}>Loading Settings...</span>
+        </div>
+      ) : (
+        <>
+          {/* ─────────────────────────────── TAB 1: SECURITY QUESTION ─────────────────────────────── */}
+          {activeTab === 'security' && (
+            <div className="settings-two-col-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
+              {/* Main Card: Add & List Security Questions */}
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #ECE8E2', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+                    Security Questions Setup
+                  </h3>
+                  <p style={{ fontSize: '0.82rem', color: '#6B7280', marginTop: '4px', margin: 0 }}>
+                    Admins and members are verified with these questions to authenticate identity when signing in from new devices or confirming payout adjustments.
+                  </p>
+                </div>
+
+                {/* Add New Question Form */}
+                <form onSubmit={handleAddSecurityQuestion} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <input
+                    type="text"
+                    placeholder="Enter new security question, e.g. What was your childhood nickname?"
+                    value={newSecurityQuestion}
+                    onChange={(e) => setNewSecurityQuestion(e.target.value)}
+                    style={{
+                      flex: 1,
+                      minWidth: '220px',
+                      backgroundColor: '#FAF9F6',
+                      border: '1px solid #ECE8E2',
+                      borderRadius: '10px',
+                      padding: '10px 14px',
+                      fontSize: '0.85rem',
+                      color: '#111827',
+                      outline: 'none'
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    style={{
+                      backgroundColor: '#1B4332',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '10px',
+                      padding: '10px 18px',
+                      fontWeight: 600,
+                      fontSize: '0.84rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'background-color 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0c4e43'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1B4332'}
+                  >
+                    <Plus size={15} />
+                    <span>Add Question</span>
+                  </button>
+                </form>
+
+                {/* Questions List */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Active Security Questions ({securityQuestions.length})
+                  </div>
+
+                  {securityQuestions.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '32px', color: '#9CA3AF', fontSize: '0.88rem', border: '1px dashed #ECE8E2', borderRadius: '12px', backgroundColor: '#FAF9F6' }}>
+                      No security questions configured yet. Add your first question above.
+                    </div>
+                  ) : (
+                    securityQuestions.map((q, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '14px 18px',
+                          backgroundColor: '#FAF9F6',
+                          border: '1px solid #ECE8E2',
+                          borderRadius: '12px',
+                          gap: '12px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: 700, color: '#0c4e43', backgroundColor: '#EAF5EE', padding: '2px 8px', borderRadius: '6px' }}>
+                            Q{idx + 1}
+                          </span>
+                          <span style={{ fontSize: '0.88rem', color: '#111827', fontWeight: 500 }}>
+                            {q}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSecurityQuestion(idx)}
+                          aria-label="Delete question"
+                          style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '6px', borderRadius: '6px' }}
+                        >
+                          <Trash2 size={16} />
                         </button>
-                      </form>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Side Info Cards */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #ECE8E2', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Check size={16} />
+                    </div>
+                    <span style={{ fontWeight: 700, fontSize: '0.88rem', color: '#111827' }}>Why this matters</span>
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: '#6B7280', lineHeight: 1.5, margin: 0 }}>
+                    Security verification questions provide a resilient 2-factor barrier safeguarding member savings schedules and preventing unauthorized withdrawals.
+                  </p>
+                </div>
+
+                <div style={{ backgroundColor: '#FAF9F6', borderRadius: '16px', border: '1px solid #ECE8E2', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#FEF3C7', color: '#B45309', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <AlertCircle size={16} />
+                    </div>
+                    <span style={{ fontWeight: 700, fontSize: '0.88rem', color: '#111827' }}>Recovery Protocol</span>
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: '#6B7280', lineHeight: 1.5, margin: 0 }}>
+                    If a member forgets their security answers, identity recovery mandates manual administrative confirmation with government photo ID.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ─────────────────────────────── TAB 2: MANAGE COMMITMENTS ─────────────────────────────── */}
+          {activeTab === 'commitment' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* 4-KPI Overview Cards (Screenshot & Theme Matching) */}
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #ECE8E2', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+                      Commitment Configuration Overview
+                    </h3>
+                    <p style={{ fontSize: '0.82rem', color: '#6B7280', marginTop: '4px', margin: 0 }}>
+                      Real-time status of savings circles, tier rules, and monthly payout constraints.
+                    </p>
+                  </div>
+                  <span style={{
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    backgroundColor: '#EAF5EE',
+                    color: '#2E7D32',
+                    border: '1px solid #D5E5DB',
+                    borderRadius: '20px',
+                    padding: '4px 12px'
+                  }}>
+                    ✓ {[goals.length > 0, amounts.length > 0, configuredCollectionMonthsCount > 0, enabledNotificationsCount > 0].filter(Boolean).length} / 4 Configured
+                  </span>
+                </div>
+
+                <div className="settings-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                  {[
+                    { icon: '📁', count: goals.length, label: 'Goal Categories', sub: 'saving_goals' as CommitmentSubTab },
+                    { icon: '£', count: amounts.length, label: 'Amount Tiers', sub: 'commitment_amounts' as CommitmentSubTab },
+                    { icon: '📅', count: configuredCollectionMonthsCount > 0 ? 12 : 0, label: 'Collection Months', sub: 'collection_month' as CommitmentSubTab },
+                    { icon: '🔔', count: enabledNotificationsCount, label: 'Notification Rules', sub: 'notifications' as CommitmentSubTab },
+                  ].map((stat) => (
+                    <div
+                      key={stat.label}
+                      style={{
+                        padding: '18px',
+                        borderRadius: '12px',
+                        border: '1px solid #ECE8E2',
+                        backgroundColor: '#FAF9F6',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#6B7280' }}>{stat.label}</span>
+                        <span style={{ fontSize: '1.2rem' }}>{stat.icon}</span>
+                      </div>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
+                        {stat.count}
+                      </div>
+                      <button
+                        onClick={() => setCommitmentTab(stat.sub)}
+                        style={{
+                          marginTop: '6px',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          color: '#0c4e43',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: 0,
+                          textAlign: 'left'
+                        }}
+                      >
+                        Configure {stat.label} →
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sub-Navigation Tabs */}
+              <div className="settings-subtab-bar">
+                {(['collection_month', 'notifications', 'saving_goals', 'commitment_amounts'] as CommitmentSubTab[]).map((sub) => {
+                  const isActive = commitmentTab === sub;
+                  return (
+                    <button
+                      key={sub}
+                      id={`commitment-subtab-${sub}`}
+                      onClick={() => setCommitmentTab(sub)}
+                      style={{
+                        padding: '9px 18px',
+                        fontWeight: isActive ? 700 : 500,
+                        fontSize: '0.84rem',
+                        border: isActive ? '1px solid #D5E5DB' : 'none',
+                        backgroundColor: isActive ? '#FFFFFF' : 'transparent',
+                        color: isActive ? '#0c4e43' : '#6B7280',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        boxShadow: isActive ? '0 1px 4px rgba(0,0,0,0.04)' : 'none',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {commitmentSubTabLabels[sub]}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Sub-Tab Panels */}
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #ECE8E2', padding: '24px' }}>
+                {/* 1. Collection Month Settings */}
+                {commitmentTab === 'collection_month' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '14px' }}>
+                      <div>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+                          Collection Month Availability
+                        </h3>
+                        <p style={{ fontSize: '0.82rem', color: '#6B7280', marginTop: '4px', margin: 0 }}>
+                          Control which harvest months are available for selection when savers choose specific monthly contribution tiers.
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <select
+                          value={selectedCollectionAmount}
+                          onChange={(e) => setSelectedCollectionAmount(e.target.value)}
+                          style={{
+                            backgroundColor: '#FAF9F6',
+                            border: '1px solid #ECE8E2',
+                            borderRadius: '10px',
+                            padding: '9px 14px',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            color: '#111827',
+                            cursor: 'pointer',
+                            outline: 'none'
+                          }}
+                        >
+                          {amounts.filter(a => a.enabled).map(a => {
+                            const valStr = Number(a.amount).toFixed(2);
+                            return <option key={a.amount} value={valStr}>Monthly Tier: £{valStr}</option>;
+                          })}
+                        </select>
+
+                        <button
+                          type="button"
+                          onClick={handleSaveCollectionMonths}
+                          disabled={saving}
+                          style={{
+                            backgroundColor: '#1B4332',
+                            color: '#FFFFFF',
+                            borderRadius: '10px',
+                            border: 'none',
+                            padding: '9px 18px',
+                            fontWeight: 600,
+                            fontSize: '0.84rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          <Save size={15} />
+                          <span>{saving ? 'Saving...' : 'Save Configuration'}</span>
+                        </button>
+                      </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '20px' }}>
-                      {securityQuestions.length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8', fontSize: '0.875rem', border: '1px dashed #e2e8f0', borderRadius: '8px' }}>
-                          No security questions configured yet.
-                        </div>
-                      )}
-                      {securityQuestions.map((q, idx) => (
-                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-                          <span style={{ fontSize: '0.9rem', color: '#1e293b', fontWeight: 500 }}>{q}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteSecurityQuestion(idx)}
-                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827' }}>
+                        Month Selection for £{selectedCollectionAmount}
+                      </span>
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newMap = { ...collectionMonthsMap, [selectedCollectionAmount]: [...ALL_MONTHS] };
+                            setCollectionMonthsMap(newMap);
+                          }}
+                          style={{ background: 'none', border: 'none', fontSize: '0.8rem', fontWeight: 600, color: '#0c4e43', cursor: 'pointer' }}
+                        >
+                          Select All
+                        </button>
+                        <span style={{ color: '#ECE8E2' }}>|</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newMap = { ...collectionMonthsMap, [selectedCollectionAmount]: [] };
+                            setCollectionMonthsMap(newMap);
+                          }}
+                          style={{ background: 'none', border: 'none', fontSize: '0.8rem', fontWeight: 600, color: '#DC2626', cursor: 'pointer' }}
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Months Checkbox Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
+                      {ALL_MONTHS.map((m) => {
+                        const enabled = isMonthEnabled(m);
+                        return (
+                          <label
+                            key={m}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '14px 16px',
+                              borderRadius: '12px',
+                              border: '1px solid',
+                              borderColor: enabled ? '#D5E5DB' : '#ECE8E2',
+                              backgroundColor: enabled ? '#FAF9F6' : '#FFFFFF',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease'
+                            }}
                           >
-                            <Trash2 size={16} />
-                          </button>
+                            <span style={{ fontWeight: 600, color: enabled ? '#111827' : '#6B7280', fontSize: '0.88rem' }}>
+                              {m}
+                            </span>
+                            <input
+                              type="checkbox"
+                              checked={enabled}
+                              onChange={() => handleToggleCollectionMonth(m)}
+                              style={{ width: '18px', height: '18px', accentColor: '#0c4e43', cursor: 'pointer' }}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Notification Triggers Settings */}
+                {commitmentTab === 'notifications' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+                      <div>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+                          Automated Notification Triggers
+                        </h3>
+                        <p style={{ fontSize: '0.82rem', color: '#6B7280', marginTop: '4px', margin: 0 }}>
+                          Toggle automatic transactional emails and SMS notifications sent when key savings milestones occur.
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#EAF5EE', border: '1px solid #D5E5DB', borderRadius: '8px', padding: '6px 12px' }}>
+                        <span style={{ color: '#2E7D32', fontWeight: 700, fontSize: '0.78rem' }}>✓ Notifications Dispatch Active</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {[
+                        { key: 'emailOnInvite' as const, label: 'Member Invitation Email', desc: 'Dispatch registration invitation and circle invite link when a new saver is enrolled.', icon: '👤' },
+                        { key: 'emailOnPayment' as const, label: 'Payment Confirmation Email', desc: 'Send receipt confirmation email when offline/online contribution is verified.', icon: '💳' },
+                        { key: 'emailOnPayout' as const, label: 'Harvest Payout Release Email', desc: 'Send congratulatory release notification when harvest disbursement is completed.', icon: '🎁' },
+                        { key: 'emailOnReminder' as const, label: 'Monthly Payment Reminder Email', desc: 'Send automated reminders for scheduled monthly contribution dues.', icon: '✉️' },
+                      ].map(({ key, label, desc, icon }) => (
+                        <label
+                          key={key}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '16px 20px',
+                            borderRadius: '12px',
+                            border: '1px solid #ECE8E2',
+                            backgroundColor: notificationSettings[key] ? '#FAF9F6' : '#FFFFFF',
+                            cursor: 'pointer',
+                            gap: '16px'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: '#EAF5EE', color: '#0c4e43', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>
+                              {icon}
+                            </div>
+                            <div>
+                              <span style={{ fontWeight: 700, color: '#111827', display: 'block', fontSize: '0.9rem' }}>{label}</span>
+                              <span style={{ fontSize: '0.8rem', color: '#6B7280' }}>{desc}</span>
+                            </div>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings[key]}
+                            onChange={() => handleToggleNotification(key)}
+                            style={{ width: '18px', height: '18px', accentColor: '#0c4e43', flexShrink: 0, cursor: 'pointer' }}
+                          />
+                        </label>
+                      ))}
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                      <button
+                        type="button"
+                        onClick={handleSaveNotificationSettings}
+                        disabled={saving}
+                        style={{
+                          backgroundColor: '#1B4332',
+                          color: '#FFFFFF',
+                          borderRadius: '10px',
+                          border: 'none',
+                          padding: '10px 24px',
+                          fontWeight: 600,
+                          fontSize: '0.85rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <Save size={15} />
+                        <span>{saving ? 'Saving...' : 'Save Notification Settings'}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Saving Goals Categories */}
+                {commitmentTab === 'saving_goals' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+                        Saving Goal Categories
+                      </h3>
+                      <p style={{ fontSize: '0.82rem', color: '#6B7280', marginTop: '4px', margin: 0 }}>
+                        Manage predefined savings targets available for savers to categorize their personal milestones.
+                      </p>
+                    </div>
+
+                    <form onSubmit={handleAddGoal} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <input
+                        type="text"
+                        placeholder="Add new goal, e.g. Property Deposit or Business Capital"
+                        value={newGoal}
+                        onChange={(e) => setNewGoal(e.target.value)}
+                        style={{
+                          flex: 1,
+                          minWidth: '220px',
+                          backgroundColor: '#FAF9F6',
+                          border: '1px solid #ECE8E2',
+                          borderRadius: '10px',
+                          padding: '10px 14px',
+                          fontSize: '0.85rem',
+                          color: '#111827',
+                          outline: 'none'
+                        }}
+                      />
+                      <button
+                        type="submit"
+                        style={{
+                          backgroundColor: '#1B4332',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '10px',
+                          padding: '10px 18px',
+                          fontWeight: 600,
+                          fontSize: '0.84rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <Plus size={15} />
+                        <span>Add Category</span>
+                      </button>
+                    </form>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {goals.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '32px', color: '#9CA3AF', fontSize: '0.88rem', border: '1px dashed #ECE8E2', borderRadius: '12px', backgroundColor: '#FAF9F6' }}>
+                          No saving goal categories configured yet. Add your first above.
+                        </div>
+                      ) : (
+                        goals.map((g, idx) => (
+                          <div
+                            key={g.name + idx}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '12px 18px',
+                              borderRadius: '12px',
+                              border: '1px solid #ECE8E2',
+                              backgroundColor: '#FAF9F6'
+                            }}
+                          >
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flex: 1 }}>
+                              <input
+                                type="checkbox"
+                                checked={g.enabled}
+                                onChange={() => handleToggleGoal(idx)}
+                                style={{ width: '18px', height: '18px', accentColor: '#0c4e43', flexShrink: 0 }}
+                              />
+                              <span style={{ fontWeight: 600, color: '#111827', fontSize: '0.88rem' }}>
+                                {g.name}
+                              </span>
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteGoal(idx)}
+                              aria-label="Delete goal category"
+                              style={{ border: 'none', background: 'none', color: '#DC2626', cursor: 'pointer', padding: '4px' }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. Commitment Amounts */}
+                {commitmentTab === 'commitment_amounts' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+                        Monthly Commitment Amount Tiers (£)
+                      </h3>
+                      <p style={{ fontSize: '0.82rem', color: '#6B7280', marginTop: '4px', margin: 0 }}>
+                        Configured monthly contribution sums available to members during circle onboarding.
+                      </p>
+                    </div>
+
+                    <form onSubmit={handleAddAmount} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <input
+                        type="number"
+                        placeholder="Add custom monthly amount, e.g. 500"
+                        value={newAmount}
+                        onChange={(e) => setNewAmount(e.target.value)}
+                        style={{
+                          flex: 1,
+                          minWidth: '220px',
+                          backgroundColor: '#FAF9F6',
+                          border: '1px solid #ECE8E2',
+                          borderRadius: '10px',
+                          padding: '10px 14px',
+                          fontSize: '0.85rem',
+                          color: '#111827',
+                          outline: 'none'
+                        }}
+                      />
+                      <button
+                        type="submit"
+                        style={{
+                          backgroundColor: '#1B4332',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '10px',
+                          padding: '10px 18px',
+                          fontWeight: 600,
+                          fontSize: '0.84rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <Plus size={15} />
+                        <span>Add Tier</span>
+                      </button>
+                    </form>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
+                      {amounts.map((a, idx) => (
+                        <div
+                          key={a.amount}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '14px 18px',
+                            borderRadius: '12px',
+                            border: '1px solid #ECE8E2',
+                            backgroundColor: '#FAF9F6'
+                          }}
+                        >
+                          <div>
+                            <span style={{ fontWeight: 800, color: '#111827', fontSize: '1.05rem', fontFamily: 'var(--font-family-title)' }}>
+                              £{Number(a.amount).toFixed(2)}
+                            </span>
+                            <span style={{ fontSize: '0.72rem', color: '#6B7280', display: 'block' }}>per month</span>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                              <input
+                                type="checkbox"
+                                checked={a.enabled}
+                                onChange={() => handleToggleAmount(idx)}
+                                style={{ width: '16px', height: '16px', accentColor: '#0c4e43', cursor: 'pointer' }}
+                              />
+                              <span style={{ fontSize: '0.75rem', color: a.enabled ? '#2E7D32' : '#B45309', fontWeight: 600 }}>
+                                {a.enabled ? 'Active' : 'Off'}
+                              </span>
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteAmount(idx)}
+                              aria-label="Delete amount"
+                              style={{ border: 'none', background: 'none', color: '#DC2626', cursor: 'pointer', padding: '4px' }}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
+                )}
+              </div>
+            </div>
+          )}
 
-                  {/* Info sidebar */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '18px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <span style={{ color: '#16a34a', fontSize: '1.1rem' }}>✔</span>
-                        <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#166534' }}>Why this matters</span>
-                      </div>
-                      <p style={{ fontSize: '0.8rem', color: '#334155', lineHeight: 1.5, margin: 0 }}>
-                        Your security question adds an extra layer of protection to your account and helps us verify your identity quickly when needed.
-                      </p>
-                    </div>
-                    <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '18px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '1.1rem' }}>🔒</span>
-                        <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#1e293b' }}>Important</span>
-                      </div>
-                      <p style={{ fontSize: '0.8rem', color: '#334155', lineHeight: 1.5, margin: 0 }}>
-                        If you forget the answer, account recovery will require administrator verification. Make sure the answer is something you can always remember.
-                      </p>
-                    </div>
-                  </div>
+          {/* ─────────────────────────────── TAB 3: EMAIL TEMPLATES ─────────────────────────────── */}
+          {activeTab === 'email-templates' && (
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #ECE8E2', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+                    Email Notification Templates
+                  </h3>
+                  <p style={{ fontSize: '0.82rem', color: '#6B7280', marginTop: '4px', margin: 0 }}>
+                    Manage customizable transactional copy and reminder schedules dispatched to savers.
+                  </p>
                 </div>
+                <input
+                  type="text"
+                  placeholder="Search templates by title or ID..."
+                  value={emailSearchQuery}
+                  onChange={(e) => setEmailSearchQuery(e.target.value)}
+                  style={{
+                    backgroundColor: '#FAF9F6',
+                    border: '1px solid #ECE8E2',
+                    borderRadius: '10px',
+                    padding: '8px 14px',
+                    width: '260px',
+                    fontSize: '0.84rem',
+                    color: '#111827',
+                    outline: 'none'
+                  }}
+                />
+              </div>
 
-                {/* Recently Updated footer */}
-                <div style={{ marginTop: '28px', padding: '14px 18px', backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#64748b' }}>
-                    <span>🕐</span>
-                    <span><strong>Recently Updated</strong> — Security questions configuration</span>
-                  </div>
-                  <button disabled title="Audit log page is coming soon" style={{ background: 'none', border: 'none', fontSize: '0.8rem', fontWeight: 600, color: '#9ca3af', cursor: 'not-allowed', display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.6 }}>
-                    View Audit Log →
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* ─────────────────────────────── TAB 2: MANAGE COMMITMENT ─────────────────────────────── */}
-            {activeTab === 'commitment' && (
-              <>
-                {/* Overview stats card (always shown) */}
-                <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '22px 26px', marginBottom: '24px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-                    <div>
-                      <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>Manage Commitment Overview</h2>
-                      <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '2px 0 0 0' }}>Quick overview of your commitment settings.</p>
-                    </div>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 700, backgroundColor: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: '20px', padding: '4px 12px' }}>
-                      ✓ {[goals.length > 0, amounts.length > 0, configuredCollectionMonthsCount > 0, enabledNotificationsCount > 0].filter(Boolean).length} / 4 Configured
-                    </span>
-                  </div>
-                  <div className="settings-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-                    {[
-                      { icon: '📁', count: goals.length, label: 'Goal Categories', sub: 'saving_goals' as CommitmentSubTab },
-                      { icon: '£', count: amounts.length, label: 'Amount Tiers', sub: 'commitment_amounts' as CommitmentSubTab },
-                      { icon: '📅', count: configuredCollectionMonthsCount > 0 ? 12 : 0, label: 'Collection Months', sub: 'collection_month' as CommitmentSubTab },
-                      { icon: '🔔', count: enabledNotificationsCount, label: 'Notifications On', sub: 'notifications' as CommitmentSubTab },
-                    ].map((stat) => (
-                      <div key={stat.label} style={{ textAlign: 'center', padding: '16px 8px', borderRadius: '10px', border: '1px solid #f1f5f9', backgroundColor: '#fafafa' }}>
-                        <div style={{ fontSize: '1.5rem', marginBottom: '6px' }}>{stat.icon}</div>
-                        <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1e293b', lineHeight: 1 }}>{stat.count}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px', marginBottom: '8px' }}>{stat.label}</div>
-                        <button
-                          onClick={() => setCommitmentTab(stat.sub)}
-                          style={{ fontSize: '0.75rem', fontWeight: 700, color: '#c27a3a', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
-                        >
-                          Manage
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Inner sub-tabs */}
-                <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                  {/* Tab bar */}
-                  <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', overflowX: 'auto' }}>
-                    {(['collection_month', 'notifications', 'saving_goals', 'commitment_amounts'] as CommitmentSubTab[]).map((sub) => (
-                      <button
-                        key={sub}
-                        id={`commitment-tab-${sub}`}
-                        onClick={() => setCommitmentTab(sub)}
-                        style={{
-                          padding: '14px 20px',
-                          fontWeight: 600,
-                          fontSize: '0.85rem',
-                          border: 'none',
-                          background: 'none',
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap',
-                          color: commitmentTab === sub ? '#c27a3a' : '#64748b',
-                          borderBottom: commitmentTab === sub ? '2px solid #c27a3a' : '2px solid transparent',
-                          transition: 'all 0.15s ease',
-                        }}
-                      >
-                        {commitmentSubTabLabels[sub]}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Tab content */}
-                  <div style={{ padding: '28px' }}>
-
-                    {/* Collection Month */}
-                    {commitmentTab === 'collection_month' && (
-                      <div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                          <div>
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>Collection Month Settings</h3>
-                            <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0 0' }}>Control which months are available for collection (harvest) for each commitment amount.</p>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <select
-                              value={selectedCollectionAmount}
-                              onChange={(e) => setSelectedCollectionAmount(e.target.value)}
-                              className="form-input"
-                              style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '8px 14px', fontWeight: 700, fontSize: '0.875rem', color: '#1e293b' }}
-                            >
-                              {amounts.filter(a => a.enabled).map(a => {
-                                const valStr = Number(a.amount).toFixed(2);
-                                return <option key={a.amount} value={valStr}>£{valStr}</option>;
-                              })}
-                            </select>
-                            <button
-                              type="button"
-                              onClick={handleSaveCollectionMonths}
-                              disabled={saving}
-                              className="btn btn-primary"
-                              style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '8px 18px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
-                            >
-                              <Save size={15} />
-                              <span>{saving ? 'Saving...' : 'Save Changes'}</span>
-                            </button>
-                          </div>
-                        </div>
-
-                        <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: '20px 0 14px 0', color: '#1e293b' }}>
-                          Collection Month Settings for £{selectedCollectionAmount}
-                        </h4>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginBottom: '12px' }}>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newMap = { ...collectionMonthsMap, [selectedCollectionAmount]: [...ALL_MONTHS] };
-                              setCollectionMonthsMap(newMap);
-                            }}
-                            style={{ background: 'none', border: 'none', fontSize: '0.8rem', fontWeight: 600, color: '#2e3a4e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                          >
-                            ☑ Select All
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newMap = { ...collectionMonthsMap, [selectedCollectionAmount]: [] };
-                              setCollectionMonthsMap(newMap);
-                            }}
-                            style={{ background: 'none', border: 'none', fontSize: '0.8rem', fontWeight: 600, color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                          >
-                            ✕ Clear All
-                          </button>
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                          {ALL_MONTHS.map((m) => {
-                            const enabled = isMonthEnabled(m);
-                            return (
-                              <label key={m} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: '10px', border: '1px solid #e2e8f0', backgroundColor: enabled ? '#f8fafc' : '#ffffff', cursor: 'pointer' }}>
-                                <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>{m}</span>
-                                <input
-                                  type="checkbox"
-                                  checked={enabled}
-                                  onChange={() => handleToggleCollectionMonth(m)}
-                                  style={{ width: '18px', height: '18px', accentColor: '#2e3a4e', cursor: 'pointer' }}
-                                />
-                              </label>
-                            );
-                          })}
-                        </div>
-
-                        <p style={{ marginTop: '14px', fontSize: '0.78rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '0.9rem' }}>ℹ️</span>
-                          Members will only see the months enabled for the amount tier they select during commitment setup.
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Notification Settings */}
-                    {commitmentTab === 'notifications' && (
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                          <div>
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>Notification Triggers</h3>
-                            <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0 0' }}>Configure automated email and in-app notifications.</p>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '6px 12px' }}>
-                            <span style={{ color: '#16a34a', fontWeight: 700, fontSize: '0.8rem' }}>✓ Notifications are active</span>
-                          </div>
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-                          {[
-                            { key: 'emailOnInvite' as const, label: 'Member Invitation Email', desc: 'Dispatch registration invitation when a new user is created.', icon: '👤' },
-                            { key: 'emailOnPayment' as const, label: 'Payment Confirmation Email', desc: 'Send receipt email when offline payment is confirmed.', icon: '💳' },
-                            { key: 'emailOnPayout' as const, label: 'Harvest Payout Release Email', desc: 'Send notification when harvest payout is released.', icon: '🎁' },
-                            { key: 'emailOnReminder' as const, label: 'Monthly Payment Reminder Email', desc: 'Send reminder emails for outstanding contribution payments.', icon: '✉️' },
-                          ].map(({ key, label, desc, icon }) => (
-                            <label key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px', borderRadius: '10px', border: '1px solid #e2e8f0', backgroundColor: '#fafafa', cursor: 'pointer', gap: '12px' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>{icon}</div>
-                                <div>
-                                  <span style={{ fontWeight: 600, color: '#1e293b', display: 'block', fontSize: '0.9rem' }}>{label}</span>
-                                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>{desc}</span>
-                                </div>
-                              </div>
-                              <input
-                                type="checkbox"
-                                checked={notificationSettings[key]}
-                                onChange={() => handleToggleNotification(key)}
-                                style={{ width: '18px', height: '18px', accentColor: '#2e3a4e', flexShrink: 0 }}
-                              />
-                            </label>
-                          ))}
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={handleSaveNotificationSettings}
-                          disabled={saving}
-                          className="btn btn-primary"
-                          style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 24px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
-                        >
-                          <Save size={15} />
-                          <span>{saving ? 'Saving...' : 'Save Notification Settings'}</span>
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Saving Goals */}
-                    {commitmentTab === 'saving_goals' && (
-                      <div>
-                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>Saving Goals Categories</h3>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '20px' }}>Manage categories available for savers to assign to their target savings cycle.</p>
-
-                        <form onSubmit={handleAddGoal} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                          <input
-                            type="text"
-                            placeholder="Add goal category, e.g. Property Investment"
-                            value={newGoal}
-                            onChange={(e) => setNewGoal(e.target.value)}
-                            className="form-input"
-                            style={{ flex: 1, backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px' }}
-                          />
-                          <button type="submit" className="btn btn-primary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Plus size={15} />
-                            <span>Add</span>
-                          </button>
-                        </form>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {goals.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: '24px', color: '#94a3b8', fontSize: '0.875rem', border: '1px dashed #e2e8f0', borderRadius: '8px' }}>
-                              No saving goal categories yet. Add one above.
+              <div className="table-container" style={{ border: '1px solid #ECE8E2', borderRadius: '12px', overflow: 'hidden' }}>
+                <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#FAF9F6', borderBottom: '1px solid #ECE8E2' }}>
+                      <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>
+                        TEMPLATE TITLE &amp; TIMING
+                      </th>
+                      <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>
+                        CATEGORY
+                      </th>
+                      <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>
+                        TEMPLATE ID
+                      </th>
+                      <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>
+                        STATUS
+                      </th>
+                      <th style={{ padding: '14px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>
+                        ACTION
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTemplates.map((tpl) => {
+                      const isEnabled = tpl.enabled !== false;
+                      return (
+                        <tr key={tpl.id} style={{ borderBottom: '1px solid #ECE8E2' }}>
+                          <td style={{ padding: '14px 16px' }}>
+                            <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.88rem' }}>{tpl.title}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '2px' }}>
+                              {tpl.reminderHours !== 'N/A' ? `Triggered ${tpl.reminderHours}h after due date.` : 'Triggered on event.'}
                             </div>
-                          )}
-                          {goals.map((g, idx) => (
-                            <div key={g.name + idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
-                              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flex: 1 }}>
-                                <span style={{ color: '#94a3b8', fontSize: '1rem', cursor: 'grab' }}>⠿</span>
-                                <input
-                                  type="checkbox"
-                                  checked={g.enabled}
-                                  onChange={() => handleToggleGoal(idx)}
-                                  style={{ width: '18px', height: '18px', accentColor: '#2e3a4e', flexShrink: 0 }}
-                                />
-                                <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>{g.name}</span>
-                              </label>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteGoal(idx)}
-                                  style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px 6px', display: 'flex', alignItems: 'center', borderRadius: '6px' }}
-                                >
-                                  <Trash2 size={15} />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                          {goals.length > 0 && (
-                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '0.78rem', color: '#94a3b8' }}>
-                              <span>⠿ Drag to reorder categories</span>
-                              <span>{goals.length} categories</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div style={{ marginTop: '16px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '10px 14px', fontSize: '0.8rem', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span>✓</span> Savers will only see active categories during commitment setup.
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Commitment Amounts */}
-                    {commitmentTab === 'commitment_amounts' && (
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px' }}>
-                          <div style={{ flex: 1 }}>
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>Commitment Amount Tiers (£)</h3>
-                            <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '20px' }}>Predefined monthly commitment amounts selectable during commitment setup.</p>
-
-                            <form onSubmit={handleAddAmount} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                              <input
-                                type="number"
-                                placeholder="Add custom amount, e.g. 2000"
-                                value={newAmount}
-                                onChange={(e) => setNewAmount(e.target.value)}
-                                className="form-input"
-                                style={{ flex: 1, backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px' }}
-                              />
-                              <button type="submit" className="btn btn-primary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Plus size={15} />
-                                <span>Add Amount</span>
+                          </td>
+                          <td style={{ padding: '14px 16px' }}>
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              backgroundColor: '#EAF5EE',
+                              color: '#0c4e43'
+                            }}>
+                              {tpl.reminderHours !== 'N/A' ? 'Reminder' : 'System'}
+                            </span>
+                          </td>
+                          <td style={{ padding: '14px 16px', color: '#6B7280', fontSize: '0.8rem', fontFamily: 'monospace' }}>
+                            {tpl.id}
+                          </td>
+                          <td style={{ padding: '14px 16px' }}>
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '2px 8px',
+                              borderRadius: '9999px',
+                              fontSize: '0.72rem',
+                              fontWeight: 600,
+                              backgroundColor: isEnabled ? '#EAF5EE' : '#FEF3C7',
+                              color: isEnabled ? '#2E7D32' : '#B45309'
+                            }}>
+                              {isEnabled ? 'Active' : 'Disabled'}
+                            </span>
+                          </td>
+                          <td style={{ padding: '14px 16px', textAlign: 'right', position: 'relative' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              <button
+                                onClick={() => handleOpenViewTemplate(tpl)}
+                                style={{ background: 'none', border: '1px solid #ECE8E2', cursor: 'pointer', padding: '6px 8px', color: '#374151', borderRadius: '8px', display: 'flex', alignItems: 'center' }}
+                                title="View Template"
+                              >
+                                <Eye size={14} />
                               </button>
-                            </form>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                              {amounts.map((a, idx) => (
-                                <div key={a.amount} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <span style={{ color: '#94a3b8', fontSize: '1rem', cursor: 'grab' }}>⠿</span>
-                                    <span style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.95rem' }}>£{Number(a.amount).toFixed(2)}</span>
-                                  </div>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                                      <input
-                                        type="checkbox"
-                                        checked={a.enabled}
-                                        onChange={() => handleToggleAmount(idx)}
-                                        style={{ width: '16px', height: '16px', accentColor: '#2e3a4e', cursor: 'pointer' }}
-                                      />
-                                      <span style={{ fontSize: '0.8rem', color: a.enabled ? '#15803d' : '#b45309', fontWeight: 600 }}>
-                                        {a.enabled ? '✓ Enabled' : 'Disabled'}
-                                      </span>
-                                    </label>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleDeleteAmount(idx)}
-                                      style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
-                                    >
-                                      <Trash2 size={15} />
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
-                              {amounts.length > 0 && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '0.78rem', color: '#94a3b8' }}>
-                                  <span>⠿ Drag to reorder amounts</span>
-                                  <span>{amounts.length} amounts</span>
-                                </div>
-                              )}
+                              <button
+                                onClick={() => handleOpenEditTemplate(tpl)}
+                                style={{ background: 'none', border: '1px solid #ECE8E2', cursor: 'pointer', padding: '6px 8px', color: '#374151', borderRadius: '8px', display: 'flex', alignItems: 'center' }}
+                                title="Edit Template"
+                              >
+                                <Edit size={14} />
+                              </button>
                             </div>
-                          </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
-                          {/* How it works sidebar */}
-                          <div style={{ width: '260px', flexShrink: 0, backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '16px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                              <span style={{ color: '#16a34a' }}>✔</span>
-                              <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#166534' }}>How it works</span>
-                            </div>
-                            <p style={{ fontSize: '0.78rem', color: '#166534', lineHeight: 1.5, margin: 0 }}>
-                              Enable the amounts you want to offer savers. Only enabled amounts will be available during commitment setup.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+          {/* ─────────────────────────────── TAB 4: DATA MIGRATION ─────────────────────────────── */}
+          {activeTab === 'migration' && (
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #ECE8E2', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+                  Bulk Data Migration &amp; Legacy Import Center
+                </h3>
+                <p style={{ fontSize: '0.82rem', color: '#6B7280', marginTop: '4px', margin: 0 }}>
+                  Synchronize legacy members (with IDs like <code style={{ backgroundColor: '#EAF5EE', padding: '2px 6px', borderRadius: '4px', color: '#0c4e43' }}>M-000374</code>), Savings Commitments (<code style={{ backgroundColor: '#EAF5EE', padding: '2px 6px', borderRadius: '4px', color: '#0c4e43' }}>SC-00222</code>), and waitlist records.
+                </p>
+              </div>
 
-                    {/* Overview sub-tab (catch-all) */}
-                    {commitmentTab === 'overview' && (
-                      <div style={{ textAlign: 'center', padding: '40px', color: '#64748b', fontSize: '0.9rem' }}>
-                        Select a sub-section above to manage its settings.
-                      </div>
-                    )}
-                  </div>
-                </div>
+              {/* Mode Switcher */}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setMigrationMode('CSV')}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    fontSize: '0.84rem',
+                    border: '1px solid',
+                    borderColor: migrationMode === 'CSV' ? '#1B4332' : '#ECE8E2',
+                    backgroundColor: migrationMode === 'CSV' ? '#1B4332' : '#FAF9F6',
+                    color: migrationMode === 'CSV' ? '#FFFFFF' : '#374151',
+                    cursor: 'pointer'
+                  }}
+                >
+                  📊 CSV / Spreadsheet Copy-Paste (Recommended)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMigrationMode('JSON')}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    fontSize: '0.84rem',
+                    border: '1px solid',
+                    borderColor: migrationMode === 'JSON' ? '#1B4332' : '#ECE8E2',
+                    backgroundColor: migrationMode === 'JSON' ? '#1B4332' : '#FAF9F6',
+                    color: migrationMode === 'JSON' ? '#FFFFFF' : '#374151',
+                    cursor: 'pointer'
+                  }}
+                >
+                  💻 Raw JSON Payload
+                </button>
+              </div>
 
-                {/* Recently Updated footer */}
-                <div style={{ marginTop: '20px', padding: '14px 18px', backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#64748b' }}>
-                    <span>🕐</span>
-                    <span><strong>Recently Updated</strong> — Commitment settings</span>
-                  </div>
-                  <button disabled title="Audit log page is coming soon" style={{ background: 'none', border: 'none', fontSize: '0.8rem', fontWeight: 600, color: '#9ca3af', cursor: 'not-allowed', display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.6 }}>
-                    View Audit Log →
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* ─────────────────────────────── TAB 3: EMAIL TEMPLATES ─────────────────────────────── */}
-            {activeTab === 'email-templates' && (
-              <>
-                <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '28px' }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                    <div>
-                      <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>Email Templates</h2>
-                      <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0 0' }}>Create, edit and manage templates used across the platform.</p>
+              {/* CSV MODE */}
+              {migrationMode === 'CSV' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '12px', padding: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827' }}>CSV Copy-Paste / Upload Instructions</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const sampleCsv = `Member ID, Name, Email, Phone, Role, Commitment Amount, Collection Month\nM-000374, Iyore Ed, iypearlie@gmail.com, 07449311040, MEMBER, 1000, February\nM-000375, Jane Smith, jane@example.com, 07700900011, MEMBER, 500, March`;
+                          setMigrationCsvText(sampleCsv);
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#0c4e43', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        Load Sample CSV
+                      </button>
                     </div>
+                    <p style={{ fontSize: '0.8rem', color: '#6B7280', margin: '0 0 10px 0' }}>
+                      Select and paste rows directly from your previous spreadsheet or upload a <strong>.csv</strong> file. Recognized columns: <code>Member ID</code>, <code>Name</code>, <code>Email</code>, <code>Phone</code>, <code>Role</code>, <code>Amount</code>, <code>Month</code>.
+                    </p>
                     <input
-                      type="text"
-                      placeholder="Search templates..."
-                      value={emailSearchQuery}
-                      onChange={(e) => setEmailSearchQuery(e.target.value)}
-                      className="form-input"
-                      style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '8px 14px', width: '240px' }}
+                      type="file"
+                      accept=".csv,.txt,.tsv"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (evt) => setMigrationCsvText(evt.target?.result as string || '');
+                          reader.readAsText(file);
+                        }
+                      }}
+                      style={{ fontSize: '0.8rem' }}
                     />
                   </div>
 
-                  <div className="table-container">
-                    <table className="custom-table" style={{ fontSize: '0.85rem' }}>
-                      <thead>
-                        <tr>
-                          <th>Template Name</th>
-                          <th>Category</th>
-                          <th>Last Updated</th>
-                          <th style={{ width: '100px' }}>Status</th>
-                          <th style={{ width: '80px', textAlign: 'right' }}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredTemplates.map((tpl) => {
-                          const isEnabled = tpl.enabled !== false;
-                          return (
-                            <tr key={tpl.id}>
-                              <td>
-                                <div style={{ fontWeight: 600, color: '#1e293b' }}>{tpl.title}</div>
-                                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>{tpl.reminderHours !== 'N/A' ? `Reminder sent ${tpl.reminderHours}h after due date.` : 'Triggered on event.'}</div>
-                              </td>
-                              <td>
-                                <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700, backgroundColor: '#dbeafe', color: '#1d4ed8' }}>
-                                  {tpl.reminderHours !== 'N/A' ? 'Reminder' : 'System'}
-                                </span>
-                              </td>
-                              <td style={{ color: '#64748b', fontSize: '0.8rem' }}>Template ID: {tpl.id}</td>
-                              <td>
-                                <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700, backgroundColor: isEnabled ? '#dcfce7' : '#fef3c7', color: isEnabled ? '#15803d' : '#b45309' }}>
-                                  {isEnabled ? 'Active' : 'Disabled'}
-                                </span>
-                              </td>
-                              <td style={{ textAlign: 'right', position: 'relative' }}>
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                  <button
-                                    onClick={() => handleOpenEditTemplate(tpl)}
-                                    style={{ background: 'none', border: '1px solid #e2e8f0', cursor: 'pointer', padding: '4px 8px', color: '#64748b', borderRadius: '6px', display: 'flex', alignItems: 'center' }}
-                                    title="Edit template"
-                                  >
-                                    <Edit size={14} />
-                                  </button>
-                                  <div style={{ position: 'relative' }}>
-                                    <button
-                                      onClick={() => setOpenDropdownId(openDropdownId === tpl.id ? null : tpl.id)}
-                                      style={{ background: 'none', border: '1px solid #e2e8f0', cursor: 'pointer', padding: '4px 8px', color: '#64748b', borderRadius: '6px', display: 'flex', alignItems: 'center' }}
-                                    >
-                                      <MoreVertical size={14} />
-                                    </button>
-                                    {openDropdownId === tpl.id && (
-                                      <div style={{ position: 'absolute', right: 0, top: '30px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '140px', padding: '4px' }}>
-                                        <button
-                                          onClick={() => handleOpenViewTemplate(tpl)}
-                                          style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 12px', background: 'none', border: 'none', fontSize: '0.8rem', cursor: 'pointer', color: '#334155' }}
-                                        >
-                                          <Eye size={13} />
-                                          <span>View Template</span>
-                                        </button>
-                                        <button
-                                          onClick={() => handleOpenEditTemplate(tpl)}
-                                          style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 12px', background: 'none', border: 'none', fontSize: '0.8rem', cursor: 'pointer', color: '#334155' }}
-                                        >
-                                          <Edit size={13} />
-                                          <span>Edit Template</span>
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Recently Updated footer */}
-                <div style={{ marginTop: '20px', padding: '14px 18px', backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#64748b' }}>
-                    <span>🕐</span>
-                    <span><strong>Recently Updated</strong> — Email templates</span>
-                  </div>
-                  <button disabled title="Audit log page is coming soon" style={{ background: 'none', border: 'none', fontSize: '0.8rem', fontWeight: 600, color: '#9ca3af', cursor: 'not-allowed', display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.6 }}>
-                    View Audit Log →
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* ─────────────────────────────── TAB 4: DATA MIGRATION ─────────────────────────────── */}
-            {activeTab === 'migration' && (
-              <>
-                <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '28px', maxWidth: '860px' }}>
-                  <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>Bulk Data Migration & Import Center</h2>
-                  <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '20px' }}>
-                    Migrate legacy Members (with exact Member IDs like <code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', color: '#0284c7' }}>M-000374</code>), Savings Commitments (<code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', color: '#0284c7' }}>SC-00222</code>), Payments, and Waiting List records from your previous website into the platform.
-                  </p>
-
-                  {/* Mode Switcher */}
-                  <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                    <button
-                      type="button"
-                      onClick={() => setMigrationMode('CSV')}
-                      style={{ padding: '8px 16px', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', border: '1px solid #cbd5e1', backgroundColor: migrationMode === 'CSV' ? '#2e3a4e' : '#ffffff', color: migrationMode === 'CSV' ? '#ffffff' : '#475569', cursor: 'pointer' }}
-                    >
-                      📊 CSV / Spreadsheet Copy-Paste (Recommended)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMigrationMode('JSON')}
-                      style={{ padding: '8px 16px', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', border: '1px solid #cbd5e1', backgroundColor: migrationMode === 'JSON' ? '#2e3a4e' : '#ffffff', color: migrationMode === 'JSON' ? '#ffffff' : '#475569', cursor: 'pointer' }}
-                    >
-                      💻 Raw JSON Payload
-                    </button>
-                  </div>
-
-                  {/* CSV MODE */}
-                  {migrationMode === 'CSV' && (
-                    <div>
-                      <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>Frontend Table / CSV Copy-Paste Guide</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const sampleCsv = `Member ID, Name, Email, Phone, Role, Commitment Amount, Collection Month\nM-000374, Iyore Ed, iypearlie@gmail.com, 07449311040, MEMBER, 1000, February\nM-000375, Jane Smith, jane@example.com, 07700900011, MEMBER, 500, March`;
-                              setMigrationCsvText(sampleCsv);
-                            }}
-                            style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
-                          >
-                            Load Sample CSV
-                          </button>
-                        </div>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 8px 0' }}>
-                          Simply select and copy the user rows from your old admin website table, or upload a <strong>.csv</strong> spreadsheet file below. Header columns recognized: <code>Member ID</code>, <code>Name</code>, <code>Email</code>, <code>Phone</code>, <code>Role</code>, <code>Amount</code>, <code>Month</code>.
-                        </p>
-                        <input type="file" accept=".csv,.txt,.tsv" onChange={(e) => { const file = e.target.files?.[0]; if (file) { const reader = new FileReader(); reader.onload = (evt) => setMigrationCsvText(evt.target?.result as string || ''); reader.readAsText(file); }}} style={{ fontSize: '0.8rem' }} />
-                      </div>
-                      <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>Paste CSV / TSV Table Rows Below:</label>
-                        <textarea rows={9} placeholder={`Member ID, Name, Email, Phone, Role, Commitment Amount, Collection Month\nM-000374, Iyore Ed, iypearlie@gmail.com, 07449311040, MEMBER, 1000, February`} value={migrationCsvText} onChange={(e) => setMigrationCsvText(e.target.value)} style={{ width: '100%', fontFamily: 'monospace', fontSize: '0.825rem', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', color: '#0f172a', boxSizing: 'border-box' }} />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* JSON MODE */}
-                  {migrationMode === 'JSON' && (
-                    <div>
-                      <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>JSON Import Schema Format Template</span>
-                          <button type="button" onClick={() => { const sample = { users: [{ invitationId: "M-000374", name: "Iyore Ed", email: "iypearlie@gmail.com", phone: "07449311040", role: "MEMBER", isActive: true }], commitments: [{ id: "SC-00222", memberEmail: "iypearlie@gmail.com", amount: 1000, goal: "Savings Goal", collectionMonth: "February", collectionYear: 2027, status: "ACTIVE" }] }; setMigrationJson(JSON.stringify(sample, null, 2)); }} style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>Load Sample Data</button>
-                        </div>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Member IDs (<code style={{ color: '#0284c7' }}>invitationId</code>) and Commitment Record IDs (<code style={{ color: '#0284c7' }}>id</code>) will be preserved exactly as specified.</p>
-                      </div>
-                      <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>Paste Migration Payload (JSON Format):</label>
-                        <textarea rows={9} placeholder={`{\n  "users": [\n    {\n      "invitationId": "M-000374",\n      "name": "Iyore Ed",\n      "email": "iypearlie@gmail.com",\n      "phone": "07449311040",\n      "role": "MEMBER",\n      "isActive": true\n    }\n  ]\n}`} value={migrationJson} onChange={(e) => setMigrationJson(e.target.value)} style={{ width: '100%', fontFamily: 'monospace', fontSize: '0.825rem', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', color: '#0f172a', boxSizing: 'border-box' }} />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Options */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.875rem', color: '#1e293b', cursor: 'pointer' }}>
-                      <input type="checkbox" checked={migrationOverwrite} onChange={(e) => setMigrationOverwrite(e.target.checked)} style={{ accentColor: '#2e3a4e' }} />
-                      <span>Overwrite / Update existing records matching Email or Member ID</span>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
+                      Paste CSV / TSV Rows Below:
                     </label>
+                    <textarea
+                      rows={8}
+                      placeholder={`Member ID, Name, Email, Phone, Role, Commitment Amount, Collection Month\nM-000374, Iyore Ed, iypearlie@gmail.com, 07449311040, MEMBER, 1000, February`}
+                      value={migrationCsvText}
+                      onChange={(e) => setMigrationCsvText(e.target.value)}
+                      style={{ width: '100%', fontFamily: 'monospace', fontSize: '0.82rem', padding: '12px', borderRadius: '10px', border: '1px solid #ECE8E2', backgroundColor: '#FAF9F6', color: '#111827', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* JSON MODE */}
+              {migrationMode === 'JSON' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '12px', padding: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827' }}>JSON Payload Template</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const sample = {
+                            users: [{ invitationId: "M-000374", name: "Iyore Ed", email: "iypearlie@gmail.com", phone: "07449311040", role: "MEMBER", isActive: true }],
+                            commitments: [{ id: "SC-00222", memberEmail: "iypearlie@gmail.com", amount: 1000, goal: "Savings Goal", collectionMonth: "February", collectionYear: 2027, status: "ACTIVE" }]
+                          };
+                          setMigrationJson(JSON.stringify(sample, null, 2));
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#0c4e43', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        Load Sample Data
+                      </button>
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: '#6B7280', margin: 0 }}>
+                      Member IDs (<code style={{ color: '#0c4e43' }}>invitationId</code>) and Commitment Record IDs (<code style={{ color: '#0c4e43' }}>id</code>) are saved exactly as specified.
+                    </p>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
-                    <button type="button" disabled={migrationRunning || (migrationMode === 'CSV' ? !migrationCsvText.trim() : !migrationJson.trim())} onClick={async () => { setMigrationRunning(true); setMigrationError(''); setMigrationReport(null); try { let payload: any = {}; if (migrationMode === 'CSV') { payload = parseCsvToPayload(migrationCsvText); } else { try { payload = JSON.parse(migrationJson); } catch (jsonErr: any) { throw new Error('Invalid JSON format: ' + jsonErr.message); } } const res = await fetch('/api/admin/migrate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...payload, dryRun: true, overwrite: migrationOverwrite }) }); const resText = await res.text(); let data: any = {}; try { data = JSON.parse(resText); } catch (e) { throw new Error(resText || 'Server error occurred during validation'); } if (res.ok) { setMigrationReport(data.report); } else { setMigrationError(data.error || 'Validation failed'); } } catch (err: any) { setMigrationError(err.message || 'Validation failed'); } finally { setMigrationRunning(false); }}} className="btn btn-secondary" style={{ padding: '10px 20px', fontWeight: 600, borderRadius: '8px' }}>
-                      {migrationRunning ? 'Validating...' : 'Validate Data (Dry Run)'}
-                    </button>
-                    <button type="button" disabled={migrationRunning || (migrationMode === 'CSV' ? !migrationCsvText.trim() : !migrationJson.trim())} onClick={async () => { if (!(await dialog.confirm('Confirm Data Migration', 'Are you sure you want to execute full data migration into the live database? All records will be saved.'))) return; setMigrationRunning(true); setMigrationError(''); setMigrationReport(null); try { let payload: any = {}; if (migrationMode === 'CSV') { payload = parseCsvToPayload(migrationCsvText); } else { try { payload = JSON.parse(migrationJson); } catch (jsonErr: any) { throw new Error('Invalid JSON format: ' + jsonErr.message); } } const res = await fetch('/api/admin/migrate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...payload, dryRun: false, overwrite: migrationOverwrite }) }); const resText = await res.text(); let data: any = {}; try { data = JSON.parse(resText); } catch (e) { throw new Error(resText || 'Server error occurred during migration'); } if (res.ok) { setMigrationReport(data.report); } else { setMigrationError(data.error || 'Migration failed'); } } catch (err: any) { setMigrationError(err.message || 'Migration failed'); } finally { setMigrationRunning(false); }}} className="btn btn-primary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', padding: '10px 24px', fontWeight: 600, borderRadius: '8px' }}>
-                      {migrationRunning ? 'Importing Data...' : 'Execute Full Data Migration'}
-                    </button>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
+                      Paste Migration Payload (JSON Format):
+                    </label>
+                    <textarea
+                      rows={8}
+                      placeholder={`{\n  "users": [\n    {\n      "invitationId": "M-000374",\n      "name": "Iyore Ed",\n      "email": "iypearlie@gmail.com",\n      "phone": "07449311040",\n      "role": "MEMBER",\n      "isActive": true\n    }\n  ]\n}`}
+                      value={migrationJson}
+                      onChange={(e) => setMigrationJson(e.target.value)}
+                      style={{ width: '100%', fontFamily: 'monospace', fontSize: '0.82rem', padding: '12px', borderRadius: '10px', border: '1px solid #ECE8E2', backgroundColor: '#FAF9F6', color: '#111827', boxSizing: 'border-box' }}
+                    />
                   </div>
+                </div>
+              )}
 
-                  {migrationError && (<div style={{ backgroundColor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', padding: '14px', borderRadius: '8px', fontSize: '0.875rem', marginBottom: '20px' }}>{migrationError}</div>)}
+              {/* Overwrite Checkbox */}
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', color: '#111827', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={migrationOverwrite}
+                  onChange={(e) => setMigrationOverwrite(e.target.checked)}
+                  style={{ width: '16px', height: '16px', accentColor: '#0c4e43' }}
+                />
+                <span>Overwrite / update existing records matching Email or Member ID</span>
+              </label>
 
-                  {migrationReport && (
-                    <div style={{ backgroundColor: migrationReport.dryRun ? '#f0fdf4' : '#eff6ff', border: `1px solid ${migrationReport.dryRun ? '#bbf7d0' : '#bfdbfe'}`, borderRadius: '12px', padding: '20px' }}>
-                      <h4 style={{ fontSize: '1rem', fontWeight: 700, color: migrationReport.dryRun ? '#166534' : '#1e40af', marginBottom: '12px' }}>{migrationReport.dryRun ? '🔍 Dry-Run Validation Summary (No Changes Saved)' : '🎉 Migration Execution Complete Report'}</h4>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '16px' }}>
-                        <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}><span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Users Processed</span><strong style={{ fontSize: '1.1rem', color: '#0f172a' }}>{migrationReport.usersProcessed}</strong><span style={{ fontSize: '0.75rem', color: '#16a34a', display: 'block', marginTop: '2px' }}>+{migrationReport.usersCreated} created / {migrationReport.usersUpdated} updated</span></div>
-                        <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}><span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Commitments Processed</span><strong style={{ fontSize: '1.1rem', color: '#0f172a' }}>{migrationReport.commitmentsProcessed}</strong><span style={{ fontSize: '0.75rem', color: '#16a34a', display: 'block', marginTop: '2px' }}>+{migrationReport.commitmentsCreated} created / {migrationReport.commitmentsUpdated} updated</span></div>
-                        <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}><span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Payments Logged</span><strong style={{ fontSize: '1.1rem', color: '#0f172a' }}>{migrationReport.paymentsCreated}</strong></div>
-                        <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}><span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Waiting List Entries</span><strong style={{ fontSize: '1.1rem', color: '#0f172a' }}>{migrationReport.waitingListCreated}</strong></div>
-                      </div>
-                      {migrationReport.warnings.length > 0 && (<div style={{ marginBottom: '12px' }}><strong style={{ fontSize: '0.8rem', color: '#d97706', display: 'block', marginBottom: '4px' }}>Warnings ({migrationReport.warnings.length}):</strong><ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.8rem', color: '#92400e' }}>{migrationReport.warnings.slice(0, 5).map((w: string, i: number) => (<li key={i}>{w}</li>))}</ul></div>)}
-                      {migrationReport.errors.length > 0 && (<div><strong style={{ fontSize: '0.8rem', color: '#dc2626', display: 'block', marginBottom: '4px' }}>Errors ({migrationReport.errors.length}):</strong><ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.8rem', color: '#991b1b' }}>{migrationReport.errors.map((e: string, i: number) => (<li key={i}>{e}</li>))}</ul></div>)}
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  disabled={migrationRunning || (migrationMode === 'CSV' ? !migrationCsvText.trim() : !migrationJson.trim())}
+                  onClick={async () => {
+                    setMigrationRunning(true);
+                    setMigrationError('');
+                    setMigrationReport(null);
+                    try {
+                      let payload: any = {};
+                      if (migrationMode === 'CSV') {
+                        payload = parseCsvToPayload(migrationCsvText);
+                      } else {
+                        try {
+                          payload = JSON.parse(migrationJson);
+                        } catch (jsonErr: any) {
+                          throw new Error('Invalid JSON format: ' + jsonErr.message);
+                        }
+                      }
+                      const res = await fetch('/api/admin/migrate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...payload, dryRun: true, overwrite: migrationOverwrite })
+                      });
+                      const resText = await res.text();
+                      let data: any = {};
+                      try { data = JSON.parse(resText); } catch (e) { throw new Error(resText || 'Server error occurred during validation'); }
+                      if (res.ok) {
+                        setMigrationReport(data.report);
+                      } else {
+                        setMigrationError(data.error || 'Validation failed');
+                      }
+                    } catch (err: any) {
+                      setMigrationError(err.message || 'Validation failed');
+                    } finally {
+                      setMigrationRunning(false);
+                    }
+                  }}
+                  style={{
+                    backgroundColor: '#FAF9F6',
+                    color: '#374151',
+                    border: '1px solid #ECE8E2',
+                    borderRadius: '10px',
+                    padding: '10px 20px',
+                    fontWeight: 600,
+                    fontSize: '0.84rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {migrationRunning ? 'Validating...' : 'Validate Data (Dry Run)'}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={migrationRunning || (migrationMode === 'CSV' ? !migrationCsvText.trim() : !migrationJson.trim())}
+                  onClick={async () => {
+                    if (!(await dialog.confirm('Confirm Data Migration', 'Are you sure you want to execute full data migration into the live database? All records will be saved.'))) return;
+                    setMigrationRunning(true);
+                    setMigrationError('');
+                    setMigrationReport(null);
+                    try {
+                      let payload: any = {};
+                      if (migrationMode === 'CSV') {
+                        payload = parseCsvToPayload(migrationCsvText);
+                      } else {
+                        try {
+                          payload = JSON.parse(migrationJson);
+                        } catch (jsonErr: any) {
+                          throw new Error('Invalid JSON format: ' + jsonErr.message);
+                        }
+                      }
+                      const res = await fetch('/api/admin/migrate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...payload, dryRun: false, overwrite: migrationOverwrite })
+                      });
+                      const resText = await res.text();
+                      let data: any = {};
+                      try { data = JSON.parse(resText); } catch (e) { throw new Error(resText || 'Server error occurred during migration'); }
+                      if (res.ok) {
+                        setMigrationReport(data.report);
+                      } else {
+                        setMigrationError(data.error || 'Migration failed');
+                      }
+                    } catch (err: any) {
+                      setMigrationError(err.message || 'Migration failed');
+                    } finally {
+                      setMigrationRunning(false);
+                    }
+                  }}
+                  style={{
+                    backgroundColor: '#1B4332',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '10px 24px',
+                    fontWeight: 600,
+                    fontSize: '0.84rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {migrationRunning ? 'Importing Data...' : 'Execute Full Data Migration'}
+                </button>
+              </div>
+
+              {migrationError && (
+                <div style={{ backgroundColor: '#FEF2F2', color: '#991B1B', border: '1px solid #FECACA', padding: '14px', borderRadius: '10px', fontSize: '0.85rem' }}>
+                  {migrationError}
+                </div>
+              )}
+
+              {migrationReport && (
+                <div style={{ backgroundColor: migrationReport.dryRun ? '#EAF5EE' : '#F0F9FF', border: `1px solid ${migrationReport.dryRun ? '#D5E5DB' : '#BAE6FD'}`, borderRadius: '12px', padding: '20px' }}>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: migrationReport.dryRun ? '#166534' : '#0369A1', margin: '0 0 12px 0' }}>
+                    {migrationReport.dryRun ? '🔍 Dry-Run Validation Summary (No Changes Saved)' : '🎉 Migration Execution Complete Report'}
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '14px' }}>
+                    <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: '10px', border: '1px solid #ECE8E2' }}>
+                      <span style={{ fontSize: '0.72rem', color: '#6B7280', display: 'block' }}>Users Processed</span>
+                      <strong style={{ fontSize: '1.1rem', color: '#111827' }}>{migrationReport.usersProcessed}</strong>
+                      <span style={{ fontSize: '0.72rem', color: '#2E7D32', display: 'block', marginTop: '2px' }}>+{migrationReport.usersCreated} created / {migrationReport.usersUpdated} updated</span>
+                    </div>
+                    <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: '10px', border: '1px solid #ECE8E2' }}>
+                      <span style={{ fontSize: '0.72rem', color: '#6B7280', display: 'block' }}>Commitments Processed</span>
+                      <strong style={{ fontSize: '1.1rem', color: '#111827' }}>{migrationReport.commitmentsProcessed}</strong>
+                      <span style={{ fontSize: '0.72rem', color: '#2E7D32', display: 'block', marginTop: '2px' }}>+{migrationReport.commitmentsCreated} created / {migrationReport.commitmentsUpdated} updated</span>
+                    </div>
+                    <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: '10px', border: '1px solid #ECE8E2' }}>
+                      <span style={{ fontSize: '0.72rem', color: '#6B7280', display: 'block' }}>Payments Logged</span>
+                      <strong style={{ fontSize: '1.1rem', color: '#111827' }}>{migrationReport.paymentsCreated}</strong>
+                    </div>
+                    <div style={{ backgroundColor: '#FFFFFF', padding: '12px', borderRadius: '10px', border: '1px solid #ECE8E2' }}>
+                      <span style={{ fontSize: '0.72rem', color: '#6B7280', display: 'block' }}>Waiting List Entries</span>
+                      <strong style={{ fontSize: '1.1rem', color: '#111827' }}>{migrationReport.waitingListCreated}</strong>
+                    </div>
+                  </div>
+                  {migrationReport.warnings.length > 0 && (
+                    <div style={{ marginBottom: '10px' }}>
+                      <strong style={{ fontSize: '0.8rem', color: '#B45309', display: 'block', marginBottom: '4px' }}>Warnings ({migrationReport.warnings.length}):</strong>
+                      <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.8rem', color: '#92400E' }}>
+                        {migrationReport.warnings.slice(0, 5).map((w: string, i: number) => (<li key={i}>{w}</li>))}
+                      </ul>
+                    </div>
+                  )}
+                  {migrationReport.errors.length > 0 && (
+                    <div>
+                      <strong style={{ fontSize: '0.8rem', color: '#DC2626', display: 'block', marginBottom: '4px' }}>Errors ({migrationReport.errors.length}):</strong>
+                      <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.8rem', color: '#991B1B' }}>
+                        {migrationReport.errors.map((e: string, i: number) => (<li key={i}>{e}</li>))}
+                      </ul>
                     </div>
                   )}
                 </div>
-              </>
-            )}
-          </>
-        )}
-      </main>
+              )}
+            </div>
+          )}
+        </>
+      )}
 
-      {/* ── MODALS ── */}
+      {/* ── MODALS (Unified Design) ── */}
 
+      {/* 1. Membership Agreement Modal */}
       {activeTopModal === 'AGREEMENT' && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveTopModal('NONE'); }}>
-          <div className="modal-content" style={{ maxWidth: '650px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
-            <button onClick={() => setActiveTopModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '8px', color: '#1e293b' }}>Membership Agreement Content</h3>
-            <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '16px' }}>Edit the guidelines displayed to savers and site visitors.</p>
-            <textarea value={membershipAgreement} onChange={(e) => setMembershipAgreement(e.target.value)} className="form-input" style={{ width: '100%', minHeight: '250px', fontFamily: 'monospace', fontSize: '0.85rem', lineHeight: 1.5, backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '12px' }} />
-            <div style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button onClick={() => { handleSaveSettingKey('membershipAgreement', membershipAgreement, 'Membership Agreement'); setActiveTopModal('NONE'); }} className="btn btn-primary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}>Save Changes</button>
-              <button onClick={() => setActiveTopModal('NONE')} className="btn btn-secondary" style={{ backgroundColor: '#e2e8f0', color: '#475569', borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}>Cancel</button>
+          <div className="modal-content" style={{ maxWidth: '650px', backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '28px', border: '1px solid #ECE8E2' }}>
+            <button onClick={() => setActiveTopModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '6px', color: '#111827', fontFamily: 'var(--font-family-title)' }}>Membership Agreement Content</h3>
+            <p style={{ color: '#6B7280', fontSize: '0.82rem', marginBottom: '16px' }}>Edit the guidelines displayed to savers and site visitors during registration.</p>
+            <textarea
+              value={membershipAgreement}
+              onChange={(e) => setMembershipAgreement(e.target.value)}
+              style={{ width: '100%', minHeight: '240px', fontFamily: 'monospace', fontSize: '0.84rem', lineHeight: 1.5, backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '12px', boxSizing: 'border-box' }}
+            />
+            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setActiveTopModal('NONE')} style={{ backgroundColor: '#FAF9F6', color: '#374151', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '9px 18px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => { handleSaveSettingKey('membershipAgreement', membershipAgreement, 'Membership Agreement'); setActiveTopModal('NONE'); }} style={{ backgroundColor: '#1B4332', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '9px 20px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>Save Changes</button>
             </div>
           </div>
         </div>
       )}
 
+      {/* 2. Fee Schedule Modal */}
       {activeTopModal === 'FEE_SCHEDULE' && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveTopModal('NONE'); }}>
-          <div className="modal-content" style={{ maxWidth: '650px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
-            <button onClick={() => setActiveTopModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '8px', color: '#1e293b' }}>Fee Schedule Content</h3>
-            <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '16px' }}>Edit the fee breakdown and tier schedule displayed to members.</p>
-            <textarea value={feeSchedule} onChange={(e) => setFeeSchedule(e.target.value)} className="form-input" style={{ width: '100%', minHeight: '250px', fontFamily: 'monospace', fontSize: '0.85rem', lineHeight: 1.5, backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '12px' }} />
-            <div style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button onClick={() => { handleSaveSettingKey('feeSchedule', feeSchedule, 'Fee Schedule'); setActiveTopModal('NONE'); }} className="btn btn-primary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}>Save Changes</button>
-              <button onClick={() => setActiveTopModal('NONE')} className="btn btn-secondary" style={{ backgroundColor: '#e2e8f0', color: '#475569', borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}>Cancel</button>
+          <div className="modal-content" style={{ maxWidth: '650px', backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '28px', border: '1px solid #ECE8E2' }}>
+            <button onClick={() => setActiveTopModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '6px', color: '#111827', fontFamily: 'var(--font-family-title)' }}>Fee Schedule Content</h3>
+            <p style={{ color: '#6B7280', fontSize: '0.82rem', marginBottom: '16px' }}>Edit the annual administrative fee breakdown and tier schedule displayed to members.</p>
+            <textarea
+              value={feeSchedule}
+              onChange={(e) => setFeeSchedule(e.target.value)}
+              style={{ width: '100%', minHeight: '240px', fontFamily: 'monospace', fontSize: '0.84rem', lineHeight: 1.5, backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '12px', boxSizing: 'border-box' }}
+            />
+            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setActiveTopModal('NONE')} style={{ backgroundColor: '#FAF9F6', color: '#374151', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '9px 18px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => { handleSaveSettingKey('feeSchedule', feeSchedule, 'Fee Schedule'); setActiveTopModal('NONE'); }} style={{ backgroundColor: '#1B4332', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '9px 20px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>Save Changes</button>
             </div>
           </div>
         </div>
       )}
 
-      {activeTopModal === 'REVIEWS' && (
-        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveTopModal('NONE'); }}>
-          <div className="modal-content" style={{ maxWidth: '550px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
-            <button onClick={() => setActiveTopModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '8px', color: '#1e293b' }}>Member Reviews & Feedback</h3>
-            <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '20px' }}>Member satisfaction metrics and feedback log.</p>
-            <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '0.9rem', color: '#334155' }}>
-              <p style={{ margin: '0 0 8px 0', fontWeight: 600 }}>Overall Saver Satisfaction Rating: 5.0 / 5.0 ★★★★★</p>
-              <p style={{ margin: 0, color: '#64748b', fontSize: '0.825rem' }}>All member reviews are verified through completed rotating collection cycles.</p>
-            </div>
-            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setActiveTopModal('NONE')} className="btn btn-secondary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}>Close</button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* 3. View Email Template Modal */}
       {activeEmailModal === 'VIEW' && selectedTemplate && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveEmailModal('NONE'); }}>
-          <div className="modal-content" style={{ maxWidth: '600px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
-            <button onClick={() => setActiveEmailModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '4px', color: '#1e293b' }}>View Email Template</h3>
-            <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '20px' }}>Template ID: {selectedTemplate.id} — {selectedTemplate.title}</p>
+          <div className="modal-content" style={{ maxWidth: '600px', backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '28px', border: '1px solid #ECE8E2' }}>
+            <button onClick={() => setActiveEmailModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '4px', color: '#111827', fontFamily: 'var(--font-family-title)' }}>View Email Template</h3>
+            <p style={{ color: '#6B7280', fontSize: '0.82rem', marginBottom: '20px' }}>Template ID: {selectedTemplate.id} — {selectedTemplate.title}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div><span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Subject Line</span><p style={{ margin: '4px 0 0 0', fontWeight: 600, color: '#1e293b', fontSize: '0.95rem' }}>{selectedTemplate.subject}</p></div>
-              <div><span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Reminder Time (Hours)</span><p style={{ margin: '4px 0 0 0', fontWeight: 600, color: '#1e293b', fontSize: '0.95rem' }}>{selectedTemplate.reminderHours}</p></div>
-              <div><span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Email Body Content</span><div style={{ marginTop: '6px', padding: '16px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.875rem', color: '#334155', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{selectedTemplate.body}</div></div>
+              <div>
+                <span style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase' }}>Subject Line</span>
+                <p style={{ margin: '4px 0 0 0', fontWeight: 600, color: '#111827', fontSize: '0.9rem' }}>{selectedTemplate.subject}</p>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase' }}>Reminder Timing</span>
+                <p style={{ margin: '4px 0 0 0', fontWeight: 600, color: '#111827', fontSize: '0.9rem' }}>{selectedTemplate.reminderHours} hours</p>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase' }}>Email Body Content</span>
+                <div style={{ marginTop: '6px', padding: '16px', backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '10px', fontSize: '0.85rem', color: '#374151', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                  {selectedTemplate.body}
+                </div>
+              </div>
             </div>
             <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setActiveEmailModal('NONE')} className="btn btn-secondary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}>Close</button>
+              <button onClick={() => setActiveEmailModal('NONE')} style={{ backgroundColor: '#FAF9F6', color: '#374151', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '9px 20px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>Close</button>
             </div>
           </div>
         </div>
       )}
 
+      {/* 4. Edit Email Template Modal */}
       {activeEmailModal === 'EDIT' && selectedTemplate && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveEmailModal('NONE'); }}>
-          <div className="modal-content" style={{ maxWidth: '650px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '32px' }}>
-            <button onClick={() => setActiveEmailModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '4px', color: '#1e293b' }}>Edit Email Template</h3>
-            <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '20px' }}>Modify template content for: {selectedTemplate.title}</p>
+          <div className="modal-content" style={{ maxWidth: '650px', backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '28px', border: '1px solid #ECE8E2' }}>
+            <button onClick={() => setActiveEmailModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '4px', color: '#111827', fontFamily: 'var(--font-family-title)' }}>Edit Email Template</h3>
+            <p style={{ color: '#6B7280', fontSize: '0.82rem', marginBottom: '20px' }}>Modify template content for: {selectedTemplate.title}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem' }}>Subject Line *</label>
-                <input type="text" value={editSubject} onChange={(e) => setEditSubject(e.target.value)} className="form-input" style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '10px 14px' }} />
+              <div>
+                <label style={{ display: 'block', fontWeight: 600, color: '#374151', fontSize: '0.84rem', marginBottom: '6px' }}>Subject Line *</label>
+                <input
+                  type="text"
+                  value={editSubject}
+                  onChange={(e) => setEditSubject(e.target.value)}
+                  style={{ width: '100%', backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '10px 14px', fontSize: '0.85rem', color: '#111827', boxSizing: 'border-box' }}
+                />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem' }}>Reminder Time (Hours)</label>
-                  <input type="text" value={editReminderHours} onChange={(e) => setEditReminderHours(e.target.value)} placeholder="e.g. 24 or N/A" className="form-input" style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '10px 14px' }} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#374151', fontSize: '0.84rem', marginBottom: '6px' }}>Reminder Hours</label>
+                  <input
+                    type="text"
+                    value={editReminderHours}
+                    onChange={(e) => setEditReminderHours(e.target.value)}
+                    placeholder="e.g. 24 or N/A"
+                    style={{ width: '100%', backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '10px 14px', fontSize: '0.85rem', color: '#111827', boxSizing: 'border-box' }}
+                  />
                 </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem' }}>Template Status *</label>
-                  <select value={editEnabled ? 'enabled' : 'disabled'} onChange={(e) => setEditEnabled(e.target.value === 'enabled')} className="form-input" style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '10px 14px', fontWeight: 600 }}>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#374151', fontSize: '0.84rem', marginBottom: '6px' }}>Template Status *</label>
+                  <select
+                    value={editEnabled ? 'enabled' : 'disabled'}
+                    onChange={(e) => setEditEnabled(e.target.value === 'enabled')}
+                    style={{ width: '100%', backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '10px 14px', fontSize: '0.85rem', fontWeight: 600, color: '#111827', boxSizing: 'border-box' }}
+                  >
                     <option value="enabled">Enabled</option>
                     <option value="disabled">Disabled</option>
                   </select>
                 </div>
               </div>
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem' }}>Email Body Content *</label>
-                <textarea value={editBody} onChange={(e) => setEditBody(e.target.value)} className="form-input" style={{ width: '100%', minHeight: '180px', fontFamily: 'sans-serif', fontSize: '0.875rem', lineHeight: 1.5, backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', padding: '12px' }} />
+              <div>
+                <label style={{ display: 'block', fontWeight: 600, color: '#374151', fontSize: '0.84rem', marginBottom: '6px' }}>Email Body Content *</label>
+                <textarea
+                  value={editBody}
+                  onChange={(e) => setEditBody(e.target.value)}
+                  style={{ width: '100%', minHeight: '160px', fontFamily: 'sans-serif', fontSize: '0.85rem', lineHeight: 1.5, backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '12px', boxSizing: 'border-box' }}
+                />
               </div>
             </div>
-            <div style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={handleSaveEditTemplate} disabled={saving} className="btn btn-primary" style={{ backgroundColor: '#2e3a4e', color: '#ffffff', borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}>{saving ? 'Saving...' : 'Save Template'}</button>
-              <button onClick={() => setActiveEmailModal('NONE')} className="btn btn-secondary" style={{ backgroundColor: '#e2e8f0', color: '#475569', borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}>Cancel</button>
+            <div style={{ marginTop: '24px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setActiveEmailModal('NONE')} style={{ backgroundColor: '#FAF9F6', color: '#374151', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '9px 18px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>Cancel</button>
+              <button type="button" onClick={handleSaveEditTemplate} disabled={saving} style={{ backgroundColor: '#1B4332', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '9px 22px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>
+                {saving ? 'Saving...' : 'Save Template'}
+              </button>
             </div>
           </div>
         </div>
