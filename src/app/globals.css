@@ -795,9 +795,11 @@ button {
   }
 
   .dashboard-table-drawer-container .dashboard-drawer,
+  .dashboard-table-drawer-container .dashboard-drawer-column,
   .dashboard-table-drawer-container > div:last-child[style*="width: 420px"],
   .dashboard-table-drawer-container > div:last-child[style*="width: 440px"],
-  .dashboard-table-drawer-container > div:last-child[style*="width: 400px"] {
+  .dashboard-table-drawer-container > div:last-child[style*="width: 400px"],
+  .dashboard-table-drawer-container > div:last-child[style*="width: 360px"] {
     width: 100% !important;
     max-width: 100% !important;
     position: static !important;

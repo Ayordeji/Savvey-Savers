@@ -598,10 +598,19 @@ function CommitmentsContent() {
     const m = searchParams.get('month');
     const y = searchParams.get('year');
     const s = searchParams.get('status');
+    const id = searchParams.get('id');
+    const search = searchParams.get('search');
     if (m) setMonthFilter(m);
     if (y) setYearFilter(y);
     if (s) setStatusFilter(s);
-  }, [searchParams]);
+    if (search) setSearchQuery(search);
+    if (id && commitments.length > 0) {
+      const match = commitments.find(c => c.id === id || c.displayId === id);
+      if (match) {
+        handleOpenViewCommitmentModal(match);
+      }
+    }
+  }, [searchParams, commitments]);
 
   const currentYearNum = new Date().getFullYear();
 
