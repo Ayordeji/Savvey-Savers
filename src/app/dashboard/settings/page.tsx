@@ -2,8 +2,9 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Settings, Plus, Save, Eye, Edit, Trash2, X, MoreVertical, FileText, Bell, ShieldCheck, Database, Upload, Check, ChevronDown, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Settings, Plus, Save, Eye, Edit, Trash2, X, MoreVertical, FileText, Bell, ShieldCheck, Database, Upload, Check, ChevronDown, CheckCircle2, AlertCircle, Edit2 } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
+import { DEFAULT_MEMBERSHIP_AGREEMENT, DEFAULT_FEE_SCHEDULE } from '@/lib/agreements';
 
 interface SavingGoal {
   name: string;
@@ -128,8 +129,10 @@ function SettingsContent() {
   const [successMsg, setSuccessMsg] = useState('');
 
   // Top Banner Content States
-  const [membershipAgreement, setMembershipAgreement] = useState('');
-  const [feeSchedule, setFeeSchedule] = useState('');
+  const [membershipAgreement, setMembershipAgreement] = useState(DEFAULT_MEMBERSHIP_AGREEMENT);
+  const [feeSchedule, setFeeSchedule] = useState(DEFAULT_FEE_SCHEDULE);
+  const [isEditingAgreement, setIsEditingAgreement] = useState(false);
+  const [isEditingFeeSchedule, setIsEditingFeeSchedule] = useState(false);
 
   // Modals for Top Banner
   const [activeTopModal, setActiveTopModal] = useState<'NONE' | 'AGREEMENT' | 'FEE_SCHEDULE' | 'REVIEWS'>('NONE');
@@ -175,8 +178,8 @@ function SettingsContent() {
         const data = await res.json();
         setGoals(data.savingGoals || []);
         setAmounts(data.commitmentAmounts || []);
-        setMembershipAgreement(data.membershipAgreement || '');
-        setFeeSchedule(data.feeSchedule || '');
+        if (data.membershipAgreement) setMembershipAgreement(data.membershipAgreement);
+        if (data.feeSchedule) setFeeSchedule(data.feeSchedule);
         setSecurityQuestions(data.securityQuestions || []);
         setCollectionMonthsMap(data.collectionMonthsMap || {});
         if (data.notificationSettings) {
@@ -1598,40 +1601,152 @@ function SettingsContent() {
 
       {/* 1. Membership Agreement Modal */}
       {activeTopModal === 'AGREEMENT' && (
-        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveTopModal('NONE'); }}>
-          <div className="modal-content" style={{ maxWidth: '650px', backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '28px', border: '1px solid #ECE8E2' }}>
-            <button onClick={() => setActiveTopModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '6px', color: '#111827', fontFamily: 'var(--font-family-title)' }}>Membership Agreement Content</h3>
-            <p style={{ color: '#6B7280', fontSize: '0.82rem', marginBottom: '16px' }}>Edit the guidelines displayed to savers and site visitors during registration.</p>
-            <textarea
-              value={membershipAgreement}
-              onChange={(e) => setMembershipAgreement(e.target.value)}
-              style={{ width: '100%', minHeight: '240px', fontFamily: 'monospace', fontSize: '0.84rem', lineHeight: 1.5, backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '12px', boxSizing: 'border-box' }}
-            />
-            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button onClick={() => setActiveTopModal('NONE')} style={{ backgroundColor: '#FAF9F6', color: '#374151', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '9px 18px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={() => { handleSaveSettingKey('membershipAgreement', membershipAgreement, 'Membership Agreement'); setActiveTopModal('NONE'); }} style={{ backgroundColor: '#1B4332', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '9px 20px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>Save Changes</button>
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setActiveTopModal('NONE'); setIsEditingAgreement(false); } }}>
+          <div className="modal-content" style={{ maxWidth: '800px', backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '28px', border: '1px solid #ECE8E2', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
+            <button onClick={() => { setActiveTopModal('NONE'); setIsEditingAgreement(false); }} style={{ position: 'absolute', right: '20px', top: '20px', color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', paddingRight: '36px', flexWrap: 'wrap', gap: '8px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: '#111827', fontFamily: 'var(--font-family-title)' }}>Membership Agreement</h3>
+                <p style={{ color: '#6B7280', fontSize: '0.82rem', margin: '4px 0 0 0' }}>Official group rotating savings guidelines and collective rules.</p>
+              </div>
+              {!isEditingAgreement && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingAgreement(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    backgroundColor: '#FAF9F6',
+                    border: '1px solid #ECE8E2',
+                    color: '#1B4332',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Edit2 size={13} />
+                  <span>Edit Agreement</span>
+                </button>
+              )}
             </div>
+
+            {isEditingAgreement ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' }}>
+                <p style={{ fontSize: '0.8rem', color: '#6B7280', margin: 0 }}>
+                  Edit agreement text or HTML formatting below:
+                </p>
+                <textarea
+                  value={membershipAgreement}
+                  onChange={(e) => setMembershipAgreement(e.target.value)}
+                  style={{ width: '100%', minHeight: '360px', fontFamily: 'monospace', fontSize: '0.84rem', lineHeight: 1.5, backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '14px', boxSizing: 'border-box' }}
+                />
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setIsEditingAgreement(false)} style={{ backgroundColor: '#FAF9F6', color: '#374151', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '9px 18px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={() => { handleSaveSettingKey('membershipAgreement', membershipAgreement, 'Membership Agreement'); setIsEditingAgreement(false); }} style={{ backgroundColor: '#1B4332', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '9px 20px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>Save Changes</button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px', flex: 1, minHeight: 0 }}>
+                <div
+                  dangerouslySetInnerHTML={{ __html: membershipAgreement || DEFAULT_MEMBERSHIP_AGREEMENT }}
+                  style={{
+                    backgroundColor: '#FAF9F6',
+                    border: '1px solid #ECE8E2',
+                    borderRadius: '12px',
+                    padding: '24px',
+                    fontSize: '0.875rem',
+                    lineHeight: 1.6,
+                    color: '#374151',
+                    overflowY: 'auto',
+                    maxHeight: '52vh'
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                  <button onClick={() => setActiveTopModal('NONE')} style={{ backgroundColor: '#1B4332', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '9px 22px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* 2. Fee Schedule Modal */}
       {activeTopModal === 'FEE_SCHEDULE' && (
-        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveTopModal('NONE'); }}>
-          <div className="modal-content" style={{ maxWidth: '650px', backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '28px', border: '1px solid #ECE8E2' }}>
-            <button onClick={() => setActiveTopModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '6px', color: '#111827', fontFamily: 'var(--font-family-title)' }}>Fee Schedule Content</h3>
-            <p style={{ color: '#6B7280', fontSize: '0.82rem', marginBottom: '16px' }}>Edit the annual administrative fee breakdown and tier schedule displayed to members.</p>
-            <textarea
-              value={feeSchedule}
-              onChange={(e) => setFeeSchedule(e.target.value)}
-              style={{ width: '100%', minHeight: '240px', fontFamily: 'monospace', fontSize: '0.84rem', lineHeight: 1.5, backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '12px', boxSizing: 'border-box' }}
-            />
-            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button onClick={() => setActiveTopModal('NONE')} style={{ backgroundColor: '#FAF9F6', color: '#374151', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '9px 18px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={() => { handleSaveSettingKey('feeSchedule', feeSchedule, 'Fee Schedule'); setActiveTopModal('NONE'); }} style={{ backgroundColor: '#1B4332', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '9px 20px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>Save Changes</button>
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setActiveTopModal('NONE'); setIsEditingFeeSchedule(false); } }}>
+          <div className="modal-content" style={{ maxWidth: '800px', backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '28px', border: '1px solid #ECE8E2', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
+            <button onClick={() => { setActiveTopModal('NONE'); setIsEditingFeeSchedule(false); }} style={{ position: 'absolute', right: '20px', top: '20px', color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', paddingRight: '36px', flexWrap: 'wrap', gap: '8px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: '#111827', fontFamily: 'var(--font-family-title)' }}>Network Membership &amp; Fee Schedule</h3>
+                <p style={{ color: '#6B7280', fontSize: '0.82rem', margin: '4px 0 0 0' }}>Annual administrative fee breakdown, monthly savings tiers, and penalty rules.</p>
+              </div>
+              {!isEditingFeeSchedule && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingFeeSchedule(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    backgroundColor: '#FAF9F6',
+                    border: '1px solid #ECE8E2',
+                    color: '#1B4332',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Edit2 size={13} />
+                  <span>Edit Fee Schedule</span>
+                </button>
+              )}
             </div>
+
+            {isEditingFeeSchedule ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' }}>
+                <p style={{ fontSize: '0.8rem', color: '#6B7280', margin: 0 }}>
+                  Edit fee schedule text or HTML formatting below:
+                </p>
+                <textarea
+                  value={feeSchedule}
+                  onChange={(e) => setFeeSchedule(e.target.value)}
+                  style={{ width: '100%', minHeight: '360px', fontFamily: 'monospace', fontSize: '0.84rem', lineHeight: 1.5, backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '14px', boxSizing: 'border-box' }}
+                />
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setIsEditingFeeSchedule(false)} style={{ backgroundColor: '#FAF9F6', color: '#374151', border: '1px solid #ECE8E2', borderRadius: '10px', padding: '9px 18px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={() => { handleSaveSettingKey('feeSchedule', feeSchedule, 'Fee Schedule'); setIsEditingFeeSchedule(false); }} style={{ backgroundColor: '#1B4332', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '9px 20px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>Save Changes</button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px', flex: 1, minHeight: 0 }}>
+                <div
+                  dangerouslySetInnerHTML={{ __html: feeSchedule || DEFAULT_FEE_SCHEDULE }}
+                  style={{
+                    backgroundColor: '#FAF9F6',
+                    border: '1px solid #ECE8E2',
+                    borderRadius: '12px',
+                    padding: '24px',
+                    fontSize: '0.875rem',
+                    lineHeight: 1.6,
+                    color: '#374151',
+                    overflowY: 'auto',
+                    maxHeight: '52vh'
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                  <button onClick={() => setActiveTopModal('NONE')} style={{ backgroundColor: '#1B4332', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '9px 22px', fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer' }}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

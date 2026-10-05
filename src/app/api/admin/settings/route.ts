@@ -11,6 +11,8 @@ async function getUserSession() {
   return verifyToken(token);
 }
 
+import { DEFAULT_MEMBERSHIP_AGREEMENT, DEFAULT_FEE_SCHEDULE } from '@/lib/agreements';
+
 export async function GET() {
   // Publicly accessible settings for landing page and dashboard
   const savingGoals = (await db.setting.findUnique({ where: { key: 'savingGoals' } }))?.value || [
@@ -34,8 +36,8 @@ export async function GET() {
     { amount: "1250.00", enabled: true },
     { amount: "1500.00", enabled: true }
   ];
-  const membershipAgreement = (await db.setting.findUnique({ where: { key: 'membershipAgreement' } }))?.value || null;
-  const feeSchedule = (await db.setting.findUnique({ where: { key: 'feeSchedule' } }))?.value || null;
+  const membershipAgreement = (await db.setting.findUnique({ where: { key: 'membershipAgreement' } }))?.value || DEFAULT_MEMBERSHIP_AGREEMENT;
+  const feeSchedule = (await db.setting.findUnique({ where: { key: 'feeSchedule' } }))?.value || DEFAULT_FEE_SCHEDULE;
 
   const securityQuestions = (await db.setting.findUnique({ where: { key: 'securityQuestions' } }))?.value || [
     "What was the name of your first primary school?",
