@@ -38,7 +38,7 @@ export default function TermsAndConditionsPage() {
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <h1
             style={{
-              fontSize: 'clamp(2.5rem, 5vw, 3.4rem)',
+              fontSize: 'clamp(2.35rem, 3.5vw, 3.2rem)',
               fontWeight: 700,
               fontFamily: 'var(--font-family-title)',
               color: '#1A1A1A',
@@ -269,7 +269,7 @@ export default function TermsAndConditionsPage() {
         >
           <h3
             style={{
-              fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+              fontSize: 'clamp(1.35rem, 1.8vw, 1.75rem)',
               fontWeight: 600,
               fontFamily: 'var(--font-family-title)',
               color: '#FFFDFA',

@@ -76,7 +76,7 @@ export default function AboutUsPage() {
               </div>
               <h1
                 style={{
-                  fontSize: 'clamp(2.75rem, 5.5vw, 4.2rem)',
+                  fontSize: 'clamp(2.35rem, 3.5vw, 3.2rem)',
                   fontWeight: 700,
                   fontFamily: 'var(--font-family-title)',
                   lineHeight: 1.2,
@@ -289,7 +289,7 @@ export default function AboutUsPage() {
               </div>
               <h2
                 style={{
-                  fontSize: 'clamp(2rem, 3vw, 2.7rem)',
+                  fontSize: 'clamp(1.65rem, 2.4vw, 2.25rem)',
                   fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   lineHeight: 1.2,
@@ -766,7 +766,7 @@ export default function AboutUsPage() {
           >
             <h3
               style={{
-                fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+                fontSize: 'clamp(1.35rem, 1.8vw, 1.75rem)',
                 fontWeight: 600,
                 fontFamily: 'var(--font-family-title)',
                 color: '#FFFDFA',

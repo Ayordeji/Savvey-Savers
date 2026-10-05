@@ -105,7 +105,7 @@ export default function HomePage() {
 
               <h1
                 style={{
-                  fontSize: 'clamp(2.85rem, 6vw, 4.2rem)',
+                  fontSize: 'clamp(2.35rem, 3.5vw, 3.2rem)',
                   fontWeight: 700,
                   fontFamily: 'var(--font-family-title)',
                   lineHeight: 1.15,
@@ -308,7 +308,7 @@ export default function HomePage() {
             <div style={{ textAlign: 'center', marginBottom: '64px' }}>
               <h2
                 style={{
-                  fontSize: 'clamp(1.85rem, 3vw, 2.5rem)',
+                  fontSize: 'clamp(1.65rem, 2.4vw, 2.25rem)',
                   fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   color: '#1A1A1A',
@@ -438,7 +438,7 @@ export default function HomePage() {
             <div>
               <h2
                 style={{
-                  fontSize: 'clamp(1.85rem, 3vw, 2.5rem)',
+                  fontSize: 'clamp(1.65rem, 2.4vw, 2.25rem)',
                   fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   lineHeight: 1.2,
@@ -560,7 +560,7 @@ export default function HomePage() {
             <div style={{ textAlign: 'center', marginBottom: '56px' }}>
               <h2
                 style={{
-                  fontSize: 'clamp(1.85rem, 3vw, 2.5rem)',
+                  fontSize: 'clamp(1.65rem, 2.4vw, 2.25rem)',
                   fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   color: '#1A1A1A',
@@ -680,7 +680,7 @@ export default function HomePage() {
             <div style={{ order: 2 }}>
               <h2
                 style={{
-                  fontSize: 'clamp(1.85rem, 3vw, 2.5rem)',
+                  fontSize: 'clamp(1.65rem, 2.4vw, 2.25rem)',
                   fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   lineHeight: 1.2,
@@ -769,7 +769,7 @@ export default function HomePage() {
               </div>
               <h2
                 style={{
-                  fontSize: 'clamp(1.85rem, 3vw, 2.5rem)',
+                  fontSize: 'clamp(1.65rem, 2.4vw, 2.25rem)',
                   fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   color: '#1A1A1A',
@@ -1002,7 +1002,7 @@ export default function HomePage() {
           >
             <h3
               style={{
-                fontSize: 'clamp(1.6rem, 2.6vw, 2.2rem)',
+                fontSize: 'clamp(1.35rem, 1.8vw, 1.75rem)',
                 fontWeight: 600,
                 fontFamily: 'var(--font-family-title)',
                 color: '#FFFDFA',
