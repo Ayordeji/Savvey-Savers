@@ -104,8 +104,8 @@ export default function HomePage() {
 
               <h1
                 style={{
-                  fontSize: 'clamp(2.4rem, 3.8vw, 3.8rem)',
-                  fontWeight: 600,
+                  fontSize: 'clamp(2.75rem, 5.5vw, 4.2rem)',
+                  fontWeight: 700,
                   fontFamily: 'var(--font-family-title)',
                   lineHeight: 1.15,
                   color: '#1A1A1A',
@@ -227,8 +227,8 @@ export default function HomePage() {
                   <div
                     key={idx}
                     style={{
-                      backgroundColor: '#FFFDFA',
-                      border: '1px solid rgba(14, 79, 69, 0.15)',
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(14, 79, 69, 0.25)',
                       borderRadius: '360px',
                       padding: '8px 16px',
                       display: 'flex',
@@ -341,7 +341,7 @@ export default function HomePage() {
             <div style={{ textAlign: 'center', marginBottom: '64px' }}>
               <h2
                 style={{
-                  fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+                  fontSize: 'clamp(1.85rem, 3vw, 2.5rem)',
                   fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   color: '#1A1A1A',
@@ -471,7 +471,7 @@ export default function HomePage() {
             <div>
               <h2
                 style={{
-                  fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+                  fontSize: 'clamp(1.85rem, 3vw, 2.5rem)',
                   fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   lineHeight: 1.2,
@@ -593,7 +593,7 @@ export default function HomePage() {
             <div style={{ textAlign: 'center', marginBottom: '56px' }}>
               <h2
                 style={{
-                  fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+                  fontSize: 'clamp(1.85rem, 3vw, 2.5rem)',
                   fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   color: '#1A1A1A',
@@ -713,7 +713,7 @@ export default function HomePage() {
             <div style={{ order: 2 }}>
               <h2
                 style={{
-                  fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+                  fontSize: 'clamp(1.85rem, 3vw, 2.5rem)',
                   fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   lineHeight: 1.2,
@@ -802,7 +802,7 @@ export default function HomePage() {
               </div>
               <h2
                 style={{
-                  fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+                  fontSize: 'clamp(1.85rem, 3vw, 2.5rem)',
                   fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   color: '#1A1A1A',
@@ -1035,7 +1035,7 @@ export default function HomePage() {
           >
             <h3
               style={{
-                fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+                fontSize: 'clamp(1.6rem, 2.6vw, 2.2rem)',
                 fontWeight: 600,
                 fontFamily: 'var(--font-family-title)',
                 color: '#FFFDFA',
@@ -1105,7 +1105,7 @@ export default function HomePage() {
         }
         @media (max-width: 900px) {
           .responsive-section-padding {
-            padding: 50px 24px !important;
+            padding: 40px 16px !important;
           }
           .hidden-mobile {
             display: none !important;

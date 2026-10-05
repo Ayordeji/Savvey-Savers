@@ -75,7 +75,7 @@ export default function MarketingFooter({
                 maxWidth: '380px',
               }}
             >
-              Trusted community saving. A structured savings collective helping members across the UK achieve meaningful financial goals together.
+              A structured savings collective helping members across the UK achieve meaningful financial goals together.
             </p>
           </div>
 
@@ -303,16 +303,18 @@ export default function MarketingFooter({
         {/* Divider */}
         <div style={{ height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.12)', width: '100%' }} />
 
-        {/* Bottom Bar: GDPR notice & copyright */}
+        {/* Bottom Bar: GDPR notice & copyright (Centered) */}
         <div
           style={{
             display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'space-between',
+            flexDirection: 'column',
+            justifyContent: 'center',
             alignItems: 'center',
-            gap: '16px',
+            textAlign: 'center',
+            gap: '8px',
             fontSize: '0.85rem',
             color: '#a3b8ad',
+            width: '100%',
           }}
         >
           <div>

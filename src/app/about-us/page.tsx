@@ -75,8 +75,8 @@ export default function AboutUsPage() {
               </div>
               <h1
                 style={{
-                  fontSize: 'clamp(2.4rem, 3.8vw, 3.8rem)',
-                  fontWeight: 600,
+                  fontSize: 'clamp(2.75rem, 5.5vw, 4.2rem)',
+                  fontWeight: 700,
                   fontFamily: 'var(--font-family-title)',
                   lineHeight: 1.2,
                   color: '#1A1A1A',
@@ -800,7 +800,7 @@ export default function AboutUsPage() {
         }
         @media (max-width: 900px) {
           .responsive-section-padding {
-            padding: 50px 24px !important;
+            padding: 40px 16px !important;
           }
           .responsive-stats-padding {
             padding: 24px 20px !important;

@@ -12,7 +12,7 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [amount, setAmount] = useState('£500');
+  const [amount, setAmount] = useState('£100 - £500');
   const [hasReferrer, setHasReferrer] = useState(false);
   const [referrer, setReferrer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -366,11 +366,9 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
                     color: 'var(--text-main)',
                   }}
                 >
-                  <option value="£250">£250 per month</option>
-                  <option value="£500">£500 per month</option>
-                  <option value="£1,000">£1,000 per month</option>
-                  <option value="£2,000">£2,000 per month</option>
-                  <option value="£3,000+">£3,000+ per month</option>
+                  <option value="£100 - £500">£100 - £500</option>
+                  <option value="£500 - £1000">£500 - £1000</option>
+                  <option value="£1000+">£1000+</option>
                 </select>
               </div>
 

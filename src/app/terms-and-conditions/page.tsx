@@ -42,11 +42,11 @@ export default function TermsAndConditionsPage() {
         >
           <h1
             style={{
-              fontSize: 'clamp(2.2rem, 3.5vw, 3.2rem)',
-              fontWeight: 600,
+              fontSize: 'clamp(2.5rem, 5vw, 3.4rem)',
+              fontWeight: 700,
               fontFamily: 'var(--font-family-title)',
               color: '#1A1A1A',
-              margin: '0 0 12px 0',
+              margin: '0 0 14px 0',
               lineHeight: 1.15,
             }}
           >
@@ -312,10 +312,13 @@ export default function TermsAndConditionsPage() {
       <style jsx>{`
         @media (max-width: 900px) {
           .responsive-legal-padding {
-            padding: 40px 20px !important;
+            padding: 0 !important;
           }
           .responsive-legal-card {
-            padding: 36px 24px !important;
+            padding: 32px 18px !important;
+            border-radius: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
           }
         }
       `}</style>

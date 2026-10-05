@@ -130,6 +130,14 @@ export default function MarketingHeader({
             gap: '12px',
           }}
         >
+          <div
+            className="desktop-header-cta"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}
+          >
           {onOpenLogin ? (
             <button
               onClick={onOpenLogin}
@@ -249,6 +257,7 @@ export default function MarketingHeader({
               Join Our Waiting List
             </Link>
           )}
+          </div>
 
           {/* Mobile hamburger button */}
           <button
@@ -408,8 +417,11 @@ export default function MarketingHeader({
           }
         }
         @media (max-width: 900px) {
+          .desktop-header-cta {
+            display: none !important;
+          }
           .header-inner-container {
-            padding: 0 24px !important;
+            padding: 0 16px !important;
           }
         }
       `}</style>

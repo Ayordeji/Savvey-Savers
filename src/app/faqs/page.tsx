@@ -95,8 +95,8 @@ export default function FaqsPage() {
           <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
             <h1
               style={{
-                fontSize: 'clamp(2.4rem, 3.8vw, 3.8rem)',
-                fontWeight: 600,
+                fontSize: 'clamp(2.75rem, 5.5vw, 4.2rem)',
+                fontWeight: 700,
                 fontFamily: 'var(--font-family-title)',
                 lineHeight: 1.15,
                 color: '#1A1A1A',
@@ -294,7 +294,7 @@ export default function FaqsPage() {
       <style jsx>{`
         @media (max-width: 900px) {
           .responsive-section-padding {
-            padding: 50px 24px !important;
+            padding: 40px 16px !important;
           }
         }
       `}</style>
