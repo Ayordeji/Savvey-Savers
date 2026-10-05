@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import BackToTop from './BackToTop';
 
 interface MarketingFooterProps {
   onOpenLogin?: () => void;
@@ -19,6 +20,12 @@ export default function MarketingFooter({
         padding: '60px 80px 40px',
         fontFamily: 'var(--font-family-body)',
         borderTop: '1px solid rgba(0, 0, 0, 0.2)',
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
+        margin: 0,
+        flexShrink: 0,
+        position: 'relative',
       }}
       className="footer-main-container"
     >
@@ -325,6 +332,8 @@ export default function MarketingFooter({
           </div>
         </div>
       </div>
+
+      <BackToTop />
 
       <style jsx>{`
         @media (max-width: 900px) {

@@ -50,6 +50,7 @@ export default function HomePage() {
 
   return (
     <div
+      className="marketing-page-wrapper"
       style={{
         minHeight: '100vh',
         display: 'flex',
@@ -57,6 +58,9 @@ export default function HomePage() {
         backgroundColor: '#FFFDFA',
         fontFamily: 'var(--font-family-body)',
         color: '#1A1A1A',
+        width: '100%',
+        margin: 0,
+        padding: 0,
       }}
     >
       <MarketingHeader
