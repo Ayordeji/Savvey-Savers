@@ -27,19 +27,15 @@ export default function TermsAndConditionsPage() {
         onOpenWaitlist={() => setWaitlistModalOpen(true)}
       />
 
-      <main style={{ flex: 1, padding: '60px 80px 80px' }} className="responsive-legal-padding">
-        <div
-          style={{
-            maxWidth: '1000px',
-            margin: '0 auto',
-            backgroundColor: '#FFFDFA',
-            borderRadius: '24px',
-            padding: '56px 64px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
-            border: '1px solid rgba(0, 0, 0, 0.06)',
-          }}
-          className="responsive-legal-card"
-        >
+      {/* Top Hero Banner */}
+      <section
+        style={{
+          backgroundColor: '#F4F1E8',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+        }}
+        className="responsive-legal-banner"
+      >
+        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <h1
             style={{
               fontSize: 'clamp(2.5rem, 5vw, 3.4rem)',
@@ -57,14 +53,28 @@ export default function TermsAndConditionsPage() {
             style={{
               fontSize: '0.95rem',
               color: '#666',
-              marginBottom: '36px',
-              borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
-              paddingBottom: '20px',
+              margin: 0,
             }}
           >
             Effective Date: <strong>1st of July 2026</strong> · Savvey Savers Collective
           </p>
+        </div>
+      </section>
 
+      {/* Main Content (Unboxed, natural page flow) */}
+      <main
+        style={{
+          flex: 1,
+          backgroundColor: '#FFFDFA',
+        }}
+        className="responsive-legal-main"
+      >
+        <div
+          style={{
+            maxWidth: '1000px',
+            margin: '0 auto',
+          }}
+        >
           <div
             style={{
               display: 'flex',
@@ -310,15 +320,18 @@ export default function TermsAndConditionsPage() {
       <WaitlistModal isOpen={waitlistModalOpen} onClose={() => setWaitlistModalOpen(false)} />
 
       <style jsx>{`
+        .responsive-legal-banner {
+          padding: 56px 32px 50px;
+        }
+        .responsive-legal-main {
+          padding: 56px 32px 80px;
+        }
         @media (max-width: 900px) {
-          .responsive-legal-padding {
-            padding: 0 !important;
+          .responsive-legal-banner {
+            padding: 36px 16px 28px !important;
           }
-          .responsive-legal-card {
-            padding: 32px 18px !important;
-            border-radius: 0 !important;
-            border: none !important;
-            box-shadow: none !important;
+          .responsive-legal-main {
+            padding: 32px 16px 60px !important;
           }
         }
       `}</style>

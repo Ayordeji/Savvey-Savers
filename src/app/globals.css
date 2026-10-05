@@ -740,4 +740,21 @@ button {
   transform: translateX(4px) !important;
 }
 
+/* Legal Pages (Cookie Policy, Terms & Conditions) Unboxed Layout */
+.responsive-legal-banner {
+  padding: 56px 32px 50px;
+}
+.responsive-legal-main {
+  padding: 56px 32px 80px;
+}
+
+@media (max-width: 900px) {
+  .responsive-legal-banner {
+    padding: 36px 16px 28px !important;
+  }
+  .responsive-legal-main {
+    padding: 32px 16px 60px !important;
+  }
+}
+
 
