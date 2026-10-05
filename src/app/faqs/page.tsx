@@ -1,16 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import MarketingHeader from '@/components/marketing/MarketingHeader';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import AuthModal from '@/components/marketing/AuthModal';
 import WaitlistModal from '@/components/marketing/WaitlistModal';
-import { HelpCircle, ChevronDown, Mail, ArrowRight, MessageCircle } from 'lucide-react';
+import { PlusCircle, MinusCircle } from 'lucide-react';
 
 export default function FaqsPage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [waitlistModalOpen, setWaitlistModalOpen] = useState(false);
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(0); // First item open by default
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
 
   const faqItems = [
     {
@@ -69,9 +70,9 @@ export default function FaqsPage() {
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'var(--bg-main)',
+        backgroundColor: '#FFFDFA',
         fontFamily: 'var(--font-family-body)',
-        color: 'var(--text-main)',
+        color: '#1A1A1A',
       }}
     >
       <MarketingHeader
@@ -81,82 +82,90 @@ export default function FaqsPage() {
       />
 
       <main style={{ flex: 1 }}>
-        {/* Hero Section */}
+        {/* ============================================================ */}
+        {/* 1. FAQS HERO (container: #F4F1E8)                           */}
+        {/* ============================================================ */}
         <section
           style={{
-            padding: '70px 24px 50px',
-            backgroundColor: 'var(--primary)',
-            color: '#ffffff',
-            textAlign: 'center',
+            backgroundColor: '#F4F1E8',
+            padding: '80px 80px 70px',
           }}
+          className="responsive-section-padding"
         >
-          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
             <div
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '6px 14px',
-                borderRadius: '9999px',
-                backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                color: '#e2ede5',
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
+                fontSize: '0.875rem',
+                fontWeight: 600,
                 textTransform: 'uppercase',
-                marginBottom: '16px',
+                fontStyle: 'italic',
+                color: '#0E4F45',
+                letterSpacing: '0.06em',
+                marginBottom: '14px',
               }}
             >
-              <HelpCircle size={16} />
-              <span>You Ask, We Answer</span>
+              You ask we answer
             </div>
-
             <h1
               style={{
-                fontSize: 'clamp(2.2rem, 4vw, 3.2rem)',
-                fontWeight: 800,
+                fontSize: 'clamp(2.4rem, 3.8vw, 3.8rem)',
+                fontWeight: 600,
                 fontFamily: 'var(--font-family-title)',
                 lineHeight: 1.15,
-                margin: '0 0 16px 0',
+                color: '#1A1A1A',
+                margin: '0 0 20px 0',
               }}
             >
               Frequently Asked Questions
             </h1>
-
             <p
               style={{
-                fontSize: 'clamp(1rem, 1.5vw, 1.15rem)',
-                lineHeight: 1.6,
-                color: '#c5d6cc',
-                margin: '0 auto',
-                maxWidth: '620px',
+                fontSize: 'clamp(1.05rem, 1.2vw, 1.2rem)',
+                lineHeight: 1.7,
+                color: '#4a4a4a',
+                maxWidth: '700px',
+                margin: 0,
               }}
             >
-              Everything you need to know about Savvey Savers Collective, our vetted circles, monthly allocations, and governance framework.
+              Everything you need to know about Savvey Savers Collective. Can’t find what you are looking for?{' '}
+              <a
+                href="mailto:Support@SavveySaver.com"
+                style={{ color: '#0E4F45', fontWeight: 600, textDecoration: 'underline' }}
+              >
+                Contact us
+              </a>
             </p>
           </div>
         </section>
 
-        {/* FAQs Accordion */}
+        {/* ============================================================ */}
+        {/* 2. FAQS ACCORDION (#FFFDFA matching WordPress)               */}
+        {/* ============================================================ */}
         <section
           style={{
-            padding: '60px 24px 80px',
-            maxWidth: '900px',
-            margin: '0 auto',
+            backgroundColor: '#FFFDFA',
+            padding: '80px 80px 100px',
           }}
+          className="responsive-section-padding"
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div
+            style={{
+              maxWidth: '960px',
+              margin: '0 auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+            }}
+          >
             {faqItems.map((item, idx) => {
               const isOpen = expandedIndex === idx;
               return (
                 <div
                   key={idx}
                   style={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '12px',
-                    border: '1px solid var(--border-color)',
-                    boxShadow: isOpen ? 'var(--shadow-md)' : 'var(--shadow-sm)',
+                    backgroundColor: '#F4F1E8',
+                    borderRadius: '16px',
+                    border: '1px solid rgba(0, 0, 0, 0.06)',
                     overflow: 'hidden',
                     transition: 'all 0.2s ease',
                   }}
@@ -165,7 +174,7 @@ export default function FaqsPage() {
                     onClick={() => toggleAccordion(idx)}
                     style={{
                       width: '100%',
-                      padding: '20px 24px',
+                      padding: '24px 28px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -173,49 +182,32 @@ export default function FaqsPage() {
                       border: 'none',
                       textAlign: 'left',
                       cursor: 'pointer',
-                      gap: '16px',
+                      gap: '20px',
                     }}
                   >
                     <span
                       style={{
-                        fontSize: '1.05rem',
-                        fontWeight: 700,
+                        fontSize: '1.15rem',
+                        fontWeight: 600,
                         fontFamily: 'var(--font-family-title)',
-                        color: isOpen ? 'var(--primary)' : 'var(--text-main)',
+                        color: isOpen ? '#0E4F45' : '#1A1A1A',
                         lineHeight: 1.35,
                       }}
                     >
                       {item.q}
                     </span>
-                    <span
-                      style={{
-                        width: '28px',
-                        height: '28px',
-                        borderRadius: '50%',
-                        backgroundColor: isOpen ? 'var(--primary)' : 'var(--bg-surface)',
-                        color: isOpen ? '#ffffff' : 'var(--text-muted)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                        transition: 'transform 0.2s ease, background-color 0.2s',
-                      }}
-                    >
-                      <ChevronDown size={18} />
+                    <span style={{ color: '#0E4F45', flexShrink: 0 }}>
+                      {isOpen ? <MinusCircle size={24} /> : <PlusCircle size={24} />}
                     </span>
                   </button>
 
                   {isOpen && (
                     <div
                       style={{
-                        padding: '0 24px 22px',
-                        color: 'var(--text-muted)',
-                        fontSize: '0.95rem',
-                        lineHeight: 1.65,
-                        borderTop: '1px solid var(--border-subtle)',
-                        paddingTop: '16px',
-                        animation: 'fadeIn 0.2s ease',
+                        padding: '0 28px 24px',
+                        color: '#4a4a4a',
+                        fontSize: '1rem',
+                        lineHeight: 1.7,
                       }}
                     >
                       {item.a}
@@ -225,75 +217,81 @@ export default function FaqsPage() {
               );
             })}
           </div>
+        </section>
 
-          {/* Need help card */}
+        {/* ============================================================ */}
+        {/* 3. CTA BANNER                                                */}
+        {/* ============================================================ */}
+        <section
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+            minHeight: '480px',
+            backgroundColor: '#0E4F45',
+          }}
+        >
           <div
             style={{
-              marginTop: '48px',
-              padding: '32px',
-              backgroundColor: '#ffffff',
-              borderRadius: '16px',
-              border: '1.5px dashed var(--border-color)',
-              textAlign: 'center',
+              backgroundImage: 'url(/images/holding-hands.webp)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              minHeight: '360px',
+            }}
+          />
+
+          <div
+            style={{
+              backgroundColor: '#0E4F45',
+              color: '#FFFDFA',
+              padding: '60px 48px',
               display: 'flex',
               flexDirection: 'column',
+              justifyContent: 'center',
               alignItems: 'center',
-              gap: '12px',
+              textAlign: 'center',
             }}
           >
-            <div
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--primary-light)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--primary)',
-              }}
-            >
-              <Mail size={22} />
-            </div>
             <h3
               style={{
-                margin: 0,
-                fontSize: '1.25rem',
-                fontWeight: 700,
+                fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+                fontWeight: 600,
                 fontFamily: 'var(--font-family-title)',
+                color: '#FFFDFA',
+                margin: '0 0 16px 0',
               }}
             >
-              Can't find what you are looking for?
+              Start your journey
             </h3>
             <p
               style={{
-                margin: 0,
-                fontSize: '0.925rem',
-                color: 'var(--text-muted)',
+                fontSize: '1.05rem',
+                lineHeight: 1.65,
+                color: '#e2ede5',
                 maxWidth: '460px',
+                margin: '0 0 28px 0',
               }}
             >
-              Our governance and member administration team is here to answer any questions about circle setup, verification, or community guidelines.
+              Witness the transformative power of collective financial strength. Welcome to a community where your dreams matter, and together, we make them a reality.
             </p>
-            <a
-              href="mailto:Support@SavveySaver.com"
+            <button
+              onClick={() => setWaitlistModalOpen(true)}
               style={{
-                marginTop: '8px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 22px',
-                borderRadius: '8px',
-                backgroundColor: 'var(--primary)',
-                color: '#ffffff',
+                backgroundColor: '#FFFDFA',
+                color: '#0E4F45',
+                border: 'none',
+                padding: '14px 34px',
+                borderRadius: '360px',
+                fontSize: '1rem',
                 fontWeight: 600,
-                fontSize: '0.9rem',
-                textDecoration: 'none',
+                fontFamily: 'var(--font-family-title)',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F4F1E8')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFDFA')}
             >
-              <span>Contact Support Team</span>
-              <ArrowRight size={15} />
-            </a>
+              Join Waiting List
+            </button>
           </div>
         </section>
       </main>
@@ -305,6 +303,14 @@ export default function FaqsPage() {
 
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
       <WaitlistModal isOpen={waitlistModalOpen} onClose={() => setWaitlistModalOpen(false)} />
+
+      <style jsx>{`
+        @media (max-width: 900px) {
+          .responsive-section-padding {
+            padding: 50px 24px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

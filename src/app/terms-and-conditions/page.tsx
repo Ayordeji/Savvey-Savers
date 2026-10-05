@@ -5,7 +5,6 @@ import MarketingHeader from '@/components/marketing/MarketingHeader';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import AuthModal from '@/components/marketing/AuthModal';
 import WaitlistModal from '@/components/marketing/WaitlistModal';
-import { FileText, ShieldAlert } from 'lucide-react';
 
 export default function TermsAndConditionsPage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -17,9 +16,9 @@ export default function TermsAndConditionsPage() {
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'var(--bg-main)',
+        backgroundColor: '#F4F1E8',
         fontFamily: 'var(--font-family-body)',
-        color: 'var(--text-main)',
+        color: '#1A1A1A',
       }}
     >
       <MarketingHeader
@@ -28,44 +27,27 @@ export default function TermsAndConditionsPage() {
         onOpenWaitlist={() => setWaitlistModalOpen(true)}
       />
 
-      <main style={{ flex: 1, padding: '60px 24px 80px' }}>
+      <main style={{ flex: 1, padding: '60px 80px 80px' }} className="responsive-legal-padding">
         <div
           style={{
-            maxWidth: '860px',
+            maxWidth: '1000px',
             margin: '0 auto',
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            padding: '48px',
-            border: '1px solid var(--border-color)',
-            boxShadow: 'var(--shadow-sm)',
+            backgroundColor: '#FFFDFA',
+            borderRadius: '24px',
+            padding: '56px 64px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
+            border: '1px solid rgba(0, 0, 0, 0.06)',
           }}
+          className="responsive-legal-card"
         >
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '6px 12px',
-              borderRadius: '6px',
-              backgroundColor: 'var(--primary-light)',
-              color: 'var(--primary)',
-              fontSize: '0.8125rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              marginBottom: '16px',
-            }}
-          >
-            <FileText size={16} />
-            <span>Legal Documentation</span>
-          </div>
-
           <h1
             style={{
-              fontSize: 'clamp(2rem, 3.5vw, 2.75rem)',
-              fontWeight: 800,
+              fontSize: 'clamp(2.2rem, 3.5vw, 3.2rem)',
+              fontWeight: 600,
               fontFamily: 'var(--font-family-title)',
-              color: 'var(--text-main)',
+              color: '#1A1A1A',
               margin: '0 0 12px 0',
+              lineHeight: 1.15,
             }}
           >
             Terms and Conditions
@@ -73,10 +55,10 @@ export default function TermsAndConditionsPage() {
 
           <p
             style={{
-              fontSize: '0.9rem',
-              color: 'var(--text-muted)',
-              marginBottom: '32px',
-              borderBottom: '1px solid var(--border-color)',
+              fontSize: '0.95rem',
+              color: '#666',
+              marginBottom: '36px',
+              borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
               paddingBottom: '20px',
             }}
           >
@@ -89,8 +71,8 @@ export default function TermsAndConditionsPage() {
               flexDirection: 'column',
               gap: '28px',
               lineHeight: 1.7,
-              fontSize: '0.95rem',
-              color: 'var(--text-main)',
+              fontSize: '1rem',
+              color: '#2a2a2a',
             }}
           >
             <p>
@@ -98,145 +80,145 @@ export default function TermsAndConditionsPage() {
             </p>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 1. About Us
               </h3>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                This Website is operated by Savvey Savers Collective (“SSC”, “we”, “our” or “us”). Our Website provides information about our community savings model and allows prospective members to join our waiting list or contact us. Use of this Website does not in itself create membership of Savvey Savers Collective.
+              <p style={{ margin: 0, color: '#4a4a4a' }}>
+                This Website is operated by Savvey Savers Collective (“SSC”, “we”, “our” or “us”). Our Website provides information about our community savings model and allows prospective members to join our waiting list or contact us. Use of this Website does not create membership of Savvey Savers Collective.
               </p>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 2. Eligibility
               </h3>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                You must be at least 18 years old and a resident of the United Kingdom to use this Website or join our waiting list. By using this Website, you confirm that you meet these criteria.
+              <p style={{ margin: 0, color: '#4a4a4a' }}>
+                You must be at least 18 years old and a resident of the United Kingdom to use this Website or join our waiting list. By using this Website, you confirm that you meet this requirement.
               </p>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 3. Waiting List
               </h3>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                Joining our waiting list does not guarantee membership. Applications are reviewed based on circle availability, referral validation, and our membership criteria. We reserve the right to accept or decline any application at our discretion. Being invited to join a savings circle remains subject to full onboarding checks and verification.
+              <p style={{ margin: 0, color: '#4a4a4a' }}>
+                Joining our waiting list does not guarantee membership. Applications may be reviewed based on our membership criteria and available places. We reserve the right to accept or decline any application at our discretion. Being invited to join the Collective remains subject to our onboarding and verification processes.
               </p>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 4. Website Use
               </h3>
-              <p style={{ margin: '0 0 10px 0', color: 'var(--text-muted)' }}>
+              <p style={{ margin: '0 0 10px 0', color: '#4a4a4a' }}>
                 You agree to use this Website only for lawful purposes. You must not:
               </p>
-              <ul style={{ paddingLeft: '24px', margin: 0, color: 'var(--text-muted)' }}>
-                <li>Misuse or attempt to interfere with the proper working of the Website;</li>
-                <li>Introduce malicious software, viruses, or harmful code;</li>
-                <li>Attempt to gain unauthorised access to our systems, servers, or databases;</li>
-                <li>Use the Website in any manner that disrupts or impairs other users;</li>
-                <li>Copy, scrape, reproduce, or repurpose Website content without prior written permission.</li>
+              <ul style={{ paddingLeft: '24px', margin: 0, color: '#4a4a4a' }}>
+                <li>Misuse or attempt to interfere with the Website;</li>
+                <li>Introduce malicious software or harmful code;</li>
+                <li>Attempt to gain unauthorised access to our systems;</li>
+                <li>Use the Website in a way that disrupts other users;</li>
+                <li>Copy, scrape or reproduce Website content without permission.</li>
               </ul>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 5. Information You Provide
               </h3>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                If you submit information through our Website (such as waiting list applications or contact enquiries), you warrant that all information provided is accurate, complete, and current. You are responsible for informing us if your contact details change.
+              <p style={{ margin: 0, color: '#4a4a4a' }}>
+                If you submit information through our Website, you agree that it is accurate, complete and up to date. You are responsible for informing us if your contact details change.
               </p>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 6. Intellectual Property
               </h3>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                Unless otherwise stated, all content on this Website—including text, graphics, logos, branding, images, documents, software, and design—is owned by Savvey Savers Collective or used under licence. You may view and download material for your own personal, non-commercial use. You may not reproduce, distribute, or commercially exploit any content without our prior written consent.
+              <p style={{ margin: 0, color: '#4a4a4a' }}>
+                Unless otherwise stated, all content on this Website including text, graphics, logos, branding, images, documents and design is owned by Savvey Savers Collective or used under licence. You may view and download material for your own personal, non-commercial use. You may not reproduce, distribute, modify, publish or commercially exploit any Website content without our prior written permission.
               </p>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 7. Privacy
               </h3>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                Our collection and use of personal information is governed by our Privacy Policy and UK GDPR regulations. By using this Website, you acknowledge that you have read and understood our data protection practices.
+              <p style={{ margin: 0, color: '#4a4a4a' }}>
+                Our collection and use of personal information is governed by our Privacy Policy. By using this Website, you acknowledge that you have read our Privacy Policy.
               </p>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 8. Cookies
               </h3>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                This Website uses cookies to improve your browsing experience and understand how visitors interact with our platform. You can manage your cookie preferences through your browser settings. Further information can be found in our Cookie Policy.
+              <p style={{ margin: 0, color: '#4a4a4a' }}>
+                This Website uses cookies to improve your browsing experience and understand how visitors use our Website. You can manage your cookie preferences through your browser settings. Further information can be found in our Cookie Policy.
               </p>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 9. Website Availability
               </h3>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                We aim to keep our Website operational and accessible at all times. However, we do not guarantee uninterrupted access and reserve the right to suspend, withdraw, or modify any part of the Website without prior notice.
+              <p style={{ margin: 0, color: '#4a4a4a' }}>
+                We aim to keep our Website available at all times. However, we do not guarantee uninterrupted access and may suspend, withdraw or change any part of the Website without notice.
               </p>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 10. Accuracy of Information
               </h3>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                We make reasonable efforts to ensure the information published on this Website is accurate. However, information is provided for general guidance only and may change without notice. Nothing on this Website constitutes financial, legal, investment, or professional advice.
+              <p style={{ margin: 0, color: '#4a4a4a' }}>
+                We make reasonable efforts to ensure the information published on this Website is accurate. However, information is provided for general guidance only and may change without notice. Nothing on this Website constitutes financial, legal or professional advice.
               </p>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 11. Limitation of Liability
               </h3>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                To the fullest extent permitted by law, Savvey Savers Collective shall not be liable for any direct, indirect, incidental, consequential, or special loss or damage arising from your use of, or inability to use, this Website. Nothing in these Terms excludes liability that cannot legally be excluded under applicable law.
+              <p style={{ margin: 0, color: '#4a4a4a' }}>
+                To the fullest extent permitted by law, Savvey Savers Collective shall not be liable for any direct, indirect, incidental, consequential or special loss or damage arising from your use of, or inability to use, this Website. Nothing in these Terms excludes liability that cannot legally be excluded under applicable law.
               </p>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 12. Links to Other Websites
               </h3>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                Our Website may contain links to third-party websites for your convenience. We do not control or endorse those websites and are not responsible for their content, security, or privacy practices.
+              <p style={{ margin: 0, color: '#4a4a4a' }}>
+                Our Website may contain links to third-party websites for your convenience. We do not control or endorse those websites and are not responsible for their content, security or privacy practices.
               </p>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 13. Changes to These Terms
               </h3>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
+              <p style={{ margin: 0, color: '#4a4a4a' }}>
                 We may update these Terms from time to time. Any changes will take effect once published on this Website. Your continued use of the Website constitutes acceptance of the revised Terms.
               </p>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 14. Governing Law
               </h3>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                These Terms are governed by and construed in accordance with the laws of England and Wales. Any dispute arising from these Terms or your use of this Website shall be subject to the exclusive jurisdiction of the courts of England and Wales.
+              <p style={{ margin: 0, color: '#4a4a4a' }}>
+                These Terms are governed by the laws of England and Wales. Any dispute arising from these Terms or your use of this Website shall be subject to the exclusive jurisdiction of the courts of England and Wales.
               </p>
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-family-title)', color: 'var(--primary)', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, fontFamily: 'var(--font-family-title)', color: '#0E4F45', marginBottom: '8px' }}>
                 15. Contact Us
               </h3>
-              <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                If you have questions regarding these Terms and Conditions, please contact us at:{' '}
-                <a href="mailto:info@savveysavers.com" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+              <p style={{ margin: 0, color: '#4a4a4a' }}>
+                If you have any questions about these Terms, please contact us. Email:{' '}
+                <a href="mailto:info@savveysavers.com" style={{ color: '#0E4F45', fontWeight: 600 }}>
                   info@savveysavers.com
                 </a>
               </p>
@@ -245,6 +227,80 @@ export default function TermsAndConditionsPage() {
         </div>
       </main>
 
+      {/* CTA Banner matching WordPress site */}
+      <section
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+          minHeight: '440px',
+          backgroundColor: '#0E4F45',
+        }}
+      >
+        <div
+          style={{
+            backgroundImage: 'url(/images/holding-hands.webp)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            minHeight: '340px',
+          }}
+        />
+
+        <div
+          style={{
+            backgroundColor: '#0E4F45',
+            color: '#FFFDFA',
+            padding: '60px 48px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            textAlign: 'center',
+          }}
+        >
+          <h3
+            style={{
+              fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+              fontWeight: 600,
+              fontFamily: 'var(--font-family-title)',
+              color: '#FFFDFA',
+              margin: '0 0 16px 0',
+            }}
+          >
+            Start your journey
+          </h3>
+          <p
+            style={{
+              fontSize: '1.05rem',
+              lineHeight: 1.65,
+              color: '#e2ede5',
+              maxWidth: '460px',
+              margin: '0 0 28px 0',
+            }}
+          >
+            Witness the transformative power of collective financial strength. Welcome to a community where your dreams matter, and together, we make them a reality.
+          </p>
+          <button
+            onClick={() => setWaitlistModalOpen(true)}
+            style={{
+              backgroundColor: '#FFFDFA',
+              color: '#0E4F45',
+              border: 'none',
+              padding: '14px 34px',
+              borderRadius: '360px',
+              fontSize: '1rem',
+              fontWeight: 600,
+              fontFamily: 'var(--font-family-title)',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F4F1E8')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFDFA')}
+          >
+            Join Waiting List
+          </button>
+        </div>
+      </section>
+
       <MarketingFooter
         onOpenLogin={() => setAuthModalOpen(true)}
         onOpenWaitlist={() => setWaitlistModalOpen(true)}
@@ -252,6 +308,17 @@ export default function TermsAndConditionsPage() {
 
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
       <WaitlistModal isOpen={waitlistModalOpen} onClose={() => setWaitlistModalOpen(false)} />
+
+      <style jsx>{`
+        @media (max-width: 900px) {
+          .responsive-legal-padding {
+            padding: 40px 20px !important;
+          }
+          .responsive-legal-card {
+            padding: 36px 24px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowUpRight, ShieldCheck } from 'lucide-react';
 
 interface MarketingFooterProps {
   onOpenLogin?: () => void;
@@ -13,336 +12,328 @@ export default function MarketingFooter({
   onOpenWaitlist,
 }: MarketingFooterProps) {
   return (
-    <footer
-      style={{
-        backgroundColor: '#090e0c', // deep forest black matching sidebar
-        color: '#e2ede5',
-        borderTop: '1px solid #14241d',
-        fontFamily: 'var(--font-family-body)',
-        padding: '64px 24px 36px',
-      }}
-    >
+    <div>
+      {/* 1. Important Notice Strip (exact background: #D3CEBE matching old design) */}
       <div
         style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '48px',
+          backgroundColor: '#D3CEBE',
+          color: '#1A1A1A',
+          padding: '40px 80px',
+          fontFamily: 'var(--font-family-body)',
         }}
+        className="footer-notice-container"
       >
-        {/* Top 3-Column Section */}
+        <div style={{ maxWidth: '1440px', margin: '0 auto', fontSize: '0.95rem', lineHeight: 1.65 }}>
+          <strong style={{ fontWeight: 700 }}>Important Notice: </strong>
+          Savvey Savers Collective provides structured savings circles to help members achieve financial goals through pooled contributions. We do not provide loans, banking services, or regulated investment products. Participation involves shared responsibility and adherence to community guidelines.
+        </div>
+      </div>
+
+      {/* 2. Main Footer (exact background: #1A1A1A, text: #FFFDFA matching old design) */}
+      <footer
+        style={{
+          backgroundColor: '#1A1A1A',
+          color: '#FFFDFA',
+          padding: '60px 80px 40px',
+          fontFamily: 'var(--font-family-body)',
+        }}
+        className="footer-main-container"
+      >
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            maxWidth: '1440px',
+            margin: '0 auto',
+            display: 'flex',
+            flexDirection: 'column',
             gap: '40px',
           }}
         >
-          {/* Column 1: Brand & Description */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            <Link href="/" style={{ display: 'inline-block' }}>
-              <img
-                src="/logo_new-removebg-preview.png"
-                alt="Savvey Savers Collective"
+          {/* 3 Columns Grid */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '48px',
+              justifyContent: 'space-between',
+            }}
+          >
+            {/* Column 1: Brand */}
+            <div>
+              <h4
                 style={{
-                  height: '48px',
-                  width: 'auto',
-                  objectFit: 'contain',
-                  filter: 'brightness(1.1)',
+                  margin: '0 0 4px 0',
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  fontFamily: 'var(--font-family-title)',
+                  color: '#FFFDFA',
+                  letterSpacing: '0.02em',
                 }}
-              />
-            </Link>
-            <p
-              style={{
-                fontSize: '0.9375rem',
-                lineHeight: 1.65,
-                color: '#a3b8ad',
-                margin: 0,
-                maxWidth: '360px',
-              }}
-            >
-              Trusted community saving. A structured savings collective helping members across the UK achieve meaningful financial goals together through disciplined pooled contributions.
-            </p>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                backgroundColor: 'rgba(21, 128, 61, 0.15)',
-                border: '1px solid rgba(21, 128, 61, 0.3)',
-                color: '#86efac',
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                width: 'fit-content',
-              }}
-            >
-              <ShieldCheck size={16} />
-              <span>UK Residents · Referral & Vetted Only</span>
+              >
+                Savvey Savers
+              </h4>
+              <p
+                style={{
+                  margin: '0 0 16px 0',
+                  fontSize: '1.75rem',
+                  fontWeight: 800,
+                  fontFamily: 'var(--font-family-title)',
+                  color: '#FFFDFA',
+                  lineHeight: 1.2,
+                }}
+              >
+                Collective
+              </p>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: '0.95rem',
+                  lineHeight: 1.65,
+                  color: '#dcd7ca',
+                  maxWidth: '380px',
+                }}
+              >
+                Trusted community saving. A structured savings collective helping members across the UK achieve meaningful financial goals together.
+              </p>
+            </div>
+
+            {/* Column 2: Quick Links */}
+            <div>
+              <h5
+                style={{
+                  margin: '0 0 20px 0',
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                  fontFamily: 'var(--font-family-title)',
+                  color: '#FFFDFA',
+                }}
+              >
+                Quick Links
+              </h5>
+              <ul
+                style={{
+                  listStyle: 'none',
+                  padding: 0,
+                  margin: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                }}
+              >
+                <li>
+                  <Link
+                    href="/about-us"
+                    style={{
+                      color: '#FFFDFA',
+                      textDecoration: 'none',
+                      fontSize: '0.95rem',
+                      transition: 'color 0.2s',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#A46A3F')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = '#FFFDFA')}
+                  >
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/faqs"
+                    style={{
+                      color: '#FFFDFA',
+                      textDecoration: 'none',
+                      fontSize: '0.95rem',
+                      transition: 'color 0.2s',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#A46A3F')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = '#FFFDFA')}
+                  >
+                    FAQs
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/cookie-policy"
+                    style={{
+                      color: '#FFFDFA',
+                      textDecoration: 'none',
+                      fontSize: '0.95rem',
+                      transition: 'color 0.2s',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#A46A3F')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = '#FFFDFA')}
+                  >
+                    Cookie Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/terms-and-conditions"
+                    style={{
+                      color: '#FFFDFA',
+                      textDecoration: 'none',
+                      fontSize: '0.95rem',
+                      transition: 'color 0.2s',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#A46A3F')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = '#FFFDFA')}
+                  >
+                    Terms and Conditions
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 3: Access Pill Buttons */}
+            <div>
+              <h5
+                style={{
+                  margin: '0 0 20px 0',
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                  fontFamily: 'var(--font-family-title)',
+                  color: '#FFFDFA',
+                }}
+              >
+                Access
+              </h5>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '240px' }}>
+                {onOpenLogin ? (
+                  <button
+                    onClick={onOpenLogin}
+                    style={{
+                      backgroundColor: '#F4F1E8',
+                      color: '#0E4F45',
+                      border: 'none',
+                      padding: '11px 24px',
+                      borderRadius: '360px',
+                      fontSize: '0.95rem',
+                      fontWeight: 600,
+                      fontFamily: 'var(--font-family-title)',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#ffffff')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#F4F1E8')}
+                  >
+                    Login
+                  </button>
+                ) : (
+                  <Link
+                    href="/login"
+                    style={{
+                      backgroundColor: '#F4F1E8',
+                      color: '#0E4F45',
+                      border: 'none',
+                      padding: '11px 24px',
+                      borderRadius: '360px',
+                      fontSize: '0.95rem',
+                      fontWeight: 600,
+                      fontFamily: 'var(--font-family-title)',
+                      textDecoration: 'none',
+                      textAlign: 'center',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#ffffff')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#F4F1E8')}
+                  >
+                    Login
+                  </Link>
+                )}
+
+                {onOpenWaitlist ? (
+                  <button
+                    onClick={onOpenWaitlist}
+                    style={{
+                      backgroundColor: '#0E4F45',
+                      color: '#FFFDFA',
+                      border: '2px solid #0E4F45',
+                      padding: '11px 24px',
+                      borderRadius: '360px',
+                      fontSize: '0.95rem',
+                      fontWeight: 600,
+                      fontFamily: 'var(--font-family-title)',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#0E4F45F2';
+                      e.currentTarget.style.borderColor = '#0E4F45F2';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#0E4F45';
+                      e.currentTarget.style.borderColor = '#0E4F45';
+                    }}
+                  >
+                    Request Access
+                  </button>
+                ) : (
+                  <Link
+                    href="/#waitlist"
+                    style={{
+                      backgroundColor: '#0E4F45',
+                      color: '#FFFDFA',
+                      border: '2px solid #0E4F45',
+                      padding: '11px 24px',
+                      borderRadius: '360px',
+                      fontSize: '0.95rem',
+                      fontWeight: 600,
+                      fontFamily: 'var(--font-family-title)',
+                      textDecoration: 'none',
+                      textAlign: 'center',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#0E4F45F2';
+                      e.currentTarget.style.borderColor = '#0E4F45F2';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#0E4F45';
+                      e.currentTarget.style.borderColor = '#0E4F45';
+                    }}
+                  >
+                    Request Access
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Column 2: Quick Links */}
-          <div>
-            <h4
-              style={{
-                fontFamily: 'var(--font-family-title)',
-                fontSize: '1rem',
-                fontWeight: 700,
-                color: '#ffffff',
-                marginBottom: '18px',
-                letterSpacing: '0.02em',
-              }}
-            >
-              Quick Links
-            </h4>
-            <ul
-              style={{
-                listStyle: 'none',
-                padding: 0,
-                margin: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-              }}
-            >
-              <li>
-                <Link
-                  href="/about-us"
-                  style={{
-                    color: '#c5d6cc',
-                    textDecoration: 'none',
-                    fontSize: '0.9375rem',
-                    transition: 'color 0.2s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--secondary)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#c5d6cc')}
-                >
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/faqs"
-                  style={{
-                    color: '#c5d6cc',
-                    textDecoration: 'none',
-                    fontSize: '0.9375rem',
-                    transition: 'color 0.2s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--secondary)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#c5d6cc')}
-                >
-                  Frequently Asked Questions (FAQs)
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/terms-and-conditions"
-                  style={{
-                    color: '#c5d6cc',
-                    textDecoration: 'none',
-                    fontSize: '0.9375rem',
-                    transition: 'color 0.2s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--secondary)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#c5d6cc')}
-                >
-                  Terms and Conditions
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/cookie-policy"
-                  style={{
-                    color: '#c5d6cc',
-                    textDecoration: 'none',
-                    fontSize: '0.9375rem',
-                    transition: 'color 0.2s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--secondary)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#c5d6cc')}
-                >
-                  Cookie Policy
-                </Link>
-              </li>
-            </ul>
-          </div>
+          {/* Divider */}
+          <div style={{ height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.15)', width: '100%' }} />
 
-          {/* Column 3: Platform Access & Member Portal */}
-          <div>
-            <h4
-              style={{
-                fontFamily: 'var(--font-family-title)',
-                fontSize: '1rem',
-                fontWeight: 700,
-                color: '#ffffff',
-                marginBottom: '18px',
-                letterSpacing: '0.02em',
-              }}
-            >
-              Member Access
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {onOpenLogin ? (
-                <button
-                  onClick={onOpenLogin}
-                  style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    color: '#ffffff',
-                    padding: '10px 16px',
-                    borderRadius: '8px',
-                    fontSize: '0.9375rem',
-                    fontWeight: 600,
-                    fontFamily: 'var(--font-family-title)',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.borderColor = 'var(--secondary)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                  }}
-                >
-                  <span>Member Portal Login</span>
-                  <ArrowUpRight size={16} />
-                </button>
-              ) : (
-                <Link
-                  href="/login"
-                  style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    color: '#ffffff',
-                    padding: '10px 16px',
-                    borderRadius: '8px',
-                    fontSize: '0.9375rem',
-                    fontWeight: 600,
-                    fontFamily: 'var(--font-family-title)',
-                    textDecoration: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.borderColor = 'var(--secondary)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                  }}
-                >
-                  <span>Member Portal Login</span>
-                  <ArrowUpRight size={16} />
-                </Link>
-              )}
-
-              {onOpenWaitlist ? (
-                <button
-                  onClick={onOpenWaitlist}
-                  style={{
-                    backgroundColor: 'var(--secondary)',
-                    border: 'none',
-                    color: '#ffffff',
-                    padding: '10px 16px',
-                    borderRadius: '8px',
-                    fontSize: '0.9375rem',
-                    fontWeight: 700,
-                    fontFamily: 'var(--font-family-title)',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    boxShadow: '0 4px 12px var(--secondary-glow)',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--secondary-hover)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--secondary)')}
-                >
-                  <span>Request Circle Access</span>
-                  <ArrowUpRight size={16} />
-                </button>
-              ) : (
-                <Link
-                  href="/#waitlist"
-                  style={{
-                    backgroundColor: 'var(--secondary)',
-                    border: 'none',
-                    color: '#ffffff',
-                    padding: '10px 16px',
-                    borderRadius: '8px',
-                    fontSize: '0.9375rem',
-                    fontWeight: 700,
-                    fontFamily: 'var(--font-family-title)',
-                    textDecoration: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    boxShadow: '0 4px 12px var(--secondary-glow)',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--secondary-hover)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--secondary)')}
-                >
-                  <span>Request Circle Access</span>
-                  <ArrowUpRight size={16} />
-                </Link>
-              )}
+          {/* Bottom Bar: GDPR notice & copyright */}
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '16px',
+              fontSize: '0.85rem',
+              color: '#a3b8ad',
+            }}
+          >
+            <div>
+              We protect your personal data in accordance with GDPR and applicable data protection laws.
+            </div>
+            <div>
+              © {new Date().getFullYear()} Savvey Savers Collective. All rights reserved.
             </div>
           </div>
         </div>
+      </footer>
 
-        {/* Important Notice Callout */}
-        <div
-          style={{
-            padding: '20px 24px',
-            borderRadius: '10px',
-            backgroundColor: '#111a14',
-            border: '1px solid #1c2e24',
-            fontSize: '0.85rem',
-            lineHeight: 1.6,
-            color: '#94a79c',
-          }}
-        >
-          <strong style={{ color: '#e2ede5', display: 'block', marginBottom: '4px' }}>
-            Important Notice:
-          </strong>
-          Savvey Savers Collective provides structured savings circles to help members achieve financial goals through pooled contributions. We do not provide loans, banking services, or regulated investment products. Participation involves shared responsibility and adherence to community guidelines.
-        </div>
-
-        {/* Bottom Bar: Copyright & Compliance */}
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '16px',
-            paddingTop: '24px',
-            borderTop: '1px solid #14241d',
-            fontSize: '0.8125rem',
-            color: '#718378',
-          }}
-        >
-          <div>
-            © {new Date().getFullYear()} Savvey Savers Collective. All rights reserved.
-          </div>
-          <div>
-            We protect your personal data in accordance with GDPR and applicable UK data protection laws.
-          </div>
-        </div>
-      </div>
-    </footer>
+      <style jsx>{`
+        @media (max-width: 900px) {
+          .footer-notice-container {
+            padding: 30px 24px !important;
+          }
+          .footer-main-container {
+            padding: 40px 24px 30px !important;
+          }
+        }
+      `}</style>
+    </div>
   );
 }

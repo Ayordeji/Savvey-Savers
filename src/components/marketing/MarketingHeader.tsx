@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, ArrowRight, UserCheck } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 interface MarketingHeaderProps {
   onOpenLogin?: () => void;
@@ -21,7 +21,7 @@ export default function MarketingHeader({
     { label: 'Home', href: '/' },
     { label: 'About Us', href: '/about-us' },
     { label: 'FAQs', href: '/faqs' },
-    { label: 'Terms & Conditions', href: '/terms-and-conditions' },
+    { label: 'Terms and Conditions', href: '/terms-and-conditions' },
     { label: 'Cookie Policy', href: '/cookie-policy' },
   ];
 
@@ -30,24 +30,24 @@ export default function MarketingHeader({
       style={{
         position: 'sticky',
         top: 0,
-        zIndex: 50,
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid var(--border-color)',
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
+        zIndex: 100,
+        backgroundColor: '#F4F1E8', // exact warm cream from old design
+        borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+        boxShadow: '0px 0px 10px -2px rgba(0, 0, 0, 0.25)',
         transition: 'all 0.2s ease',
       }}
     >
       <div
         style={{
-          maxWidth: '1280px',
+          maxWidth: '1440px',
           margin: '0 auto',
-          padding: '0 24px',
-          height: '80px',
+          padding: '0 80px',
+          height: '84px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
         }}
+        className="header-inner-container"
       >
         {/* Brand Logo */}
         <Link
@@ -60,11 +60,12 @@ export default function MarketingHeader({
         >
           <img
             src="/logo_new-removebg-preview.png"
-            alt="Savvey Savers Collective"
+            alt="Savvey Savers"
             style={{
-              height: '46px',
+              height: '52px',
               width: 'auto',
               objectFit: 'contain',
+              cursor: 'pointer',
             }}
           />
         </Link>
@@ -74,7 +75,7 @@ export default function MarketingHeader({
           style={{
             display: 'none',
             alignItems: 'center',
-            gap: '28px',
+            gap: '32px',
           }}
           className="desktop-nav"
         >
@@ -85,20 +86,21 @@ export default function MarketingHeader({
                 key={item.href}
                 href={item.href}
                 style={{
-                  fontSize: '0.9375rem',
-                  fontWeight: isActive ? 700 : 500,
+                  fontSize: '1rem',
+                  fontWeight: isActive ? 600 : 500,
                   fontFamily: 'var(--font-family-body)',
-                  color: isActive ? 'var(--primary)' : 'var(--text-main)',
+                  color: isActive ? '#0E4F45' : '#1A1A1A',
                   textDecoration: 'none',
                   position: 'relative',
-                  padding: '8px 0',
+                  padding: '6px 0',
                   transition: 'color 0.2s ease',
+                  letterSpacing: '0.02em',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = 'var(--primary)';
+                  e.currentTarget.style.color = '#0E4F45';
                 }}
                 onMouseLeave={(e) => {
-                  if (!isActive) e.currentTarget.style.color = 'var(--text-main)';
+                  if (!isActive) e.currentTarget.style.color = '#1A1A1A';
                 }}
               >
                 {item.label}
@@ -110,7 +112,7 @@ export default function MarketingHeader({
                       left: 0,
                       right: 0,
                       height: '2px',
-                      backgroundColor: 'var(--primary)',
+                      backgroundColor: '#0E4F45',
                       borderRadius: '2px',
                     }}
                   />
@@ -120,7 +122,7 @@ export default function MarketingHeader({
           })}
         </nav>
 
-        {/* Action CTAs */}
+        {/* Header CTA Buttons matching old design (pill buttons) */}
         <div
           style={{
             display: 'flex',
@@ -132,24 +134,25 @@ export default function MarketingHeader({
             <button
               onClick={onOpenLogin}
               style={{
-                padding: '9px 18px',
-                borderRadius: '8px',
-                border: '1.5px solid var(--border-color)',
-                backgroundColor: '#ffffff',
-                color: 'var(--primary)',
+                padding: '10px 24px',
+                borderRadius: '360px',
+                border: '2px solid #1A1A1A',
+                backgroundColor: 'transparent',
+                color: '#1A1A1A',
                 fontFamily: 'var(--font-family-title)',
                 fontWeight: 600,
-                fontSize: '0.875rem',
+                fontSize: '0.9375rem',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
+                letterSpacing: '0.02em',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--primary)';
-                e.currentTarget.style.backgroundColor = 'var(--primary-light)';
+                e.currentTarget.style.backgroundColor = '#1A1A1A';
+                e.currentTarget.style.color = '#FFFDFA';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--border-color)';
-                e.currentTarget.style.backgroundColor = '#ffffff';
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#1A1A1A';
               }}
             >
               Login
@@ -158,26 +161,27 @@ export default function MarketingHeader({
             <Link
               href="/login"
               style={{
-                padding: '9px 18px',
-                borderRadius: '8px',
-                border: '1.5px solid var(--border-color)',
-                backgroundColor: '#ffffff',
-                color: 'var(--primary)',
+                padding: '10px 24px',
+                borderRadius: '360px',
+                border: '2px solid #1A1A1A',
+                backgroundColor: 'transparent',
+                color: '#1A1A1A',
                 fontFamily: 'var(--font-family-title)',
                 fontWeight: 600,
-                fontSize: '0.875rem',
+                fontSize: '0.9375rem',
                 textDecoration: 'none',
                 display: 'inline-flex',
                 alignItems: 'center',
                 transition: 'all 0.2s ease',
+                letterSpacing: '0.02em',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--primary)';
-                e.currentTarget.style.backgroundColor = 'var(--primary-light)';
+                e.currentTarget.style.backgroundColor = '#1A1A1A';
+                e.currentTarget.style.color = '#FFFDFA';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--border-color)';
-                e.currentTarget.style.backgroundColor = '#ffffff';
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#1A1A1A';
               }}
             >
               Login
@@ -188,63 +192,61 @@ export default function MarketingHeader({
             <button
               onClick={onOpenWaitlist}
               style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: 'var(--secondary)',
-                color: '#ffffff',
+                padding: '10px 24px',
+                borderRadius: '360px',
+                border: '2px solid #0E4F45',
+                backgroundColor: '#0E4F45',
+                color: '#FFFDFA',
                 fontFamily: 'var(--font-family-title)',
-                fontWeight: 700,
-                fontSize: '0.875rem',
+                fontWeight: 600,
+                fontSize: '0.9375rem',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: '0 4px 12px var(--secondary-glow)',
                 transition: 'all 0.2s ease',
+                letterSpacing: '0.02em',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--secondary-hover)';
-                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.backgroundColor = '#0E4F45F2';
+                e.currentTarget.style.borderColor = '#0E4F45F2';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--secondary)';
-                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.backgroundColor = '#0E4F45';
+                e.currentTarget.style.borderColor = '#0E4F45';
               }}
             >
-              <span>Join Waiting List</span>
-              <ArrowRight size={15} />
+              Join Our Waiting List
             </button>
           ) : (
             <Link
               href="/#waitlist"
               style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: 'var(--secondary)',
-                color: '#ffffff',
+                padding: '10px 24px',
+                borderRadius: '360px',
+                border: '2px solid #0E4F45',
+                backgroundColor: '#0E4F45',
+                color: '#FFFDFA',
                 fontFamily: 'var(--font-family-title)',
-                fontWeight: 700,
-                fontSize: '0.875rem',
+                fontWeight: 600,
+                fontSize: '0.9375rem',
                 textDecoration: 'none',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: '0 4px 12px var(--secondary-glow)',
                 transition: 'all 0.2s ease',
+                letterSpacing: '0.02em',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--secondary-hover)';
-                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.backgroundColor = '#0E4F45F2';
+                e.currentTarget.style.borderColor = '#0E4F45F2';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--secondary)';
-                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.backgroundColor = '#0E4F45';
+                e.currentTarget.style.borderColor = '#0E4F45';
               }}
             >
-              <span>Join Waiting List</span>
-              <ArrowRight size={15} />
+              Join Our Waiting List
             </Link>
           )}
 
@@ -258,9 +260,9 @@ export default function MarketingHeader({
               justifyContent: 'center',
               padding: '8px',
               borderRadius: '8px',
-              border: '1px solid var(--border-color)',
+              border: '1px solid rgba(0, 0, 0, 0.15)',
               background: '#ffffff',
-              color: 'var(--text-main)',
+              color: '#1A1A1A',
               cursor: 'pointer',
             }}
             className="mobile-hamburger-btn"
@@ -274,13 +276,13 @@ export default function MarketingHeader({
       {mobileMenuOpen && (
         <div
           style={{
-            backgroundColor: '#ffffff',
-            borderBottom: '1px solid var(--border-color)',
-            padding: '20px 24px 28px',
+            backgroundColor: '#F4F1E8',
+            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+            padding: '20px 32px 30px',
             display: 'flex',
             flexDirection: 'column',
             gap: '14px',
-            boxShadow: 'var(--shadow-md)',
+            boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
           }}
           className="mobile-nav-drawer"
         >
@@ -292,13 +294,13 @@ export default function MarketingHeader({
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
                 style={{
-                  fontSize: '1rem',
+                  fontSize: '1.05rem',
                   fontWeight: isActive ? 700 : 500,
                   fontFamily: 'var(--font-family-body)',
-                  color: isActive ? 'var(--primary)' : 'var(--text-main)',
+                  color: isActive ? '#0E4F45' : '#1A1A1A',
                   textDecoration: 'none',
                   padding: '8px 0',
-                  borderBottom: '1px solid var(--border-subtle)',
+                  borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
                 }}
               >
                 {item.label}
@@ -306,7 +308,7 @@ export default function MarketingHeader({
             );
           })}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
             {onOpenLogin ? (
               <button
                 onClick={() => {
@@ -316,17 +318,17 @@ export default function MarketingHeader({
                 style={{
                   width: '100%',
                   padding: '12px',
-                  borderRadius: '8px',
-                  border: '1.5px solid var(--border-color)',
-                  backgroundColor: '#ffffff',
-                  color: 'var(--primary)',
+                  borderRadius: '360px',
+                  border: '2px solid #1A1A1A',
+                  backgroundColor: 'transparent',
+                  color: '#1A1A1A',
                   fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   cursor: 'pointer',
                   textAlign: 'center',
                 }}
               >
-                Member Login
+                Login
               </button>
             ) : (
               <Link
@@ -335,10 +337,10 @@ export default function MarketingHeader({
                 style={{
                   width: '100%',
                   padding: '12px',
-                  borderRadius: '8px',
-                  border: '1.5px solid var(--border-color)',
-                  backgroundColor: '#ffffff',
-                  color: 'var(--primary)',
+                  borderRadius: '360px',
+                  border: '2px solid #1A1A1A',
+                  backgroundColor: 'transparent',
+                  color: '#1A1A1A',
                   fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   textDecoration: 'none',
@@ -346,7 +348,7 @@ export default function MarketingHeader({
                   boxSizing: 'border-box',
                 }}
               >
-                Member Login
+                Login
               </Link>
             )}
 
@@ -359,11 +361,11 @@ export default function MarketingHeader({
                 style={{
                   width: '100%',
                   padding: '12px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: 'var(--secondary)',
-                  color: '#ffffff',
-                  fontWeight: 700,
+                  borderRadius: '360px',
+                  border: '2px solid #0E4F45',
+                  backgroundColor: '#0E4F45',
+                  color: '#FFFDFA',
+                  fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   cursor: 'pointer',
                   textAlign: 'center',
@@ -378,11 +380,11 @@ export default function MarketingHeader({
                 style={{
                   width: '100%',
                   padding: '12px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: 'var(--secondary)',
-                  color: '#ffffff',
-                  fontWeight: 700,
+                  borderRadius: '360px',
+                  border: '2px solid #0E4F45',
+                  backgroundColor: '#0E4F45',
+                  color: '#FFFDFA',
+                  fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
                   textDecoration: 'none',
                   textAlign: 'center',
@@ -397,12 +399,17 @@ export default function MarketingHeader({
       )}
 
       <style jsx>{`
-        @media (min-width: 900px) {
+        @media (min-width: 1024px) {
           .desktop-nav {
             display: flex !important;
           }
           .mobile-hamburger-btn {
             display: none !important;
+          }
+        }
+        @media (max-width: 900px) {
+          .header-inner-container {
+            padding: 0 24px !important;
           }
         }
       `}</style>

@@ -7,28 +7,30 @@ import MarketingFooter from '@/components/marketing/MarketingFooter';
 import AuthModal from '@/components/marketing/AuthModal';
 import WaitlistModal from '@/components/marketing/WaitlistModal';
 import {
-  ShieldCheck,
   CheckCircle2,
   ArrowRight,
+  ChevronRight,
+  Star,
   Users,
   Coins,
   CalendarCheck,
-  TrendingUp,
-  Building,
+  HeartHandshake,
+  Home as HomeIcon,
   GraduationCap,
   Briefcase,
   Globe2,
-  HeartHandshake,
-  Star,
-  Lock,
-  ChevronRight,
+  Users2,
+  ShieldCheck,
+  Bookmark,
+  CheckCircle,
+  Building,
+  Shield,
 } from 'lucide-react';
 
-export default function Home() {
+export default function HomePage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [waitlistModalOpen, setWaitlistModalOpen] = useState(false);
 
-  // Check if already logged in -> redirect to dashboard
   useEffect(() => {
     fetch('/api/auth/session')
       .then((res) => res.json())
@@ -46,9 +48,9 @@ export default function Home() {
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'var(--bg-main)',
+        backgroundColor: '#FFFDFA',
         fontFamily: 'var(--font-family-body)',
-        color: 'var(--text-main)',
+        color: '#1A1A1A',
       }}
     >
       <MarketingHeader
@@ -59,311 +61,283 @@ export default function Home() {
 
       <main style={{ flex: 1 }}>
         {/* ============================================================ */}
-        {/* SECTION 1: HERO SECTION                                      */}
+        {/* 1. HERO SECTION (background: #F4F1E8)                        */}
         {/* ============================================================ */}
         <section
           style={{
-            padding: '60px 24px 80px',
-            maxWidth: '1280px',
-            margin: '0 auto',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-            gap: '48px',
-            alignItems: 'center',
+            backgroundColor: '#F4F1E8',
+            padding: '70px 80px 80px',
           }}
+          className="responsive-section-padding"
         >
-          {/* Left Column: Copy & CTAs */}
-          <div>
-            {/* Pill Badge */}
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '7px 16px',
-                borderRadius: '9999px',
-                backgroundColor: 'rgba(12, 78, 67, 0.08)',
-                border: '1px solid rgba(12, 78, 67, 0.18)',
-                color: 'var(--primary)',
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                marginBottom: '20px',
-              }}
-            >
-              <ShieldCheck size={16} />
-              <span>UK RESIDENTS ONLY, BY REFERRAL & APPROVAL</span>
-            </div>
-
-            <h1
-              style={{
-                fontSize: 'clamp(2.4rem, 4.5vw, 3.6rem)',
-                fontWeight: 800,
-                fontFamily: 'var(--font-family-title)',
-                lineHeight: 1.12,
-                color: 'var(--text-main)',
-                margin: '0 0 20px 0',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Build Wealth Through a{' '}
-              <span style={{ color: 'var(--primary)', position: 'relative' }}>
-                Trusted Savings Community
-              </span>
-            </h1>
-
-            <p
-              style={{
-                fontSize: 'clamp(1.05rem, 1.6vw, 1.2rem)',
-                lineHeight: 1.65,
-                color: 'var(--text-muted)',
-                marginBottom: '32px',
-                maxWidth: '560px',
-              }}
-            >
-              A structured, referral-based savings collective that enables members to work towards property ownership and other major life goals, including education, through a trusted, interest-free community saving model.
-            </p>
-
-            {/* CTAs */}
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '14px',
-                alignItems: 'center',
-                marginBottom: '36px',
-              }}
-            >
-              <button
-                onClick={() => setWaitlistModalOpen(true)}
+          <div
+            style={{
+              maxWidth: '1440px',
+              margin: '0 auto',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+              gap: '60px',
+              alignItems: 'center',
+            }}
+          >
+            {/* Left Column: Copy & Actions */}
+            <div>
+              {/* Top Kicker matching old design */}
+              <div
                 style={{
-                  padding: '14px 28px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  backgroundColor: 'var(--secondary)',
-                  color: '#ffffff',
-                  fontFamily: 'var(--font-family-title)',
-                  fontWeight: 700,
-                  fontSize: '1rem',
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  boxShadow: '0 6px 18px var(--secondary-glow)',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--secondary-hover)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--secondary)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                <span>Join the Waiting List</span>
-                <ArrowRight size={18} />
-              </button>
-
-              <Link
-                href="/about-us"
-                style={{
-                  padding: '13px 26px',
-                  borderRadius: '10px',
-                  border: '1.5px solid var(--border-color)',
-                  backgroundColor: '#ffffff',
-                  color: 'var(--text-main)',
-                  fontFamily: 'var(--font-family-title)',
+                  fontSize: '0.875rem',
                   fontWeight: 600,
-                  fontSize: '1rem',
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--primary)';
-                  e.currentTarget.style.color = 'var(--primary)';
-                  e.currentTarget.style.backgroundColor = 'var(--primary-light)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border-color)';
-                  e.currentTarget.style.color = 'var(--text-main)';
-                  e.currentTarget.style.backgroundColor = '#ffffff';
+                  textTransform: 'uppercase',
+                  fontStyle: 'italic',
+                  color: '#0E4F45',
+                  letterSpacing: '0.06em',
+                  marginBottom: '16px',
+                  fontFamily: 'var(--font-family-body)',
                 }}
               >
-                <span>Learn More</span>
-                <ChevronRight size={16} />
-              </Link>
-            </div>
+                UK RESIDENTS ONLY, BY REFERRAL & APPROVAL
+              </div>
 
-            {/* Trust Checkmarks */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, minmax(140px, 1fr))',
-                gap: '12px',
-                paddingTop: '20px',
-                borderTop: '1px solid var(--border-color)',
-              }}
-            >
-              {[
-                'Vetted members',
-                'Structured governance',
-                'Transparent tracking',
-                'GDPR-Compliant',
-              ].map((item, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle2 size={16} style={{ color: 'var(--primary)', flexShrink: 0 }} />
-                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                    {item}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right Column: Hero Graphic with Floating Badges */}
-          <div style={{ position: 'relative' }}>
-            <div
-              style={{
-                borderRadius: '24px',
-                overflow: 'hidden',
-                boxShadow: '0 25px 50px -12px rgba(12, 78, 67, 0.25)',
-                border: '1px solid var(--border-color)',
-                position: 'relative',
-              }}
-            >
-              <img
-                src="/images/hero-image.webp"
-                alt="Savvey Savers Community and Wealth Building"
+              {/* Headline matching old design */}
+              <h1
                 style={{
-                  width: '100%',
-                  height: 'auto',
-                  maxHeight: '520px',
-                  objectFit: 'cover',
-                  display: 'block',
+                  fontSize: 'clamp(2.4rem, 3.8vw, 3.8rem)',
+                  fontWeight: 600,
+                  fontFamily: 'var(--font-family-title)',
+                  lineHeight: 1.15,
+                  color: '#1A1A1A',
+                  margin: '0 0 24px 0',
+                  letterSpacing: '-0.02em',
                 }}
-              />
-            </div>
+              >
+                Build Wealth Through a <br className="hidden-mobile" />
+                <span
+                  style={{
+                    fontStyle: 'italic',
+                    color: '#0E4F45',
+                    fontFamily: 'var(--font-family-title)',
+                    fontWeight: 700,
+                  }}
+                >
+                  Trusted{' '}
+                </span>
+                Savings Community
+              </h1>
 
-            {/* Floating Badge 1: 12+ Years Impact */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '20px',
-                left: '-16px',
-                backgroundColor: '#ffffff',
-                padding: '12px 18px',
-                borderRadius: '12px',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.12)',
-                border: '1px solid var(--border-color)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-              }}
-            >
+              {/* Description */}
+              <p
+                style={{
+                  fontSize: 'clamp(1rem, 1.15vw, 1.15rem)',
+                  lineHeight: 1.7,
+                  color: '#4a4a4a',
+                  marginBottom: '36px',
+                  maxWidth: '580px',
+                }}
+              >
+                A structured, referral-based savings collective that enables members to work towards property ownership and other major life goals, including education, through a trusted, interest-free community saving model.
+              </p>
+
+              {/* Action Buttons (exact pills) */}
               <div
                 style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '8px',
-                  backgroundColor: 'var(--primary-light)',
                   display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '16px',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--primary)',
+                  marginBottom: '36px',
                 }}
               >
-                <TrendingUp size={20} />
+                <button
+                  onClick={() => setWaitlistModalOpen(true)}
+                  style={{
+                    padding: '12px 28px',
+                    borderRadius: '360px',
+                    border: '2px solid #0E4F45',
+                    backgroundColor: '#0E4F45',
+                    color: '#FFFDFA',
+                    fontFamily: 'var(--font-family-title)',
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#0E4F45F2';
+                    e.currentTarget.style.borderColor = '#0E4F45F2';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#0E4F45';
+                    e.currentTarget.style.borderColor = '#0E4F45';
+                  }}
+                >
+                  <span>Join the Waiting List</span>
+                  <ArrowRight size={16} />
+                </button>
+
+                <Link
+                  href="/about-us"
+                  style={{
+                    padding: '12px 28px',
+                    borderRadius: '360px',
+                    border: '2px solid #1A1A1A',
+                    backgroundColor: 'transparent',
+                    color: '#1A1A1A',
+                    fontFamily: 'var(--font-family-title)',
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#1A1A1A';
+                    e.currentTarget.style.color = '#FFFDFA';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = '#1A1A1A';
+                  }}
+                >
+                  <span>Learn More</span>
+                  <ChevronRight size={16} />
+                </Link>
               </div>
-              <div>
-                <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--primary)' }}>
-                  12+ Years
-                </strong>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  Impact & Trust
-                </span>
+
+              {/* 4 Trust Points (Pills matching old design) */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                  gap: '12px',
+                  maxWidth: '520px',
+                }}
+              >
+                {[
+                  'Vetted members',
+                  'Structured governance',
+                  'Transparent tracking',
+                  'GDPR-Compliant',
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      backgroundColor: '#FFFDFA',
+                      border: '1px solid rgba(14, 79, 69, 0.15)',
+                      borderRadius: '360px',
+                      padding: '8px 16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#1A1A1A',
+                    }}
+                  >
+                    <CheckCircle2 size={16} style={{ color: '#0E4F45', flexShrink: 0 }} />
+                    <span>{item}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Floating Badge 2: Governed Circles */}
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '24px',
-                right: '-16px',
-                backgroundColor: '#ffffff',
-                padding: '12px 18px',
-                borderRadius: '12px',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.12)',
-                border: '1px solid var(--border-color)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-              }}
-            >
+            {/* Right Column: Hero Image matching old design */}
+            <div style={{ position: 'relative' }}>
               <div
                 style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '8px',
-                  backgroundColor: 'var(--secondary-light)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--secondary)',
+                  borderRadius: '24px',
+                  overflow: 'hidden',
+                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.12)',
                 }}
               >
-                <ShieldCheck size={20} />
-              </div>
-              <div>
-                <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--secondary)' }}>
-                  Governed Circles
-                </strong>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  Transparent Tracking
-                </span>
+                <img
+                  src="/images/hero-image.webp"
+                  alt="Build Wealth Through a Trusted Savings Community"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: '540px',
+                    objectFit: 'cover',
+                    display: 'block',
+                  }}
+                />
               </div>
             </div>
           </div>
         </section>
 
         {/* ============================================================ */}
-        {/* SECTION 2: HOW THE COLLECTIVE WORKS                         */}
+        {/* 2. DARK GREEN HORIZONTAL TRUST STRIP (container ecd52b6)     */}
         {/* ============================================================ */}
         <section
           style={{
-            padding: '80px 24px',
-            backgroundColor: 'var(--bg-surface)',
-            borderTop: '1px solid var(--border-color)',
-            borderBottom: '1px solid var(--border-color)',
+            backgroundColor: '#0E4F45',
+            color: '#FFFDFA',
+            padding: '22px 80px',
+            overflowX: 'auto',
           }}
+          className="responsive-section-padding"
         >
-          <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-              <span
+          <div
+            style={{
+              maxWidth: '1440px',
+              margin: '0 auto',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '32px',
+              flexWrap: 'wrap',
+            }}
+          >
+            {[
+              { label: '12+ Years Impact', icon: CheckCircle },
+              { label: 'Governed Circles', icon: Bookmark },
+              { label: 'Verified Members', icon: CheckCircle2 },
+              { label: 'GDPR Protection', icon: ShieldCheck },
+              { label: 'Structured governance', icon: Building },
+              { label: 'GDPR-Compliant', icon: Shield },
+            ].map((item, idx) => (
+              <div
+                key={idx}
                 style={{
-                  fontSize: '0.8125rem',
-                  fontWeight: 700,
-                  color: 'var(--primary)',
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  display: 'block',
-                  marginBottom: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  fontSize: '0.95rem',
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
                 }}
               >
-                The Process
-              </span>
+                <item.icon size={18} style={{ color: '#FFBC7D' }} />
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/* 3. HOW THE COLLECTIVE WORKS (container 8d72461: #FFFDFA)     */}
+        {/* ============================================================ */}
+        <section
+          style={{
+            backgroundColor: '#FFFDFA',
+            padding: '90px 80px',
+          }}
+          className="responsive-section-padding"
+        >
+          <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '64px' }}>
               <h2
                 style={{
-                  fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
-                  fontWeight: 800,
+                  fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+                  fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
-                  color: 'var(--text-main)',
-                  margin: '0 0 12px 0',
+                  color: '#1A1A1A',
+                  margin: '0 0 14px 0',
                 }}
               >
                 How the Collective Works
@@ -371,109 +345,98 @@ export default function Home() {
               <p
                 style={{
                   fontSize: '1.05rem',
-                  color: 'var(--text-muted)',
-                  maxWidth: '600px',
+                  color: '#555',
+                  maxWidth: '640px',
                   margin: '0 auto',
+                  lineHeight: 1.6,
                 }}
               >
                 Four simple steps to achieving your financial goals through community savings.
               </p>
             </div>
 
-            {/* 4 Steps Grid */}
+            {/* 4 Step Icon Boxes with connecting line */}
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: '24px',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                gap: '32px',
+                position: 'relative',
               }}
+              className="steps-container"
             >
               {[
                 {
-                  step: '01',
                   icon: Users,
                   title: 'Join a Vetted Circle',
                   desc: 'Members are verified and placed into trusted savings circles through referrals and onboarding checks.',
                 },
                 {
-                  step: '02',
                   icon: Coins,
                   title: 'Contribute Monthly',
-                  desc: 'Members make structured monthly contributions that are tracked transparently on the member portal.',
+                  desc: 'Members make structured monthly contributions that are tracked transparently.',
                 },
                 {
-                  step: '03',
                   icon: CalendarCheck,
                   title: 'Receive Scheduled Disbursement',
-                  desc: 'Members receive pooled contributions in their assigned month according to the pre-agreed schedule.',
+                  desc: 'Members receive pooled contributions in their assigned month.',
                 },
                 {
-                  step: '04',
                   icon: HeartHandshake,
                   title: 'Collective Accountability',
-                  desc: 'Ongoing contributions ensure every member completes their cycle and reaches their major financial goal.',
+                  desc: 'Ongoing contributions ensure every member completes their cycle and reaches their goal.',
                 },
-              ].map((item, idx) => (
+              ].map((step, idx) => (
                 <div
                   key={idx}
                   style={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '16px',
-                    padding: '32px 24px',
-                    border: '1px solid var(--border-color)',
-                    boxShadow: 'var(--shadow-sm)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
                     position: 'relative',
-                    transition: 'all 0.2s ease',
+                    zIndex: 1,
                   }}
                 >
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: '20px',
-                      right: '24px',
-                      fontSize: '1.75rem',
-                      fontWeight: 800,
-                      fontFamily: 'var(--font-family-title)',
-                      color: 'var(--border-color)',
-                    }}
-                  >
-                    {item.step}
-                  </span>
+                  {/* Circular Step Icon */}
                   <div
                     style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '12px',
-                      backgroundColor: 'var(--primary-light)',
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      backgroundColor: '#0E4F45',
+                      color: '#FFFDFA',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: 'var(--primary)',
                       marginBottom: '20px',
+                      boxShadow: '0 6px 16px rgba(14, 79, 69, 0.25)',
                     }}
                   >
-                    <item.icon size={24} />
+                    <step.icon size={28} />
                   </div>
+
                   <h3
                     style={{
-                      fontSize: '1.2rem',
-                      fontWeight: 700,
+                      fontSize: '1.25rem',
+                      fontWeight: 600,
                       fontFamily: 'var(--font-family-title)',
-                      color: 'var(--text-main)',
-                      margin: '0 0 10px 0',
+                      color: '#1A1A1A',
+                      margin: '0 0 12px 0',
                     }}
                   >
-                    {item.title}
+                    {step.title}
                   </h3>
+
                   <p
                     style={{
-                      fontSize: '0.9rem',
-                      lineHeight: 1.6,
-                      color: 'var(--text-muted)',
+                      fontSize: '0.9375rem',
+                      lineHeight: 1.65,
+                      color: '#555',
                       margin: 0,
                     }}
                   >
-                    {item.desc}
+                    {step.desc}
                   </p>
                 </div>
               ))}
@@ -482,437 +445,329 @@ export default function Home() {
         </section>
 
         {/* ============================================================ */}
-        {/* SECTION 3: BUILT ON TRUST                                    */}
+        {/* 4. BUILT ON TRUST (container 85d16c3: #F4F1E8)               */}
         {/* ============================================================ */}
         <section
           style={{
-            padding: '90px 24px',
-            maxWidth: '1280px',
-            margin: '0 auto',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '50px',
-            alignItems: 'center',
+            backgroundColor: '#F4F1E8',
+            padding: '90px 80px',
           }}
+          className="responsive-section-padding"
         >
-          {/* Side Image */}
-          <div style={{ order: 2 }}>
-            <div
-              style={{
-                borderRadius: '20px',
-                overflow: 'hidden',
-                boxShadow: 'var(--shadow-xl)',
-                border: '1px solid var(--border-color)',
-              }}
-            >
-              <img
-                src="/images/savings.webp"
-                alt="Savings Safeguards & Governance"
+          <div
+            style={{
+              maxWidth: '1440px',
+              margin: '0 auto',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+              gap: '60px',
+              alignItems: 'center',
+            }}
+          >
+            {/* Left Column: Text & Checklist */}
+            <div>
+              <h2
                 style={{
-                  width: '100%',
-                  height: '460px',
-                  objectFit: 'cover',
-                  display: 'block',
+                  fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+                  fontWeight: 600,
+                  fontFamily: 'var(--font-family-title)',
+                  lineHeight: 1.2,
+                  color: '#1A1A1A',
+                  margin: '0 0 20px 0',
                 }}
-              />
-            </div>
-          </div>
+              >
+                Built on Trust. Sustained by Shared Accountability.
+              </h2>
+              <p
+                style={{
+                  fontSize: '1.05rem',
+                  lineHeight: 1.7,
+                  color: '#4a4a4a',
+                  marginBottom: '32px',
+                }}
+              >
+                Savvey Savers facilitates and administers savings circles but does not hold or manage member funds. We safeguard member contributions through structured governance, transparent processes, and secure data practices designed to protect the integrity of every savings circle.
+              </p>
 
-          {/* Checklist Content */}
-          <div style={{ order: 1 }}>
-            <span
-              style={{
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                color: 'var(--secondary)',
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: '8px',
-              }}
-            >
-              Integrity & Governance
-            </span>
-            <h2
-              style={{
-                fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
-                fontWeight: 800,
-                fontFamily: 'var(--font-family-title)',
-                lineHeight: 1.2,
-                color: 'var(--text-main)',
-                margin: '0 0 16px 0',
-              }}
-            >
-              Built on Trust. Sustained by Shared Accountability.
-            </h2>
-            <p
-              style={{
-                fontSize: '1rem',
-                lineHeight: 1.65,
-                color: 'var(--text-muted)',
-                marginBottom: '28px',
-              }}
-            >
-              Savvey Savers facilitates and administers savings circles but does not hold or manage member funds. We safeguard member contributions through structured governance, transparent processes, and secure data practices designed to protect the integrity of every savings circle.
-            </p>
-
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '14px',
-                marginBottom: '28px',
-              }}
-            >
-              {[
-                'Strict member verification protocols',
-                'Verified onboarding process',
-                'Structured disbursement schedules',
-                'Transparent contribution tracking',
-                'Clear dispute resolution processes',
-                'GDPR-aligned data protection',
-              ].map((item, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                  <CheckCircle2 size={18} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '0.925rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                    {item}
-                  </span>
-                </div>
-              ))}
+              {/* 6 Checklist Items */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                  gap: '16px',
+                }}
+              >
+                {[
+                  'Strict member verification protocols',
+                  'Verified onboarding process',
+                  'Structured disbursement schedules',
+                  'Transparent contribution tracking',
+                  'Clear dispute resolution processes',
+                  'GDPR-aligned data protection',
+                ].map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                    <CheckCircle2 size={20} style={{ color: '#0E4F45', flexShrink: 0, marginTop: '2px' }} />
+                    <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#1A1A1A' }}>
+                      {item}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <button
-              onClick={() => setWaitlistModalOpen(true)}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: 'var(--primary)',
-                color: '#ffffff',
-                fontFamily: 'var(--font-family-title)',
-                fontWeight: 700,
-                fontSize: '0.95rem',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <span>Apply for Vetted Membership</span>
-              <ArrowRight size={16} />
-            </button>
+            {/* Right Column: Image (community-scaled.webp) */}
+            <div>
+              <div
+                style={{
+                  borderRadius: '24px',
+                  overflow: 'hidden',
+                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.12)',
+                }}
+              >
+                <img
+                  src="/images/community.webp"
+                  alt="Built on Trust - Savvey Savers Community"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: '480px',
+                    objectFit: 'cover',
+                    display: 'block',
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </section>
 
         {/* ============================================================ */}
-        {/* SECTION 4: WHY MEMBERS JOIN SAVVEY SAVERS                   */}
+        {/* 5. WHY MEMBERS JOIN SAVVEY SAVERS (container e086504: sage)  */}
         {/* ============================================================ */}
         <section
           style={{
-            padding: '80px 24px',
-            backgroundColor: 'var(--bg-surface)',
-            borderTop: '1px solid var(--border-color)',
-            borderBottom: '1px solid var(--border-color)',
+            backgroundColor: 'rgba(14, 79, 69, 0.08)', // exact soft green tint
+            padding: '90px 80px',
           }}
+          className="responsive-section-padding"
         >
-          <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-              <span
-                style={{
-                  fontSize: '0.8125rem',
-                  fontWeight: 700,
-                  color: 'var(--secondary)',
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  display: 'block',
-                  marginBottom: '8px',
-                }}
-              >
-                Financial Milestones
-              </span>
+          <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '56px' }}>
               <h2
                 style={{
-                  fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
-                  fontWeight: 800,
+                  fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+                  fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
-                  color: 'var(--text-main)',
-                  margin: '0 0 12px 0',
+                  color: '#1A1A1A',
+                  margin: 0,
                 }}
               >
                 Why Members Join Savvey Savers Collective
               </h2>
-              <p
-                style={{
-                  fontSize: '1rem',
-                  color: 'var(--text-muted)',
-                  maxWidth: '650px',
-                  margin: '0 auto',
-                }}
-              >
-                Members utilize interest-free pooled disbursements to reach life-changing financial goals.
-              </p>
             </div>
 
-            {/* 5 Goal Cards */}
+            {/* 5 Milestone Cards */}
             <div
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '20px',
+                gap: '24px',
               }}
             >
               {[
-                {
-                  icon: Building,
-                  title: 'Property Deposits',
-                  desc: 'Accumulate lump-sum equity for home purchases and mortgage deposits without commercial borrowing.',
-                },
-                {
-                  icon: GraduationCap,
-                  title: 'Education Expenses',
-                  desc: 'Fund university tuition fees, career bootcamps, and professional development debt-free.',
-                },
-                {
-                  icon: Briefcase,
-                  title: 'Business Capital',
-                  desc: 'Bootstrap startup inventory, scale company equipment, and secure working capital.',
-                },
-                {
-                  icon: Globe2,
-                  title: 'Diaspora Wealth Planning',
-                  desc: 'Coordinate international investments, home country development, and long-term asset accumulation.',
-                },
-                {
-                  icon: Users,
-                  title: 'Family Financial Planning',
-                  desc: 'Achieve significant milestones, life events, and family financial stability through collective discipline.',
-                },
-              ].map((goal, idx) => (
+                { title: 'Property Deposits', icon: HomeIcon },
+                { title: 'Education Expenses', icon: GraduationCap },
+                { title: 'Business Capital', icon: Briefcase },
+                { title: 'Diaspora Wealth Planning', icon: Globe2 },
+                { title: 'Family Financial Planning', icon: Users2 },
+              ].map((card, idx) => (
                 <div
                   key={idx}
                   style={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '14px',
-                    padding: '28px 22px',
-                    border: '1px solid var(--border-color)',
-                    boxShadow: 'var(--shadow-sm)',
+                    backgroundColor: '#FFFDFA',
+                    borderRadius: '16px',
+                    padding: '36px 24px',
+                    textAlign: 'center',
+                    border: '1px solid rgba(14, 79, 69, 0.12)',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)',
                     display: 'flex',
                     flexDirection: 'column',
-                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
-                  <div>
-                    <div
-                      style={{
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '10px',
-                        backgroundColor: 'var(--secondary-light)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'var(--secondary)',
-                        marginBottom: '16px',
-                      }}
-                    >
-                      <goal.icon size={22} />
-                    </div>
-                    <h3
-                      style={{
-                        fontSize: '1.15rem',
-                        fontWeight: 700,
-                        fontFamily: 'var(--font-family-title)',
-                        color: 'var(--text-main)',
-                        margin: '0 0 10px 0',
-                      }}
-                    >
-                      {goal.title}
-                    </h3>
-                    <p
-                      style={{
-                        fontSize: '0.875rem',
-                        lineHeight: 1.55,
-                        color: 'var(--text-muted)',
-                        margin: 0,
-                      }}
-                    >
-                      {goal.desc}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ============================================================ */}
-        {/* SECTION 5: WHY SAVVEY SAVERS COLLECTIVE                     */}
-        {/* ============================================================ */}
-        <section
-          style={{
-            padding: '90px 24px',
-            maxWidth: '1280px',
-            margin: '0 auto',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '50px',
-            alignItems: 'center',
-          }}
-        >
-          {/* Left: Differentiators */}
-          <div>
-            <span
-              style={{
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                color: 'var(--primary)',
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: '8px',
-              }}
-            >
-              The Savvey Advantage
-            </span>
-            <h2
-              style={{
-                fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
-                fontWeight: 800,
-                fontFamily: 'var(--font-family-title)',
-                lineHeight: 1.2,
-                color: 'var(--text-main)',
-                margin: '0 0 16px 0',
-              }}
-            >
-              Why Savvey Savers Collective
-            </h2>
-            <p
-              style={{
-                fontSize: '1.05rem',
-                lineHeight: 1.65,
-                color: 'var(--text-muted)',
-                marginBottom: '28px',
-              }}
-            >
-              We offer a structured community-driven alternative to traditional borrowing, built on shared trust and collective responsibility.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '32px' }}>
-              {[
-                { title: 'Achieve property deposit goals faster', desc: 'Accelerate timelines through scheduled pooled payouts.' },
-                { title: 'Receive pooled funds without borrowing', desc: 'Access capital that is 100% interest-free.' },
-                { title: 'No interest. No hidden fees', desc: 'Simple, transparent, zero hidden charges or penalty surcharges.' },
-                { title: 'Build lasting financial discipline', desc: 'Structured peer accountability fosters consistent monthly habits.' },
-                { title: 'A structured alternative to commercial credit', desc: 'Community empowerment replacing predatory debt.' },
-              ].map((diff, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                   <div
                     style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '50%',
-                      backgroundColor: 'var(--status-active-bg)',
+                      width: '60px',
+                      height: '60px',
+                      borderRadius: '14px',
+                      backgroundColor: '#0E4F45',
+                      color: '#FFFDFA',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: 'var(--primary)',
-                      flexShrink: 0,
-                      marginTop: '2px',
+                      marginBottom: '18px',
                     }}
                   >
-                    <CheckCircle2 size={16} />
+                    <card.icon size={28} />
                   </div>
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-main)' }}>
-                      {diff.title}
-                    </strong>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      {diff.desc}
-                    </span>
-                  </div>
+                  <h3
+                    style={{
+                      fontSize: '1.15rem',
+                      fontWeight: 600,
+                      fontFamily: 'var(--font-family-title)',
+                      color: '#1A1A1A',
+                      margin: 0,
+                      lineHeight: 1.35,
+                    }}
+                  >
+                    {card.title}
+                  </h3>
                 </div>
               ))}
-            </div>
-
-            <button
-              onClick={() => setWaitlistModalOpen(true)}
-              style={{
-                padding: '13px 26px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: 'var(--secondary)',
-                color: '#ffffff',
-                fontFamily: 'var(--font-family-title)',
-                fontWeight: 700,
-                fontSize: '0.95rem',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 4px 14px var(--secondary-glow)',
-              }}
-            >
-              <span>Join a Savings Circle</span>
-              <ArrowRight size={16} />
-            </button>
-          </div>
-
-          {/* Right: Community Image */}
-          <div>
-            <div
-              style={{
-                borderRadius: '20px',
-                overflow: 'hidden',
-                boxShadow: 'var(--shadow-xl)',
-                border: '1px solid var(--border-color)',
-              }}
-            >
-              <img
-                src="/images/community.webp"
-                alt="Savvey Savers Collective Alternative"
-                style={{
-                  width: '100%',
-                  height: '460px',
-                  objectFit: 'cover',
-                  display: 'block',
-                }}
-              />
             </div>
           </div>
         </section>
 
         {/* ============================================================ */}
-        {/* SECTION 6: MEMBER TESTIMONIALS (GOOGLE REVIEWS)             */}
+        {/* 6. WHY SAVVEY SAVERS COLLECTIVE (container a24f3c9: #F4F1E8) */}
         {/* ============================================================ */}
         <section
           style={{
-            padding: '80px 24px',
-            backgroundColor: 'var(--bg-surface)',
-            borderTop: '1px solid var(--border-color)',
-            borderBottom: '1px solid var(--border-color)',
+            backgroundColor: '#F4F1E8',
+            padding: '90px 80px',
           }}
+          className="responsive-section-padding"
         >
-          <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-              <span
+          <div
+            style={{
+              maxWidth: '1440px',
+              margin: '0 auto',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+              gap: '60px',
+              alignItems: 'center',
+            }}
+          >
+            {/* Left: Text & Checkmarks */}
+            <div>
+              <h2
                 style={{
-                  fontSize: '0.8125rem',
-                  fontWeight: 700,
-                  color: 'var(--primary)',
-                  letterSpacing: '0.12em',
+                  fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+                  fontWeight: 600,
+                  fontFamily: 'var(--font-family-title)',
+                  lineHeight: 1.2,
+                  color: '#1A1A1A',
+                  margin: '0 0 16px 0',
+                }}
+              >
+                Why Savvey Savers Collective
+              </h2>
+              <p
+                style={{
+                  fontSize: '1.05rem',
+                  lineHeight: 1.7,
+                  color: '#4a4a4a',
+                  marginBottom: '28px',
+                }}
+              >
+                We offer a structured community-driven alternative to traditional borrowing, built on shared trust and collective responsibility.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '32px' }}>
+                {[
+                  'Achieve property deposit goals faster',
+                  'Receive pooled funds without borrowing',
+                  'No interest. No hidden fees',
+                  'Build lasting financial discipline through structured accountability',
+                  'A structured alternative to traditional borrowing',
+                ].map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <CheckCircle2 size={18} style={{ color: '#0E4F45', flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#1A1A1A' }}>
+                      {item}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setWaitlistModalOpen(true)}
+                style={{
+                  padding: '12px 28px',
+                  borderRadius: '360px',
+                  border: '2px solid #0E4F45',
+                  backgroundColor: '#0E4F45',
+                  color: '#FFFDFA',
+                  fontFamily: 'var(--font-family-title)',
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span>Join a Savings Circle</span>
+                <ArrowRight size={16} />
+              </button>
+            </div>
+
+            {/* Right: Image (savings-scaled.webp) */}
+            <div>
+              <div
+                style={{
+                  borderRadius: '24px',
+                  overflow: 'hidden',
+                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.12)',
+                }}
+              >
+                <img
+                  src="/images/savings.webp"
+                  alt="Why Savvey Savers Collective"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: '480px',
+                    objectFit: 'cover',
+                    display: 'block',
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/* 7. MEMBER TESTIMONIALS (container 31731c1: #FFFDFA)          */}
+        {/* ============================================================ */}
+        <section
+          style={{
+            backgroundColor: '#FFFDFA',
+            padding: '90px 80px',
+          }}
+          className="responsive-section-padding"
+        >
+          <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+              <div
+                style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
                   textTransform: 'uppercase',
-                  display: 'block',
-                  marginBottom: '8px',
+                  fontStyle: 'italic',
+                  color: '#0E4F45',
+                  letterSpacing: '0.06em',
+                  marginBottom: '10px',
                 }}
               >
                 Member Testimonials
-              </span>
+              </div>
               <h2
                 style={{
-                  fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
-                  fontWeight: 800,
+                  fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+                  fontWeight: 600,
                   fontFamily: 'var(--font-family-title)',
-                  color: 'var(--text-main)',
+                  color: '#1A1A1A',
                   margin: '0 0 12px 0',
                 }}
               >
@@ -920,44 +775,37 @@ export default function Home() {
               </h2>
               <p
                 style={{
-                  fontSize: '1rem',
-                  color: 'var(--text-muted)',
-                  maxWidth: '600px',
-                  margin: '0 auto 24px',
+                  fontSize: '1.05rem',
+                  color: '#555',
+                  margin: '0 auto 28px',
                 }}
               >
-                What our verified members say about saving with the collective on Google Reviews.
+                What our members say about saving with the collective.
               </p>
 
-              {/* Google Reviews Badge */}
+              {/* Google Reviews Badge Header */}
               <div
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '12px',
-                  backgroundColor: '#ffffff',
-                  padding: '10px 22px',
-                  borderRadius: '9999px',
-                  boxShadow: 'var(--shadow-sm)',
-                  border: '1px solid var(--border-color)',
+                  gap: '14px',
+                  backgroundColor: '#f7f5ec',
+                  padding: '10px 24px',
+                  borderRadius: '360px',
+                  border: '1px solid rgba(14, 79, 69, 0.12)',
                 }}
               >
+                <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>Savvey Savers Network Limited</span>
                 <div style={{ display: 'flex', gap: '3px', color: '#f59e0b' }}>
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={18} fill="#f59e0b" />
+                    <Star key={i} size={16} fill="#f59e0b" />
                   ))}
                 </div>
-                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                  5.0 Rating on Google Reviews
-                </span>
-                <span style={{ color: 'var(--border-color)' }}>|</span>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  Savvey Savers Network Limited
-                </span>
+                <span style={{ fontSize: '0.9rem', color: '#555' }}>5.0 Rating on Google Reviews</span>
               </div>
             </div>
 
-            {/* Testimonials Grid */}
+            {/* Testimonials Cards (exact soft cream background: #f7f5ec) */}
             <div
               style={{
                 display: 'grid',
@@ -967,50 +815,48 @@ export default function Home() {
             >
               {[
                 {
-                  name: 'Judy Dominic',
-                  time: '2 years ago',
-                  quote:
-                    'My 1 years collection has just been deposited in my account.. yay!. This approach encourages financial discipline and helps me achieve my financial objectives faster. Highly recommend.',
-                },
-                {
-                  name: 'oronsaye Daniel',
-                  time: '2 years ago',
-                  quote:
-                    'A very trusted and reliable saving club, I couldn’t have achieved my saving goals if not for savvey savers . Many thanks to the dedicated minds behind this great platform.',
-                },
-                {
-                  name: 'Yori Gbadamosi',
-                  time: '3 years ago',
-                  quote:
-                    'Savvey Savers Network Limited offers a range of savings solutions with transparent terms. Their excellent customer service, user-friendly online platform, transparent fee structures, and commitment to security make them a reliable choice.',
+                  name: 'olowo busola',
+                  time: '11 months ago',
+                  quote: 'Well organised...I have no regrets joining this group',
                 },
                 {
                   name: 'Simisola Adingupu',
                   time: '1 year ago',
-                  quote:
-                    'Started using savvy savers this year, just received my first half payment. I totally recommend.',
+                  quote: 'Started using savvy savers this year, just received my first half payment. I totally recommend.',
                 },
                 {
-                  name: 'olowo busola',
-                  time: '11 months ago',
-                  quote:
-                    'Well organised...I have no regrets joining this group. Very transparent ledger and reliable disbursement.',
+                  name: 'Aganbi vera',
+                  time: '2 years ago',
+                  quote: 'It’s the best, very true and safe',
                 },
                 {
                   name: 'Davidson Sunday',
                   time: '2 years ago',
-                  quote:
-                    'It is so lovely and no stress, so Compliance and structured from start to finish.',
+                  quote: 'It is so lovely and no stress, so Compliance',
+                },
+                {
+                  name: 'oronsaye Daniel',
+                  time: '2 years ago',
+                  quote: 'A very trusted and reliable saving club, I couldn’t have achieved my saving goals if not for savvey savers . Many thanks to the dedicated minds behind this great platform.',
+                },
+                {
+                  name: 'Judy Dominic',
+                  time: '2 years ago',
+                  quote: 'My 1 years collection has just been deposited in my account.. yay!. This approach encourages financial discipline and helps me achieve my financial objectives faster. Highly recommend.',
+                },
+                {
+                  name: 'Yori Gbadamosi',
+                  time: '3 years ago',
+                  quote: 'Savvey Savers Network Limited offers a range of savings solutions with transparent terms. Their excellent customer service, user-friendly online platform, transparent fee structures, and commitment to security make them a reliable choice for individuals looking to grow their savings with confidence.',
                 },
               ].map((rev, idx) => (
                 <div
                   key={idx}
                   style={{
-                    backgroundColor: '#ffffff',
+                    backgroundColor: '#f7f5ec', // exact --rev-color from WordPress widget
                     borderRadius: '16px',
                     padding: '28px',
-                    border: '1px solid var(--border-color)',
-                    boxShadow: 'var(--shadow-sm)',
+                    border: '1px solid rgba(0, 0, 0, 0.05)',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
@@ -1018,11 +864,10 @@ export default function Home() {
                 >
                   <p
                     style={{
-                      fontSize: '0.925rem',
+                      fontSize: '0.95rem',
                       lineHeight: 1.65,
-                      color: 'var(--text-main)',
+                      color: '#1A1A1A',
                       margin: '0 0 20px 0',
-                      fontStyle: 'italic',
                     }}
                   >
                     "{rev.quote}"
@@ -1033,21 +878,21 @@ export default function Home() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      borderTop: '1px solid var(--border-subtle)',
+                      borderTop: '1px solid rgba(0, 0, 0, 0.06)',
                       paddingTop: '14px',
                     }}
                   >
                     <div>
-                      <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--primary)' }}>
+                      <strong style={{ display: 'block', fontSize: '0.95rem', color: '#1A1A1A' }}>
                         {rev.name}
                       </strong>
-                      <span style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>
-                        {rev.time} · Google Verified Review
+                      <span style={{ fontSize: '0.8rem', color: '#777' }}>
+                        {rev.time}
                       </span>
                     </div>
                     <div style={{ display: 'flex', gap: '2px', color: '#f59e0b' }}>
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={14} fill="#f59e0b" />
+                        <Star key={i} size={15} fill="#f59e0b" />
                       ))}
                     </div>
                   </div>
@@ -1058,60 +903,80 @@ export default function Home() {
         </section>
 
         {/* ============================================================ */}
-        {/* SECTION 7: FINAL CTA BANNER                                  */}
+        {/* 8. START YOUR JOURNEY CTA (container c1e859e: image + #0E4F45)*/}
         {/* ============================================================ */}
         <section
           style={{
-            padding: '80px 24px',
-            backgroundColor: 'var(--primary-dark)',
-            color: '#ffffff',
-            textAlign: 'center',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+            minHeight: '480px',
+            backgroundColor: '#0E4F45',
           }}
         >
-          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-            <h2
+          {/* Left Image: holding hands */}
+          <div
+            style={{
+              backgroundImage: 'url(/images/holding-hands.webp)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              minHeight: '360px',
+            }}
+          />
+
+          {/* Right Solid Green CTA content */}
+          <div
+            style={{
+              backgroundColor: '#0E4F45',
+              color: '#FFFDFA',
+              padding: '60px 48px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              textAlign: 'center',
+            }}
+          >
+            <h3
               style={{
-                fontSize: 'clamp(2rem, 3.5vw, 2.8rem)',
-                fontWeight: 800,
+                fontSize: 'clamp(2rem, 3.2vw, 2.8rem)',
+                fontWeight: 600,
                 fontFamily: 'var(--font-family-title)',
-                marginBottom: '16px',
+                color: '#FFFDFA',
+                margin: '0 0 16px 0',
               }}
             >
-              Start Your Journey with Savvey Savers
-            </h2>
+              Start your journey
+            </h3>
             <p
               style={{
-                fontSize: '1.1rem',
-                color: '#c5d6cc',
+                fontSize: '1.05rem',
                 lineHeight: 1.65,
-                marginBottom: '32px',
+                color: '#e2ede5',
+                maxWidth: '460px',
+                margin: '0 0 28px 0',
               }}
             >
-              Take control of your savings goals today. Join a community of disciplined savers working together towards home deposits, education, and long-term wealth.
+              Witness the transformative power of collective financial strength. Welcome to a community where your dreams matter, and together, we make them a reality.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => setWaitlistModalOpen(true)}
-                style={{
-                  padding: '15px 32px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  backgroundColor: 'var(--secondary)',
-                  color: '#ffffff',
-                  fontFamily: 'var(--font-family-title)',
-                  fontWeight: 700,
-                  fontSize: '1.05rem',
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  boxShadow: '0 6px 20px var(--secondary-glow)',
-                }}
-              >
-                <span>Join Our Waiting List</span>
-                <ArrowRight size={18} />
-              </button>
-            </div>
+            <button
+              onClick={() => setWaitlistModalOpen(true)}
+              style={{
+                backgroundColor: '#FFFDFA',
+                color: '#0E4F45',
+                border: 'none',
+                padding: '14px 34px',
+                borderRadius: '360px',
+                fontSize: '1rem',
+                fontWeight: 600,
+                fontFamily: 'var(--font-family-title)',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F4F1E8')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFDFA')}
+            >
+              Join Waiting List
+            </button>
           </div>
         </section>
       </main>
@@ -1121,9 +986,19 @@ export default function Home() {
         onOpenWaitlist={() => setWaitlistModalOpen(true)}
       />
 
-      {/* Interactive Modals */}
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
       <WaitlistModal isOpen={waitlistModalOpen} onClose={() => setWaitlistModalOpen(false)} />
+
+      <style jsx>{`
+        @media (max-width: 900px) {
+          .responsive-section-padding {
+            padding: 50px 24px !important;
+          }
+          .hidden-mobile {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
