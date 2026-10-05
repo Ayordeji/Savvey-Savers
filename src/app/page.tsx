@@ -81,6 +81,7 @@ export default function HomePage() {
           className="responsive-section-padding"
         >
           <div
+            className="hero-grid"
             style={{
               maxWidth: '1440px',
               margin: '0 auto',
@@ -145,6 +146,7 @@ export default function HomePage() {
               </p>
 
               <div
+                className="hero-cta-container"
                 style={{
                   display: 'flex',
                   flexWrap: 'wrap',
@@ -1077,6 +1079,12 @@ export default function HomePage() {
         @media (max-width: 900px) {
           .responsive-section-padding {
             padding: 40px 16px !important;
+          }
+          .hero-grid {
+            gap: 20px !important;
+          }
+          .hero-cta-container {
+            margin-bottom: 0 !important;
           }
           .hidden-mobile {
             display: none !important;

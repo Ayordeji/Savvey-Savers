@@ -733,6 +733,14 @@ button {
     box-sizing: border-box !important;
   }
 
+  .hero-grid {
+    gap: 20px !important;
+  }
+
+  .hero-cta-container {
+    margin-bottom: 0 !important;
+  }
+
   .glass-panel {
     padding: 14px !important;
     max-width: 100% !important;
