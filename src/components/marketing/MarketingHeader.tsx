@@ -73,7 +73,6 @@ export default function MarketingHeader({
         {/* Desktop Navigation */}
         <nav
           style={{
-            display: 'none',
             alignItems: 'center',
             gap: '32px',
           }}
@@ -133,7 +132,6 @@ export default function MarketingHeader({
           <div
             className="desktop-header-cta"
             style={{
-              display: 'flex',
               alignItems: 'center',
               gap: '12px',
             }}

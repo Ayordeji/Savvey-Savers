@@ -757,4 +757,35 @@ button {
   }
 }
 
+/* Marketing Header Desktop & Mobile Responsive Controls */
+.desktop-nav {
+  display: none !important;
+}
+
+.desktop-header-cta {
+  display: none !important;
+}
+
+.mobile-hamburger-btn {
+  display: flex !important;
+}
+
+@media (min-width: 1024px) {
+  .desktop-nav {
+    display: flex !important;
+  }
+  .desktop-header-cta {
+    display: flex !important;
+  }
+  .mobile-hamburger-btn {
+    display: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .header-inner-container {
+    padding: 0 16px !important;
+  }
+}
+
 
