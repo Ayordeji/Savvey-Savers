@@ -52,7 +52,7 @@ export default function FaqsPage() {
     },
     {
       q: 'Does Savvey Savers provide loans or financial services?',
-      a: 'No. Savvey Savers Collective facilitates structured savings cycles. We do not provide loans, banking services, or regulated investment products.',
+      a: 'No, Savvey Savers Collective is not authorised to provide Regulated Services, which loans and banking services are classified as by the FCA. Savvey Savers Collective simply facilitates structured savings cycles for its members, with pooled savings released to preselected members at the end of each monthly cycle. We do not provide loans, banking services, or regulated investment products.',
     },
     {
       q: 'How is my data protected?',
