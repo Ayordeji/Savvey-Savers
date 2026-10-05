@@ -7,6 +7,7 @@ import MarketingFooter from '@/components/marketing/MarketingFooter';
 import AuthModal from '@/components/marketing/AuthModal';
 import WaitlistModal from '@/components/marketing/WaitlistModal';
 import {
+  Check,
   CheckCircle2,
   ArrowRight,
   ChevronRight,
@@ -104,7 +105,7 @@ export default function HomePage() {
 
               <h1
                 style={{
-                  fontSize: 'clamp(2.75rem, 5.5vw, 4.2rem)',
+                  fontSize: 'clamp(2.85rem, 6vw, 4.2rem)',
                   fontWeight: 700,
                   fontFamily: 'var(--font-family-title)',
                   lineHeight: 1.15,
@@ -228,7 +229,7 @@ export default function HomePage() {
                     key={idx}
                     style={{
                       backgroundColor: 'transparent',
-                      border: '1px solid rgba(14, 79, 69, 0.25)',
+                      border: '1.5px solid rgba(14, 79, 69, 0.3)',
                       borderRadius: '360px',
                       padding: '8px 16px',
                       display: 'flex',
@@ -239,7 +240,7 @@ export default function HomePage() {
                       color: '#1A1A1A',
                     }}
                   >
-                    <CheckCircle2 size={16} style={{ color: '#0E4F45', flexShrink: 0 }} />
+                    <Check size={16} strokeWidth={2.5} style={{ color: '#0E4F45', flexShrink: 0 }} />
                     <span>{item}</span>
                   </div>
                 ))}

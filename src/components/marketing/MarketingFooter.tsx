@@ -317,10 +317,10 @@ export default function MarketingFooter({
             width: '100%',
           }}
         >
-          <div>
+          <div style={{ textAlign: 'center', width: '100%', margin: 0 }}>
             We protect your personal data in accordance with GDPR and applicable data protection laws.
           </div>
-          <div>
+          <div style={{ textAlign: 'center', width: '100%', margin: 0 }}>
             © {new Date().getFullYear()} Savvey Savers Collective. All rights reserved.
           </div>
         </div>
