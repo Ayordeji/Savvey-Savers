@@ -295,7 +295,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
 
             <div style={{ fontSize: '0.78rem', color: '#57655c', marginTop: '6px', fontWeight: 500 }}>
-              {selectedYearNum === 2026 ? 'Jan & Feb collections confirmed (£44,300/mo)' : `Confirmed collections for ${selectedYear}`} →
+              Confirmed collections for {selectedYear} →
             </div>
           </div>
         </Link>
