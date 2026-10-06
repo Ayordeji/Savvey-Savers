@@ -123,7 +123,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
     // 3. Harvests released
     const completedHarvests = allCommitments.filter(c =>
-      c.harvestReleasedAt !== null || (c as any).harvestAmount > 0
+      Number(c.collectionYear) === selectedYearNum && (c.harvestReleasedAt !== null || (c as any).harvestAmount > 0)
     );
     completedHarvestsCount = completedHarvests.length;
     harvestReleasedTotal = completedHarvests.reduce((acc, c) => acc + (c.harvestAmount || 0), 0);
