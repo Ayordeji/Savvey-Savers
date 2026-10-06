@@ -27,7 +27,7 @@ export default function MonthlyRevenueChart({
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(lastActiveIndex);
 
   const handleBarClick = (monthName: string) => {
-    router.push(`/dashboard/commitments?month=${monthName}&year=${selectedYear}`);
+    router.push(`/dashboard/payments?month=${monthName}&year=${selectedYear}`);
   };
 
   // Pure authentic data directly from database aggregations — zero mock sample volumes

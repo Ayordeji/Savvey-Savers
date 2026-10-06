@@ -79,6 +79,7 @@ function PaymentsContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [monthFilter, setMonthFilter] = useState('');
+  const [yearFilter, setYearFilter] = useState('');
   const [memberFilter, setMemberFilter] = useState('');
 
   // Dropdown states
@@ -140,6 +141,8 @@ function PaymentsContent() {
     const idParam = searchParams.get('id');
     const searchParam = searchParams.get('search');
     const memberParam = searchParams.get('member');
+    const monthParam = searchParams.get('month');
+    const yearParam = searchParams.get('year');
     if (idParam) {
       setSearchQuery(idParam);
       setOpenDropdownId(idParam);
@@ -148,6 +151,12 @@ function PaymentsContent() {
     }
     if (memberParam) {
       setMemberFilter(memberParam);
+    }
+    if (monthParam) {
+      setMonthFilter(monthParam);
+    }
+    if (yearParam) {
+      setYearFilter(yearParam);
     }
   }, [searchParams]);
 
@@ -248,6 +257,11 @@ function PaymentsContent() {
         return false;
       }
 
+      // Year Filter
+      if (yearFilter && p.year?.toString() !== yearFilter) {
+        return false;
+      }
+
       // Member Filter
       if (memberFilter && details.memberName !== memberFilter) {
         return false;
@@ -255,7 +269,7 @@ function PaymentsContent() {
 
       return true;
     });
-  }, [payments, searchQuery, statusFilter, monthFilter, memberFilter, cmtMap, users]);
+  }, [payments, searchQuery, statusFilter, monthFilter, yearFilter, memberFilter, cmtMap, users]);
 
   const totalPages = Math.max(1, Math.ceil(filteredPayments.length / itemsPerPage));
   const paginatedPayments = useMemo(() => {
@@ -302,6 +316,7 @@ function PaymentsContent() {
     setSearchQuery('');
     setStatusFilter('');
     setMonthFilter('');
+    setYearFilter('');
     setMemberFilter('');
     setCurrentPage(1);
   };
@@ -532,6 +547,26 @@ function PaymentsContent() {
             {monthsList.map(m => (
               <option key={m} value={m}>{m}</option>
             ))}
+          </select>
+
+          <select
+            value={yearFilter}
+            onChange={(e) => setYearFilter(e.target.value)}
+            style={{
+              padding: '8px 14px',
+              fontSize: '0.82rem',
+              borderRadius: '10px',
+              border: '1px solid #ECE8E2',
+              backgroundColor: '#FAF9F6',
+              color: '#374151',
+              fontWeight: 500,
+              cursor: 'pointer'
+            }}
+          >
+            <option value="">Years: All</option>
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
           </select>
 
           <select

@@ -657,26 +657,9 @@ function CommitmentsContent() {
 
     let matchesMonthYear = true;
     if (monthFilter || yearFilter) {
-      // Check if commitment collection settings match directly
-      const matchesCmtDirect =
-        (!monthFilter || c.collectionMonth === monthFilter) &&
-        (!yearFilter || c.collectionYear.toString() === yearFilter);
-
-      // Check if there is any matching confirmed payment
-      const cmtPayments = paymentsMap[c.id] || [];
-      const hasMatchingPayment = cmtPayments.some(p => {
-        if (p.status !== 'CONFIRMED') return false;
-        
-        const pYear = p.year.toString();
-        const pMonth = p.month;
-        
-        if (monthFilter && yearFilter) return pMonth === monthFilter && pYear === yearFilter;
-        if (monthFilter && !yearFilter) return pMonth === monthFilter;
-        if (!monthFilter && yearFilter) return pYear === yearFilter;
-        
-        return false;
-      });
-      matchesMonthYear = matchesCmtDirect || hasMatchingPayment;
+      const matchesPayoutMonth = !monthFilter || c.collectionMonth === monthFilter;
+      const matchesPayoutYear = !yearFilter || c.collectionYear.toString() === yearFilter;
+      matchesMonthYear = matchesPayoutMonth && matchesPayoutYear;
     }
 
     const matchesStatus = !statusFilter || c.status === statusFilter;
@@ -969,7 +952,7 @@ function CommitmentsContent() {
               cursor: 'pointer'
             }}
           >
-            <option value="">Months: All</option>
+            <option value="">Payout Month: All</option>
             {months.map(m => (
               <option key={m} value={m}>{m}</option>
             ))}
@@ -989,10 +972,12 @@ function CommitmentsContent() {
               cursor: 'pointer'
             }}
           >
-            <option value="">Years: All</option>
+            <option value="">Payout Year: All</option>
+            <option value="2024">2024</option>
             <option value="2025">2025</option>
             <option value="2026">2026</option>
             <option value="2027">2027</option>
+            <option value="2028">2028</option>
           </select>
 
           {(searchQuery || statusFilter || monthFilter || yearFilter) && (
