@@ -950,8 +950,9 @@ function CommitmentsContent() {
             <option value="">Statuses: All</option>
             <option value="ACTIVE">Active</option>
             <option value="COMPLETED">Completed</option>
-            <option value="PENDING">Pending</option>
+            <option value="NOT_YET_STARTED">Not Started</option>
             <option value="CANCELLED">Cancelled</option>
+            <option value="PENDING">Pending</option>
           </select>
 
           <select
@@ -1093,7 +1094,7 @@ function CommitmentsContent() {
                       const progressPct = Math.min(100, Math.round((paidMonthsCount / 12) * 100));
 
                       const formatStatusText = (st: string) => {
-                        if (st === 'NOT_YET_STARTED') return 'Pending';
+                        if (st === 'NOT_YET_STARTED') return 'Not Started';
                         if (st === 'ACTIVE') return 'Active';
                         if (st === 'COMPLETED') return 'Completed';
                         if (st === 'PENDING') return 'Pending';
@@ -1204,8 +1205,8 @@ function CommitmentsContent() {
                                 borderRadius: '9999px',
                                 fontSize: '0.72rem',
                                 fontWeight: 600,
-                                backgroundColor: c.status === 'ACTIVE' ? '#EAF5EE' : c.status === 'COMPLETED' ? '#EBF5FF' : '#FEF3C7',
-                                color: c.status === 'ACTIVE' ? '#2E7D32' : c.status === 'COMPLETED' ? '#2563EB' : '#B45309'
+                                backgroundColor: c.status === 'ACTIVE' ? '#EAF5EE' : c.status === 'COMPLETED' ? '#EBF5FF' : c.status === 'CANCELLED' ? '#FEE2E2' : '#F3F4F6',
+                                color: c.status === 'ACTIVE' ? '#2E7D32' : c.status === 'COMPLETED' ? '#2563EB' : c.status === 'CANCELLED' ? '#DC2626' : '#4B5563'
                               }}>
                                 {formatStatusText(c.status)}
                               </span>
@@ -1367,10 +1368,10 @@ function CommitmentsContent() {
                       borderRadius: '9999px',
                       fontSize: '0.7rem',
                       fontWeight: 600,
-                      backgroundColor: '#EAF5EE',
-                      color: '#2E7D32'
+                      backgroundColor: selectedCmt.status === 'ACTIVE' ? '#EAF5EE' : selectedCmt.status === 'COMPLETED' ? '#EBF5FF' : selectedCmt.status === 'CANCELLED' ? '#FEE2E2' : '#F3F4F6',
+                      color: selectedCmt.status === 'ACTIVE' ? '#2E7D32' : selectedCmt.status === 'COMPLETED' ? '#2563EB' : selectedCmt.status === 'CANCELLED' ? '#DC2626' : '#4B5563'
                     }}>
-                      {selectedCmt.status}
+                      {selectedCmt.status === 'NOT_YET_STARTED' ? 'Not Started' : selectedCmt.status === 'ACTIVE' ? 'Active' : selectedCmt.status === 'COMPLETED' ? 'Completed' : selectedCmt.status === 'CANCELLED' ? 'Cancelled' : selectedCmt.status}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>

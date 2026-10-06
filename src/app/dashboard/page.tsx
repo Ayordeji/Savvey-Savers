@@ -119,7 +119,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     const yearCommitments = allCommitments.filter(c => Number(c.collectionYear) === selectedYearNum);
     totalCommitmentsCount = yearCommitments.length;
     activeCommitmentsCount = yearCommitments.filter(c => c.status === 'ACTIVE').length;
-    pendingCommitmentsCount = yearCommitments.filter(c => c.status === 'PENDING').length;
+    pendingCommitmentsCount = yearCommitments.filter(c => c.status === 'PENDING' || c.status === 'NOT_YET_STARTED').length;
 
     // 3. Harvests released
     const completedHarvests = allCommitments.filter(c =>
