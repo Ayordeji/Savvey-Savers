@@ -1,0 +1,16 @@
+name: Database Keep-Alive Cron
+
+on:
+  schedule:
+    # Runs at 08:00 UTC every day
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping-health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Savvey Savers Health Endpoint
+        run: |
+          echo "Pinging health endpoint to prevent database auto-pause..."
+          curl -s -f https://savvey-savers.vercel.app/api/health || echo "Endpoint pinged"
