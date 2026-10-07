@@ -216,6 +216,7 @@ function CommitmentsContent() {
       if (res.ok) {
         const data = await res.json();
         setPaymentsMap((prev) => ({ ...prev, [cmtId]: data }));
+        setViewCmtPayments(data);
       }
     } catch (err) {
       console.error('Error fetching payments:', err);
@@ -513,19 +514,19 @@ function CommitmentsContent() {
   };
 
   const handleToggleMonthProgress = async (mName: string, mIdx: number) => {
-    if (!selectedCommitment || currentUser?.role !== 'ADMIN') return;
+    if (!selectedCmt || currentUser?.role !== 'ADMIN') return;
     
     const fullMonthName = months.find(m => m.toLowerCase().startsWith(mName.toLowerCase())) || mName;
-    const cmtPayments = paymentsMap[selectedCommitment.id] || [];
+    const cmtPayments = paymentsMap[selectedCmt.id] || viewCmtPayments || [];
     const existingPayment = cmtPayments.find(p => 
       p.month?.toLowerCase().startsWith(mName.toLowerCase()) && p.status === 'CONFIRMED'
     );
-    const isPaid = mIdx < (selectedCommitment.paidMonthsCount || 0) || !!existingPayment;
+    const isPaid = mIdx < (cmtPayments.filter(p => p.status === 'CONFIRMED').length || 0) || !!existingPayment;
 
     if (isPaid) {
       const confirmRemove = await dialog.confirm(
         'Update Payment Progress',
-        `${fullMonthName} ${selectedCommitment.collectionYear} is currently marked as PAID (£${Number(selectedCommitment.amount).toFixed(2)}). Do you want to unmark this payment?`,
+        `${fullMonthName} ${selectedCmt.collectionYear} is currently marked as PAID (£${Number(selectedCmt.amount).toFixed(2)}). Do you want to unmark this payment?`,
         'Unmark Payment',
         'Keep As Paid'
       );
@@ -537,24 +538,28 @@ function CommitmentsContent() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'UNMARK_PAYMENT',
-            commitmentId: selectedCommitment.id,
+            commitmentId: selectedCmt.id,
             paymentId: existingPayment?.id,
             month: fullMonthName,
-            year: selectedCommitment.collectionYear
+            year: selectedCmt.collectionYear
           })
         });
         if (res.ok) {
-          fetchPayments(selectedCommitment.id);
-          fetchInitialData();
+          await fetchPayments(selectedCmt.id);
+          await fetchInitialData();
           await dialog.alert('Payment Updated', `${fullMonthName} payment has been unmarked.`);
+        } else {
+          const errData = await res.json();
+          await dialog.alert('Error', errData.error || 'Failed to unmark payment.');
         }
       } catch (err) {
         console.error(err);
+        await dialog.alert('Error', 'A network error occurred while unmarking payment.');
       }
     } else {
       const confirmAdd = await dialog.confirm(
         'Confirm Payment Progress',
-        `Mark payment for ${fullMonthName} ${selectedCommitment.collectionYear} (£${Number(selectedCommitment.amount).toFixed(2)}) as received for ${selectedCommitment.memberName}?`,
+        `Mark payment for ${fullMonthName} ${selectedCmt.collectionYear} (£${Number(selectedCmt.amount).toFixed(2)}) as received for ${selectedCmt.memberName}?`,
         'Confirm Payment',
         'Cancel'
       );
@@ -566,23 +571,24 @@ function CommitmentsContent() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'RECORD_PAST_PAYMENT',
-            commitmentId: selectedCommitment.id,
+            commitmentId: selectedCmt.id,
             month: fullMonthName,
-            year: selectedCommitment.collectionYear,
-            amount: selectedCommitment.amount,
-            sendNotification: false
+            year: selectedCmt.collectionYear,
+            amount: selectedCmt.amount,
+            sendNotification: 'no'
           })
         });
         if (res.ok) {
-          fetchPayments(selectedCommitment.id);
-          fetchInitialData();
-          await dialog.alert('Payment Recorded', `Payment for ${fullMonthName} ${selectedCommitment.collectionYear} recorded successfully.`);
+          await fetchPayments(selectedCmt.id);
+          await fetchInitialData();
+          await dialog.alert('Payment Recorded', `Payment for ${fullMonthName} ${selectedCmt.collectionYear} recorded successfully.`);
         } else {
           const data = await res.json();
           await dialog.alert('Error', data.error || 'Failed to record payment.');
         }
       } catch (err) {
         console.error(err);
+        await dialog.alert('Error', 'A network error occurred while recording payment.');
       }
     }
   };
