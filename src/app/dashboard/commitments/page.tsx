@@ -512,6 +512,81 @@ function CommitmentsContent() {
     }
   };
 
+  const handleToggleMonthProgress = async (mName: string, mIdx: number) => {
+    if (!selectedCommitment || currentUser?.role !== 'ADMIN') return;
+    
+    const fullMonthName = months.find(m => m.toLowerCase().startsWith(mName.toLowerCase())) || mName;
+    const cmtPayments = paymentsMap[selectedCommitment.id] || [];
+    const existingPayment = cmtPayments.find(p => 
+      p.month?.toLowerCase().startsWith(mName.toLowerCase()) && p.status === 'CONFIRMED'
+    );
+    const isPaid = mIdx < (selectedCommitment.paidMonthsCount || 0) || !!existingPayment;
+
+    if (isPaid) {
+      const confirmRemove = await dialog.confirm(
+        'Update Payment Progress',
+        `${fullMonthName} ${selectedCommitment.collectionYear} is currently marked as PAID (£${Number(selectedCommitment.amount).toFixed(2)}). Do you want to unmark this payment?`,
+        'Unmark Payment',
+        'Keep As Paid'
+      );
+      if (!confirmRemove) return;
+
+      try {
+        const res = await fetch('/api/admin/commitments/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'UNMARK_PAYMENT',
+            commitmentId: selectedCommitment.id,
+            paymentId: existingPayment?.id,
+            month: fullMonthName,
+            year: selectedCommitment.collectionYear
+          })
+        });
+        if (res.ok) {
+          fetchPayments(selectedCommitment.id);
+          fetchInitialData();
+          await dialog.alert('Payment Updated', `${fullMonthName} payment has been unmarked.`);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      const confirmAdd = await dialog.confirm(
+        'Confirm Payment Progress',
+        `Mark payment for ${fullMonthName} ${selectedCommitment.collectionYear} (£${Number(selectedCommitment.amount).toFixed(2)}) as received for ${selectedCommitment.memberName}?`,
+        'Confirm Payment',
+        'Cancel'
+      );
+      if (!confirmAdd) return;
+
+      try {
+        const res = await fetch('/api/admin/commitments/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'RECORD_PAST_PAYMENT',
+            commitmentId: selectedCommitment.id,
+            month: fullMonthName,
+            year: selectedCommitment.collectionYear,
+            amount: selectedCommitment.amount,
+            sendNotification: false
+          })
+        });
+        if (res.ok) {
+          fetchPayments(selectedCommitment.id);
+          fetchInitialData();
+          await dialog.alert('Payment Recorded', `Payment for ${fullMonthName} ${selectedCommitment.collectionYear} recorded successfully.`);
+        } else {
+          const data = await res.json();
+          await dialog.alert('Error', data.error || 'Failed to record payment.');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
   const handleDeleteCommitment = async (cmt: Commitment) => {
     setOpenDropdownId(null);
     const isCancelled = cmt.status === 'CANCELLED';
@@ -1417,7 +1492,9 @@ function CommitmentsContent() {
                   <div style={{ backgroundColor: '#FAF9F6', borderRadius: '14px', padding: '16px', border: '1px solid #ECE8E2' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                       <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827' }}>Payment Progress</span>
-                      <span style={{ fontSize: '0.72rem', color: '#6B7280' }}>{paidCount} of 12 completed</span>
+                      <span style={{ fontSize: '0.72rem', color: '#6B7280' }}>
+                        {currentUser?.role === 'ADMIN' ? 'Click month to mark/unmark' : `${paidCount} of 12 completed`}
+                      </span>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
@@ -1426,8 +1503,11 @@ function CommitmentsContent() {
                         const isCurrentDue = !isPaid && mIdx === paidCount;
 
                         return (
-                          <div
+                          <button
                             key={mName}
+                            type="button"
+                            onClick={() => currentUser?.role === 'ADMIN' && handleToggleMonthProgress(mName, mIdx)}
+                            title={currentUser?.role === 'ADMIN' ? (isPaid ? `Click to unmark ${mName}` : `Click to mark ${mName} as paid`) : undefined}
                             style={{
                               padding: '8px 4px',
                               borderRadius: '8px',
@@ -1440,12 +1520,15 @@ function CommitmentsContent() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              gap: '3px'
+                              gap: '3px',
+                              cursor: currentUser?.role === 'ADMIN' ? 'pointer' : 'default',
+                              transition: 'all 0.15s ease',
+                              outline: 'none'
                             }}
                           >
                             {isPaid && <Check size={11} strokeWidth={3} />}
                             <span>{mName}</span>
-                          </div>
+                          </button>
                         );
                       })}
                     </div>

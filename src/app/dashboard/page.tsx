@@ -203,11 +203,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
         gap: '20px'
       }}>
-        {/* Card 1: Total Savings Volume (Dark Forest Green Brand Card with Sparkline) */}
+        {/* Card 1: Selected Year Savings Volume (Dark Forest Green Brand Card with Sparkline) */}
         <Link
-          href="/dashboard/commitments"
+          href={`/dashboard/commitments?year=${selectedYear}`}
           className="dashboard-clickable-card-dark"
-          title="View all savings commitments"
+          title={`View ${selectedYear} savings volume`}
           style={{
             backgroundColor: '#0c4e43',
             borderRadius: '18px',
@@ -225,7 +225,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#c2d6cf', fontSize: '0.85rem', fontWeight: 500 }}>
-                <span>Total Savings Volume</span>
+                <span>{selectedYear} Savings Volume</span>
                 <Info size={14} style={{ opacity: 0.8 }} />
               </div>
               <div style={{
@@ -243,22 +243,22 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
 
             <div style={{ fontSize: '1.95rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', marginTop: '12px', letterSpacing: '-0.02em', color: '#ffffff' }}>
-              £{allTimeRevenue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              £{revenueForYear.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
 
             <div style={{ fontSize: '0.78rem', color: '#d97746', marginTop: '4px', fontWeight: 600 }}>
-              All-time confirmed savings pool →
+              Confirmed collections for {selectedYear} →
             </div>
           </div>
 
           <SparklineChart />
         </Link>
 
-        {/* Card 2: Selected Year Savings Volume */}
+        {/* Card 2: Total Lifetime Savings */}
         <Link
-          href={`/dashboard/commitments?year=${selectedYear}`}
+          href="/dashboard/commitments"
           className="dashboard-clickable-card"
-          title={`View ${selectedYear} commitments`}
+          title="View all confirmed lifetime savings"
           style={{
             backgroundColor: '#FFFFFF',
             borderRadius: '18px',
@@ -274,7 +274,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#57655c', fontSize: '0.85rem', fontWeight: 500 }}>
-                {selectedYear} Savings Volume
+                Total Lifetime Savings
               </span>
               <div style={{
                 width: '32px',
@@ -291,11 +291,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
 
             <div style={{ fontSize: '1.95rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#1a1a1a', marginTop: '12px', letterSpacing: '-0.02em' }}>
-              £{revenueForYear.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              £{allTimeRevenue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
 
             <div style={{ fontSize: '0.78rem', color: '#57655c', marginTop: '6px', fontWeight: 500 }}>
-              Confirmed collections for {selectedYear} →
+              All-time confirmed collections →
             </div>
           </div>
         </Link>
@@ -457,7 +457,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
         {/* Invited Members */}
         <Link
-          href="/dashboard/invitations"
+          href="/dashboard/users?status=INVITED"
           className="dashboard-clickable-card"
           title="View invited members"
           style={{
@@ -634,7 +634,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         </div>
 
         <Link
-          href={invitedUsersCount > 0 ? "/dashboard/invitations" : "/dashboard/commitments"}
+          href={invitedUsersCount > 0 ? "/dashboard/users?status=INVITED" : "/dashboard/commitments"}
           style={{
             display: 'inline-flex',
             alignItems: 'center',

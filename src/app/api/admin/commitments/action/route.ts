@@ -145,6 +145,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, payment: pastPayment });
     }
 
+    // --- Action 2b: UNMARK_PAYMENT ---
+    if (action === 'UNMARK_PAYMENT') {
+      if (!commitmentId) {
+        return NextResponse.json({ error: 'Commitment ID is required.' }, { status: 400 });
+      }
+
+      if (paymentId) {
+        await db.payment.delete({ where: { id: paymentId } });
+      } else if (month) {
+        const found = await db.payment.findFirst({
+          where: { commitmentId, month: { startsWith: month } }
+        });
+        if (found) {
+          await db.payment.delete({ where: { id: found.id } });
+        }
+      }
+
+      await db.auditLog.create({ data: {
+        action: 'PAYMENT_UNMARK',
+        details: `Unmarked payment for commitment ${commitmentId} (${month || 'selected'}).`,
+        userId: session.id
+      } });
+
+      return NextResponse.json({ success: true });
+    }
+
     // --- Action 3: RELEASE_HARVEST ---
     if (action === 'RELEASE_HARVEST') {
       if (!commitmentId) {

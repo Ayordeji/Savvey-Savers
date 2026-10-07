@@ -943,10 +943,13 @@ export default function ManageUsersPage() {
     
     // Status matching
     const isActiveStatus = userStatusFilter === 'ACTIVE';
-    const isInvitedStatus = userStatusFilter === 'INVITED';
+    const isInvitedStatus = userStatusFilter === 'INVITED' || userStatusFilter === 'PENDING';
     const matchesStatus = !userStatusFilter || (isActiveStatus && u.isActive) || (isInvitedStatus && !u.isActive);
     
     if (!matchesStatus) return false;
+
+    // Role / Membership matching
+    if (membershipFilter && u.role !== membershipFilter) return false;
     
     if (!q) return true;
     return (
@@ -1261,7 +1264,10 @@ export default function ManageUsersPage() {
 
         <select
           value={membershipFilter}
-          onChange={(e) => setMembershipFilter(e.target.value)}
+          onChange={(e) => {
+            setMembershipFilter(e.target.value);
+            setUsersPage(1);
+          }}
           style={{
             padding: '9px 16px',
             fontSize: '0.85rem',
@@ -1274,9 +1280,9 @@ export default function ManageUsersPage() {
             outline: 'none'
           }}
         >
-          <option value="">All Memberships</option>
-          <option value="2026 Annual">2026 Annual</option>
-          <option value="Standard">Standard Saver</option>
+          <option value="">All Roles</option>
+          <option value="ADMIN">ADMIN</option>
+          <option value="MEMBER">MEMBER</option>
         </select>
 
         <button
@@ -1348,6 +1354,9 @@ export default function ManageUsersPage() {
                       </th>
                       <th onClick={() => requestSort('name')} style={{ cursor: 'pointer', userSelect: 'none', padding: '12px 14px', fontSize: '0.72rem', color: '#6B7280', fontWeight: 700 }}>
                         MEMBER ⬍
+                      </th>
+                      <th onClick={() => requestSort('role')} style={{ cursor: 'pointer', userSelect: 'none', padding: '12px 14px', fontSize: '0.72rem', color: '#6B7280', fontWeight: 700 }}>
+                        ROLE ⬍
                       </th>
                       <th style={{ padding: '12px 14px', fontSize: '0.72rem', color: '#6B7280', fontWeight: 700 }}>
                         MEMBERSHIP ⬍
@@ -1434,6 +1443,22 @@ export default function ManageUsersPage() {
                                   </div>
                                 </div>
                               </div>
+                            </td>
+
+                            {/* Role */}
+                            <td style={{ padding: '14px' }}>
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                                fontSize: '0.72rem',
+                                fontWeight: 700,
+                                backgroundColor: u.role === 'ADMIN' ? '#EFF6FF' : '#F3F4F6',
+                                color: u.role === 'ADMIN' ? '#1D4ED8' : '#4B5563'
+                              }}>
+                                {u.role || 'MEMBER'}
+                              </span>
                             </td>
 
                             {/* Membership */}
@@ -1766,6 +1791,29 @@ export default function ManageUsersPage() {
                     }}
                   >
                     Request Payment
+                  </button>
+
+                  <button
+                    onClick={() => handleOpenConfirmFeeModal(selectedUser)}
+                    style={{
+                      marginTop: '8px',
+                      width: '100%',
+                      padding: '8px',
+                      backgroundColor: '#2E5A44',
+                      border: '1px solid #2E5A44',
+                      color: '#FFFFFF',
+                      borderRadius: '8px',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <CheckCircle size={14} />
+                    Confirm Receipt / Payment
                   </button>
                 </div>
 

@@ -276,14 +276,25 @@ function PaymentsContent() {
     return filteredPayments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   }, [filteredPayments, currentPage, itemsPerPage]);
 
-  // KPI Calculations
-  const receivedCount = payments.filter(p => p.status === 'CONFIRMED').length;
-  const pendingCount = payments.filter(p => p.status === 'PENDING').length;
-  const overdueCount = 0; // In standard cycle, overdue is 0 when all active are verified
-  const totalPayments = payments.length || 1;
-  const receivedPct = Math.min(100, Math.round((receivedCount / totalPayments) * 100));
+  // KPI Calculations (scoped to selected month & year if filtered)
+  const scopedPayments = useMemo(() => {
+    if (monthFilter || yearFilter) {
+      return payments.filter(p => {
+        if (monthFilter && p.month !== monthFilter) return false;
+        if (yearFilter && p.year?.toString() !== yearFilter) return false;
+        return true;
+      });
+    }
+    return payments;
+  }, [payments, monthFilter, yearFilter]);
 
-  const totalCollectedThisMonth = payments
+  const receivedCount = scopedPayments.filter(p => p.status === 'CONFIRMED').length;
+  const pendingCount = scopedPayments.filter(p => p.status === 'PENDING').length;
+  const overdueCount = 0; // In standard cycle, overdue is 0 when all active are verified
+  const totalScopePayments = scopedPayments.length || 1;
+  const receivedPct = Math.min(100, Math.round((receivedCount / totalScopePayments) * 100));
+
+  const totalCollectedThisMonth = scopedPayments
     .filter(p => p.status === 'CONFIRMED')
     .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
@@ -418,7 +429,9 @@ function PaymentsContent() {
         {/* Card 1: Total Collected This Month */}
         <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Total Collected This Month</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>
+              {monthFilter ? `Total Collected (${monthFilter}${yearFilter ? ' ' + yearFilter : ''})` : 'Total Collected This Month'}
+            </span>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Wallet size={16} />
             </div>
@@ -427,7 +440,7 @@ function PaymentsContent() {
             £{totalCollectedThisMonth.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-            {receivedCount} of {totalPayments} collected ({receivedPct}%)
+            {receivedCount} of {totalScopePayments} collected ({receivedPct}%)
           </span>
         </div>
 
@@ -1183,9 +1196,19 @@ function PaymentsContent() {
           <div className="dashboard-drawer-column" style={{ width: '360px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Widget 1: Payment Overview Donut Chart */}
             <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #ECE8E2', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0, marginBottom: '16px' }}>
-                Payment Overview
-              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div>
+                  <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0 }}>
+                    Payment Overview
+                  </h3>
+                  <div style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '2px' }}>
+                    {monthFilter ? `${monthFilter} ${yearFilter || ''}` : 'Total Collections'}
+                  </div>
+                </div>
+                <span style={{ fontSize: '1rem', fontWeight: 800, color: '#2E7D32' }}>
+                  £{totalCollectedThisMonth.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
 
               {/* Donut Chart Visual */}
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', height: '180px' }}>
@@ -1205,11 +1228,11 @@ function PaymentsContent() {
                     strokeLinecap="round"
                   />
                 </svg>
-                <div style={{ position: 'absolute', textAlign: 'center' }}>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
-                    {totalPayments}
+                <div style={{ position: 'absolute', textAlign: 'center', maxWidth: '140px', padding: '0 8px' }}>
+                  <div style={{ fontSize: totalCollectedThisMonth >= 100000 ? '1.15rem' : '1.35rem', fontWeight: 800, color: '#111827', lineHeight: 1.1 }}>
+                    £{totalCollectedThisMonth.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: '#2E7D32', fontWeight: 700, marginTop: '2px' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#2E7D32', fontWeight: 700, marginTop: '4px' }}>
                     {receivedPct}% Collected
                   </div>
                 </div>
