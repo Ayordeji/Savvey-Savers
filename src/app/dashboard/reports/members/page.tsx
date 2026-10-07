@@ -73,7 +73,22 @@ function MemberReportContent() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('/api/admin/users');
+      const [sessRes, res] = await Promise.all([
+        fetch('/api/auth/session'),
+        fetch('/api/admin/users')
+      ]);
+
+      if (sessRes.ok) {
+        const sessData = await sessRes.json();
+        if (!sessData.loggedIn || sessData.user?.role !== 'ADMIN') {
+          router.replace('/dashboard');
+          return;
+        }
+      } else {
+        router.replace('/dashboard');
+        return;
+      }
+
       if (res.ok) {
         const data = await res.json();
         setUsers(Array.isArray(data) ? data : []);

@@ -34,13 +34,44 @@ export async function GET(request: Request) {
       (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   } else {
-    // Return all payments for admin
     if (session.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized.' }, { status: 403 });
+      const dbUser = (await db.user.findUnique({ where: { id: session.id } })) ||
+        (session.email ? await db.user.findUnique({ where: { email: session.email } }) : null);
+
+      const userKeys = Array.from(new Set([
+        session.id,
+        session.email,
+        dbUser?.id,
+        dbUser?.displayId,
+        dbUser?.email
+      ].filter((k): k is string => typeof k === 'string' && k.trim().length > 0)));
+
+      const memberCmts = await db.commitment.findMany({
+        where: {
+          OR: [
+            ...userKeys.map(k => ({ memberId: k })),
+            ...(dbUser?.name ? [{ memberName: dbUser.name }] : [])
+          ]
+        },
+        select: { id: true }
+      });
+      const cmtIds = memberCmts.map(c => c.id);
+
+      payments = (await db.payment.findMany({
+        where: {
+          OR: [
+            ...userKeys.map(k => ({ userId: k })),
+            ...(cmtIds.length > 0 ? [{ commitmentId: { in: cmtIds } }] : [])
+          ]
+        }
+      })).sort(
+        (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    } else {
+      payments = (await db.payment.findMany()).sort(
+        (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
     }
-    payments = (await db.payment.findMany()).sort(
-      (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
   }
 
   return NextResponse.json(payments);

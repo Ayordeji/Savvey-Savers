@@ -70,6 +70,7 @@ function PaymentsContent() {
   const searchParams = useSearchParams();
   const dialog = useDialog();
 
+  const [currentUser, setCurrentUser] = useState<{ id: string; role: 'ADMIN' | 'MEMBER'; displayId?: string; email?: string; name?: string; } | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -110,11 +111,23 @@ function PaymentsContent() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [payRes, cmtRes, usrRes] = await Promise.all([
+      const [payRes, cmtRes, usrRes, sessRes] = await Promise.all([
         fetch('/api/admin/payments'),
         fetch('/api/admin/commitments'),
-        fetch('/api/admin/users')
+        fetch('/api/admin/users'),
+        fetch('/api/auth/session')
       ]);
+
+      if (sessRes.ok) {
+        const sData = await sessRes.json();
+        if (sData.loggedIn && sData.user) {
+          setCurrentUser(sData.user);
+        } else {
+          setCurrentUser({ id: 'member', role: 'MEMBER' });
+        }
+      } else {
+        setCurrentUser({ id: 'member', role: 'MEMBER' });
+      }
 
       if (payRes.ok) {
         setPayments(await payRes.json());
@@ -232,6 +245,27 @@ function PaymentsContent() {
     return payments.filter(p => {
       const details = getPaymentDetails(p);
 
+      // Role isolation for Members
+      if (currentUser?.role === 'MEMBER') {
+        const myKeys = [
+          currentUser.id,
+          currentUser.displayId,
+          currentUser.email,
+          currentUser.name
+        ].filter(Boolean).map(k => String(k).toLowerCase().trim());
+
+        const mId = details.memberDisplayId ? String(details.memberDisplayId).toLowerCase().trim() : '';
+        const mName = details.memberName ? String(details.memberName).toLowerCase().trim() : '';
+        const mEmail = details.memberEmail ? String(details.memberEmail).toLowerCase().trim() : '';
+        const pUserId = (p as any).userId ? String((p as any).userId).toLowerCase().trim() : '';
+        const cmt = cmtMap.get(p.commitmentId);
+        const cmtMemberId = cmt?.memberId ? String(cmt.memberId).toLowerCase().trim() : '';
+        const cmtMemberName = cmt?.memberName ? String(cmt.memberName).toLowerCase().trim() : '';
+
+        const isMine = myKeys.includes(mId) || myKeys.includes(mName) || myKeys.includes(mEmail) || myKeys.includes(pUserId) || myKeys.includes(cmtMemberId) || myKeys.includes(cmtMemberName);
+        if (!isMine) return false;
+      }
+
       // Search Query
       if (searchQuery) {
         const q = searchQuery.toLowerCase().trim();
@@ -269,7 +303,7 @@ function PaymentsContent() {
 
       return true;
     });
-  }, [payments, searchQuery, statusFilter, monthFilter, yearFilter, memberFilter, cmtMap, users]);
+  }, [payments, searchQuery, statusFilter, monthFilter, yearFilter, memberFilter, cmtMap, users, currentUser]);
 
   const totalPages = Math.max(1, Math.ceil(filteredPayments.length / itemsPerPage));
   const paginatedPayments = useMemo(() => {
@@ -393,10 +427,12 @@ function PaymentsContent() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
-            Payments
+            {currentUser?.role === 'MEMBER' ? 'My Payments' : 'Payments'}
           </h2>
           <p style={{ color: '#6B7280', fontSize: '0.88rem', marginTop: '4px', margin: 0 }}>
-            Track monthly member contributions, record payments, and manage collection cycles.
+            {currentUser?.role === 'MEMBER'
+              ? 'Track your monthly contribution receipts, payment history, and payment confirmations.'
+              : 'Track monthly member contributions, record payments, and manage collection cycles.'}
           </p>
         </div>
 
@@ -582,25 +618,27 @@ function PaymentsContent() {
             <option value="2024">2024</option>
           </select>
 
-          <select
-            value={memberFilter}
-            onChange={(e) => setMemberFilter(e.target.value)}
-            style={{
-              padding: '8px 14px',
-              fontSize: '0.82rem',
-              borderRadius: '10px',
-              border: '1px solid #ECE8E2',
-              backgroundColor: '#FAF9F6',
-              color: '#374151',
-              fontWeight: 500,
-              cursor: 'pointer'
-            }}
-          >
-            <option value="">Members: All</option>
-            {users.map(u => (
-              <option key={u.id} value={u.name}>{u.name}</option>
-            ))}
-          </select>
+          {currentUser?.role === 'ADMIN' && (
+            <select
+              value={memberFilter}
+              onChange={(e) => setMemberFilter(e.target.value)}
+              style={{
+                padding: '8px 14px',
+                fontSize: '0.82rem',
+                borderRadius: '10px',
+                border: '1px solid #ECE8E2',
+                backgroundColor: '#FAF9F6',
+                color: '#374151',
+                fontWeight: 500,
+                cursor: 'pointer'
+              }}
+            >
+              <option value="">Members: All</option>
+              {users.map(u => (
+                <option key={u.id} value={u.name}>{u.name}</option>
+              ))}
+            </select>
+          )}
 
           {(searchQuery || statusFilter || monthFilter || memberFilter) && (
             <button
@@ -635,15 +673,17 @@ function PaymentsContent() {
               <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#FAF9F6', borderBottom: '1px solid #ECE8E2' }}>
-                    <th style={{ width: '36px', textAlign: 'center', padding: '14px 10px' }}>
-                      <input
-                        type="checkbox"
-                        checked={allPageSelected}
-                        ref={el => { if (el) el.indeterminate = somePageSelected; }}
-                        onChange={e => handleSelectAll(e.target.checked)}
-                        style={{ width: '16px', height: '16px', accentColor: '#2E5A44', cursor: 'pointer' }}
-                      />
-                    </th>
+                    {currentUser?.role === 'ADMIN' && (
+                      <th style={{ width: '36px', textAlign: 'center', padding: '14px 10px' }}>
+                        <input
+                          type="checkbox"
+                          checked={allPageSelected}
+                          ref={el => { if (el) el.indeterminate = somePageSelected; }}
+                          onChange={e => handleSelectAll(e.target.checked)}
+                          style={{ width: '16px', height: '16px', accentColor: '#2E5A44', cursor: 'pointer' }}
+                        />
+                      </th>
+                    )}
                     <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em', width: '130px', whiteSpace: 'nowrap' }}>
                       PAYMENT ID
                     </th>
@@ -670,7 +710,7 @@ function PaymentsContent() {
                 <tbody>
                   {paginatedPayments.length === 0 ? (
                     <tr>
-                      <td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF', fontSize: '0.88rem' }}>
+                      <td colSpan={currentUser?.role === 'ADMIN' ? 8 : 7} style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF', fontSize: '0.88rem' }}>
                         No payments match your criteria.
                       </td>
                     </tr>
@@ -691,14 +731,16 @@ function PaymentsContent() {
                             backgroundColor: isRowSelected ? '#FAF9F6' : (isDirectTarget ? '#F0FDF4' : undefined)
                           }}
                         >
-                          <td style={{ textAlign: 'center', padding: '14px 10px' }} onClick={(e) => e.stopPropagation()}>
-                            <input
-                              type="checkbox"
-                              checked={selectedIds.has(p.id)}
-                              onChange={e => handleSelectRow(p.id, e.target.checked)}
-                              style={{ width: '16px', height: '16px', accentColor: '#0c4e43', cursor: 'pointer' }}
-                            />
-                          </td>
+                          {currentUser?.role === 'ADMIN' && (
+                            <td style={{ textAlign: 'center', padding: '14px 10px' }} onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.has(p.id)}
+                                onChange={e => handleSelectRow(p.id, e.target.checked)}
+                                style={{ width: '16px', height: '16px', accentColor: '#0c4e43', cursor: 'pointer' }}
+                              />
+                            </td>
+                          )}
 
                           {/* Payment ID Monospace Pill */}
                           <td style={{ padding: '14px 16px', width: '130px', whiteSpace: 'nowrap' }}>
@@ -812,7 +854,7 @@ function PaymentsContent() {
                                   gap: '2px'
                                 }}
                               >
-                                {p.status === 'PENDING' && (
+                                {p.status === 'PENDING' && currentUser?.role === 'ADMIN' && (
                                   <button
                                     onClick={() => handleConfirmPayment(p)}
                                     style={{
@@ -1138,19 +1180,45 @@ function PaymentsContent() {
                   </div>
 
                   {/* Actions Row */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {!isConfirmed && (
+                  {currentUser?.role === 'ADMIN' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {!isConfirmed && (
+                        <button
+                          onClick={() => handleConfirmPayment(selectedPayment)}
+                          style={{
+                            width: '100%',
+                            backgroundColor: '#0c4e43',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            borderRadius: '10px',
+                            padding: '10px 14px',
+                            fontWeight: 600,
+                            fontSize: '0.84rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          <CheckCircle size={15} />
+                          <span>Confirm Payment Receipt</span>
+                        </button>
+                      )}
+
                       <button
-                        onClick={() => handleConfirmPayment(selectedPayment)}
+                        onClick={() => {
+                          router.push(`/dashboard/users?search=${encodeURIComponent(d.memberName)}`);
+                        }}
                         style={{
                           width: '100%',
-                          backgroundColor: '#0c4e43',
-                          color: '#FFFFFF',
-                          border: 'none',
+                          backgroundColor: '#FAF9F6',
+                          color: '#374151',
+                          border: '1px solid #ECE8E2',
                           borderRadius: '10px',
-                          padding: '10px 14px',
+                          padding: '9px 14px',
                           fontWeight: 600,
-                          fontSize: '0.84rem',
+                          fontSize: '0.82rem',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -1158,35 +1226,11 @@ function PaymentsContent() {
                           gap: '6px'
                         }}
                       >
-                        <CheckCircle size={15} />
-                        <span>Confirm Payment Receipt</span>
+                        <ExternalLink size={14} />
+                        <span>View Member Profile</span>
                       </button>
-                    )}
-
-                    <button
-                      onClick={() => {
-                        router.push(`/dashboard/users?search=${encodeURIComponent(d.memberName)}`);
-                      }}
-                      style={{
-                        width: '100%',
-                        backgroundColor: '#FAF9F6',
-                        color: '#374151',
-                        border: '1px solid #ECE8E2',
-                        borderRadius: '10px',
-                        padding: '9px 14px',
-                        fontWeight: 600,
-                        fontSize: '0.82rem',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      <ExternalLink size={14} />
-                      <span>View Member Profile</span>
-                    </button>
-                  </div>
+                    </div>
+                  )}
                 </>
               );
             })()}

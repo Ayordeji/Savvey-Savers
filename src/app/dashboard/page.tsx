@@ -109,6 +109,31 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       })
     ]);
 
+    const userKeys = Array.from(new Set([
+      user.id,
+      user.displayId,
+      (user as any).invitationId,
+      user.email
+    ].filter((k): k is string => typeof k === 'string' && k.trim().length > 0)));
+
+    // Scope data if user is not admin
+    const relevantCommitments = isAdmin
+      ? allCommitments
+      : allCommitments.filter(c => 
+          userKeys.includes(c.memberId) || 
+          (c.user?.email && userKeys.includes(c.user.email)) ||
+          (user.name && c.memberName?.toLowerCase() === user.name.toLowerCase())
+        );
+
+    const relevantCommitmentIds = new Set(relevantCommitments.map(c => c.id));
+
+    const relevantPayments = isAdmin
+      ? allPayments
+      : allPayments.filter(p => 
+          userKeys.includes(p.userId) || 
+          relevantCommitmentIds.has(p.commitmentId)
+        );
+
     // 1. Members count (active members vs invited awaiting activation)
     const nonAdminUsers = rawUsers.filter(u => u.role !== 'ADMIN' && !u.isSuperAdmin && u.id !== 'usr_admin');
     activeUsersCount = nonAdminUsers.filter(u => u.isActive).length;
@@ -116,23 +141,25 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     invitedUsersCount = unactivatedMembers.length;
 
     // 2. Commitments for selected year
-    const yearCommitments = allCommitments.filter(c => Number(c.collectionYear) === selectedYearNum);
+    const yearCommitments = relevantCommitments.filter(c => Number(c.collectionYear) === selectedYearNum);
     totalCommitmentsCount = yearCommitments.length;
     activeCommitmentsCount = yearCommitments.filter(c => c.status === 'ACTIVE').length;
     pendingCommitmentsCount = yearCommitments.filter(c => c.status === 'PENDING' || c.status === 'NOT_YET_STARTED').length;
 
-    // 3. Harvests released
-    const completedHarvests = allCommitments.filter(c =>
+    // 3. Harvests released / target
+    const completedHarvests = relevantCommitments.filter(c =>
       Number(c.collectionYear) === selectedYearNum && (c.harvestReleasedAt !== null || (c as any).harvestAmount > 0)
     );
     completedHarvestsCount = completedHarvests.length;
-    harvestReleasedTotal = completedHarvests.reduce((acc, c) => acc + (c.harvestAmount || 0), 0);
+    harvestReleasedTotal = isAdmin
+      ? completedHarvests.reduce((acc, c) => acc + (c.harvestAmount || 0), 0)
+      : yearCommitments.reduce((acc, c) => acc + (Number(c.amount) * 12), 0);
 
     // 4. All-time revenue = sum of all confirmed payments
-    allTimeRevenue = allPayments.reduce((acc, p) => acc + p.amount, 0);
+    allTimeRevenue = relevantPayments.reduce((acc, p) => acc + p.amount, 0);
 
     // 5. Revenue for selected year
-    const yearPayments = allPayments.filter(p => p.year === selectedYearNum);
+    const yearPayments = relevantPayments.filter(p => p.year === selectedYearNum);
     revenueForYear = yearPayments.reduce((acc, p) => acc + p.amount, 0);
 
     // 6. Monthly distribution for selected year
@@ -142,7 +169,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     });
 
     // 7. Recent authentic transactions
-    recentPayments = allPayments.slice(0, 5);
+    recentPayments = relevantPayments.slice(0, 5);
   } catch (err) {
     console.error('Dashboard metrics aggregation error:', err);
   }
@@ -171,7 +198,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             {greetingTime}, {userFirstName} 👋
           </h2>
           <p style={{ color: '#57655c', fontSize: '0.875rem', marginTop: '4px' }}>
-            Real-time verified overview of Savvey Savers collective performance.
+            {isAdmin
+              ? 'Real-time verified overview of Savvey Savers collective performance.'
+              : 'Track your personal savings progress, contributions, and upcoming harvest payouts.'}
           </p>
         </div>
 
@@ -225,7 +254,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#c2d6cf', fontSize: '0.85rem', fontWeight: 500 }}>
-                <span>{selectedYear} Savings Volume</span>
+                <span>{isAdmin ? `${selectedYear} Savings Volume` : `My ${selectedYear} Total Saved`}</span>
                 <Info size={14} style={{ opacity: 0.8 }} />
               </div>
               <div style={{
@@ -247,7 +276,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
 
             <div style={{ fontSize: '0.78rem', color: '#d97746', marginTop: '4px', fontWeight: 600 }}>
-              Confirmed collections for {selectedYear} →
+              {isAdmin
+                ? `Confirmed collections for ${selectedYear} →`
+                : `Confirmed contributions in ${selectedYear} →`}
             </div>
           </div>
 
@@ -274,7 +305,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#57655c', fontSize: '0.85rem', fontWeight: 500 }}>
-                Total Lifetime Savings
+                {isAdmin ? 'Total Lifetime Savings' : 'My Lifetime Savings'}
               </span>
               <div style={{
                 width: '32px',
@@ -295,16 +326,16 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
 
             <div style={{ fontSize: '0.78rem', color: '#57655c', marginTop: '6px', fontWeight: 500 }}>
-              All-time confirmed collections →
+              {isAdmin ? 'All-time confirmed collections →' : 'All-time confirmed savings pool →'}
             </div>
           </div>
         </Link>
 
-        {/* Card 3: Harvests Released */}
+        {/* Card 3: Harvests Released / Target */}
         <Link
-          href="/dashboard/reports/commitments"
+          href={isAdmin ? "/dashboard/reports/commitments" : "/dashboard/commitments"}
           className="dashboard-clickable-card"
-          title="View harvest reports"
+          title={isAdmin ? "View harvest reports" : "View my savings commitments"}
           style={{
             backgroundColor: '#FFFFFF',
             borderRadius: '18px',
@@ -320,7 +351,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#57655c', fontSize: '0.85rem', fontWeight: 500 }}>
-                Harvests Released
+                {isAdmin ? 'Harvests Released' : 'Target Harvest Payout'}
               </span>
               <div style={{
                 width: '32px',
@@ -341,7 +372,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
 
             <div style={{ fontSize: '0.78rem', color: '#57655c', marginTop: '6px', fontWeight: 500 }}>
-              {completedHarvestsCount} completed harvest{completedHarvestsCount === 1 ? '' : 's'} recorded →
+              {isAdmin
+                ? `${completedHarvestsCount} completed harvest${completedHarvestsCount === 1 ? '' : 's'} recorded →`
+                : `Target payout for ${selectedYear} →`}
             </div>
           </div>
         </Link>
@@ -353,139 +386,273 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
         gap: '16px'
       }}>
-        {/* Active Commitments */}
-        <Link
-          href={`/dashboard/commitments?status=ACTIVE&year=${selectedYear}`}
-          className="dashboard-clickable-card"
-          title={`View active commitments for ${selectedYear}`}
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '16px',
-            padding: '20px',
-            border: '1px solid #dcd7ca',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            minHeight: '135px'
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Active Commitments</span>
-              <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#e6f0ee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0c4e43' }}>
-                <CheckCircle size={15} />
+        {isAdmin ? (
+          <>
+            {/* Active Commitments */}
+            <Link
+              href={`/dashboard/commitments?status=ACTIVE&year=${selectedYear}`}
+              className="dashboard-clickable-card"
+              title={`View active commitments for ${selectedYear}`}
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '1px solid #dcd7ca',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                minHeight: '135px'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Active Commitments</span>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#e6f0ee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0c4e43' }}>
+                    <CheckCircle size={15} />
+                  </div>
+                </div>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                  {activeCommitmentsCount} / {totalCommitmentsCount}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
+                  {activeCommitmentPct}% active in {selectedYear}
+                </div>
               </div>
-            </div>
-            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
-              {activeCommitmentsCount} / {totalCommitmentsCount}
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
-              {activeCommitmentPct}% active in {selectedYear}
-            </div>
-          </div>
-          <div style={{ width: '100%', height: '6px', backgroundColor: '#E5E7EB', borderRadius: '9999px', marginTop: '12px', overflow: 'hidden' }}>
-            <div style={{ width: `${activeCommitmentPct}%`, height: '100%', backgroundColor: '#0c4e43', borderRadius: '9999px' }} />
-          </div>
-        </Link>
+              <div style={{ width: '100%', height: '6px', backgroundColor: '#E5E7EB', borderRadius: '9999px', marginTop: '12px', overflow: 'hidden' }}>
+                <div style={{ width: `${activeCommitmentPct}%`, height: '100%', backgroundColor: '#0c4e43', borderRadius: '9999px' }} />
+              </div>
+            </Link>
 
-        {/* Pending Commitments */}
-        <Link
-          href={`/dashboard/commitments?status=PENDING&year=${selectedYear}`}
-          className="dashboard-clickable-card"
-          title={`View pending commitments for ${selectedYear}`}
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '16px',
-            padding: '20px',
-            border: '1px solid #dcd7ca',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            minHeight: '135px'
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Pending Commitments</span>
-              <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#fbf1ec', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97746' }}>
-                <Clock size={15} />
+            {/* Pending Commitments */}
+            <Link
+              href={`/dashboard/commitments?status=PENDING&year=${selectedYear}`}
+              className="dashboard-clickable-card"
+              title={`View pending commitments for ${selectedYear}`}
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '1px solid #dcd7ca',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                minHeight: '135px'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Pending Commitments</span>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#fbf1ec', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97746' }}>
+                    <Clock size={15} />
+                  </div>
+                </div>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                  {pendingCommitmentsCount} / {totalCommitmentsCount}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
+                  {pendingCommitmentsCount === 0 ? 'All commitments confirmed' : `${pendingCommitmentsCount} awaiting confirmation`}
+                </div>
               </div>
-            </div>
-            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
-              {pendingCommitmentsCount} / {totalCommitmentsCount}
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
-              {pendingCommitmentsCount === 0 ? 'All commitments confirmed' : `${pendingCommitmentsCount} awaiting confirmation`}
-            </div>
-          </div>
-        </Link>
+            </Link>
 
-        {/* Active Members */}
-        <Link
-          href="/dashboard/users?status=ACTIVE"
-          className="dashboard-clickable-card"
-          title="View active members"
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '16px',
-            padding: '20px',
-            border: '1px solid #dcd7ca',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            minHeight: '135px'
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Active Members</span>
-              <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#e6f0ee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0c4e43' }}>
-                <Users size={15} />
+            {/* Active Members */}
+            <Link
+              href="/dashboard/users?status=ACTIVE"
+              className="dashboard-clickable-card"
+              title="View active members"
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '1px solid #dcd7ca',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                minHeight: '135px'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Active Members</span>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#e6f0ee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0c4e43' }}>
+                    <Users size={15} />
+                  </div>
+                </div>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                  {activeUsersCount}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
+                  {invitedUsersCount > 0 ? `${invitedUsersCount} awaiting activation` : 'All members active'}
+                </div>
               </div>
-            </div>
-            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
-              {activeUsersCount}
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
-              {invitedUsersCount > 0 ? `${invitedUsersCount} awaiting activation` : 'All members active'}
-            </div>
-          </div>
-          <div style={{ width: '100%', height: '6px', backgroundColor: '#E5E7EB', borderRadius: '9999px', marginTop: '12px', overflow: 'hidden' }}>
-            <div style={{ width: `${Math.min(100, Math.round((activeUsersCount / (activeUsersCount + invitedUsersCount || 1)) * 100))}%`, height: '100%', backgroundColor: '#0c4e43', borderRadius: '9999px' }} />
-          </div>
-        </Link>
+              <div style={{ width: '100%', height: '6px', backgroundColor: '#E5E7EB', borderRadius: '9999px', marginTop: '12px', overflow: 'hidden' }}>
+                <div style={{ width: `${Math.min(100, Math.round((activeUsersCount / (activeUsersCount + invitedUsersCount || 1)) * 100))}%`, height: '100%', backgroundColor: '#0c4e43', borderRadius: '9999px' }} />
+              </div>
+            </Link>
 
-        {/* Invited Members */}
-        <Link
-          href="/dashboard/users?status=INVITED"
-          className="dashboard-clickable-card"
-          title="View invited members"
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '16px',
-            padding: '20px',
-            border: '1px solid #dcd7ca',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            minHeight: '135px'
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Invited Members</span>
-              <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#fbf1ec', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97746' }}>
-                <UserPlus size={15} />
+            {/* Invited Members */}
+            <Link
+              href="/dashboard/users?status=INVITED"
+              className="dashboard-clickable-card"
+              title="View invited members"
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '1px solid #dcd7ca',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                minHeight: '135px'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Invited Members</span>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#fbf1ec', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97746' }}>
+                    <UserPlus size={15} />
+                  </div>
+                </div>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                  {invitedUsersCount}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
+                  {invitedUsersCount > 0 ? 'Pending platform activation' : 'No pending invitations'}
+                </div>
               </div>
-            </div>
-            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
-              {invitedUsersCount}
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
-              {invitedUsersCount > 0 ? 'Pending platform activation' : 'No pending invitations'}
-            </div>
-          </div>
-        </Link>
+            </Link>
+          </>
+        ) : (
+          <>
+            {/* Member Card 1: My Active Commitments */}
+            <Link
+              href="/dashboard/commitments"
+              className="dashboard-clickable-card"
+              title="View my savings commitments"
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '1px solid #dcd7ca',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                minHeight: '135px'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Active Commitments</span>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#e6f0ee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0c4e43' }}>
+                    <CheckCircle size={15} />
+                  </div>
+                </div>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                  {activeCommitmentsCount} / {totalCommitmentsCount}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
+                  {activeCommitmentsCount > 0 ? `${activeCommitmentsCount} savings pool(s) active` : 'No active commitments'}
+                </div>
+              </div>
+            </Link>
+
+            {/* Member Card 2: Monthly Savings Rate */}
+            <Link
+              href="/dashboard/commitments"
+              className="dashboard-clickable-card"
+              title="View my monthly contributions"
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '1px solid #dcd7ca',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                minHeight: '135px'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Monthly Savings Target</span>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#fbf1ec', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97746' }}>
+                    <Clock size={15} />
+                  </div>
+                </div>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                  £{yearCommitments.reduce((acc, c) => acc + (Number(c.amount) || 0), 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
+                  Target monthly contribution
+                </div>
+              </div>
+            </Link>
+
+            {/* Member Card 3: Next Payout Date */}
+            <Link
+              href="/dashboard/commitments"
+              className="dashboard-clickable-card"
+              title="View my payout schedule"
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '1px solid #dcd7ca',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                minHeight: '135px'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Next Harvest Payout</span>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#e6f0ee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0c4e43' }}>
+                    <Gift size={15} />
+                  </div>
+                </div>
+                <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                  {yearCommitments[0]?.collectionMonth || 'December'} {selectedYear}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
+                  Scheduled payout month
+                </div>
+              </div>
+            </Link>
+
+            {/* Member Card 4: Invite Friends */}
+            <Link
+              href="/dashboard/invitations"
+              className="dashboard-clickable-card"
+              title="Invite friends to Savvey Savers"
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '1px solid #dcd7ca',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                minHeight: '135px'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Refer a Friend</span>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#fbf1ec', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97746' }}>
+                    <UserPlus size={15} />
+                  </div>
+                </div>
+                <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                  Invite & Share
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
+                  Refer friends & family →
+                </div>
+              </div>
+            </Link>
+          </>
+        )}
       </div>
 
       {/* 4. Visuals: Savings Volume Over Time + At a Glance */}
@@ -508,10 +675,12 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
               <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1a1a1a', fontFamily: 'var(--font-family-title)', margin: 0 }}>
-                Savings Volume Over Time
+                {isAdmin ? 'Savings Volume Over Time' : 'My Monthly Contributions'}
               </h3>
               <p style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '3px' }}>
-                Actual confirmed collections across months for {selectedYear}
+                {isAdmin
+                  ? `Actual confirmed collections across months for ${selectedYear}`
+                  : `Your confirmed savings payments across months for ${selectedYear}`}
               </p>
             </div>
 
@@ -567,7 +736,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             fontWeight: 600,
             color: '#ffffff'
           }}>
-            {activeCommitmentsCount} Active Commitments
+            {activeCommitmentsCount} Active Commitment{activeCommitmentsCount === 1 ? '' : 's'}
           </div>
 
           {/* Large glowing terracotta circular checkmark */}
@@ -592,7 +761,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           </div>
 
           <div style={{ color: '#c2d6cf', fontSize: '0.82rem', marginBottom: '8px' }}>
-            {activeUsersCount} active verified members participating in cycle.
+            {isAdmin
+              ? `${activeUsersCount} active verified members participating in cycle.`
+              : (activeCommitmentsCount > 0
+                  ? 'Your personal savings cycle is active and on track.'
+                  : 'Start or join a savings pool today.')}
           </div>
         </div>
       </div>
@@ -613,9 +786,13 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8C5815', fontWeight: 700, fontSize: '0.9rem' }}>
             <AlertTriangle size={18} />
             <span>
-              {invitedUsersCount > 0
-                ? `${invitedUsersCount} pending action item${invitedUsersCount > 1 ? 's' : ''}`
-                : 'All accounts and contributions are fully up to date'}
+              {isAdmin
+                ? (invitedUsersCount > 0
+                    ? `${invitedUsersCount} pending action item${invitedUsersCount > 1 ? 's' : ''}`
+                    : 'All accounts and contributions are fully up to date')
+                : (activeCommitmentsCount > 0
+                    ? 'Your savings contributions and account status are in good standing'
+                    : 'Get started by exploring available savings commitments')}
             </span>
           </div>
 
@@ -624,7 +801,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#0c4e43' }} />
               <span>0 overdue payments</span>
             </div>
-            {invitedUsersCount > 0 && (
+            {isAdmin && invitedUsersCount > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#d97746' }} />
                 <span>{invitedUsersCount} member invitation{invitedUsersCount > 1 ? 's' : ''} awaiting activation</span>
@@ -634,7 +811,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         </div>
 
         <Link
-          href={invitedUsersCount > 0 ? "/dashboard/users?status=INVITED" : "/dashboard/commitments"}
+          href={isAdmin ? (invitedUsersCount > 0 ? "/dashboard/users?status=INVITED" : "/dashboard/commitments") : "/dashboard/commitments"}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -649,7 +826,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             transition: 'background-color 0.15s'
           }}
         >
-          <span>{invitedUsersCount > 0 ? "Review Invitations" : "View Commitments"}</span>
+          <span>{isAdmin ? (invitedUsersCount > 0 ? "Review Invitations" : "View Commitments") : "View My Commitments"}</span>
           <ArrowRight size={14} />
         </Link>
       </div>
@@ -674,10 +851,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
               <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1a1a1a', fontFamily: 'var(--font-family-title)', margin: 0 }}>
-                Recent Activity
+                {isAdmin ? 'Recent Activity' : 'My Recent Payments'}
               </h3>
               <p style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '3px' }}>
-                Live ledger transactions from the database
+                {isAdmin ? 'Live ledger transactions from the database' : 'Your confirmed contribution payment receipts'}
               </p>
             </div>
             <Link

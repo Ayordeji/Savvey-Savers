@@ -801,10 +801,12 @@ function CommitmentsContent() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
-            Savings Commitments
+            {currentUser?.role === 'MEMBER' ? 'My Savings Commitments' : 'Savings Commitments'}
           </h2>
           <p style={{ color: '#6B7280', fontSize: '0.88rem', marginTop: '4px', margin: 0 }}>
-            Active pool commitments, payout dates, and monthly contribution tracking.
+            {currentUser?.role === 'MEMBER'
+              ? 'Your active pool commitments, payout dates, and monthly contribution tracking.'
+              : 'Active pool commitments, payout dates, and monthly contribution tracking.'}
           </p>
         </div>
 
@@ -893,7 +895,7 @@ function CommitmentsContent() {
             }}
           >
             <Plus size={16} />
-            <span>New Savings Commitment</span>
+            <span>{currentUser?.role === 'MEMBER' ? 'Request Savings Goal' : 'New Savings Commitment'}</span>
             <ChevronDown size={14} style={{ opacity: 0.8 }} />
           </button>
         </div>
@@ -1589,99 +1591,101 @@ function CommitmentsContent() {
                     )}
                   </div>
 
-                  {/* 4 Action Buttons */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-                    <button
-                      onClick={() => {
-                        const pending = cmtPayments.find(p => p.status === 'PENDING');
-                        handleConfirmPayment(pending?.id, selectedCmt.id);
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '10px',
-                        backgroundColor: '#2E5A44',
-                        color: '#FFFFFF',
-                        border: 'none',
-                        borderRadius: '10px',
-                        fontSize: '0.82rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      <CheckCircle size={15} />
-                      <span>Confirm Monthly Payment</span>
-                    </button>
+                  {/* Admin Action Buttons */}
+                  {currentUser?.role === 'ADMIN' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                      <button
+                        onClick={() => {
+                          const pending = cmtPayments.find(p => p.status === 'PENDING');
+                          handleConfirmPayment(pending?.id, selectedCmt.id);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          backgroundColor: '#2E5A44',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '10px',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <CheckCircle size={15} />
+                        <span>Confirm Monthly Payment</span>
+                      </button>
 
-                    <button
-                      onClick={() => handleOpenPastPaymentModal(selectedCmt)}
-                      style={{
-                        width: '100%',
-                        padding: '9px',
-                        backgroundColor: '#FFFFFF',
-                        color: '#374151',
-                        border: '1px solid #ECE8E2',
-                        borderRadius: '10px',
-                        fontSize: '0.82rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      <Plus size={15} />
-                      <span>Add Past Payment</span>
-                    </button>
+                      <button
+                        onClick={() => handleOpenPastPaymentModal(selectedCmt)}
+                        style={{
+                          width: '100%',
+                          padding: '9px',
+                          backgroundColor: '#FFFFFF',
+                          color: '#374151',
+                          border: '1px solid #ECE8E2',
+                          borderRadius: '10px',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <Plus size={15} />
+                        <span>Add Past Payment</span>
+                      </button>
 
-                    <button
-                      onClick={() => handleReleaseHarvest(selectedCmt.id)}
-                      style={{
-                        width: '100%',
-                        padding: '9px',
-                        backgroundColor: '#FFFBEB',
-                        color: '#B45309',
-                        border: '1px solid #FCD34D',
-                        borderRadius: '10px',
-                        fontSize: '0.82rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      <Banknote size={15} />
-                      <span>Complete Harvest Payout</span>
-                    </button>
+                      <button
+                        onClick={() => handleReleaseHarvest(selectedCmt.id)}
+                        style={{
+                          width: '100%',
+                          padding: '9px',
+                          backgroundColor: '#FFFBEB',
+                          color: '#B45309',
+                          border: '1px solid #FCD34D',
+                          borderRadius: '10px',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <Banknote size={15} />
+                        <span>Complete Harvest Payout</span>
+                      </button>
 
-                    <button
-                      onClick={() => handleDeleteCommitment(selectedCmt)}
-                      style={{
-                        width: '100%',
-                        padding: '8px',
-                        backgroundColor: 'transparent',
-                        color: '#DC2626',
-                        border: '1px solid rgba(220, 38, 38, 0.3)',
-                        borderRadius: '10px',
-                        fontSize: '0.8rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      <Trash2 size={14} />
-                      <span>Terminate Commitment</span>
-                    </button>
-                  </div>
+                      <button
+                        onClick={() => handleDeleteCommitment(selectedCmt)}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          backgroundColor: 'transparent',
+                          color: '#DC2626',
+                          border: '1px solid rgba(220, 38, 38, 0.3)',
+                          borderRadius: '10px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <Trash2 size={14} />
+                        <span>Terminate Commitment</span>
+                      </button>
+                    </div>
+                  )}
                 </>
               );
             })()}

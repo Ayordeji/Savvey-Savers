@@ -246,11 +246,20 @@ export default function ManageUsersPage() {
     fetch('/api/auth/session')
       .then(res => res.json())
       .then(data => {
-        if (data.loggedIn) {
+        if (data.loggedIn && data.user) {
+          if (data.user.role !== 'ADMIN') {
+            router.replace('/dashboard');
+            return;
+          }
           setCurrentUser(data.user);
+        } else {
+          router.replace('/dashboard');
         }
       })
-      .catch(err => console.error('Error fetching session:', err));
+      .catch(err => {
+        console.error('Error fetching session:', err);
+        router.replace('/dashboard');
+      });
 
     fetch('/api/admin/settings')
       .then(res => res.json())

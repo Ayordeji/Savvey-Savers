@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Settings, Plus, Save, Eye, Edit, Trash2, X, MoreVertical, FileText, Bell, ShieldCheck, Database, Upload, Check, ChevronDown, CheckCircle2, AlertCircle, Edit2 } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import { DEFAULT_MEMBERSHIP_AGREEMENT, DEFAULT_FEE_SCHEDULE } from '@/lib/agreements';
@@ -171,9 +171,26 @@ function SettingsContent() {
   const [editEnabled, setEditEnabled] = useState(true);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
+  const router = useRouter();
+
   const fetchSettings = async () => {
     try {
-      const res = await fetch('/api/admin/settings');
+      const [sessRes, res] = await Promise.all([
+        fetch('/api/auth/session'),
+        fetch('/api/admin/settings')
+      ]);
+
+      if (sessRes.ok) {
+        const sessData = await sessRes.json();
+        if (!sessData.loggedIn || sessData.user?.role !== 'ADMIN') {
+          router.replace('/dashboard');
+          return;
+        }
+      } else {
+        router.replace('/dashboard');
+        return;
+      }
+
       if (res.ok) {
         const data = await res.json();
         setGoals(data.savingGoals || []);

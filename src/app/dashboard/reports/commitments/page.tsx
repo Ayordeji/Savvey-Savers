@@ -121,10 +121,22 @@ function CommitmentsReportContent() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [cmtRes, usrRes] = await Promise.all([
+      const [sessRes, cmtRes, usrRes] = await Promise.all([
+        fetch('/api/auth/session'),
         fetch('/api/admin/commitments'),
         fetch('/api/admin/users')
       ]);
+
+      if (sessRes.ok) {
+        const sessData = await sessRes.json();
+        if (!sessData.loggedIn || sessData.user?.role !== 'ADMIN') {
+          router.replace('/dashboard');
+          return;
+        }
+      } else {
+        router.replace('/dashboard');
+        return;
+      }
 
       if (cmtRes.ok) {
         const data = await cmtRes.json();

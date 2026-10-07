@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Check,
   X,
@@ -39,6 +40,7 @@ interface WaitingListEntry {
 }
 
 export default function WaitingListPage() {
+  const router = useRouter();
   const dialog = useDialog();
   const [entries, setEntries] = useState<WaitingListEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,7 +78,22 @@ export default function WaitingListPage() {
 
   const fetchEntries = async () => {
     try {
-      const res = await fetch('/api/admin/waiting-list');
+      const [sessRes, res] = await Promise.all([
+        fetch('/api/auth/session'),
+        fetch('/api/admin/waiting-list')
+      ]);
+
+      if (sessRes.ok) {
+        const sessData = await sessRes.json();
+        if (!sessData.loggedIn || sessData.user?.role !== 'ADMIN') {
+          router.replace('/dashboard');
+          return;
+        }
+      } else {
+        router.replace('/dashboard');
+        return;
+      }
+
       if (res.ok) {
         const data = await res.json();
         setEntries(data);

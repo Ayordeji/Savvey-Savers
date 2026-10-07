@@ -74,8 +74,8 @@ export default function Sidebar({ user }: SidebarProps) {
     }
   };
 
-  // Main navigation items matching client application
-  const mainNavItems = [
+  // Main navigation items based on role
+  const mainNavItems = user?.role === 'ADMIN' ? [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Members', href: '/dashboard/users', icon: Users },
     { name: 'Savings Commitments', href: '/dashboard/commitments', icon: CalendarCheck },
@@ -85,6 +85,11 @@ export default function Sidebar({ user }: SidebarProps) {
     { name: 'Invitations', href: '/dashboard/invitations', icon: Share2 },
     { name: 'Deleted Records', href: '/dashboard/deleted-records', icon: Trash2 },
     { name: 'Reports', href: '/dashboard/reports/members', icon: FileBarChart },
+  ] : [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'My Savings Commitments', href: '/dashboard/commitments', icon: CalendarCheck },
+    { name: 'My Payments', href: '/dashboard/payments', icon: CreditCard },
+    { name: 'My Invitations', href: '/dashboard/invitations', icon: Share2 },
   ];
 
   const navContent = (
@@ -182,14 +187,25 @@ export default function Sidebar({ user }: SidebarProps) {
         {/* SETTINGS CATEGORY */}
         <div className={styles.navSectionHeader}>SETTINGS</div>
 
-        <Link
-          href="/dashboard/settings"
-          onClick={() => setIsMobileOpen(false)}
-          className={`${styles.navItem} ${pathname.startsWith('/dashboard/settings') ? styles.activeNavItem : ''}`}
-        >
-          <Settings size={18} style={{ color: pathname.startsWith('/dashboard/settings') ? '#ffffff' : '#8fa89b' }} />
-          <span>Account Settings</span>
-        </Link>
+        {user?.role === 'ADMIN' ? (
+          <Link
+            href="/dashboard/settings"
+            onClick={() => setIsMobileOpen(false)}
+            className={`${styles.navItem} ${pathname.startsWith('/dashboard/settings') ? styles.activeNavItem : ''}`}
+          >
+            <Settings size={18} style={{ color: pathname.startsWith('/dashboard/settings') ? '#ffffff' : '#8fa89b' }} />
+            <span>Account Settings</span>
+          </Link>
+        ) : (
+          <Link
+            href="/dashboard/profile"
+            onClick={() => setIsMobileOpen(false)}
+            className={`${styles.navItem} ${pathname.startsWith('/dashboard/profile') ? styles.activeNavItem : ''}`}
+          >
+            <Settings size={18} style={{ color: pathname.startsWith('/dashboard/profile') ? '#ffffff' : '#8fa89b' }} />
+            <span>My Profile</span>
+          </Link>
+        )}
 
         <Link
           href="/dashboard/notifications"
