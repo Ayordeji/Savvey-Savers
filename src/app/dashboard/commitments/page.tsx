@@ -878,26 +878,28 @@ function CommitmentsContent() {
             </button>
           )}
 
-          <button
-            onClick={handleOpenAddModal}
-            style={{
-              backgroundColor: '#2E5A44',
-              color: '#FFFFFF',
-              border: 'none',
-              borderRadius: '10px',
-              padding: '9px 18px',
-              fontWeight: 600,
-              fontSize: '0.82rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer'
-            }}
-          >
-            <Plus size={16} />
-            <span>{currentUser?.role === 'MEMBER' ? 'Request Savings Goal' : 'New Savings Commitment'}</span>
-            <ChevronDown size={14} style={{ opacity: 0.8 }} />
-          </button>
+          {currentUser?.role === 'ADMIN' && (
+            <button
+              onClick={handleOpenAddModal}
+              style={{
+                backgroundColor: '#2E5A44',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '10px',
+                padding: '9px 18px',
+                fontWeight: 600,
+                fontSize: '0.82rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              <Plus size={16} />
+              <span>New Savings Commitment</span>
+              <ChevronDown size={14} style={{ opacity: 0.8 }} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -1693,8 +1695,8 @@ function CommitmentsContent() {
         )}
       </div>
 
-      {/* --- ADD COMMITMENT MODAL --- */}
-      {activeModal === 'ADD' && (
+      {/* --- ADD COMMITMENT MODAL (Admin only) --- */}
+      {activeModal === 'ADD' && currentUser?.role === 'ADMIN' && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
           <div className="modal-content">
             <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)' }}>

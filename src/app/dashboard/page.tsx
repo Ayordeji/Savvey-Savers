@@ -98,14 +98,23 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     const [allCommitments, allPayments, rawUsers] = await Promise.all([
       db.commitment.findMany({
         include: { user: true }
+      }).catch(err => {
+        console.error('Error fetching commitments:', err);
+        return [];
       }),
       db.payment.findMany({
         where: { status: 'CONFIRMED' },
         include: { user: true, commitment: true },
         orderBy: { createdAt: 'desc' }
+      }).catch(err => {
+        console.error('Error fetching payments:', err);
+        return [];
       }),
       db.user.findMany({
         orderBy: { createdAt: 'desc' }
+      }).catch(err => {
+        console.error('Error fetching users:', err);
+        return [];
       })
     ]);
 
@@ -156,16 +165,16 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       : yearCommitments.reduce((acc, c) => acc + (Number(c.amount) * 12), 0);
 
     // 4. All-time revenue = sum of all confirmed payments
-    allTimeRevenue = relevantPayments.reduce((acc, p) => acc + p.amount, 0);
+    allTimeRevenue = relevantPayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
 
     // 5. Revenue for selected year
     const yearPayments = relevantPayments.filter(p => p.year === selectedYearNum);
-    revenueForYear = yearPayments.reduce((acc, p) => acc + p.amount, 0);
+    revenueForYear = yearPayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
 
     // 6. Monthly distribution for selected year
     months.forEach((m, idx) => {
       const monthPayments = yearPayments.filter(p => p.month?.trim().toLowerCase() === m.toLowerCase());
-      monthlyData[idx] = monthPayments.reduce((acc, p) => acc + p.amount, 0);
+      monthlyData[idx] = monthPayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
     });
 
     // 7. Recent authentic transactions
@@ -180,7 +189,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   if (currentHour < 12) greetingTime = 'Good morning';
   else if (currentHour < 17) greetingTime = 'Good afternoon';
 
-  const userFirstName = user.firstName || user.name.split(' ')[0] || 'Iyore';
+  const userFirstName = user.firstName?.trim() || (user.name ? user.name.split(' ')[0] : '') || 'Member';
   const activeCommitmentPct = totalCommitmentsCount > 0 ? ((activeCommitmentsCount / totalCommitmentsCount) * 100).toFixed(1) : '0.0';
 
   return (

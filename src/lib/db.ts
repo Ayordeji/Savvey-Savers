@@ -36,6 +36,4 @@ const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
 
 export const db = prisma;
 
-// In development, reuse the singleton across hot reloads.
-// In production (Vercel), globalThis is per-Lambda so this only runs once anyway.
-if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma;
+if (!globalThis.prismaGlobal) globalThis.prismaGlobal = prisma;
