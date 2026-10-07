@@ -2358,28 +2358,7 @@ export default function ManageUsersPage() {
               </div>
 
               <div className="form-group" style={{ margin: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <label className="form-label" style={{ margin: 0, fontWeight: 600, color: '#334155' }}>Select Role *</label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFormRole('SUPER_ADMIN' as any);
-                      setFormIsSuperAdmin(true);
-                    }}
-                    style={{
-                      border: '1px solid #cbd5e1',
-                      backgroundColor: '#f8fafc',
-                      color: '#1e293b',
-                      fontSize: '0.78rem',
-                      fontWeight: 600,
-                      borderRadius: '6px',
-                      padding: '4px 10px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    ⚡ Request Super Admin Access
-                  </button>
-                </div>
+                <label className="form-label" style={{ marginBottom: '6px', fontWeight: 600, color: '#334155' }}>Select Role *</label>
                 <select
                   value={formIsSuperAdmin ? 'SUPER_ADMIN' : formRole}
                   onChange={(e) => {

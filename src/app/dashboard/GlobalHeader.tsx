@@ -492,7 +492,7 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
                 </div>
                 
                 <Link
-                  href="/dashboard/settings"
+                  href={user.role === 'ADMIN' ? '/dashboard/settings' : '/dashboard/profile'}
                   onClick={() => setShowUserDropdown(false)}
                   style={{
                     display: 'flex',
@@ -507,7 +507,7 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
                   }}
                 >
                   <UserIcon size={16} />
-                  <span>Account Settings</span>
+                  <span>{user.role === 'ADMIN' ? 'Account Settings' : 'My Profile'}</span>
                 </Link>
 
                 <button
