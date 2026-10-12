@@ -67,10 +67,11 @@ function CommitmentsContent() {
     setSearchQuery('');
     setStatusFilter('');
     setMonthFilter('');
-    setYearFilter('');
+    setYearFilter('2026');
     setCurrentPage(1);
   };
-  const [yearFilter, setYearFilter] = useState('');
+  const [yearFilter, setYearFilter] = useState('2026');
+  const [sendEmailNotification, setSendEmailNotification] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Settings configs
@@ -451,7 +452,10 @@ function CommitmentsContent() {
   };
 
   const handleConfirmPayment = async (paymentId: string | undefined, commitmentId: string) => {
-    if (!(await dialog.confirm('Confirm Payment', 'Confirm receipt of this contribution payment? This triggers an email receipt.', 'Proceed', 'Cancel'))) return;
+    const emailNoticeText = sendEmailNotification
+      ? 'A confirmation email receipt will be sent to the member.'
+      : 'Confirmation email is muted (no email will be sent).';
+    if (!(await dialog.confirm('Confirm Payment', `Confirm receipt of this contribution payment? ${emailNoticeText}`, 'Proceed', 'Cancel'))) return;
     try {
       const res = await fetch('/api/admin/commitments/action', {
         method: 'POST',
@@ -459,7 +463,9 @@ function CommitmentsContent() {
         body: JSON.stringify({
           action: 'CONFIRM_PAYMENT',
           paymentId: paymentId || undefined,
-          commitmentId
+          commitmentId,
+          sendNotification: sendEmailNotification,
+          sendEmail: sendEmailNotification
         })
       });
 
@@ -557,9 +563,10 @@ function CommitmentsContent() {
         await dialog.alert('Error', 'A network error occurred while unmarking payment.');
       }
     } else {
+      const emailNoticeText = sendEmailNotification ? ' (Confirmation email will be sent)' : ' (Email confirmation is muted)';
       const confirmAdd = await dialog.confirm(
         'Confirm Payment Progress',
-        `Mark payment for ${fullMonthName} ${selectedCmt.collectionYear} (£${Number(selectedCmt.amount).toFixed(2)}) as received for ${selectedCmt.memberName}?`,
+        `Mark payment for ${fullMonthName} ${selectedCmt.collectionYear} (£${Number(selectedCmt.amount).toFixed(2)}) as received for ${selectedCmt.memberName}?${emailNoticeText}`,
         'Confirm Payment',
         'Cancel'
       );
@@ -575,7 +582,8 @@ function CommitmentsContent() {
             month: fullMonthName,
             year: selectedCmt.collectionYear,
             amount: selectedCmt.amount,
-            sendNotification: 'no'
+            sendNotification: sendEmailNotification ? 'yes' : 'no',
+            sendEmail: sendEmailNotification
           })
         });
         if (res.ok) {
@@ -1061,6 +1069,8 @@ function CommitmentsContent() {
             <option value="2026">2026</option>
             <option value="2027">2027</option>
             <option value="2028">2028</option>
+            <option value="2029">2029</option>
+            <option value="2030">2030</option>
           </select>
 
           {(searchQuery || statusFilter || monthFilter || yearFilter) && (
@@ -1409,48 +1419,81 @@ function CommitmentsContent() {
             </div>
 
             {/* Member Header */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{
-                  width: '50px',
-                  height: '50px',
-                  borderRadius: '50%',
-                  backgroundColor: '#1B4332',
-                  color: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  fontSize: '1.2rem',
-                  flexShrink: 0
-                }}>
-                  {selectedCmt.memberName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'MB'}
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#111827' }}>
-                      {selectedCmt.memberName}
-                    </span>
-                    <span style={{
-                      padding: '2px 8px',
-                      borderRadius: '9999px',
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                      backgroundColor: selectedCmt.status === 'ACTIVE' ? '#EAF5EE' : selectedCmt.status === 'COMPLETED' ? '#EBF5FF' : selectedCmt.status === 'CANCELLED' ? '#FEE2E2' : '#F3F4F6',
-                      color: selectedCmt.status === 'ACTIVE' ? '#2E7D32' : selectedCmt.status === 'COMPLETED' ? '#2563EB' : selectedCmt.status === 'CANCELLED' ? '#DC2626' : '#4B5563'
-                    }}>
-                      {selectedCmt.status === 'NOT_YET_STARTED' ? 'Not Started' : selectedCmt.status === 'ACTIVE' ? 'Active' : selectedCmt.status === 'COMPLETED' ? 'Completed' : selectedCmt.status === 'CANCELLED' ? 'Cancelled' : selectedCmt.status}
-                    </span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    width: '50px',
+                    height: '50px',
+                    borderRadius: '50%',
+                    backgroundColor: '#1B4332',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '1.2rem',
+                    flexShrink: 0
+                  }}>
+                    {selectedCmt.memberName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'MB'}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                    <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#0c4e43', fontWeight: 700, backgroundColor: '#EAF5EE', padding: '1px 6px', borderRadius: '4px' }}>
-                      {selectedCmt.displayId || selectedCmt.id}
-                    </span>
-                    <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                      &bull; Goal: {selectedCmt.goal || 'General Savings'}
-                    </span>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#111827', wordBreak: 'break-word' }}>
+                        {selectedCmt.memberName}
+                      </span>
+                      <span style={{
+                        padding: '2px 8px',
+                        borderRadius: '9999px',
+                        fontSize: '0.7rem',
+                        fontWeight: 600,
+                        backgroundColor: selectedCmt.status === 'ACTIVE' ? '#EAF5EE' : selectedCmt.status === 'COMPLETED' ? '#EBF5FF' : selectedCmt.status === 'CANCELLED' ? '#FEE2E2' : '#F3F4F6',
+                        color: selectedCmt.status === 'ACTIVE' ? '#2E7D32' : selectedCmt.status === 'COMPLETED' ? '#2563EB' : selectedCmt.status === 'CANCELLED' ? '#DC2626' : '#4B5563'
+                      }}>
+                        {selectedCmt.status === 'NOT_YET_STARTED' ? 'Not Started' : selectedCmt.status === 'ACTIVE' ? 'Active' : selectedCmt.status === 'COMPLETED' ? 'Completed' : selectedCmt.status === 'CANCELLED' ? 'Cancelled' : selectedCmt.status}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px', flexWrap: 'wrap' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#0c4e43', fontWeight: 700, backgroundColor: '#EAF5EE', padding: '1px 6px', borderRadius: '4px' }}>
+                        {selectedCmt.displayId || selectedCmt.id}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                        &bull; Goal: {selectedCmt.goal || 'General Savings'}
+                      </span>
+                    </div>
                   </div>
                 </div>
+
+                {/* Direct Action Link to Member Details Page */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (currentUser?.role === 'ADMIN') {
+                      router.push(`/dashboard/users?search=${encodeURIComponent(selectedCmt.memberName)}&userId=${encodeURIComponent(selectedCmt.memberId || '')}&openView=true`);
+                    } else {
+                      router.push('/dashboard/profile');
+                    }
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    fontSize: '0.76rem',
+                    fontWeight: 600,
+                    backgroundColor: '#F0FDF4',
+                    color: '#166534',
+                    border: '1px solid #BBF7D0',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
+                  }}
+                  title={currentUser?.role === 'ADMIN' ? 'Go to member details on the Members page' : 'Go to your profile'}
+                >
+                  <ExternalLink size={13} />
+                  <span>{currentUser?.role === 'ADMIN' ? 'Member Profile' : 'My Profile'}</span>
+                </button>
               </div>
             </div>
 
@@ -1498,12 +1541,41 @@ function CommitmentsContent() {
 
                   {/* Payment Progress Tracker (12 Month Pills) */}
                   <div style={{ backgroundColor: '#FAF9F6', borderRadius: '14px', padding: '16px', border: '1px solid #ECE8E2' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                       <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827' }}>Payment Progress</span>
                       <span style={{ fontSize: '0.72rem', color: '#6B7280' }}>
                         {currentUser?.role === 'ADMIN' ? 'Click month to mark/unmark' : `${paidCount} of 12 completed`}
                       </span>
                     </div>
+
+                    {/* Admin Email Notification Toggle */}
+                    {currentUser?.role === 'ADMIN' && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '8px 12px',
+                        backgroundColor: sendEmailNotification ? '#EFF6FF' : '#F3F4F6',
+                        borderRadius: '8px',
+                        marginBottom: '12px',
+                        border: sendEmailNotification ? '1px solid #BFDBFE' : '1px solid #E5E7EB'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Mail size={14} style={{ color: sendEmailNotification ? '#2563EB' : '#6B7280' }} />
+                          <label htmlFor="drawerEmailToggle" style={{ fontSize: '0.75rem', fontWeight: 600, color: sendEmailNotification ? '#1E40AF' : '#4B5563', cursor: 'pointer', margin: 0 }}>
+                            Send confirmation email on updates
+                          </label>
+                        </div>
+                        <input
+                          id="drawerEmailToggle"
+                          type="checkbox"
+                          checked={sendEmailNotification}
+                          onChange={(e) => setSendEmailNotification(e.target.checked)}
+                          style={{ cursor: 'pointer', width: '15px', height: '15px', accentColor: '#2563EB' }}
+                          title="Toggle whether to dispatch email receipt when updating payments"
+                        />
+                      </div>
+                    )}
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                       {monthNamesList.map((mName, mIdx) => {
@@ -1600,6 +1672,36 @@ function CommitmentsContent() {
                   {/* Admin Action Buttons */}
                   {currentUser?.role === 'ADMIN' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                      {/* Direct Member Profile Action */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (currentUser?.role === 'ADMIN') {
+                            router.push(`/dashboard/users?search=${encodeURIComponent(selectedCmt.memberName)}&userId=${encodeURIComponent(selectedCmt.memberId || '')}&openView=true`);
+                          } else {
+                            router.push('/dashboard/profile');
+                          }
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '9px',
+                          backgroundColor: '#F0FDF4',
+                          color: '#166534',
+                          border: '1px solid #BBF7D0',
+                          borderRadius: '10px',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <ExternalLink size={14} />
+                        <span>{currentUser?.role === 'ADMIN' ? "View Member's Full Profile" : "View My Profile"}</span>
+                      </button>
+
                       <button
                         onClick={() => {
                           const pending = cmtPayments.find(p => p.status === 'PENDING');
@@ -1921,11 +2023,10 @@ function CommitmentsContent() {
 
               {/* Send Notification */}
               <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Send Notification</label>
+                <label className="form-label">Send Confirmation Email</label>
                 <select value={pastPaySendNotification} onChange={(e) => setPastPaySendNotification(e.target.value as 'yes' | 'no')} className="form-select">
-                  <option value="" disabled>Choose...</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
+                  <option value="no">No — Record payment silently without email</option>
+                  <option value="yes">Yes — Dispatch email receipt to member</option>
                 </select>
               </div>
 

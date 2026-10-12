@@ -73,6 +73,7 @@ function PaymentsContent() {
   const [currentUser, setCurrentUser] = useState<{ id: string; role: 'ADMIN' | 'MEMBER'; displayId?: string; email?: string; name?: string; } | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [commitments, setCommitments] = useState<Commitment[]>([]);
+  const [notifyMemberEmail, setNotifyMemberEmail] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -368,7 +369,10 @@ function PaymentsContent() {
 
   const handleConfirmPayment = async (p: Payment) => {
     setOpenDropdownId(null);
-    if (!(await dialog.confirm('Confirm Payment Receipt', `Confirm payment of £${Number(p.amount).toFixed(2)} for ${p.month} ${p.year}? This will send a confirmation receipt.`))) {
+    const emailNotice = notifyMemberEmail
+      ? 'A confirmation receipt email will be sent to the member.'
+      : 'Email confirmation is muted (no email will be sent).';
+    if (!(await dialog.confirm('Confirm Payment Receipt', `Confirm payment of £${Number(p.amount).toFixed(2)} for ${p.month} ${p.year}? ${emailNotice}`))) {
       return;
     }
 
@@ -379,7 +383,9 @@ function PaymentsContent() {
         body: JSON.stringify({
           action: 'CONFIRM_PAYMENT',
           paymentId: p.id,
-          commitmentId: p.commitmentId
+          commitmentId: p.commitmentId,
+          sendNotification: notifyMemberEmail,
+          sendEmail: notifyMemberEmail
         })
       });
 
@@ -657,6 +663,31 @@ function PaymentsContent() {
             </button>
           )}
         </div>
+
+        {currentUser?.role === 'ADMIN' && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            backgroundColor: notifyMemberEmail ? '#EFF6FF' : '#F9FAFB',
+            border: notifyMemberEmail ? '1px solid #BFDBFE' : '1px solid #E5E7EB',
+            borderRadius: '10px',
+            padding: '7px 12px'
+          }}>
+            <Mail size={14} style={{ color: notifyMemberEmail ? '#2563EB' : '#6B7280' }} />
+            <label htmlFor="payEmailToggle" style={{ fontSize: '0.78rem', fontWeight: 600, color: notifyMemberEmail ? '#1E40AF' : '#4B5563', cursor: 'pointer', margin: 0 }}>
+              Email receipts
+            </label>
+            <input
+              id="payEmailToggle"
+              type="checkbox"
+              checked={notifyMemberEmail}
+              onChange={(e) => setNotifyMemberEmail(e.target.checked)}
+              style={{ cursor: 'pointer', width: '15px', height: '15px', accentColor: '#2563EB' }}
+              title="Toggle whether to dispatch email receipt when confirming payments"
+            />
+          </div>
+        )}
       </div>
 
       {/* Main Two-Column Layout (Table on Left, Drawer/Widgets on Right) */}

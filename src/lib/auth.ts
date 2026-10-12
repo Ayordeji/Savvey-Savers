@@ -13,7 +13,7 @@ export async function createSessionCookie(payload: any): Promise<string> {
   const jwt = await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('5d')
+    .setExpirationTime('8h')
     .sign(encodedKey);
   
   return jwt;

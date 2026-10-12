@@ -99,7 +99,7 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24 * 5, // 5 days
+      maxAge: 60 * 60 * 8, // 8 hours maximum session lifetime
     });
 
     // Record login audit event

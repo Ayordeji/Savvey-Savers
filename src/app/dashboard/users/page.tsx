@@ -280,6 +280,20 @@ export default function ManageUsersPage() {
     if (statusParam) {
       setUserStatusFilter(statusParam.toUpperCase());
     }
+
+    const userIdParam = searchParams.get('userId');
+    const openViewParam = searchParams.get('openView');
+    if ((openViewParam === 'true' || userIdParam) && users.length > 0 && activeModal === 'NONE') {
+      const match = users.find(u =>
+        (userIdParam && u.id === userIdParam) ||
+        (userIdParam && u.displayId === userIdParam) ||
+        (searchParam && u.name.toLowerCase() === searchParam.toLowerCase()) ||
+        (searchParam && u.email.toLowerCase() === searchParam.toLowerCase())
+      );
+      if (match) {
+        handleOpenViewModal(match);
+      }
+    }
     const approveId = searchParams.get('approveSuperAdmin');
     if (approveId && users.length > 0) {
       const targetUser = users.find((u) => u.id === approveId);

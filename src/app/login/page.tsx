@@ -11,8 +11,18 @@ export default function LoginPage() {
   const router = useRouter();
   const [waitlistModalOpen, setWaitlistModalOpen] = useState(false);
 
+  const [sessionExpiredNotice, setSessionExpiredNotice] = useState(false);
+
   // Check existing session
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('sessionExpired') === 'true') {
+        setSessionExpiredNotice(true);
+        return;
+      }
+    }
+
     fetch('/api/auth/session')
       .then((res) => res.json())
       .then((data) => {
@@ -21,7 +31,7 @@ export default function LoginPage() {
         }
       })
       .catch((err) => console.error('Session verify error:', err));
-  }, [router]);
+  }, []);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -167,6 +177,26 @@ export default function LoginPage() {
 
           {!isForgotPassword ? (
             <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {sessionExpiredNotice && (
+                <div
+                  style={{
+                    backgroundColor: '#FEF3C7',
+                    color: '#92400E',
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    fontSize: '0.85rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    border: '1px solid #FCD34D',
+                    lineHeight: '1.4'
+                  }}
+                >
+                  <AlertCircle size={18} style={{ flexShrink: 0, color: '#D97706' }} />
+                  <span>Your session has expired due to inactivity. Please log in again to continue.</span>
+                </div>
+              )}
+
               {error && (
                 <div
                   style={{

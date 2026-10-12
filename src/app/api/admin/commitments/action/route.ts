@@ -18,7 +18,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { action, commitmentId, paymentId, month, year, amount, memberId, receiptUrl } = await request.json();
+    const { action, commitmentId, paymentId, month, year, amount, memberId, receiptUrl, sendNotification, sendEmail } = await request.json();
+
+    const notifyByEmail =
+      sendEmail !== false &&
+      sendEmail !== 'no' &&
+      sendNotification !== false &&
+      sendNotification !== 'no';
 
     if (!action) {
       return NextResponse.json({ error: 'Action is required.' }, { status: 400 });
@@ -62,13 +68,13 @@ export async function POST(request: Request) {
       // The commitment only moves to COMPLETED when the admin explicitly releases the harvest.
 
       if (member && cmt) {
-        // Dispatch Email Notification
-        const settingsRecord = await db.setting.findUnique({ where: { key: 'emailTemplates' } });
-        const templates = settingsRecord?.value as any[] || [];
-        await sendTemplatedEmail("22", member.email, {
-          fullMonthName: payment.month,
-          name: member.name
-        });
+        // Dispatch Email Notification (only if enabled by admin)
+        if (notifyByEmail) {
+          await sendTemplatedEmail("22", member.email, {
+            fullMonthName: payment.month,
+            name: member.name
+          });
+        }
 
         // Member Notification
         await db.notification.create({ data: {
@@ -81,7 +87,7 @@ export async function POST(request: Request) {
 
       await db.auditLog.create({ data: {
         action: 'PAYMENT_CONFIRM',
-        details: `Confirmed savings payment of £${payment.amount} for ${payment.month} ${payment.year}.`,
+        details: `Confirmed savings payment of £${payment.amount} for ${payment.month} ${payment.year}. (Email notice: ${notifyByEmail ? 'Sent' : 'Muted'})`,
         userId: session.id
       } });
 
@@ -114,10 +120,13 @@ export async function POST(request: Request) {
       } });
 
       if (member) {
-        await sendTemplatedEmail("22", member.email, {
-          fullMonthName: month,
-          name: member.name
-        });
+        // Dispatch Email Notification (only if enabled by admin)
+        if (notifyByEmail) {
+          await sendTemplatedEmail("22", member.email, {
+            fullMonthName: month,
+            name: member.name
+          });
+        }
 
         // Member Notification
         await db.notification.create({ data: {
