@@ -371,7 +371,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ color: '#065F46', fontSize: '0.85rem', fontWeight: 700 }}>
-                  {isAdmin ? 'Total Harvests Released' : `${selectedYear} Harvest Payout`}
+                  {isAdmin
+                    ? `${selectedYear} Total Harvests Released`
+                    : (Number(selectedYear) === new Date().getFullYear() || selectedYear === '2026'
+                        ? 'Current Year Harvest Total'
+                        : `${selectedYear} Harvest Total`)}
                 </span>
                 <span style={{
                   padding: '3px 9px',
