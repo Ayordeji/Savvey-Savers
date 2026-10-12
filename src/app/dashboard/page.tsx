@@ -5,7 +5,6 @@ import { db } from '@/lib/db';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import MonthlyRevenueChart from './MonthlyRevenueChart';
 import SparklineChart from './SparklineChart';
-import CommitmentDonutChart from './CommitmentDonutChart';
 import YearSelect from './YearSelect';
 import {
   TrendingUp,
@@ -1042,170 +1041,112 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         </Link>
       </div>
 
-      {/* 6. Recent Activity & Commitment Overview */}
-      <div className="dashboard-activity-grid" style={{
-        display: 'grid',
-        gridTemplateColumns: '1.6fr 1fr',
-        gap: '20px'
+      {/* 6. Recent Activity */}
+      <div style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: '18px',
+        padding: '24px',
+        border: '1px solid #dcd7ca',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+        minWidth: 0,
+        maxWidth: '100%',
+        overflow: 'hidden'
       }}>
-        {/* Left: Recent Activity Card */}
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '18px',
-          padding: '24px',
-          border: '1px solid #dcd7ca',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
-          minWidth: 0,
-          maxWidth: '100%',
-          overflow: 'hidden'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1a1a1a', fontFamily: 'var(--font-family-title)', margin: 0 }}>
-                {isAdmin ? 'Recent Activity' : 'My Recent Payments'}
-              </h3>
-              <p style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '3px' }}>
-                {isAdmin ? 'Live ledger transactions from the database.' : 'Your confirmed contribution payment receipts.'}
-              </p>
-            </div>
-            <Link
-              href="/dashboard/payments"
-              style={{
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                color: '#0c4e43',
-                textDecoration: 'none',
-                padding: '6px 14px',
-                border: '1px solid #dcd7ca',
-                borderRadius: '8px',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#FAFAF9'
-              }}
-            >
-              View all
-            </Link>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {recentPayments.length === 0 ? (
-              <div style={{ padding: '24px', textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem' }}>
-                No recent payment transactions recorded.
-              </div>
-            ) : (
-              recentPayments.map((p) => {
-                const memberName = p.user?.name || (p as any).memberName || 'Member';
-                const memberDisplayId = p.user?.displayId || p.user?.invitationId || '';
-                const dateFormatted = new Date(p.createdAt).toLocaleDateString('en-GB', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric'
-                });
-
-                return (
-                  <Link
-                    key={p.id}
-                    href={`/dashboard/payments?id=${p.id}`}
-                    className="activity-item-link"
-                    title={`View payment record for ${memberName}`}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '8px 10px',
-                      borderRadius: '10px',
-                      borderBottom: '1px solid #F5F3EF',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                      <div style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '50%',
-                        backgroundColor: '#e6f0ee',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#0c4e43',
-                        flexShrink: 0
-                      }}>
-                        <Receipt size={18} />
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1a1a1a' }}>
-                          Savings contribution confirmed
-                        </div>
-                        <div style={{ fontSize: '0.78rem', color: '#57655c' }}>
-                          £{Number(p.amount).toLocaleString()} from {memberName} {memberDisplayId ? `(${memberDisplayId})` : ''} • {p.month} {p.year}
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '0.75rem', color: '#8a968f' }}>{dateFormatted}</div>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0c4e43' }}>
-                        + £{Number(p.amount).toFixed(2)}
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* Right: Commitment Overview Card */}
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '18px',
-          padding: '24px',
-          border: '1px solid #dcd7ca',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minWidth: 0,
-          maxWidth: '100%'
-        }}>
-          <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1a1a1a', fontFamily: 'var(--font-family-title)', margin: 0 }}>
-              Commitment Overview
+              {isAdmin ? 'Recent Activity' : 'My Recent Payments'}
             </h3>
             <p style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '3px' }}>
-              Status distribution for {selectedYear}
+              {isAdmin ? 'Live ledger transactions from the database.' : 'Your confirmed contribution payment receipts.'}
             </p>
+          </div>
+          <Link
+            href="/dashboard/payments"
+            style={{
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              color: '#0c4e43',
+              textDecoration: 'none',
+              padding: '6px 14px',
+              border: '1px solid #dcd7ca',
+              borderRadius: '8px',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#FAFAF9'
+            }}
+          >
+            View all
+          </Link>
+        </div>
 
-            {/* Donut Chart */}
-            <div style={{ marginTop: '16px' }}>
-              <CommitmentDonutChart
-                total={totalCommitmentsCount}
-                active={activeCommitmentsCount}
-                pending={pendingCommitmentsCount}
-                completed={0}
-              />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {recentPayments.length === 0 ? (
+            <div style={{ padding: '24px', textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem' }}>
+              No recent payment transactions recorded.
             </div>
-          </div>
+          ) : (
+            recentPayments.map((p) => {
+              const memberName = p.user?.name || (p as any).memberName || 'Member';
+              const memberDisplayId = p.user?.displayId || p.user?.invitationId || '';
+              const dateFormatted = new Date(p.createdAt).toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+              });
 
-          <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #F5F3EF' }}>
-            <Link
-              href="/dashboard/commitments"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '0.82rem',
-                fontWeight: 600,
-                color: '#0c4e43',
-                textDecoration: 'none'
-              }}
-            >
-              <span>View all commitments</span>
-              <ArrowRight size={14} />
-            </Link>
-          </div>
+              return (
+                <Link
+                  key={p.id}
+                  href={`/dashboard/payments?id=${p.id}`}
+                  className="activity-item-link"
+                  title={`View payment record for ${memberName}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 10px',
+                    borderRadius: '10px',
+                    borderBottom: '1px solid #F5F3EF',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      backgroundColor: '#e6f0ee',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#0c4e43',
+                      flexShrink: 0
+                    }}>
+                      <Receipt size={18} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1a1a1a' }}>
+                        Savings contribution confirmed
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#57655c' }}>
+                        £{Number(p.amount).toLocaleString()} from {memberName} {memberDisplayId ? `(${memberDisplayId})` : ''} • {p.month} {p.year}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#8a968f' }}>{dateFormatted}</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0c4e43' }}>
+                      + £{Number(p.amount).toFixed(2)}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })
+          )}
         </div>
       </div>
 
