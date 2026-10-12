@@ -1090,7 +1090,7 @@ export default function MyInvitationsPage() {
                             </div>
                           </div>
                           <div style={{ backgroundColor: '#FAF9F6', padding: '8px 10px', borderRadius: '8px', border: '1px solid #ECE8E2' }}>
-                            <div style={{ color: '#6B7280', fontSize: '0.7rem' }}>Target Harvest</div>
+                            <div style={{ color: '#6B7280', fontSize: '0.7rem' }}>Scheduled Harvest</div>
                             <div style={{ fontWeight: 700, color: '#111827', marginTop: '2px' }}>
                               {cmt.collectionMonth} {cmt.collectionYear}
                             </div>

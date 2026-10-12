@@ -21,7 +21,14 @@ import {
   Check,
   ArrowRight,
   Receipt,
-  PlusCircle
+  PlusCircle,
+  PiggyBank,
+  Coins,
+  Layers,
+  CreditCard,
+  CalendarRange,
+  ArrowUpRight,
+  Sparkles
 } from 'lucide-react';
 
 interface PageProps {
@@ -294,11 +301,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           className="dashboard-clickable-card"
           title="View all confirmed lifetime savings"
           style={{
-            backgroundColor: '#FFFFFF',
+            background: 'linear-gradient(145deg, #FFFFFF 0%, #FFFDF9 50%, #FEF9F2 100%)',
             borderRadius: '18px',
             padding: '24px',
-            border: '1px solid #dcd7ca',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+            border: '1.5px solid #F5DEB3',
+            boxShadow: '0 4px 18px -2px rgba(217, 119, 70, 0.12)',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
@@ -307,44 +314,46 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         >
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#57655c', fontSize: '0.85rem', fontWeight: 500 }}>
+              <span style={{ color: '#854D0E', fontSize: '0.85rem', fontWeight: 600 }}>
                 {isAdmin ? 'Total Lifetime Savings' : 'My Lifetime Savings'}
               </span>
               <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                backgroundColor: '#fbf1ec',
-                color: '#d97746',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #EA580C 0%, #D97746 50%, #C2410C 100%)',
+                color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(234, 88, 12, 0.35)'
               }}>
-                <Calendar size={16} />
+                <PiggyBank size={18} />
               </div>
             </div>
 
-            <div style={{ fontSize: '1.95rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#1a1a1a', marginTop: '12px', letterSpacing: '-0.02em' }}>
+            <div style={{ fontSize: '1.95rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#1C1917', marginTop: '12px', letterSpacing: '-0.02em' }}>
               £{allTimeRevenue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
 
-            <div style={{ fontSize: '0.78rem', color: '#57655c', marginTop: '6px', fontWeight: 500 }}>
-              {isAdmin ? 'All-time confirmed collections →' : 'All-time confirmed savings pool →'}
+            <div style={{ fontSize: '0.78rem', color: '#C2410C', marginTop: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span>{isAdmin ? 'All-time confirmed collections' : 'All-time confirmed savings pool'}</span>
+              <ArrowRight size={13} />
             </div>
           </div>
         </Link>
 
-        {/* Card 3: Harvests Released / Target */}
+        {/* Card 3: 2026 Harvest Payout (Fixed Payout, Not Target) */}
         <Link
           href={isAdmin ? "/dashboard/reports/commitments" : "/dashboard/commitments"}
           className="dashboard-clickable-card"
           title={isAdmin ? "View harvest reports" : "View my savings commitments"}
           style={{
-            backgroundColor: '#FFFFFF',
+            background: 'linear-gradient(145deg, #F0FDF4 0%, #ECFDF5 50%, #D1FAE5 100%)',
             borderRadius: '18px',
             padding: '24px',
-            border: '1px solid #dcd7ca',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+            border: '1.5px solid #6EE7B7',
+            boxShadow: '0 8px 24px -4px rgba(16, 185, 129, 0.22)',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
@@ -353,31 +362,47 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         >
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#57655c', fontSize: '0.85rem', fontWeight: 500 }}>
-                {isAdmin ? 'Harvests Released' : 'Target Harvest Payout'}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ color: '#065F46', fontSize: '0.85rem', fontWeight: 700 }}>
+                  {isAdmin ? 'Total Harvests Released' : `${selectedYear} Harvest Payout`}
+                </span>
+                <span style={{
+                  padding: '3px 9px',
+                  borderRadius: '9999px',
+                  fontSize: '0.68rem',
+                  fontWeight: 700,
+                  backgroundColor: '#A7F3D0',
+                  color: '#064E3B'
+                }}>
+                  {isAdmin ? 'Released' : 'Fixed Payout'}
+                </span>
+              </div>
               <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                backgroundColor: '#e6f0ee',
-                color: '#0c4e43',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #059669 0%, #047857 50%, #065F46 100%)',
+                color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(5, 150, 105, 0.35)'
               }}>
-                <Gift size={16} />
+                <Coins size={18} />
               </div>
             </div>
 
-            <div style={{ fontSize: '1.95rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#1a1a1a', marginTop: '12px', letterSpacing: '-0.02em' }}>
+            <div style={{ fontSize: '1.95rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#064E3B', marginTop: '12px', letterSpacing: '-0.02em' }}>
               £{harvestReleasedTotal.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
 
-            <div style={{ fontSize: '0.78rem', color: '#57655c', marginTop: '6px', fontWeight: 500 }}>
-              {isAdmin
-                ? `${completedHarvestsCount} completed harvest${completedHarvestsCount === 1 ? '' : 's'} recorded →`
-                : `Target payout for ${selectedYear} →`}
+            <div style={{ fontSize: '0.78rem', color: '#047857', marginTop: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span>
+                {isAdmin
+                  ? `${completedHarvestsCount} completed harvest${completedHarvestsCount === 1 ? '' : 's'} recorded`
+                  : `Scheduled payout for ${selectedYear}`}
+              </span>
+              <ArrowRight size={13} />
             </div>
           </div>
         </Link>
@@ -397,10 +422,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               className="dashboard-clickable-card"
               title={`View active commitments for ${selectedYear}`}
               style={{
-                backgroundColor: '#FFFFFF',
+                background: 'linear-gradient(145deg, #F0F9FF 0%, #E0F2FE 100%)',
                 borderRadius: '16px',
                 padding: '20px',
-                border: '1px solid #dcd7ca',
+                border: '1.5px solid #BAE6FD',
+                boxShadow: '0 4px 14px -2px rgba(2, 132, 199, 0.12)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -409,20 +435,20 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Active Commitments</span>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#e6f0ee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0c4e43' }}>
-                    <CheckCircle size={15} />
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#0369A1' }}>Active Commitments</span>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 3px 8px rgba(2, 132, 199, 0.3)' }}>
+                    <Layers size={16} />
                   </div>
                 </div>
-                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0C4A6E', marginTop: '6px' }}>
                   {activeCommitmentsCount} / {totalCommitmentsCount}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.75rem', color: '#0284C7', marginTop: '2px', fontWeight: 500 }}>
                   {activeCommitmentPct}% active in {selectedYear}
                 </div>
               </div>
-              <div style={{ width: '100%', height: '6px', backgroundColor: '#E5E7EB', borderRadius: '9999px', marginTop: '12px', overflow: 'hidden' }}>
-                <div style={{ width: `${activeCommitmentPct}%`, height: '100%', backgroundColor: '#0c4e43', borderRadius: '9999px' }} />
+              <div style={{ width: '100%', height: '6px', backgroundColor: '#BAE6FD', borderRadius: '9999px', marginTop: '12px', overflow: 'hidden' }}>
+                <div style={{ width: `${activeCommitmentPct}%`, height: '100%', background: 'linear-gradient(90deg, #0284C7, #38BDF8)', borderRadius: '9999px' }} />
               </div>
             </Link>
 
@@ -432,10 +458,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               className="dashboard-clickable-card"
               title={`View pending commitments for ${selectedYear}`}
               style={{
-                backgroundColor: '#FFFFFF',
+                background: 'linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%)',
                 borderRadius: '16px',
                 padding: '20px',
-                border: '1px solid #dcd7ca',
+                border: '1.5px solid #FDE68A',
+                boxShadow: '0 4px 14px -2px rgba(217, 119, 70, 0.12)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -444,15 +471,15 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Pending Commitments</span>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#fbf1ec', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97746' }}>
-                    <Clock size={15} />
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#92400E' }}>Pending Commitments</span>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #D97746 0%, #B45309 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 3px 8px rgba(217, 119, 70, 0.3)' }}>
+                    <Clock size={16} />
                   </div>
                 </div>
-                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#78350F', marginTop: '6px' }}>
                   {pendingCommitmentsCount} / {totalCommitmentsCount}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.75rem', color: '#B45309', marginTop: '2px', fontWeight: 500 }}>
                   {pendingCommitmentsCount === 0 ? 'All commitments confirmed' : `${pendingCommitmentsCount} awaiting confirmation`}
                 </div>
               </div>
@@ -464,10 +491,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               className="dashboard-clickable-card"
               title="View active members"
               style={{
-                backgroundColor: '#FFFFFF',
+                background: 'linear-gradient(145deg, #F0FDF4 0%, #D1FAE5 100%)',
                 borderRadius: '16px',
                 padding: '20px',
-                border: '1px solid #dcd7ca',
+                border: '1.5px solid #A7F3D0',
+                boxShadow: '0 4px 14px -2px rgba(16, 185, 129, 0.14)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -476,20 +504,20 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Active Members</span>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#e6f0ee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0c4e43' }}>
-                    <Users size={15} />
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#065F46' }}>Active Members</span>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 3px 8px rgba(5, 150, 105, 0.3)' }}>
+                    <Users size={16} />
                   </div>
                 </div>
-                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#064E3B', marginTop: '6px' }}>
                   {activeUsersCount}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.75rem', color: '#047857', marginTop: '2px', fontWeight: 500 }}>
                   {invitedUsersCount > 0 ? `${invitedUsersCount} awaiting activation` : 'All members active'}
                 </div>
               </div>
-              <div style={{ width: '100%', height: '6px', backgroundColor: '#E5E7EB', borderRadius: '9999px', marginTop: '12px', overflow: 'hidden' }}>
-                <div style={{ width: `${Math.min(100, Math.round((activeUsersCount / (activeUsersCount + invitedUsersCount || 1)) * 100))}%`, height: '100%', backgroundColor: '#0c4e43', borderRadius: '9999px' }} />
+              <div style={{ width: '100%', height: '6px', backgroundColor: '#A7F3D0', borderRadius: '9999px', marginTop: '12px', overflow: 'hidden' }}>
+                <div style={{ width: `${Math.min(100, Math.round((activeUsersCount / (activeUsersCount + invitedUsersCount || 1)) * 100))}%`, height: '100%', background: 'linear-gradient(90deg, #059669, #34D399)', borderRadius: '9999px' }} />
               </div>
             </Link>
 
@@ -499,10 +527,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               className="dashboard-clickable-card"
               title="View invited members"
               style={{
-                backgroundColor: '#FFFFFF',
+                background: 'linear-gradient(145deg, #FAF5FF 0%, #F3E8FF 100%)',
                 borderRadius: '16px',
                 padding: '20px',
-                border: '1px solid #dcd7ca',
+                border: '1.5px solid #E9D5FF',
+                boxShadow: '0 4px 14px -2px rgba(124, 58, 237, 0.12)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -511,15 +540,15 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Invited Members</span>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#fbf1ec', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97746' }}>
-                    <UserPlus size={15} />
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B21A8' }}>Invited Members</span>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 3px 8px rgba(124, 58, 237, 0.3)' }}>
+                    <UserPlus size={16} />
                   </div>
                 </div>
-                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#4C1D95', marginTop: '6px' }}>
                   {invitedUsersCount}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.75rem', color: '#7C3AED', marginTop: '2px', fontWeight: 500 }}>
                   {invitedUsersCount > 0 ? 'Pending platform activation' : 'No pending invitations'}
                 </div>
               </div>
@@ -533,10 +562,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               className="dashboard-clickable-card"
               title="View my savings commitments"
               style={{
-                backgroundColor: '#FFFFFF',
+                background: 'linear-gradient(145deg, #F0F9FF 0%, #E0F2FE 100%)',
                 borderRadius: '16px',
                 padding: '20px',
-                border: '1px solid #dcd7ca',
+                border: '1.5px solid #BAE6FD',
+                boxShadow: '0 4px 14px -2px rgba(2, 132, 199, 0.12)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -545,30 +575,31 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Active Commitments</span>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#e6f0ee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0c4e43' }}>
-                    <CheckCircle size={15} />
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#0369A1' }}>Active Commitments</span>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 3px 8px rgba(2, 132, 199, 0.3)' }}>
+                    <Layers size={16} />
                   </div>
                 </div>
-                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0C4A6E', marginTop: '6px' }}>
                   {activeCommitmentsCount} / {totalCommitmentsCount}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.75rem', color: '#0284C7', marginTop: '2px', fontWeight: 500 }}>
                   {activeCommitmentsCount > 0 ? `${activeCommitmentsCount} savings pool(s) active` : 'No active commitments'}
                 </div>
               </div>
             </Link>
 
-            {/* Member Card 2: Monthly Savings Rate */}
+            {/* Member Card 2: Fixed Monthly Contribution (Not Target) */}
             <Link
               href="/dashboard/commitments"
               className="dashboard-clickable-card"
               title="View my monthly contributions"
               style={{
-                backgroundColor: '#FFFFFF',
+                background: 'linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%)',
                 borderRadius: '16px',
                 padding: '20px',
-                border: '1px solid #dcd7ca',
+                border: '1.5px solid #FDE68A',
+                boxShadow: '0 4px 14px -2px rgba(217, 119, 70, 0.12)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -577,16 +608,16 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Monthly Savings Target</span>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#fbf1ec', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97746' }}>
-                    <Clock size={15} />
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#92400E' }}>Monthly Contribution</span>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #D97746 0%, #B45309 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 3px 8px rgba(217, 119, 70, 0.3)' }}>
+                    <CreditCard size={16} />
                   </div>
                 </div>
-                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#78350F', marginTop: '6px' }}>
                   £{yearCommitments.reduce((acc, c) => acc + (Number(c.amount) || 0), 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
-                  Target monthly contribution
+                <div style={{ fontSize: '0.75rem', color: '#B45309', marginTop: '2px', fontWeight: 500 }}>
+                  Fixed monthly contribution
                 </div>
               </div>
             </Link>
@@ -597,10 +628,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               className="dashboard-clickable-card"
               title="View my payout schedule"
               style={{
-                backgroundColor: '#FFFFFF',
+                background: 'linear-gradient(145deg, #FAF5FF 0%, #F3E8FF 100%)',
                 borderRadius: '16px',
                 padding: '20px',
-                border: '1px solid #dcd7ca',
+                border: '1.5px solid #E9D5FF',
+                boxShadow: '0 4px 14px -2px rgba(124, 58, 237, 0.12)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -609,15 +641,15 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Next Harvest Payout</span>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#e6f0ee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0c4e43' }}>
-                    <Gift size={15} />
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B21A8' }}>Next Harvest Payout</span>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 3px 8px rgba(124, 58, 237, 0.3)' }}>
+                    <CalendarRange size={16} />
                   </div>
                 </div>
-                <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#4C1D95', marginTop: '6px' }}>
                   {yearCommitments[0]?.collectionMonth || 'December'} {selectedYear}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.75rem', color: '#7C3AED', marginTop: '2px', fontWeight: 500 }}>
                   Scheduled payout month
                 </div>
               </div>
@@ -629,10 +661,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               className="dashboard-clickable-card"
               title="Invite friends to Savvey Savers"
               style={{
-                backgroundColor: '#FFFFFF',
+                background: 'linear-gradient(145deg, #FFF1F2 0%, #FFE4E6 100%)',
                 borderRadius: '16px',
                 padding: '20px',
-                border: '1px solid #dcd7ca',
+                border: '1.5px solid #FECDD3',
+                boxShadow: '0 4px 14px -2px rgba(225, 29, 72, 0.12)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -641,16 +674,17 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#57655c' }}>Refer a Friend</span>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: '#fbf1ec', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97746' }}>
-                    <UserPlus size={15} />
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#9F1239' }}>Refer a Friend</span>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #E11D48 0%, #BE123C 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 3px 8px rgba(225, 29, 72, 0.3)' }}>
+                    <UserPlus size={16} />
                   </div>
                 </div>
-                <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#1a1a1a', marginTop: '6px' }}>
+                <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#881337', marginTop: '6px' }}>
                   Invite & Share
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '2px' }}>
-                  Refer friends & family →
+                <div style={{ fontSize: '0.75rem', color: '#E11D48', marginTop: '2px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span>Refer friends & family</span>
+                  <ArrowRight size={12} />
                 </div>
               </div>
             </Link>
