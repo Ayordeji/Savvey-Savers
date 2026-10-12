@@ -420,7 +420,7 @@ export default function ManageUsersPage() {
 
   const handleOpenRequestFeeModal = (user: User) => {
     if (user.role === 'ADMIN') {
-      dialog.alert({ title: 'Exempt', message: 'Administrators are exempt from membership fees.', type: 'info' });
+      dialog.alert({ title: 'Fee Exempt', message: 'Administrators are exempt from membership fees.', type: 'info' });
       return;
     }
     setSelectedUser(user);
@@ -433,7 +433,7 @@ export default function ManageUsersPage() {
 
   const handleOpenConfirmFeeModal = async (user: User) => {
     if (user.role === 'ADMIN') {
-      dialog.alert({ title: 'Exempt', message: 'Administrators are exempt from membership fees.', type: 'info' });
+      dialog.alert({ title: 'Fee Exempt', message: 'Administrators are exempt from membership fees.', type: 'info' });
       return;
     }
     setSelectedUser(user);
@@ -1496,18 +1496,17 @@ export default function ManageUsersPage() {
                             <td style={{ padding: '14px' }}>
                               {u.role === 'ADMIN' ? (
                                 <div>
-                                  <span style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    padding: '3px 8px',
-                                    borderRadius: '6px',
-                                    fontSize: '0.72rem',
-                                    fontWeight: 700,
-                                    backgroundColor: '#EFF6FF',
-                                    color: '#1D4ED8'
+                                  <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#1E40AF' }}>
+                                    Fee Exempt
+                                  </div>
+                                  <div style={{
+                                    fontSize: '0.75rem',
+                                    color: '#1D4ED8',
+                                    fontWeight: 500,
+                                    marginTop: '2px'
                                   }}>
-                                    Exempt
-                                  </span>
+                                    Admin • No fee required
+                                  </div>
                                 </div>
                               ) : (
                                 <>
@@ -1813,7 +1812,7 @@ export default function ManageUsersPage() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
                           <div style={{ fontSize: '0.82rem', color: '#4B5563', fontWeight: 500 }}>Membership Status</div>
-                          <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', marginTop: '4px' }}>Exempt</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', marginTop: '4px' }}>Fee Exempt</div>
                         </div>
                         <span style={{
                           padding: '3px 10px',
@@ -2077,9 +2076,9 @@ export default function ManageUsersPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                       <div>
                         <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#111827' }}>Annual Membership Fee</div>
-                        <div style={{ fontSize: '0.72rem', color: '#9CA3AF' }}>Status: Exempt</div>
+                        <div style={{ fontSize: '0.72rem', color: '#9CA3AF' }}>Status: Fee Exempt (Admin)</div>
                       </div>
-                      <span style={{ fontWeight: 700, color: '#1D4ED8', fontSize: '0.82rem' }}>Exempt</span>
+                      <span style={{ fontWeight: 700, color: '#1D4ED8', fontSize: '0.82rem' }}>Fee Exempt</span>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -2116,7 +2115,7 @@ export default function ManageUsersPage() {
                     backgroundColor: selectedUser.role === 'ADMIN' ? '#EFF6FF' : (selectedUser.membershipFeeConfirmed ? '#EAF5EE' : '#FEF3C7'),
                     color: selectedUser.role === 'ADMIN' ? '#1D4ED8' : (selectedUser.membershipFeeConfirmed ? '#2E7D32' : '#B45309')
                   }}>
-                    {selectedUser.role === 'ADMIN' ? 'Exempt' : (selectedUser.membershipFeeConfirmed ? 'Fee Paid' : 'Fee Pending')}
+                    {selectedUser.role === 'ADMIN' ? 'Fee Exempt (Admin)' : (selectedUser.membershipFeeConfirmed ? 'Fee Paid' : 'Fee Pending')}
                   </span>
                 </div>
 

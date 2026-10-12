@@ -107,7 +107,7 @@ export async function GET() {
       phone: u.phone,
       role: u.role,
       isActive: u.isActive,
-      membership: u.role === 'ADMIN' ? 'Exempt' : u.membership,
+      membership: u.role === 'ADMIN' ? 'Fee Exempt (Admin)' : u.membership,
       membershipFeeConfirmed: u.role === 'ADMIN' ? true : u.membershipFeeConfirmed,
       membershipFeeConfirmedAt: u.role === 'ADMIN' ? (u.membershipFeeConfirmedAt || u.createdAt) : (u.membershipFeeConfirmedAt || null),
       hasPendingFee: u.role === 'ADMIN' ? false : (u.membershipFeeRecords?.some((r: any) => r.status === 'PENDING') || false),
