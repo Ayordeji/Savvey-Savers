@@ -81,7 +81,7 @@ function PaymentsContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [monthFilter, setMonthFilter] = useState('');
-  const [yearFilter, setYearFilter] = useState('');
+  const [yearFilter, setYearFilter] = useState<string>(() => new Date().getFullYear().toString());
   const [memberFilter, setMemberFilter] = useState('');
 
   // Dropdown states
@@ -169,7 +169,7 @@ function PaymentsContent() {
     if (monthParam) {
       setMonthFilter(monthParam);
     }
-    if (yearParam) {
+    if (yearParam !== null && yearParam !== undefined) {
       setYearFilter(yearParam);
     }
   }, [searchParams]);
@@ -203,6 +203,17 @@ function PaymentsContent() {
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
+
+  // Dynamic years list from payments and current year
+  const availableYears = useMemo(() => {
+    const yearsSet = new Set<string>();
+    const currentYr = new Date().getFullYear().toString();
+    yearsSet.add(currentYr);
+    payments.forEach(p => {
+      if (p.year) yearsSet.add(p.year.toString());
+    });
+    return Array.from(yearsSet).sort((a, b) => Number(b) - Number(a));
+  }, [payments]);
 
   // Helper to determine simulated or real payment status
   const getPaymentDetails = (p: Payment) => {
@@ -358,11 +369,10 @@ function PaymentsContent() {
   const somePageSelected = paginatedPayments.some(p => selectedIds.has(p.id)) && !allPageSelected;
 
   const handleResetFilters = () => {
-
     setSearchQuery('');
     setStatusFilter('');
     setMonthFilter('');
-    setYearFilter('');
+    setYearFilter(new Date().getFullYear().toString());
     setMemberFilter('');
     setCurrentPage(1);
   };
@@ -639,9 +649,9 @@ function PaymentsContent() {
             }}
           >
             <option value="">Years: All</option>
-            <option value="2026">2026</option>
-            <option value="2025">2025</option>
-            <option value="2024">2024</option>
+            {availableYears.map(yr => (
+              <option key={yr} value={yr}>{yr}</option>
+            ))}
           </select>
 
           {currentUser?.role === 'ADMIN' && (
@@ -666,7 +676,7 @@ function PaymentsContent() {
             </select>
           )}
 
-          {(searchQuery || statusFilter || monthFilter || memberFilter) && (
+          {(searchQuery || statusFilter || monthFilter || memberFilter || (yearFilter !== '' && yearFilter !== new Date().getFullYear().toString())) && (
             <button
               onClick={handleResetFilters}
               style={{
