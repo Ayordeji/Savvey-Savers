@@ -2612,6 +2612,32 @@ export default function ManageUsersPage() {
               );
             })()}
 
+            {/* Residential Address Card */}
+            <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
+                  Residential Address
+                </span>
+                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                  {selectedUser.country || 'UNITED KINGDOM'}
+                </span>
+              </div>
+
+              {selectedUser.addressLine1 || selectedUser.city || selectedUser.postCode ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.85rem', color: '#1e293b' }}>
+                  {selectedUser.addressLine1 && <div style={{ fontWeight: 600 }}>{selectedUser.addressLine1}</div>}
+                  {selectedUser.addressLine2 && <div style={{ color: '#475569' }}>{selectedUser.addressLine2}</div>}
+                  <div style={{ color: '#475569' }}>
+                    {[selectedUser.city, selectedUser.postCode].filter(Boolean).join(', ')}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ fontSize: '0.82rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                  No residential address recorded.
+                </div>
+              )}
+            </div>
+
             {/* Savings Commitments List Section */}
             <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
