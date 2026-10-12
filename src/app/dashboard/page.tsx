@@ -600,7 +600,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               </div>
             </Link>
 
-            {/* Member Card 2: Fixed Monthly Contribution (Not Target) */}
+            {/* Member Card 2: Agreed Monthly Contribution Amount */}
             <Link
               href="/dashboard/commitments"
               className="dashboard-clickable-card"
@@ -619,7 +619,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#92400E' }}>Monthly Contribution</span>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#92400E' }}>Monthly Contribution Amount</span>
                   <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #D97746 0%, #B45309 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 3px 8px rgba(217, 119, 70, 0.3)' }}>
                     <CreditCard size={16} />
                   </div>
@@ -628,7 +628,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                   £{yearCommitments.reduce((acc, c) => acc + (Number(c.amount) || 0), 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#B45309', marginTop: '2px', fontWeight: 500 }}>
-                  Fixed monthly contribution
+                  Agreed monthly contribution
                 </div>
               </div>
             </Link>
