@@ -246,7 +246,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         <Link
           href={`/dashboard/commitments?year=${selectedYear}`}
           className="dashboard-clickable-card-dark"
-          title={`View ${selectedYear} savings volume`}
+          title={isAdmin ? `View ${selectedYear} savings volume` : `View ${selectedYear} savings contributions to date`}
           style={{
             backgroundColor: '#0c4e43',
             borderRadius: '18px',
@@ -262,10 +262,16 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           }}
         >
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#c2d6cf', fontSize: '0.85rem', fontWeight: 500 }}>
-                <span>{isAdmin ? `${selectedYear} Savings Volume` : `My ${selectedYear} Total Saved`}</span>
-                <Info size={14} style={{ opacity: 0.8 }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#c2d6cf', fontSize: '0.82rem', fontWeight: 500, lineHeight: 1.35, flex: 1 }}>
+                <span>
+                  {isAdmin
+                    ? `${selectedYear} Savings Contributions to Date`
+                    : (Number(selectedYear) === new Date().getFullYear() || selectedYear === '2026'
+                        ? 'My Current Year Savings Contributions to Date'
+                        : `My ${selectedYear} Savings Contributions to Date`)}
+                </span>
+                <Info size={14} style={{ opacity: 0.8, flexShrink: 0 }} />
               </div>
               <div style={{
                 width: '32px',
@@ -275,7 +281,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                flexShrink: 0
               }}>
                 <TrendingUp size={16} />
               </div>
