@@ -270,7 +270,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <p style={{ color: '#57655c', fontSize: '0.875rem', marginTop: '4px' }}>
             {isAdmin
               ? 'Real-time verified overview of Savvey Savers collective performance.'
-              : 'Track your personal savings progress, contributions, and upcoming harvest payouts.'}
+              : "Your improved dashboard gives you a clearer view of your personal savings progress, Harvest Payouts, and what we're achieving together as a Collective."}
           </p>
         </div>
 
