@@ -647,7 +647,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#0369A1' }}>Active Commitments</span>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#0369A1' }}>Total Commitment Slots</span>
                   <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 3px 8px rgba(2, 132, 199, 0.3)' }}>
                     <Layers size={16} />
                   </div>
@@ -656,7 +656,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                   {activeCommitmentsCount} / {totalCommitmentsCount}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#0284C7', marginTop: '2px', fontWeight: 500 }}>
-                  {activeCommitmentsCount > 0 ? `${activeCommitmentsCount} savings pool(s) active` : 'No active commitments'}
+                  {activeCommitmentsCount > 0 ? `${activeCommitmentsCount} savings slot(s) active` : 'No active commitment slots'}
                 </div>
               </div>
             </Link>
