@@ -1059,13 +1059,13 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           maxWidth: '100%',
           overflow: 'hidden'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1a1a1a', fontFamily: 'var(--font-family-title)', margin: 0 }}>
                 {isAdmin ? 'Recent Activity' : 'My Recent Payments'}
               </h3>
               <p style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '3px' }}>
-                {isAdmin ? 'Live ledger transactions from the database' : 'Your confirmed contribution payment receipts'}
+                {isAdmin ? 'Live ledger transactions from the database.' : 'Your confirmed contribution payment receipts.'}
               </p>
             </div>
             <Link
@@ -1075,9 +1075,15 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 fontWeight: 600,
                 color: '#0c4e43',
                 textDecoration: 'none',
-                padding: '4px 10px',
+                padding: '6px 14px',
                 border: '1px solid #dcd7ca',
-                borderRadius: '8px'
+                borderRadius: '8px',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#FAFAF9'
               }}
             >
               View all
