@@ -299,7 +299,7 @@ export default function MyInvitationsPage() {
           name: formFirstName.trim() + ' ' + formLastName.trim(),
           email: formEmail.trim(),
           phone: formPhone.trim(),
-          monthlySavingsCommitment: formAmount,
+          monthlySavingsCommitment: formAmount || 0,
           referredBy: currentUser?.id
         }),
       });
@@ -1424,35 +1424,6 @@ export default function MyInvitationsPage() {
                         onChange={(e) => setFormPhone(e.target.value)}
                         className="form-input"
                       />
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
-                    <div className="form-group" style={{ margin: 0 }}>
-                      <label className="form-label">Savings Commitment Amount (£)</label>
-                      <select value={formAmount} onChange={(e) => setFormAmount(e.target.value)} className="form-select">
-                        {enabledAmounts.map((a) => (
-                          <option key={a.amount} value={a.amount}>£{Number(a.amount).toFixed(2)}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div className="form-group" style={{ margin: 0 }}>
-                      <label className="form-label">Preferred Collection Month</label>
-                      <select value={formMonth} onChange={(e) => setFormMonth(e.target.value)} className="form-select">
-                        {months.map((m) => (
-                          <option key={m} value={m}>{m}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="form-group" style={{ margin: 0 }}>
-                      <label className="form-label">Collection Year</label>
-                      <select value={formYear} onChange={(e) => setFormYear(e.target.value)} className="form-select">
-                        <option value="2026">2026</option>
-                        <option value="2027">2027</option>
-                      </select>
                     </div>
                   </div>
 

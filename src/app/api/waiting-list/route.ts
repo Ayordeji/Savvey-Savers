@@ -6,9 +6,9 @@ export async function POST(request: Request) {
   try {
     const { name, email, phone, monthlySavingsCommitment, referredBy } = await request.json();
 
-    if (!name || !email || !phone || !monthlySavingsCommitment) {
+    if (!name || !email || !phone) {
       return NextResponse.json(
-        { error: 'Name, email, phone number, and intended savings amount are required.' },
+        { error: 'Name, email, and phone number are required.' },
         { status: 400 }
       );
     }
@@ -46,13 +46,7 @@ export async function POST(request: Request) {
     }
 
     const rawAmount = String(monthlySavingsCommitment || '').replace(/[^0-9.]/g, '');
-    const commitmentVal = parseFloat(rawAmount);
-    if (isNaN(commitmentVal) || commitmentVal <= 0) {
-      return NextResponse.json(
-        { error: 'Please select a valid monthly savings goal amount.' },
-        { status: 400 }
-      );
-    }
+    const commitmentVal = parseFloat(rawAmount) || 0;
 
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -106,7 +100,9 @@ export async function POST(request: Request) {
         try {
           await db.notification.create({ data: {
             userId: admin.id,
-            message: `New prospect ${name} signed up on the waiting list. Intended amount: £${commitmentVal}.`,
+            message: commitmentVal > 0 
+              ? `New prospect ${name} signed up on the waiting list. Intended amount: £${commitmentVal}.`
+              : `New prospect ${name} signed up on the waiting list.`,
             type: 'WAITING_LIST_SIGNUP',
             isRead: false,
           } });
@@ -114,7 +110,7 @@ export async function POST(request: Request) {
           await sendEmail({
             to: admin.email,
             subject: 'Savvey Savers - New Waiting List Signup',
-            body: `Hello ${admin.name},\n\nA new prospect has registered on the Savvey Savers waiting list.\n\nDetails:\n- Name: ${name}\n- Email: ${email}\n- Phone: ${phone}\n- Intended Monthly Savings: £${commitmentVal}\n${referredBy ? `- Referred By: ${referredBy}\n` : ''}\nYou can review and approve this signup inside your coordinator dashboard.\n\nBest regards,\nSavvey Savers Team`
+            body: `Hello ${admin.name},\n\nA new prospect has registered on the Savvey Savers waiting list.\n\nDetails:\n- Name: ${name}\n- Email: ${email}\n- Phone: ${phone}\n${commitmentVal > 0 ? `- Intended Monthly Savings: £${commitmentVal}\n` : ''}${referredBy ? `- Referred By: ${referredBy}\n` : ''}\nYou can review and approve this signup inside your coordinator dashboard.\n\nBest regards,\nSavvey Savers Team`
           });
         } catch (adminErr) {
           console.warn(`Failed notification for admin ${admin.email}:`, adminErr);
