@@ -1889,9 +1889,20 @@ export default function ManageUsersPage() {
                         {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#6B7280' }}>City / Country</span>
-                      <span style={{ color: '#111827' }}>{selectedUser.city || 'London'}, {selectedUser.country || 'United Kingdom'}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                      <span style={{ color: '#6B7280', flexShrink: 0 }}>Full Address</span>
+                      <span style={{ color: '#111827', textAlign: 'right', fontWeight: 500, lineHeight: 1.4, wordBreak: 'break-word' }}>
+                        {selectedUser.addressLine1 || selectedUser.city || selectedUser.postCode ? (
+                          <>
+                            {selectedUser.addressLine1 && <div>{selectedUser.addressLine1}</div>}
+                            {selectedUser.addressLine2 && <div>{selectedUser.addressLine2}</div>}
+                            <div>{[selectedUser.city, selectedUser.postCode].filter(Boolean).join(', ')}</div>
+                            <div style={{ color: '#6B7280', fontSize: '0.72rem' }}>{selectedUser.country || 'UNITED KINGDOM'}</div>
+                          </>
+                        ) : (
+                          <span style={{ color: '#9CA3AF', fontStyle: 'italic' }}>Not provided</span>
+                        )}
+                      </span>
                     </div>
                   </div>
                 </div>
