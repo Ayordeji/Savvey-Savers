@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle, Download, Upload, Filter, Send, Wallet, Clock, Check, ChevronDown, ArrowRight, UserCheck } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle, Download, Upload, Filter, Send, Wallet, Clock, Check, ChevronDown, ArrowRight, UserCheck, User, Shield } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import PaginationControls from '../PaginationControls';
 import styles from './users.module.css';
@@ -1923,31 +1923,37 @@ export default function ManageUsersPage() {
                   </div>
                 </div>
 
-                {/* Account Information Card */}
+                {/* Contact Information Card */}
                 <div style={{ backgroundColor: '#FAF9F6', borderRadius: '14px', padding: '16px', border: '1px solid #ECE8E2' }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827', marginBottom: '12px' }}>
-                    Account Information
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <User size={15} style={{ color: '#0c4e43' }} />
+                    <span>Contact Information</span>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.78rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#6B7280' }}>Status</span>
-                      <span style={{ color: selectedUser.isActive ? '#2E7D32' : '#B45309', fontWeight: 600 }}>
-                        {selectedUser.isActive ? 'Active' : 'Pending'}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ color: '#6B7280', flexShrink: 0 }}>Full Name</span>
+                      <span style={{ color: '#111827', fontWeight: 600, textAlign: 'right', wordBreak: 'break-word' }}>
+                        {selectedUser.name}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#6B7280' }}>Role</span>
-                      <span style={{ color: '#111827', fontWeight: 600 }}>{selectedUser.role || 'MEMBER'}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#6B7280' }}>Joined On</span>
-                      <span style={{ color: '#111827' }}>
-                        {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ color: '#6B7280', flexShrink: 0 }}>Email Address</span>
+                      <span style={{ color: '#111827', fontWeight: 500, textAlign: 'right', wordBreak: 'break-all' }}>
+                        {selectedUser.email}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-                      <span style={{ color: '#6B7280', flexShrink: 0 }}>Full Address</span>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ color: '#6B7280', flexShrink: 0 }}>Phone Number</span>
+                      <span style={{ color: '#111827', fontWeight: 500, textAlign: 'right' }}>
+                        {selectedUser.phone || <span style={{ color: '#9CA3AF', fontStyle: 'italic' }}>Not provided</span>}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', borderTop: '1px dashed #ECE8E2', paddingTop: '10px' }}>
+                      <span style={{ color: '#6B7280', flexShrink: 0 }}>Address</span>
                       <span style={{ color: '#111827', textAlign: 'right', fontWeight: 500, lineHeight: 1.4, wordBreak: 'break-word' }}>
                         {selectedUser.addressLine1 || selectedUser.city || selectedUser.postCode ? (
                           <>
@@ -1959,6 +1965,46 @@ export default function ManageUsersPage() {
                         ) : (
                           <span style={{ color: '#9CA3AF', fontStyle: 'italic' }}>Not provided</span>
                         )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Information Card */}
+                <div style={{ backgroundColor: '#FAF9F6', borderRadius: '14px', padding: '16px', border: '1px solid #ECE8E2' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Shield size={15} style={{ color: '#0c4e43' }} />
+                    <span>Account Information</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.78rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#6B7280' }}>Member ID</span>
+                      <span style={{ color: '#111827', fontWeight: 600, fontFamily: 'monospace' }}>
+                        {selectedUser.displayId || selectedUser.invitationId || selectedUser.id}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#6B7280' }}>Status</span>
+                      <span style={{
+                        padding: '2px 8px',
+                        borderRadius: '9999px',
+                        fontSize: '0.72rem',
+                        fontWeight: 600,
+                        backgroundColor: selectedUser.isActive ? '#EAF5EE' : '#FEF3C7',
+                        color: selectedUser.isActive ? '#2E7D32' : '#B45309'
+                      }}>
+                        {selectedUser.isActive ? 'Active' : 'Pending'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#6B7280' }}>Role</span>
+                      <span style={{ color: '#111827', fontWeight: 600 }}>{selectedUser.role || 'MEMBER'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#6B7280' }}>Joined On</span>
+                      <span style={{ color: '#111827' }}>
+                        {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
                       </span>
                     </div>
                   </div>
