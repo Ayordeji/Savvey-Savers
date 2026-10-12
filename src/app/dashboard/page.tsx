@@ -302,11 +302,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <SparklineChart />
         </Link>
 
-        {/* Card 2: Total Lifetime Savings */}
+        {/* Card 2: Total Savings Contributions */}
         <Link
           href="/dashboard/commitments"
           className="dashboard-clickable-card"
-          title="View all confirmed lifetime savings"
+          title="View all confirmed savings contributions"
           style={{
             background: 'linear-gradient(145deg, #FFFFFF 0%, #FFFDF9 50%, #FEF9F2 100%)',
             borderRadius: '18px',
@@ -322,7 +322,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#854D0E', fontSize: '0.85rem', fontWeight: 600 }}>
-                {isAdmin ? 'Total Lifetime Savings' : 'My Lifetime Savings'}
+                Total Savings Contributions
               </span>
               <div style={{
                 width: '36px',
