@@ -45,6 +45,7 @@ export async function GET() {
     postCode: user.postCode || '',
     country: user.country || 'United Kingdom',
     role: user.role,
+    termsAccepted: Boolean(user.termsAccepted),
   });
 }
 
@@ -56,6 +57,33 @@ export async function PUT(req: Request) {
 
   try {
     const body = await req.json();
+
+    // Dedicated handler for terms and conditions agreement
+    if (body.termsAccepted === true) {
+      await db.user.update({
+        where: { id: user.id },
+        data: { termsAccepted: true },
+      });
+
+      try {
+        await db.auditLog.create({
+          data: {
+            action: 'TERMS_ACCEPTED',
+            details: `User ${user.email} agreed to the updated terms of use and membership agreement.`,
+            userId: user.id,
+          },
+        });
+      } catch (logErr) {
+        console.warn('Terms acceptance audit log error:', logErr);
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Terms and conditions accepted successfully',
+        termsAccepted: true,
+      });
+    }
+
     const { firstName, lastName, phone, addressLine1, addressLine2, city, postCode, country } = body;
 
     const updatedFirstName = (firstName || '').trim();

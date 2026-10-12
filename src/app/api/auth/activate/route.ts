@@ -76,7 +76,7 @@ export async function POST(request: Request) {
       city: (city || user.city || '').trim(),
       postCode: (postCode || user.postCode || '').trim(),
       country: 'UNITED KINGDOM',
-      termsAccepted: termsAccepted !== false,
+      termsAccepted: termsAccepted === true,
     };
 
     // Activate the user

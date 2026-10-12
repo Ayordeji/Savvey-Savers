@@ -33,7 +33,8 @@ export async function POST(request: Request) {
       where: { id: user.id },
       data: {
         invitationId: resetToken,
-        invitationExpiresAt: expiresAt
+        invitationExpiresAt: expiresAt,
+        termsAccepted: false // Reset so member must agree to terms on first login
       }
     });
 

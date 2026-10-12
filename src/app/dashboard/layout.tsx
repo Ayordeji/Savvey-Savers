@@ -9,6 +9,7 @@ import styles from './layout.module.css';
 import Link from 'next/link';
 import GlobalHeader from './GlobalHeader';
 import SessionTimeout from './SessionTimeout';
+import TermsAgreementModal from './TermsAgreementModal';
 
 export default async function DashboardLayout({
   children,
@@ -60,9 +61,26 @@ export default async function DashboardLayout({
     console.warn('DashboardLayout notification query error:', notifErr);
   }
 
+  let agreementHtml: string | undefined;
+  if (!user.termsAccepted) {
+    try {
+      const setting = await db.setting.findUnique({ where: { key: 'membershipAgreement' } });
+      if (setting && typeof setting.value === 'string') {
+        agreementHtml = setting.value;
+      }
+    } catch (setErr) {
+      console.warn('DashboardLayout agreement setting error:', setErr);
+    }
+  }
+
   return (
     <div className={styles.dashboardContainer}>
       <SessionTimeout />
+      <TermsAgreementModal
+        initialTermsAccepted={Boolean(user.termsAccepted)}
+        userRole={user.role}
+        agreementHtml={agreementHtml}
+      />
       <DashboardTransitionLoader />
       <Sidebar user={{
         id: user.id,

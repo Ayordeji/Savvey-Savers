@@ -56,7 +56,8 @@ export async function GET() {
         invitationId: user.invitationId || undefined,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        termsAccepted: Boolean(user.termsAccepted)
       }
     });
 

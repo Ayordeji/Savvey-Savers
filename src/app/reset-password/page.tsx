@@ -53,8 +53,8 @@ function ResetPasswordContent() {
         body: JSON.stringify({
           invitationId: token,
           password: password,
-          // Sending dummy termsAccepted since activate expects it
-          termsAccepted: true
+          // Member must agree to new terms on first login
+          termsAccepted: false
         })
       });
 
