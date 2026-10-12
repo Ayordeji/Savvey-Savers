@@ -104,6 +104,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   let harvestStillToBePaidCount = 0;
   let lastHarvestPayout = 'None yet';
   let nextHarvestPayout = 'None scheduled';
+  let totalGroupSavingsToDate = 0;
+  let totalGroupPaymentsCount = 0;
+  let projectedGroupSavingsForYear = 0;
+  let activeGroupCommitmentsCount = 0;
+  let monthlyGroupCommitmentSum = 0;
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -240,6 +245,24 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
     // 7. Recent authentic transactions
     recentPayments = relevantPayments.slice(0, 5);
+
+    // 8. Total Group Savings to date (across the entire collective)
+    totalGroupSavingsToDate = allPayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+    totalGroupPaymentsCount = allPayments.length;
+
+    // 9. Projected Group Savings for Current/Selected Year (all active commitments * 12)
+    const activeGroupCommitmentsForYear = allCommitments.filter(
+      c => Number(c.collectionYear) === selectedYearNum && c.status === 'ACTIVE'
+    );
+    projectedGroupSavingsForYear = activeGroupCommitmentsForYear.reduce(
+      (acc, c) => acc + (Number(c.amount) * 12),
+      0
+    );
+    activeGroupCommitmentsCount = activeGroupCommitmentsForYear.length;
+    monthlyGroupCommitmentSum = activeGroupCommitmentsForYear.reduce(
+      (acc, c) => acc + (Number(c.amount) || 0),
+      0
+    );
   } catch (err) {
     console.error('Dashboard metrics aggregation error:', err);
   }
@@ -1041,112 +1064,264 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         </Link>
       </div>
 
-      {/* 6. Recent Activity */}
-      <div style={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: '18px',
-        padding: '24px',
-        border: '1px solid #dcd7ca',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
-        minWidth: 0,
-        maxWidth: '100%',
-        overflow: 'hidden'
+      {/* 6. Recent Activity & Group Savings Metrics */}
+      <div className="dashboard-activity-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: '1.4fr 1fr',
+        gap: '20px'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1a1a1a', fontFamily: 'var(--font-family-title)', margin: 0 }}>
-              {isAdmin ? 'Recent Activity' : 'My Recent Payments'}
-            </h3>
-            <p style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '3px' }}>
-              {isAdmin ? 'Live ledger transactions from the database.' : 'Your confirmed contribution payment receipts.'}
-            </p>
-          </div>
-          <Link
-            href="/dashboard/payments"
-            style={{
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              color: '#0c4e43',
-              textDecoration: 'none',
-              padding: '6px 14px',
-              border: '1px solid #dcd7ca',
-              borderRadius: '8px',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#FAFAF9'
-            }}
-          >
-            View all
-          </Link>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {recentPayments.length === 0 ? (
-            <div style={{ padding: '24px', textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem' }}>
-              No recent payment transactions recorded.
+        {/* Left: Recent Activity */}
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '18px',
+          padding: '24px',
+          border: '1px solid #dcd7ca',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+          minWidth: 0,
+          maxWidth: '100%',
+          overflow: 'hidden'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1a1a1a', fontFamily: 'var(--font-family-title)', margin: 0 }}>
+                {isAdmin ? 'Recent Activity' : 'My Recent Payments'}
+              </h3>
+              <p style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '3px' }}>
+                {isAdmin ? 'Live ledger transactions from the database.' : 'Your confirmed contribution payment receipts.'}
+              </p>
             </div>
-          ) : (
-            recentPayments.map((p) => {
-              const memberName = p.user?.name || (p as any).memberName || 'Member';
-              const memberDisplayId = p.user?.displayId || p.user?.invitationId || '';
-              const dateFormatted = new Date(p.createdAt).toLocaleDateString('en-GB', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric'
-              });
+            <Link
+              href="/dashboard/payments"
+              style={{
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                color: '#0c4e43',
+                textDecoration: 'none',
+                padding: '6px 14px',
+                border: '1px solid #dcd7ca',
+                borderRadius: '8px',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#FAFAF9'
+              }}
+            >
+              View all
+            </Link>
+          </div>
 
-              return (
-                <Link
-                  key={p.id}
-                  href={`/dashboard/payments?id=${p.id}`}
-                  className="activity-item-link"
-                  title={`View payment record for ${memberName}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '8px 10px',
-                    borderRadius: '10px',
-                    borderBottom: '1px solid #F5F3EF',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <div style={{
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '50%',
-                      backgroundColor: '#e6f0ee',
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {recentPayments.length === 0 ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem' }}>
+                No recent payment transactions recorded.
+              </div>
+            ) : (
+              recentPayments.map((p) => {
+                const memberName = p.user?.name || (p as any).memberName || 'Member';
+                const memberDisplayId = p.user?.displayId || p.user?.invitationId || '';
+                const dateFormatted = new Date(p.createdAt).toLocaleDateString('en-GB', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                });
+
+                return (
+                  <Link
+                    key={p.id}
+                    href={`/dashboard/payments?id=${p.id}`}
+                    className="activity-item-link"
+                    title={`View payment record for ${memberName}`}
+                    style={{
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#0c4e43',
-                      flexShrink: 0
-                    }}>
-                      <Receipt size={18} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1a1a1a' }}>
-                        Savings contribution confirmed
+                      justifyContent: 'space-between',
+                      padding: '8px 10px',
+                      borderRadius: '10px',
+                      borderBottom: '1px solid #F5F3EF',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        backgroundColor: '#e6f0ee',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#0c4e43',
+                        flexShrink: 0
+                      }}>
+                        <Receipt size={18} />
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: '#57655c' }}>
-                        £{Number(p.amount).toLocaleString()} from {memberName} {memberDisplayId ? `(${memberDisplayId})` : ''} • {p.month} {p.year}
+                      <div>
+                        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1a1a1a' }}>
+                          Savings contribution confirmed
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#57655c' }}>
+                          £{Number(p.amount).toLocaleString()} from {memberName} {memberDisplayId ? `(${memberDisplayId})` : ''} • {p.month} {p.year}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.75rem', color: '#8a968f' }}>{dateFormatted}</div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0c4e43' }}>
-                      + £{Number(p.amount).toFixed(2)}
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#8a968f' }}>{dateFormatted}</div>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0c4e43' }}>
+                        + £{Number(p.amount).toFixed(2)}
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              );
-            })
-          )}
+                  </Link>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Right: Group Savings Overview (2 Tiles) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', minWidth: 0 }}>
+          {/* Tile 1: Total Group Savings to Date */}
+          <div style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '18px',
+            padding: '22px 24px',
+            border: '1px solid #dcd7ca',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            minWidth: 0
+          }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: '#1a1a1a', fontFamily: 'var(--font-family-title)', margin: 0 }}>
+                    Total Group Savings to Date
+                  </h3>
+                  <p style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '3px', margin: 0 }}>
+                    What we have saved together as a group
+                  </p>
+                </div>
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '10px',
+                  backgroundColor: '#e6f0ee',
+                  color: '#0c4e43',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <Users size={20} />
+                </div>
+              </div>
+
+              <div style={{ fontSize: '1.95rem', fontWeight: 800, color: '#0c4e43', marginTop: '16px', lineHeight: 1.1 }}>
+                £{totalGroupSavingsToDate.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: '16px',
+              paddingTop: '12px',
+              borderTop: '1px solid #F5F3EF',
+              fontSize: '0.78rem',
+              color: '#57655c'
+            }}>
+              <span>{totalGroupPaymentsCount.toLocaleString()} confirmed member contributions</span>
+              <Link
+                href="/dashboard/payments"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  color: '#0c4e43',
+                  fontWeight: 600,
+                  textDecoration: 'none'
+                }}
+              >
+                <span>View ledger</span>
+                <ArrowRight size={13} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Tile 2: Projected Group Savings for Current Year */}
+          <div style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '18px',
+            padding: '22px 24px',
+            border: '1px solid #dcd7ca',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            minWidth: 0
+          }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: '#1a1a1a', fontFamily: 'var(--font-family-title)', margin: 0 }}>
+                    {selectedYearNum === new Date().getFullYear() || selectedYear === '2026'
+                      ? 'Projected Group Savings for Current Year'
+                      : `Projected Group Savings for ${selectedYear}`}
+                  </h3>
+                  <p style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '3px', margin: 0 }}>
+                    Projected based on all active {selectedYear} savings commitment amounts
+                  </p>
+                </div>
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(217, 119, 70, 0.12)',
+                  color: '#d97746',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <TrendingUp size={20} />
+                </div>
+              </div>
+
+              <div style={{ fontSize: '1.95rem', fontWeight: 800, color: '#1a1a1a', marginTop: '16px', lineHeight: 1.1 }}>
+                £{projectedGroupSavingsForYear.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: '16px',
+              paddingTop: '12px',
+              borderTop: '1px solid #F5F3EF',
+              fontSize: '0.78rem',
+              color: '#57655c'
+            }}>
+              <span>{activeGroupCommitmentsCount} active slots • £{monthlyGroupCommitmentSum.toLocaleString('en-GB', { minimumFractionDigits: 0 })}/mo × 12</span>
+              <Link
+                href={`/dashboard/commitments?year=${selectedYear}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  color: '#d97746',
+                  fontWeight: 600,
+                  textDecoration: 'none'
+                }}
+              >
+                <span>Commitments</span>
+                <ArrowRight size={13} />
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
 
