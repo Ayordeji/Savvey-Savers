@@ -67,10 +67,10 @@ function CommitmentsContent() {
     setSearchQuery('');
     setStatusFilter('');
     setMonthFilter('');
-    setYearFilter('2026');
+    setYearFilter(new Date().getFullYear().toString());
     setCurrentPage(1);
   };
-  const [yearFilter, setYearFilter] = useState('2026');
+  const [yearFilter, setYearFilter] = useState(() => new Date().getFullYear().toString());
   const [sendEmailNotification, setSendEmailNotification] = useState(false);
   const [loading, setLoading] = useState(true);
 

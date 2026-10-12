@@ -37,7 +37,7 @@ interface PageProps {
 }
 
 export default async function DashboardPage({ searchParams }: PageProps) {
-  let selectedYear = '2026';
+  let selectedYear = new Date().getFullYear().toString();
   try {
     const params = searchParams ? await searchParams : {};
     if (params && typeof params.year === 'string') {
@@ -49,7 +49,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     }
   }
 
-  const selectedYearNum = parseInt(selectedYear, 10) || 2026;
+  const selectedYearNum = parseInt(selectedYear, 10) || new Date().getFullYear();
 
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
