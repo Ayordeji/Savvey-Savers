@@ -1376,79 +1376,81 @@ function PaymentsContent() {
             </div>
 
             {/* Widget 4: Quick Actions */}
-            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #ECE8E2', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0, marginBottom: '14px' }}>
-                Quick Actions
-              </h3>
+            {currentUser?.role === 'ADMIN' && (
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #ECE8E2', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0, marginBottom: '14px' }}>
+                  Quick Actions
+                </h3>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <button
-                  onClick={() => router.push('/dashboard/commitments')}
-                  style={{
-                    width: '100%',
-                    padding: '10px 14px',
-                    backgroundColor: '#FAF9F6',
-                    border: '1px solid #ECE8E2',
-                    borderRadius: '10px',
-                    fontSize: '0.82rem',
-                    fontWeight: 600,
-                    color: '#111827',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
-                  }}
-                >
-                  <span>Record Member Payment</span>
-                  <ArrowRight size={14} color="#6B7280" />
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button
+                    onClick={() => router.push('/dashboard/commitments')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      backgroundColor: '#FAF9F6',
+                      border: '1px solid #ECE8E2',
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      color: '#111827',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <span>Record Member Payment</span>
+                    <ArrowRight size={14} color="#6B7280" />
+                  </button>
 
-                <button
-                  onClick={() => router.push('/dashboard/commitments')}
-                  style={{
-                    width: '100%',
-                    padding: '10px 14px',
-                    backgroundColor: '#FAF9F6',
-                    border: '1px solid #ECE8E2',
-                    borderRadius: '10px',
-                    fontSize: '0.82rem',
-                    fontWeight: 600,
-                    color: '#111827',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
-                  }}
-                >
-                  <span>Send Bulk Payment Reminder</span>
-                  <Mail size={14} color="#6B7280" />
-                </button>
+                  <button
+                    onClick={() => router.push('/dashboard/commitments')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      backgroundColor: '#FAF9F6',
+                      border: '1px solid #ECE8E2',
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      color: '#111827',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <span>Send Bulk Payment Reminder</span>
+                    <Mail size={14} color="#6B7280" />
+                  </button>
 
-                <button
-                  onClick={() => router.push('/dashboard/reports')}
-                  style={{
-                    width: '100%',
-                    padding: '10px 14px',
-                    backgroundColor: '#FAF9F6',
-                    border: '1px solid #ECE8E2',
-                    borderRadius: '10px',
-                    fontSize: '0.82rem',
-                    fontWeight: 600,
-                    color: '#111827',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
-                  }}
-                >
-                  <span>Generate Monthly Report</span>
-                  <FileText size={14} color="#6B7280" />
-                </button>
+                  <button
+                    onClick={() => router.push('/dashboard/reports')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      backgroundColor: '#FAF9F6',
+                      border: '1px solid #ECE8E2',
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      color: '#111827',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <span>Generate Monthly Report</span>
+                    <FileText size={14} color="#6B7280" />
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>
