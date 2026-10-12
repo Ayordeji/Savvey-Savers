@@ -28,7 +28,9 @@ import {
   CreditCard,
   CalendarRange,
   ArrowUpRight,
-  Sparkles
+  Sparkles,
+  CheckCircle2,
+  Hourglass
 } from 'lucide-react';
 
 interface PageProps {
@@ -97,6 +99,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   let yearCommitments: any[] = [];
   let relevantCommitments: any[] = [];
   let relevantPayments: any[] = [];
+  let alreadyReceivedHarvestAmount = 0;
+  let alreadyReceivedHarvestCount = 0;
+  let harvestStillToBePaidAmount = 0;
+  let harvestStillToBePaidCount = 0;
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -164,6 +170,26 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     harvestReleasedTotal = isAdmin
       ? completedHarvests.reduce((acc, c) => acc + (c.harvestAmount || 0), 0)
       : yearCommitments.reduce((acc, c) => acc + (Number(c.amount) * 12), 0);
+
+    // Released Harvests (Already Received in selected year)
+    const releasedYearCommitments = yearCommitments.filter(c =>
+      c.harvestReleasedAt !== null || ((c as any).harvestAmount && (c as any).harvestAmount > 0)
+    );
+    alreadyReceivedHarvestCount = releasedYearCommitments.length;
+    alreadyReceivedHarvestAmount = releasedYearCommitments.reduce(
+      (acc, c) => acc + (c.harvestAmount || Number(c.amount) * 12),
+      0
+    );
+
+    // Pending Harvests (Still to be Paid in selected year)
+    const pendingYearCommitments = yearCommitments.filter(c =>
+      !c.harvestReleasedAt && (!(c as any).harvestAmount || (c as any).harvestAmount === 0)
+    );
+    harvestStillToBePaidCount = pendingYearCommitments.length;
+    harvestStillToBePaidAmount = pendingYearCommitments.reduce(
+      (acc, c) => acc + (Number(c.amount) * 12),
+      0
+    );
 
     // 4. All-time revenue = sum of all confirmed payments
     allTimeRevenue = relevantPayments.reduce((acc, p) => acc + p.amount, 0);
@@ -629,6 +655,76 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#B45309', marginTop: '2px', fontWeight: 500 }}>
                   Agreed monthly contribution
+                </div>
+              </div>
+            </Link>
+
+            {/* Member Card 2b: Already Received Harvest Amount */}
+            <Link
+              href="/dashboard/commitments"
+              className="dashboard-clickable-card"
+              title="View my released harvests"
+              style={{
+                background: 'linear-gradient(145deg, #ECFDF5 0%, #D1FAE5 100%)',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '1.5px solid #6EE7B7',
+                boxShadow: '0 4px 14px -2px rgba(16, 185, 129, 0.14)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                minHeight: '135px'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#065F46' }}>Already Received Harvest Amount</span>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 3px 8px rgba(5, 150, 105, 0.3)' }}>
+                    <CheckCircle2 size={16} />
+                  </div>
+                </div>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#064E3B', marginTop: '6px' }}>
+                  £{alreadyReceivedHarvestAmount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#047857', marginTop: '2px', fontWeight: 500 }}>
+                  {alreadyReceivedHarvestCount > 0
+                    ? `${alreadyReceivedHarvestCount} harvest payout${alreadyReceivedHarvestCount === 1 ? '' : 's'} received`
+                    : 'Total payout from released harvest(s)'}
+                </div>
+              </div>
+            </Link>
+
+            {/* Member Card 2c: Harvest Still to be Paid */}
+            <Link
+              href="/dashboard/commitments"
+              className="dashboard-clickable-card"
+              title="View remaining scheduled harvests"
+              style={{
+                background: 'linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%)',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '1.5px solid #FCD34D',
+                boxShadow: '0 4px 14px -2px rgba(245, 158, 11, 0.14)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                minHeight: '135px'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#92400E' }}>Harvest Still to be Paid</span>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 3px 8px rgba(217, 119, 6, 0.3)' }}>
+                    <Hourglass size={16} />
+                  </div>
+                </div>
+                <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#78350F', marginTop: '6px' }}>
+                  £{harvestStillToBePaidAmount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#B45309', marginTop: '2px', fontWeight: 500 }}>
+                  {harvestStillToBePaidCount > 0
+                    ? `${harvestStillToBePaidCount} harvest${harvestStillToBePaidCount === 1 ? '' : 's'} left to be paid in ${selectedYear}`
+                    : `Based on harvest left to be paid in ${selectedYear}`}
                 </div>
               </div>
             </Link>
