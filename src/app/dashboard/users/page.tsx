@@ -419,6 +419,10 @@ export default function ManageUsersPage() {
   };
 
   const handleOpenRequestFeeModal = (user: User) => {
+    if (user.role === 'ADMIN') {
+      dialog.alert({ title: 'Exempt', message: 'Administrators are exempt from membership fees.', type: 'info' });
+      return;
+    }
     setSelectedUser(user);
     setFeeBase('35.99');
     setFeeAdmin('0');
@@ -428,6 +432,10 @@ export default function ManageUsersPage() {
   };
 
   const handleOpenConfirmFeeModal = async (user: User) => {
+    if (user.role === 'ADMIN') {
+      dialog.alert({ title: 'Exempt', message: 'Administrators are exempt from membership fees.', type: 'info' });
+      return;
+    }
     setSelectedUser(user);
     setOpenDropdownId(null);
     setFeePaidDate(new Date().toISOString().split('T')[0]);
@@ -1179,7 +1187,7 @@ export default function ManageUsersPage() {
           </div>
           <div>
             <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#111827', lineHeight: 1.1 }}>
-              {users.filter(u => u.hasPendingFee).length || 1}
+              {users.filter(u => u.hasPendingFee && u.role !== 'ADMIN').length}
             </div>
             <div style={{ fontSize: '0.8rem', color: '#6B7280', marginTop: '2px' }}>
               Fee Outstanding
@@ -1411,7 +1419,7 @@ export default function ManageUsersPage() {
                         const isBottomRow = idx >= 2 && paginatedUsers.length >= 4 && idx >= paginatedUsers.length - 2;
                         const userCommitmentsCount = allCommitmentsList.filter((c: any) => c.memberId === u.id).length;
                         const initials = u.name.split(' ').filter(Boolean).map((n) => n[0]).join('').substring(0, 2).toUpperCase() || 'M';
-                        const isPendingPayment = !u.membershipFeeConfirmed;
+                        const isPendingPayment = u.role !== 'ADMIN' && !u.membershipFeeConfirmed;
 
                         return (
                           <tr
@@ -1486,17 +1494,36 @@ export default function ManageUsersPage() {
 
                             {/* Membership */}
                             <td style={{ padding: '14px' }}>
-                              <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#111827' }}>
-                                2026 Annual
-                              </div>
-                              <div style={{
-                                fontSize: '0.75rem',
-                                color: isPendingPayment ? '#D97706' : '#2E7D32',
-                                fontWeight: 500,
-                                marginTop: '2px'
-                              }}>
-                                £35.99 • {isPendingPayment ? 'Payment pending' : 'Paid'}
-                              </div>
+                              {u.role === 'ADMIN' ? (
+                                <div>
+                                  <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    padding: '3px 8px',
+                                    borderRadius: '6px',
+                                    fontSize: '0.72rem',
+                                    fontWeight: 700,
+                                    backgroundColor: '#EFF6FF',
+                                    color: '#1D4ED8'
+                                  }}>
+                                    Exempt
+                                  </span>
+                                </div>
+                              ) : (
+                                <>
+                                  <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#111827' }}>
+                                    2026 Annual
+                                  </div>
+                                  <div style={{
+                                    fontSize: '0.75rem',
+                                    color: isPendingPayment ? '#D97706' : '#2E7D32',
+                                    fontWeight: 500,
+                                    marginTop: '2px'
+                                  }}>
+                                    £35.99 • {isPendingPayment ? 'Payment pending' : 'Paid'}
+                                  </div>
+                                </>
+                              )}
                             </td>
 
                             {/* Status */}
@@ -1551,15 +1578,19 @@ export default function ManageUsersPage() {
                                       <Edit size={14} />
                                       <span>Edit Member</span>
                                     </button>
-                                    <button onClick={() => handleOpenRequestFeeModal(u)} className={styles.dropdownItem}>
-                                      <FileText size={14} />
-                                      <span>Request Fee</span>
-                                    </button>
-                                    {u.hasPendingFee && (
-                                      <button onClick={() => handleOpenConfirmFeeModal(u)} className={styles.dropdownItem}>
-                                        <CheckCircle size={14} />
-                                        <span>Confirm Fee</span>
-                                      </button>
+                                    {u.role !== 'ADMIN' && (
+                                      <>
+                                        <button onClick={() => handleOpenRequestFeeModal(u)} className={styles.dropdownItem}>
+                                          <FileText size={14} />
+                                          <span>Request Fee</span>
+                                        </button>
+                                        {u.hasPendingFee && (
+                                          <button onClick={() => handleOpenConfirmFeeModal(u)} className={styles.dropdownItem}>
+                                            <CheckCircle size={14} />
+                                            <span>Confirm Fee</span>
+                                          </button>
+                                        )}
+                                      </>
                                     )}
                                     {!u.isSuperAdmin && u.id !== currentUser?.id && (
                                       <button onClick={() => handleOpenDeleteModal(u)} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
@@ -1777,67 +1808,93 @@ export default function ManageUsersPage() {
                     Membership
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  {selectedUser.role === 'ADMIN' ? (
                     <div>
-                      <div style={{ fontSize: '0.82rem', color: '#4B5563', fontWeight: 500 }}>2026 Annual Membership</div>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', marginTop: '4px' }}>£35.99</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: '0.82rem', color: '#4B5563', fontWeight: 500 }}>Membership Status</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', marginTop: '4px' }}>Exempt</div>
+                        </div>
+                        <span style={{
+                          padding: '3px 10px',
+                          borderRadius: '9999px',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          backgroundColor: '#EFF6FF',
+                          color: '#1D4ED8'
+                        }}>
+                          Admin Exemption
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '10px', lineHeight: 1.4 }}>
+                        Administrators are exempt from annual membership fees.
+                      </div>
                     </div>
-                    <span style={{
-                      padding: '3px 10px',
-                      borderRadius: '9999px',
-                      fontSize: '0.72rem',
-                      fontWeight: 600,
-                      backgroundColor: selectedUser.membershipFeeConfirmed ? '#EAF5EE' : '#FEF3C7',
-                      color: selectedUser.membershipFeeConfirmed ? '#2E7D32' : '#B45309'
-                    }}>
-                      {selectedUser.membershipFeeConfirmed ? 'Paid' : 'Payment pending'}
-                    </span>
-                  </div>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: '0.82rem', color: '#4B5563', fontWeight: 500 }}>2026 Annual Membership</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', marginTop: '4px' }}>£35.99</div>
+                        </div>
+                        <span style={{
+                          padding: '3px 10px',
+                          borderRadius: '9999px',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          backgroundColor: selectedUser.membershipFeeConfirmed ? '#EAF5EE' : '#FEF3C7',
+                          color: selectedUser.membershipFeeConfirmed ? '#2E7D32' : '#B45309'
+                        }}>
+                          {selectedUser.membershipFeeConfirmed ? 'Paid' : 'Payment pending'}
+                        </span>
+                      </div>
 
-                  <div style={{ fontSize: '0.75rem', color: '#9CA3AF', marginTop: '10px' }}>
-                    Payment received date: {selectedUser.membershipFeeConfirmedAt ? new Date(selectedUser.membershipFeeConfirmedAt).toLocaleDateString('en-GB') : '—'}
-                  </div>
+                      <div style={{ fontSize: '0.75rem', color: '#9CA3AF', marginTop: '10px' }}>
+                        Payment received date: {selectedUser.membershipFeeConfirmedAt ? new Date(selectedUser.membershipFeeConfirmedAt).toLocaleDateString('en-GB') : '—'}
+                      </div>
 
-                  <button
-                    onClick={() => handleOpenRequestFeeModal(selectedUser)}
-                    style={{
-                      marginTop: '12px',
-                      width: '100%',
-                      padding: '8px',
-                      backgroundColor: '#FFFFFF',
-                      border: '1px solid #D97746',
-                      color: '#D97746',
-                      borderRadius: '8px',
-                      fontSize: '0.82rem',
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Request Payment
-                  </button>
+                      <button
+                        onClick={() => handleOpenRequestFeeModal(selectedUser)}
+                        style={{
+                          marginTop: '12px',
+                          width: '100%',
+                          padding: '8px',
+                          backgroundColor: '#FFFFFF',
+                          border: '1px solid #D97746',
+                          color: '#D97746',
+                          borderRadius: '8px',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Request Payment
+                      </button>
 
-                  <button
-                    onClick={() => handleOpenConfirmFeeModal(selectedUser)}
-                    style={{
-                      marginTop: '8px',
-                      width: '100%',
-                      padding: '8px',
-                      backgroundColor: '#2E5A44',
-                      border: '1px solid #2E5A44',
-                      color: '#FFFFFF',
-                      borderRadius: '8px',
-                      fontSize: '0.82rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    <CheckCircle size={14} />
-                    Confirm Receipt / Payment
-                  </button>
+                      <button
+                        onClick={() => handleOpenConfirmFeeModal(selectedUser)}
+                        style={{
+                          marginTop: '8px',
+                          width: '100%',
+                          padding: '8px',
+                          backgroundColor: '#2E5A44',
+                          border: '1px solid #2E5A44',
+                          color: '#FFFFFF',
+                          borderRadius: '8px',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <CheckCircle size={14} />
+                        Confirm Receipt / Payment
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 {/* Sub-cards: 2 columns */}
@@ -1970,13 +2027,23 @@ export default function ManageUsersPage() {
                   Payment History
                 </div>
                 <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '16px', border: '1px solid #ECE8E2' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#111827' }}>Annual Fee 2026</div>
-                      <div style={{ fontSize: '0.72rem', color: '#9CA3AF' }}>Jan 15, 2026 &bull; Bank Transfer</div>
+                  {selectedUser.role === 'ADMIN' ? (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#111827' }}>Annual Membership Fee</div>
+                        <div style={{ fontSize: '0.72rem', color: '#9CA3AF' }}>Status: Exempt</div>
+                      </div>
+                      <span style={{ fontWeight: 700, color: '#1D4ED8', fontSize: '0.82rem' }}>Exempt</span>
                     </div>
-                    <span style={{ fontWeight: 700, color: '#2E7D32', fontSize: '0.88rem' }}>£35.99</span>
-                  </div>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#111827' }}>Annual Fee 2026</div>
+                        <div style={{ fontSize: '0.72rem', color: '#9CA3AF' }}>Jan 15, 2026 &bull; Bank Transfer</div>
+                      </div>
+                      <span style={{ fontWeight: 700, color: '#2E7D32', fontSize: '0.88rem' }}>£35.99</span>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#111827' }}>Monthly Contribution</div>
@@ -2000,10 +2067,10 @@ export default function ManageUsersPage() {
                     borderRadius: '9999px',
                     fontSize: '0.72rem',
                     fontWeight: 600,
-                    backgroundColor: selectedUser.membershipFeeConfirmed ? '#EAF5EE' : '#FEF3C7',
-                    color: selectedUser.membershipFeeConfirmed ? '#2E7D32' : '#B45309'
+                    backgroundColor: selectedUser.role === 'ADMIN' ? '#EFF6FF' : (selectedUser.membershipFeeConfirmed ? '#EAF5EE' : '#FEF3C7'),
+                    color: selectedUser.role === 'ADMIN' ? '#1D4ED8' : (selectedUser.membershipFeeConfirmed ? '#2E7D32' : '#B45309')
                   }}>
-                    {selectedUser.membershipFeeConfirmed ? 'Fee Paid' : 'Fee Pending'}
+                    {selectedUser.role === 'ADMIN' ? 'Exempt' : (selectedUser.membershipFeeConfirmed ? 'Fee Paid' : 'Fee Pending')}
                   </span>
                 </div>
 
@@ -2015,7 +2082,7 @@ export default function ManageUsersPage() {
                         Current Tier
                       </div>
                       <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#111827', marginTop: '2px' }}>
-                        {selectedUser.membership || '2026 Annual Membership'}
+                        {selectedUser.role === 'ADMIN' ? 'Administrator (Exempt)' : (selectedUser.membership || '2026 Annual Membership')}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
@@ -2023,7 +2090,7 @@ export default function ManageUsersPage() {
                         Annual Fee
                       </div>
                       <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0c4e43', marginTop: '2px' }}>
-                        £35.99
+                        {selectedUser.role === 'ADMIN' ? '£0.00' : '£35.99'}
                       </div>
                     </div>
                   </div>
@@ -2041,21 +2108,30 @@ export default function ManageUsersPage() {
                         <Check size={13} /> Verified & Signed
                       </span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#6B7280' }}>Payment Date</span>
-                      <span style={{ fontWeight: 500, color: '#111827' }}>
-                        {selectedUser.membershipFeeConfirmedAt
-                          ? new Date(selectedUser.membershipFeeConfirmedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                          : 'Pending confirmation'}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#6B7280' }}>Renewal Cycle</span>
-                      <span style={{ fontWeight: 500, color: '#111827' }}>January 2027</span>
-                    </div>
+                    {selectedUser.role === 'ADMIN' ? (
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6B7280' }}>Fee Exemption</span>
+                        <span style={{ fontWeight: 600, color: '#1D4ED8' }}>Administrator Exemption</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: '#6B7280' }}>Payment Date</span>
+                          <span style={{ fontWeight: 500, color: '#111827' }}>
+                            {selectedUser.membershipFeeConfirmedAt
+                              ? new Date(selectedUser.membershipFeeConfirmedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                              : 'Pending confirmation'}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: '#6B7280' }}>Renewal Cycle</span>
+                          <span style={{ fontWeight: 500, color: '#111827' }}>January 2027</span>
+                        </div>
+                      </>
+                    )}
                   </div>
 
-                  {!selectedUser.membershipFeeConfirmed && (
+                  {selectedUser.role !== 'ADMIN' && !selectedUser.membershipFeeConfirmed && (
                     <button
                       onClick={() => handleOpenRequestFeeModal(selectedUser)}
                       style={{
@@ -2123,7 +2199,9 @@ export default function ManageUsersPage() {
                   <div style={{ padding: '12px 14px', backgroundColor: '#FAF9F6', borderRadius: '10px', fontSize: '0.78rem', border: '1px solid #ECE8E2' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontWeight: 600, color: '#111827' }}>
-                        {selectedUser.membershipFeeConfirmed ? 'Membership Fee Confirmed' : 'Membership Fee Invoiced'}
+                        {selectedUser.role === 'ADMIN'
+                          ? 'Administrator Fee Exemption'
+                          : (selectedUser.membershipFeeConfirmed ? 'Membership Fee Confirmed' : 'Membership Fee Invoiced')}
                       </span>
                       <span style={{ color: '#9CA3AF', fontSize: '0.7rem' }}>
                         {selectedUser.membershipFeeConfirmedAt
@@ -2132,9 +2210,11 @@ export default function ManageUsersPage() {
                       </span>
                     </div>
                     <div style={{ color: '#57655c', marginTop: '3px', fontSize: '0.75rem' }}>
-                      {selectedUser.membershipFeeConfirmed
-                        ? '£35.99 annual contribution confirmed to collective pool.'
-                        : 'Invoice dispatched awaiting member payment confirmation.'}
+                      {selectedUser.role === 'ADMIN'
+                        ? 'Administrators are exempt from annual membership fees.'
+                        : (selectedUser.membershipFeeConfirmed
+                          ? '£35.99 annual contribution confirmed to collective pool.'
+                          : 'Invoice dispatched awaiting member payment confirmation.')}
                     </div>
                   </div>
 
@@ -2515,6 +2595,45 @@ export default function ManageUsersPage() {
 
             {/* Membership Details Card Summary (2x2 Grid, No Tables) */}
             {(() => {
+              if (selectedUser.role === 'ADMIN') {
+                return (
+                  <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
+                        Membership Fee Details
+                      </span>
+                      <span style={{ fontSize: '0.75rem', padding: '3px 10px', borderRadius: '9999px', fontWeight: 600, backgroundColor: '#EFF6FF', color: '#1D4ED8' }}>
+                        Exempt (Admin)
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Annual Membership Fee</span>
+                        <strong style={{ fontSize: '1.05rem', color: '#1D4ED8' }}>£0.00</strong>
+                      </div>
+
+                      <div>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Fee Status</span>
+                        <strong style={{ fontSize: '0.9rem', color: '#1e293b' }}>Exempt from fee</strong>
+                      </div>
+
+                      <div>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Role</span>
+                        <strong style={{ fontSize: '0.9rem', color: '#1D4ED8' }}>Administrator</strong>
+                      </div>
+
+                      <div>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Member Since</span>
+                        <strong style={{ fontSize: '0.9rem', color: '#1e293b' }}>
+                          {new Date(selectedUser.createdAt || Date.now()).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
               const currentYear = new Date().getFullYear();
               const latestRecord = [...userFeeRecords].sort((a: any, b: any) => b.year - a.year)[0];
               const isPaid = latestRecord ? (latestRecord.status === 'PAID' || latestRecord.status === 'COMPLETED') : Boolean(selectedUser.membershipFeeConfirmed);

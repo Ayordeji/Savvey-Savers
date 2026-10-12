@@ -107,10 +107,10 @@ export async function GET() {
       phone: u.phone,
       role: u.role,
       isActive: u.isActive,
-      membership: u.membership,
-      membershipFeeConfirmed: u.membershipFeeConfirmed,
-      membershipFeeConfirmedAt: u.membershipFeeConfirmedAt || null,
-      hasPendingFee: u.membershipFeeRecords?.some((r: any) => r.status === 'PENDING') || false,
+      membership: u.role === 'ADMIN' ? 'Exempt' : u.membership,
+      membershipFeeConfirmed: u.role === 'ADMIN' ? true : u.membershipFeeConfirmed,
+      membershipFeeConfirmedAt: u.role === 'ADMIN' ? (u.membershipFeeConfirmedAt || u.createdAt) : (u.membershipFeeConfirmedAt || null),
+      hasPendingFee: u.role === 'ADMIN' ? false : (u.membershipFeeRecords?.some((r: any) => r.status === 'PENDING') || false),
       createdAt: u.createdAt,
       lastLoginAt: u.lastLoginAt,
       invitationId: u.invitationId,
@@ -221,7 +221,7 @@ export async function POST(request: Request) {
       postCode: postCode || '',
       country: country || 'United Kingdom',
       permissions: isMemberInvite ? [] : (permissions || []),
-      membershipFeeConfirmed: false,
+      membershipFeeConfirmed: role === 'ADMIN',
       termsAccepted: true
     } });
 

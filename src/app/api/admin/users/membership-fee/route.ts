@@ -64,6 +64,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User not found.' }, { status: 404 });
     }
 
+    if (user.role === 'ADMIN') {
+      return NextResponse.json({ error: 'Administrators are exempt from membership fees.' }, { status: 400 });
+    }
+
     if (action === 'REQUEST') {
       const parsedYear = Number(year);
       const parsedBase = Number(baseFee) || 0;
