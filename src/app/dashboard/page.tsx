@@ -103,6 +103,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   let alreadyReceivedHarvestCount = 0;
   let harvestStillToBePaidAmount = 0;
   let harvestStillToBePaidCount = 0;
+  let lastHarvestPayout = 'None yet';
+  let nextHarvestPayout = 'None scheduled';
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -190,6 +192,39 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       (acc, c) => acc + (Number(c.amount) * 12),
       0
     );
+
+    // Harvest Schedule Dates (Last Harvest Payout & Next Harvest Payout)
+    const monthOrder = [
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'
+    ];
+
+    const getCommitmentTime = (c: any) => {
+      const yr = Number(c.collectionYear) || 2026;
+      const mIdx = monthOrder.indexOf((c.collectionMonth || '').toLowerCase().trim());
+      return yr * 12 + (mIdx >= 0 ? mIdx : 11);
+    };
+
+    const releasedCommitments = relevantCommitments
+      .filter(c => c.harvestReleasedAt !== null || ((c as any).harvestAmount && (c as any).harvestAmount > 0))
+      .sort((a, b) => {
+        if (a.harvestReleasedAt && b.harvestReleasedAt) {
+          return new Date(b.harvestReleasedAt).getTime() - new Date(a.harvestReleasedAt).getTime();
+        }
+        return getCommitmentTime(b) - getCommitmentTime(a);
+      });
+
+    if (releasedCommitments.length > 0) {
+      lastHarvestPayout = `${releasedCommitments[0].collectionMonth} ${releasedCommitments[0].collectionYear}`;
+    }
+
+    const upcomingCommitments = relevantCommitments
+      .filter(c => !c.harvestReleasedAt && (!(c as any).harvestAmount || (c as any).harvestAmount === 0))
+      .sort((a, b) => getCommitmentTime(a) - getCommitmentTime(b));
+
+    if (upcomingCommitments.length > 0) {
+      nextHarvestPayout = `${upcomingCommitments[0].collectionMonth} ${upcomingCommitments[0].collectionYear}`;
+    }
 
     // 4. All-time revenue = sum of all confirmed payments
     allTimeRevenue = relevantPayments.reduce((acc, p) => acc + p.amount, 0);
@@ -729,7 +764,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               </div>
             </Link>
 
-            {/* Member Card 3: Next Payout Date */}
+            {/* Member Card 3: Harvest Payout Schedule (Last & Next) */}
             <Link
               href="/dashboard/commitments"
               className="dashboard-clickable-card"
@@ -748,16 +783,48 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B21A8' }}>Next Harvest Payout</span>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B21A8' }}>Harvest Payout Schedule</span>
                   <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 3px 8px rgba(124, 58, 237, 0.3)' }}>
                     <CalendarRange size={16} />
                   </div>
                 </div>
-                <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#4C1D95', marginTop: '6px' }}>
-                  {yearCommitments[0]?.collectionMonth || 'December'} {selectedYear}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: '#7C3AED', marginTop: '2px', fontWeight: 500 }}>
-                  Scheduled payout month
+
+                {/* Side-by-side metrics: Last Harvest & Next Harvest */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '10px',
+                  marginTop: '10px',
+                  paddingTop: '2px'
+                }}>
+                  {/* Last Harvest Payout */}
+                  <div style={{
+                    borderRight: '1px solid #E9D5FF',
+                    paddingRight: '6px'
+                  }}>
+                    <div style={{ fontSize: '0.68rem', color: '#7C3AED', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                      Last Harvest
+                    </div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#4C1D95', marginTop: '3px', lineHeight: 1.2 }}>
+                      {lastHarvestPayout}
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: '#6B21A8', marginTop: '2px', fontWeight: 500 }}>
+                      {lastHarvestPayout === 'None yet' ? 'No past releases' : 'Previously paid'}
+                    </div>
+                  </div>
+
+                  {/* Next Harvest Payout */}
+                  <div style={{ paddingLeft: '4px' }}>
+                    <div style={{ fontSize: '0.68rem', color: '#7C3AED', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                      Next Harvest
+                    </div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#4C1D95', marginTop: '3px', lineHeight: 1.2 }}>
+                      {nextHarvestPayout}
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: '#6B21A8', marginTop: '2px', fontWeight: 500 }}>
+                      Scheduled payout
+                    </div>
+                  </div>
                 </div>
               </div>
             </Link>
