@@ -466,13 +466,19 @@ function PaymentsContent() {
         </div>
       </div>
 
-      {/* 4 KPI Progress Cards (Screenshot 4) */}
+      {/* 4 KPI Progress Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-        {/* Card 1: Total Collected This Month */}
+        {/* Card 1: Total Amount */}
         <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>
-              {monthFilter ? `Total Collected (${monthFilter}${yearFilter ? ' ' + yearFilter : ''})` : 'Total Collected This Month'}
+              {currentUser?.role === 'MEMBER'
+                ? (monthFilter
+                    ? `My Payments (${monthFilter}${yearFilter ? ' ' + yearFilter : ''})`
+                    : (yearFilter ? `My Payments (${yearFilter})` : 'My Total Paid to Date'))
+                : (monthFilter
+                    ? `Total Collected (${monthFilter}${yearFilter ? ' ' + yearFilter : ''})`
+                    : (yearFilter ? `Total Collected (${yearFilter})` : 'Total Collected to Date'))}
             </span>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Wallet size={16} />
@@ -482,14 +488,18 @@ function PaymentsContent() {
             £{totalCollectedThisMonth.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-            {receivedCount} of {totalScopePayments} collected ({receivedPct}%)
+            {currentUser?.role === 'MEMBER'
+              ? `${receivedCount} confirmed payment receipt${receivedCount === 1 ? '' : 's'}`
+              : `${receivedCount} of ${totalScopePayments} collected (${receivedPct}%)`}
           </span>
         </div>
 
-        {/* Card 2: Payments Received */}
+        {/* Card 2: Confirmed / Received */}
         <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Payments Received</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>
+              {currentUser?.role === 'MEMBER' ? 'Confirmed Receipts' : 'Payments Received'}
+            </span>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <CheckCircle size={16} />
             </div>
@@ -500,10 +510,12 @@ function PaymentsContent() {
           <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>All payments verified</span>
         </div>
 
-        {/* Card 3: Pending Payments */}
+        {/* Card 3: Pending Confirmation */}
         <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Pending Payments</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>
+              {currentUser?.role === 'MEMBER' ? 'Pending Confirmation' : 'Pending Payments'}
+            </span>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#FEF3C7', color: '#B45309', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Clock size={16} />
             </div>
@@ -516,18 +528,26 @@ function PaymentsContent() {
           </span>
         </div>
 
-        {/* Card 4: Overdue Payments */}
+        {/* Card 4: Overdue / Status */}
         <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Overdue Payments</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>
+              {currentUser?.role === 'MEMBER' ? 'Account Status' : 'Overdue Payments'}
+            </span>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <AlertCircle size={16} />
             </div>
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
-            {overdueCount}
+          <div style={{ fontSize: currentUser?.role === 'MEMBER' ? '1.35rem' : '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
+            {currentUser?.role === 'MEMBER'
+              ? (overdueCount === 0 ? 'Up to Date' : `${overdueCount} Overdue`)
+              : overdueCount}
           </div>
-          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>No overdue accounts</span>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+            {currentUser?.role === 'MEMBER'
+              ? 'No outstanding payments'
+              : 'No overdue accounts'}
+          </span>
         </div>
       </div>
 
@@ -1266,8 +1286,8 @@ function PaymentsContent() {
               );
             })()}
           </div>
-        ) : (
-          /* Right Side: 4 Widgets (Matches Screenshot 4) */
+        ) : currentUser?.role === 'ADMIN' ? (
+          /* Right Side: 4 Widgets - Admin Only */
           <div className="dashboard-drawer-column" style={{ width: '360px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Widget 1: Payment Overview Donut Chart */}
             <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #ECE8E2', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
@@ -1376,83 +1396,81 @@ function PaymentsContent() {
             </div>
 
             {/* Widget 4: Quick Actions */}
-            {currentUser?.role === 'ADMIN' && (
-              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #ECE8E2', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0, marginBottom: '14px' }}>
-                  Quick Actions
-                </h3>
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #ECE8E2', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0, marginBottom: '14px' }}>
+                Quick Actions
+              </h3>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <button
-                    onClick={() => router.push('/dashboard/commitments')}
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      backgroundColor: '#FAF9F6',
-                      border: '1px solid #ECE8E2',
-                      borderRadius: '10px',
-                      fontSize: '0.82rem',
-                      fontWeight: 600,
-                      color: '#111827',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                    <span>Record Member Payment</span>
-                    <ArrowRight size={14} color="#6B7280" />
-                  </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button
+                  onClick={() => router.push('/dashboard/commitments')}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    backgroundColor: '#FAF9F6',
+                    border: '1px solid #ECE8E2',
+                    borderRadius: '10px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    color: '#111827',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <span>Record Member Payment</span>
+                  <ArrowRight size={14} color="#6B7280" />
+                </button>
 
-                  <button
-                    onClick={() => router.push('/dashboard/commitments')}
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      backgroundColor: '#FAF9F6',
-                      border: '1px solid #ECE8E2',
-                      borderRadius: '10px',
-                      fontSize: '0.82rem',
-                      fontWeight: 600,
-                      color: '#111827',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                    <span>Send Bulk Payment Reminder</span>
-                    <Mail size={14} color="#6B7280" />
-                  </button>
+                <button
+                  onClick={() => router.push('/dashboard/commitments')}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    backgroundColor: '#FAF9F6',
+                    border: '1px solid #ECE8E2',
+                    borderRadius: '10px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    color: '#111827',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <span>Send Bulk Payment Reminder</span>
+                  <Mail size={14} color="#6B7280" />
+                </button>
 
-                  <button
-                    onClick={() => router.push('/dashboard/reports')}
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      backgroundColor: '#FAF9F6',
-                      border: '1px solid #ECE8E2',
-                      borderRadius: '10px',
-                      fontSize: '0.82rem',
-                      fontWeight: 600,
-                      color: '#111827',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                    <span>Generate Monthly Report</span>
-                    <FileText size={14} color="#6B7280" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => router.push('/dashboard/reports')}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    backgroundColor: '#FAF9F6',
+                    border: '1px solid #ECE8E2',
+                    borderRadius: '10px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    color: '#111827',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <span>Generate Monthly Report</span>
+                  <FileText size={14} color="#6B7280" />
+                </button>
               </div>
-            )}
+            </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
