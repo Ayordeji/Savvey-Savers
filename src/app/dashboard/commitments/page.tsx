@@ -116,7 +116,7 @@ function CommitmentsContent() {
   const [formAmount, setFormAmount] = useState('');
   const [formGoal, setFormGoal] = useState('');
   const [formMonth, setFormMonth] = useState('January');
-  const [formYear, setFormYear] = useState('2026');
+  const [formYear, setFormYear] = useState('2027');
   const [formStatus, setFormStatus] = useState<'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'NOT_YET_STARTED'>('ACTIVE');
 
   // Reminder fields — now supports bulk (multiple commitments)
@@ -235,7 +235,7 @@ function CommitmentsContent() {
     setFormAmount(amounts[0]?.amount.toString() || '100');
     setFormGoal(goals[0]?.name || 'Savings');
     setFormMonth('January');
-    setFormYear('2026');
+    setFormYear(currentUser?.role === 'ADMIN' ? '2026' : '2027');
     setActiveModal('ADD');
   };
 
@@ -1868,11 +1868,17 @@ function CommitmentsContent() {
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Collection Year</label>
-                  <select value={formYear} onChange={(e) => setFormYear(e.target.value)} className="form-select">
-                    <option value="2026">2026</option>
-                    <option value="2027">2027</option>
-                    <option value="2028">2028</option>
-                  </select>
+                  {currentUser?.role === 'ADMIN' ? (
+                    <select value={formYear} onChange={(e) => setFormYear(e.target.value)} className="form-select">
+                      <option value="2026">2026</option>
+                      <option value="2027">2027</option>
+                      <option value="2028">2028</option>
+                    </select>
+                  ) : (
+                    <select value={formYear || '2027'} onChange={(e) => setFormYear(e.target.value)} className="form-select">
+                      <option value="2027">2027</option>
+                    </select>
+                  )}
                 </div>
               </div>
 
