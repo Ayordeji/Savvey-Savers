@@ -1224,9 +1224,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
 
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
               marginTop: '16px',
               paddingTop: '12px',
               borderTop: '1px solid #F5F3EF',
@@ -1234,20 +1231,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               color: '#57655c'
             }}>
               <span>{totalGroupPaymentsCount.toLocaleString()} confirmed member contributions</span>
-              <Link
-                href="/dashboard/payments"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  color: '#0c4e43',
-                  fontWeight: 600,
-                  textDecoration: 'none'
-                }}
-              >
-                <span>View ledger</span>
-                <ArrowRight size={13} />
-              </Link>
             </div>
           </div>
 
@@ -1293,33 +1276,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               <div style={{ fontSize: '1.95rem', fontWeight: 800, color: '#1a1a1a', marginTop: '16px', lineHeight: 1.1 }}>
                 £{projectedGroupSavingsForYear.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginTop: '16px',
-              paddingTop: '12px',
-              borderTop: '1px solid #F5F3EF',
-              fontSize: '0.78rem',
-              color: '#57655c'
-            }}>
-              <span>{activeGroupCommitmentsCount} active slots • £{monthlyGroupCommitmentSum.toLocaleString('en-GB', { minimumFractionDigits: 0 })}/mo × 12</span>
-              <Link
-                href={`/dashboard/commitments?year=${selectedYear}`}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  color: '#d97746',
-                  fontWeight: 600,
-                  textDecoration: 'none'
-                }}
-              >
-                <span>Commitments</span>
-                <ArrowRight size={13} />
-              </Link>
             </div>
           </div>
         </div>
