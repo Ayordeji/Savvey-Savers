@@ -420,7 +420,7 @@ export default function ManageUsersPage() {
 
   const handleOpenRequestFeeModal = (user: User) => {
     if (user.role === 'ADMIN') {
-      dialog.alert({ title: 'Fee Exempt', message: 'Administrators are exempt from membership fees.', type: 'info' });
+      dialog.alert('Fee Exempt', 'Administrators are exempt from membership fees.');
       return;
     }
     setSelectedUser(user);
@@ -433,7 +433,7 @@ export default function ManageUsersPage() {
 
   const handleOpenConfirmFeeModal = async (user: User) => {
     if (user.role === 'ADMIN') {
-      dialog.alert({ title: 'Fee Exempt', message: 'Administrators are exempt from membership fees.', type: 'info' });
+      dialog.alert('Fee Exempt', 'Administrators are exempt from membership fees.');
       return;
     }
     setSelectedUser(user);

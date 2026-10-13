@@ -519,7 +519,7 @@ function CommitmentsContent() {
     const existingPayment = cmtPayments.find(p => 
       p.month?.toLowerCase().startsWith(mName.toLowerCase()) && p.status === 'CONFIRMED'
     );
-    const isPaid = mIdx < (cmtPayments.filter(p => p.status === 'CONFIRMED').length || 0) || !!existingPayment;
+    const isPaid = !!existingPayment;
 
     if (isPaid) {
       const confirmRemove = await dialog.confirm(
@@ -618,8 +618,7 @@ function CommitmentsContent() {
 
     const unconfirmedDue = monthNamesList.filter((mName, mIdx) => {
       if (mIdx > maxIdx) return false;
-      const isPaid = mIdx < (cmtPayments.filter(p => p.status === 'CONFIRMED').length || 0) ||
-        cmtPayments.some(p => p.month?.toLowerCase().startsWith(mName.toLowerCase()) && p.status === 'CONFIRMED');
+      const isPaid = cmtPayments.some(p => p.month?.toLowerCase().startsWith(mName.toLowerCase()) && p.status === 'CONFIRMED');
       return !isPaid;
     });
 
@@ -1767,9 +1766,13 @@ function CommitmentsContent() {
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                       {monthNamesList.map((mName, mIdx) => {
-                        const isPaid = mIdx < paidCount || cmtPayments.some(p => p.month?.toLowerCase().startsWith(mName.toLowerCase()) && p.status === 'CONFIRMED');
+                        const isPaid = cmtPayments.some(p => p.month?.toLowerCase().startsWith(mName.toLowerCase()) && p.status === 'CONFIRMED');
                         const isSelected = selectedMonthsToConfirm.includes(mName);
-                        const isCurrentDue = !isPaid && mIdx === paidCount;
+                        const now = new Date();
+                        const currentYear = now.getFullYear();
+                        const currentMonthIdx = now.getMonth();
+                        const cYear = Number(selectedCmt.collectionYear) || currentYear;
+                        const isCurrentDue = !isPaid && (cYear < currentYear || (cYear === currentYear && mIdx <= currentMonthIdx));
 
                         return (
                           <button

@@ -30,6 +30,7 @@ import PaginationControls from '../PaginationControls';
 interface Payment {
   id: string;
   commitmentId: string;
+  userId?: string;
   amount: number;
   month: string;
   year: number;
