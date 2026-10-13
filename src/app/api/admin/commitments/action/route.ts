@@ -191,16 +191,8 @@ export async function POST(request: Request) {
 
       const member = await db.user.findUnique({ where: { id: cmt.memberId } });
 
-      // Compute total confirmed payout amount (total payments received)
-      const relatedPayments = await db.payment.findMany({ where: { commitmentId, status: 'CONFIRMED' } });
-      
-      if (relatedPayments.length === 0) {
-        return NextResponse.json({
-          error: "The user's payment has not yet been confirmed, hence there is no harvest to release."
-        }, { status: 400 });
-      }
-
-      const harvestAmount = relatedPayments.reduce((acc, p) => acc + p.amount, 0);
+      // Compute total payout amount (total target pot = monthly amount * 12)
+      const harvestAmount = (Number(cmt.amount) || 0) * 12;
 
       // Update commitment status to COMPLETED and record the harvest amount
       await db.commitment.update({

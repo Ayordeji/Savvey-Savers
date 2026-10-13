@@ -223,9 +223,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       Number(c.collectionYear) === selectedYearNum && (c.harvestReleasedAt !== null || (c as any).harvestAmount > 0)
     );
     completedHarvestsCount = completedHarvests.length;
-    harvestReleasedTotal = isAdmin
-      ? completedHarvests.reduce((acc, c) => acc + (c.harvestAmount || 0), 0)
-      : yearCommitments.reduce((acc, c) => acc + (Number(c.amount) * 12), 0);
+    harvestReleasedTotal = completedHarvests.reduce((acc, c) => acc + ((Number(c.amount) || 0) * 12), 0);
 
     // Released Harvests (Already Received in selected year)
     const releasedYearCommitments = yearCommitments.filter(c =>
@@ -233,7 +231,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     );
     alreadyReceivedHarvestCount = releasedYearCommitments.length;
     alreadyReceivedHarvestAmount = releasedYearCommitments.reduce(
-      (acc, c) => acc + (c.harvestAmount || Number(c.amount) * 12),
+      (acc, c) => acc + ((Number(c.amount) || 0) * 12),
       0
     );
 

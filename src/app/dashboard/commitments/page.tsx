@@ -20,6 +20,8 @@ interface Commitment {
   status: 'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'NOT_YET_STARTED';
   createdAt: string;
   payments?: Payment[];
+  harvestAmount?: number | null;
+  harvestReleasedAt?: string | null;
 }
 
 interface Payment {
@@ -488,7 +490,14 @@ function CommitmentsContent() {
         // Refresh commitments
         const res2 = await fetch('/api/admin/commitments');
         if (res2.ok) {
-          setCommitments(await res2.json());
+          const freshList = await res2.json();
+          setCommitments(freshList);
+          if (selectedCmt) {
+            const freshSelected = freshList.find((c: any) => c.id === cmtId);
+            if (freshSelected) {
+              setSelectedCmt(freshSelected);
+            }
+          }
         }
         router.refresh();
         await dialog.alert('Success', 'Harvest payout released and member notified.');
@@ -914,10 +923,8 @@ function CommitmentsContent() {
     return commitments.filter((c) => c.memberId === memberId && (c.status === 'ACTIVE' || c.status === 'PENDING'));
   };
 
-  // KPI card metrics (filtered by yearFilter when set)
-  const kpiCommitments = yearFilter
-    ? commitments.filter(c => c.collectionYear?.toString() === yearFilter)
-    : commitments;
+  // KPI card metrics (responds to all active filters: status, month, year, search)
+  const kpiCommitments = filteredCommitments;
 
   const activeCommitmentsCount = kpiCommitments.filter(c => c.status === 'ACTIVE').length;
   const totalCommittedValue = kpiCommitments
@@ -926,13 +933,19 @@ function CommitmentsContent() {
 
   const kpiCommitmentIds = new Set(kpiCommitments.map(c => c.id));
   const totalCollectedValue = Object.entries(paymentsMap)
-    .filter(([cmtId]) => !yearFilter || kpiCommitmentIds.has(cmtId))
+    .filter(([cmtId]) => kpiCommitmentIds.has(cmtId))
     .flatMap(([, payments]) => payments)
-    .filter(p => p.status === 'CONFIRMED' && (!yearFilter || p.year?.toString() === yearFilter))
+    .filter(p => p.status === 'CONFIRMED' && (!yearFilter || p.year?.toString() === yearFilter || !p.year))
     .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
   const completedPayoutsCount = kpiCommitments.filter(c => c.status === 'COMPLETED').length;
   const totalPayoutsTarget = kpiCommitments.length;
+
+  const filterLabel = [
+    statusFilter ? (statusFilter === 'OUTSTANDING' ? 'Outstanding' : statusFilter) : '',
+    monthFilter,
+    yearFilter
+  ].filter(Boolean).join(' ');
 
   const monthNamesList = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -1056,7 +1069,7 @@ function CommitmentsContent() {
             {activeCommitmentsCount}
           </div>
           <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-            {yearFilter ? `${yearFilter} active commitments` : 'All active commitments'}
+            {filterLabel ? `${filterLabel} active commitments` : 'All active commitments'}
           </span>
         </div>
 
@@ -1072,7 +1085,7 @@ function CommitmentsContent() {
             £{totalCommittedValue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-            {yearFilter ? `${yearFilter} committed value` : 'Annual committed value'}
+            {filterLabel ? `${filterLabel} committed value` : 'Annual committed value'}
           </span>
         </div>
 
@@ -1088,7 +1101,7 @@ function CommitmentsContent() {
             £{totalCollectedValue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-            {yearFilter ? `${yearFilter} total collection` : 'Total cycle collection'}
+            {filterLabel ? `${filterLabel} total collection` : 'Total cycle collection'}
           </span>
         </div>
 
@@ -1104,7 +1117,7 @@ function CommitmentsContent() {
             {completedPayoutsCount} / {totalPayoutsTarget}
           </div>
           <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-            {yearFilter ? `${yearFilter} completed payouts` : 'Completed payouts'}
+            {filterLabel ? `${filterLabel} completed payouts` : 'Completed payouts'}
           </span>
         </div>
       </div>
@@ -1477,12 +1490,23 @@ function CommitmentsContent() {
                                           </button>
                                         )}
 
-                                        {c.status !== 'COMPLETED' && c.status !== 'CANCELLED' && (
-                                          <button onClick={() => { handleReleaseHarvest(c.id); setOpenDropdownId(null); }} className={styles.dropdownItem}>
-                                            <FileText size={14} />
-                                            <span>Release Harvest</span>
-                                          </button>
-                                        )}
+                                        {c.status !== 'CANCELLED' && (() => {
+                                          const isHarvestReleased = Boolean(c.harvestReleasedAt || (c.harvestAmount && Number(c.harvestAmount) > 0));
+                                          if (isHarvestReleased) {
+                                            return (
+                                              <button disabled className={styles.dropdownItem} style={{ opacity: 1, cursor: 'default', color: '#16a34a', fontWeight: 600 }}>
+                                                <CheckCircle size={14} color="#16a34a" />
+                                                <span>Harvest Paid Out (£{((Number(c.amount) || 0) * 12).toLocaleString('en-GB', { minimumFractionDigits: 2 })})</span>
+                                              </button>
+                                            );
+                                          }
+                                          return (
+                                            <button onClick={() => { handleReleaseHarvest(c.id); setOpenDropdownId(null); }} className={styles.dropdownItem}>
+                                              <Banknote size={14} />
+                                              <span>Release Harvest</span>
+                                            </button>
+                                          );
+                                        })()}
 
                                         <button onClick={() => { handleDeleteCommitment(c); setOpenDropdownId(null); }} className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}>
                                           <X size={14} color="#dc2626" />
@@ -1971,27 +1995,47 @@ function CommitmentsContent() {
                         <span>Add Past Payment</span>
                       </button>
 
-                      <button
-                        onClick={() => handleReleaseHarvest(selectedCmt.id)}
-                        style={{
+                      {Boolean(selectedCmt.harvestReleasedAt || (selectedCmt.harvestAmount && Number(selectedCmt.harvestAmount) > 0)) ? (
+                        <div style={{
                           width: '100%',
-                          padding: '9px',
-                          backgroundColor: '#FFFBEB',
-                          color: '#B45309',
-                          border: '1px solid #FCD34D',
+                          padding: '10px 14px',
+                          backgroundColor: '#EAF5EE',
+                          color: '#15803D',
+                          border: '1.5px solid #A7F3D0',
                           borderRadius: '10px',
                           fontSize: '0.82rem',
-                          fontWeight: 600,
-                          cursor: 'pointer',
+                          fontWeight: 700,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '6px'
-                        }}
-                      >
-                        <Banknote size={15} />
-                        <span>Complete Harvest Payout</span>
-                      </button>
+                        }}>
+                          <CheckCircle size={15} />
+                          <span>Harvest Paid Out (£{((Number(selectedCmt.amount) || 0) * 12).toLocaleString('en-GB', { minimumFractionDigits: 2 })})</span>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleReleaseHarvest(selectedCmt.id)}
+                          style={{
+                            width: '100%',
+                            padding: '9px',
+                            backgroundColor: '#FFFBEB',
+                            color: '#B45309',
+                            border: '1px solid #FCD34D',
+                            borderRadius: '10px',
+                            fontSize: '0.82rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          <Banknote size={15} />
+                          <span>Complete Harvest Payout</span>
+                        </button>
+                      )}
 
                       <button
                         onClick={() => handleDeleteCommitment(selectedCmt)}

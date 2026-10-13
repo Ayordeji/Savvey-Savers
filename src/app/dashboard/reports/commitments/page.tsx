@@ -293,7 +293,7 @@ function CommitmentsReportContent() {
   // KPI summaries
   const completedHarvests = commitments.filter(c => c.harvestReleasedAt !== null || (c.harvestAmount && Number(c.harvestAmount) > 0));
   const totalHarvested = completedHarvests.length;
-  const totalHarvestReleasedAmount = completedHarvests.reduce((sum, c) => sum + (Number(c.harvestAmount) || (Number(c.amount) * 12)), 0);
+  const totalHarvestReleasedAmount = completedHarvests.reduce((sum, c) => sum + ((Number(c.amount) || 0) * 12), 0);
 
   const pendingHarvests = commitments.filter(c => !c.harvestReleasedAt && (!c.harvestAmount || Number(c.harvestAmount) === 0) && c.status !== 'CANCELLED');
   const totalPendingHarvestsCount = pendingHarvests.length;
