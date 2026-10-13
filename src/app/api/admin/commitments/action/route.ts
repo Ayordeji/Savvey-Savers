@@ -105,6 +105,19 @@ export async function POST(request: Request) {
 
       const member = await db.user.findUnique({ where: { id: cmt.memberId } });
 
+      // Check if payment already exists for this commitment, month, and year to prevent duplicates
+      const existingPayment = await db.payment.findFirst({
+        where: {
+          commitmentId,
+          month: { equals: month, mode: 'insensitive' },
+          year: parseInt(year),
+          status: 'CONFIRMED'
+        }
+      });
+      if (existingPayment) {
+        return NextResponse.json({ success: true, payment: existingPayment, alreadyExists: true });
+      }
+
       // Create confirmed payment
       const pastPayment = await db.payment.create({ data: {
         commitmentId,
@@ -162,7 +175,10 @@ export async function POST(request: Request) {
         await db.payment.delete({ where: { id: paymentId } });
       } else if (month) {
         const found = await db.payment.findFirst({
-          where: { commitmentId, month: { startsWith: month } }
+          where: {
+            commitmentId,
+            month: { startsWith: month, mode: 'insensitive' }
+          }
         });
         if (found) {
           await db.payment.delete({ where: { id: found.id } });

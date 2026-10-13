@@ -157,6 +157,8 @@ export async function POST(request: Request) {
 
     } else if (action === 'RECORD_PAYMENT' || action === 'CONFIRM_PAYMENT') {
       const parsedAmount = Number(amountPaid);
+      const parsedBaseFee = baseFee !== undefined ? Number(baseFee) : undefined;
+      const parsedAdminFee = adminFee !== undefined ? Number(adminFee) : undefined;
       const paymentDate = paidAt ? new Date(paidAt) : new Date();
 
       let recordToUpdate;
@@ -172,22 +174,30 @@ export async function POST(request: Request) {
       }
 
       if (recordToUpdate) {
+        const finalBase = parsedBaseFee !== undefined ? parsedBaseFee : recordToUpdate.baseFee;
+        const finalAdmin = parsedAdminFee !== undefined ? parsedAdminFee : recordToUpdate.adminFee;
+        const finalTotal = parsedAmount || (finalBase + finalAdmin);
         await db.membershipFeeRecord.update({
           where: { id: recordToUpdate.id },
           data: {
             status: 'PAID',
-            totalFee: parsedAmount || recordToUpdate.totalFee,
+            baseFee: finalBase,
+            adminFee: finalAdmin,
+            totalFee: finalTotal,
             paidAt: paymentDate
           }
         });
       } else {
         // Create paid record if none existed
+        const finalBase = parsedBaseFee !== undefined ? parsedBaseFee : (parsedAmount || 0);
+        const finalAdmin = parsedAdminFee !== undefined ? parsedAdminFee : 0;
+        const finalTotal = parsedAmount || (finalBase + finalAdmin);
         await db.membershipFeeRecord.create({ data: {
           userId,
-          year: new Date().getFullYear(),
-          baseFee: parsedAmount || 0,
-          adminFee: 0,
-          totalFee: parsedAmount || 0,
+          year: year ? Number(year) : new Date().getFullYear(),
+          baseFee: finalBase,
+          adminFee: finalAdmin,
+          totalFee: finalTotal,
           status: 'PAID',
           requestedAt: paymentDate,
           paidAt: paymentDate

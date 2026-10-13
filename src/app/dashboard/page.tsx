@@ -938,120 +938,116 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         )}
       </div>
 
-      {/* 4. Visuals: Savings Volume Over Time + At a Glance */}
-      <div className="dashboard-two-col-grid" style={{
-        display: 'grid',
-        gridTemplateColumns: '2fr 1fr',
-        gap: '20px'
-      }}>
-        {/* Left: Savings Volume Over Time Bar Chart */}
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '18px',
-          padding: '24px',
-          border: '1px solid #dcd7ca',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
-          minWidth: 0,
-          maxWidth: '100%',
-          overflow: 'hidden'
+      {/* 4. Visuals: Savings Volume Over Time + At a Glance (Admin only) */}
+      {isAdmin && (
+        <div className="dashboard-two-col-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr',
+          gap: '20px'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1a1a1a', fontFamily: 'var(--font-family-title)', margin: 0 }}>
-                {isAdmin ? 'Savings Volume Over Time' : 'My Monthly Contributions'}
-              </h3>
-              <p style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '3px' }}>
-                {isAdmin
-                  ? `Actual confirmed collections across months for ${selectedYear}`
-                  : `Your confirmed savings payments across months for ${selectedYear}`}
-              </p>
-            </div>
-
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '5px 12px',
-              border: '1px solid #dcd7ca',
-              borderRadius: '8px',
-              fontSize: '0.8rem',
-              color: '#1a1a1a',
-              fontWeight: 600,
-              backgroundColor: '#faf9f6'
-            }}>
-              <span>Monthly Distribution</span>
-            </div>
-          </div>
-
-          <MonthlyRevenueChart monthlyData={monthlyData} months={months} selectedYear={selectedYear} />
-        </div>
-
-        {/* Right: At a glance (Dark Brand Card) */}
-        <div style={{
-          backgroundColor: '#0c4e43',
-          borderRadius: '18px',
-          padding: '24px',
-          color: '#FFFFFF',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          textAlign: 'center',
-          boxShadow: '0 10px 25px -4px rgba(12, 78, 67, 0.35)',
-          minWidth: 0,
-          maxWidth: '100%',
-          boxSizing: 'border-box'
-        }}>
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start' }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>
-              At a glance
-            </h3>
-          </div>
-
-          {/* Top pill badge */}
+          {/* Left: Savings Volume Over Time Bar Chart */}
           <div style={{
-            marginTop: '8px',
-            padding: '6px 14px',
-            backgroundColor: 'rgba(255, 255, 255, 0.12)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '9999px',
-            fontSize: '0.78rem',
-            fontWeight: 600,
-            color: '#ffffff'
+            backgroundColor: '#FFFFFF',
+            borderRadius: '18px',
+            padding: '24px',
+            border: '1px solid #dcd7ca',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+            minWidth: 0,
+            maxWidth: '100%',
+            overflow: 'hidden'
           }}>
-            {activeCommitmentsCount} Active Commitment{activeCommitmentsCount === 1 ? '' : 's'}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1a1a1a', fontFamily: 'var(--font-family-title)', margin: 0 }}>
+                  Savings Volume Over Time
+                </h3>
+                <p style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '3px' }}>
+                  Actual confirmed collections across months for {selectedYear}
+                </p>
+              </div>
+
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '5px 12px',
+                border: '1px solid #dcd7ca',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                color: '#1a1a1a',
+                fontWeight: 600,
+                backgroundColor: '#faf9f6'
+              }}>
+                <span>Monthly Distribution</span>
+              </div>
+            </div>
+
+            <MonthlyRevenueChart monthlyData={monthlyData} months={months} selectedYear={selectedYear} />
           </div>
 
-          {/* Large glowing terracotta circular checkmark */}
+          {/* Right: At a glance (Dark Brand Card) */}
           <div style={{
-            position: 'relative',
-            width: '84px',
-            height: '84px',
-            borderRadius: '50%',
+            backgroundColor: '#0c4e43',
+            borderRadius: '18px',
+            padding: '24px',
+            color: '#FFFFFF',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
-            margin: '24px 0'
+            justifyContent: 'space-between',
+            textAlign: 'center',
+            boxShadow: '0 10px 25px -4px rgba(12, 78, 67, 0.35)',
+            minWidth: 0,
+            maxWidth: '100%',
+            boxSizing: 'border-box'
           }}>
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              borderRadius: '50%',
-              border: '2.5px solid #d97746',
-              boxShadow: '0 0 20px rgba(217, 119, 70, 0.45)'
-            }} />
-            <Check size={36} color="#FFFFFF" strokeWidth={3} />
-          </div>
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>
+                At a glance
+              </h3>
+            </div>
 
-          <div style={{ color: '#c2d6cf', fontSize: '0.82rem', marginBottom: '8px' }}>
-            {isAdmin
-              ? `${activeUsersCount} active verified members participating in cycle.`
-              : (activeCommitmentsCount > 0
-                  ? 'Your personal savings cycle is active and on track.'
-                  : 'Start or join a savings pool today.')}
+            {/* Top pill badge */}
+            <div style={{
+              marginTop: '8px',
+              padding: '6px 14px',
+              backgroundColor: 'rgba(255, 255, 255, 0.12)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '9999px',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              color: '#ffffff'
+            }}>
+              {activeCommitmentsCount} Active Commitment{activeCommitmentsCount === 1 ? '' : 's'}
+            </div>
+
+            {/* Large glowing terracotta circular checkmark */}
+            <div style={{
+              position: 'relative',
+              width: '84px',
+              height: '84px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '24px 0'
+            }}>
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: '50%',
+                border: '2.5px solid #d97746',
+                boxShadow: '0 0 20px rgba(217, 119, 70, 0.45)'
+              }} />
+              <Check size={36} color="#FFFFFF" strokeWidth={3} />
+            </div>
+
+            <div style={{ color: '#c2d6cf', fontSize: '0.82rem', marginBottom: '8px' }}>
+              {activeUsersCount} active verified members participating in cycle.
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* 5. Attention Alert Banner */}
       <div style={{

@@ -548,7 +548,9 @@ export default function ManageUsersPage() {
   const handleConfirmFeeSubmit = async () => {
     if (!selectedUser) return;
     setFormSubmitting(true);
-    const totalAmount = (parseFloat(feeBase) || 0) + (parseFloat(feeAdmin) || 0);
+    const bFee = parseFloat(feeBase) || 0;
+    const aFee = parseFloat(feeAdmin) || 0;
+    const totalAmount = bFee + aFee;
     try {
       const res = await fetch('/api/admin/users/membership-fee', {
         method: 'POST',
@@ -557,6 +559,8 @@ export default function ManageUsersPage() {
           action: 'RECORD_PAYMENT',
           userId: selectedUser.id,
           year: feeYear,
+          baseFee: bFee,
+          adminFee: aFee,
           amountPaid: totalAmount,
           paidAt: feePaidDate
         })
@@ -3025,22 +3029,55 @@ export default function ManageUsersPage() {
             </div>
 
             <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '18px', marginBottom: '20px' }}>
-              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#064e3b', marginBottom: '12px' }}>
-                £ {((parseFloat(feeBase) || 0) + (parseFloat(feeAdmin) || 0)).toFixed(2)}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Fee Due</span>
+                <span style={{ fontSize: '1.75rem', fontWeight: 800, color: '#064e3b', lineHeight: 1 }}>
+                  £ {((parseFloat(feeBase) || 0) + (parseFloat(feeAdmin) || 0)).toFixed(2)}
+                </span>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.9rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#4b5563', fontWeight: 600 }}>Base Membership Fee :</span>
-                  <span style={{ fontWeight: 700, color: '#111827' }}>£ {(parseFloat(feeBase) || 0).toFixed(2)}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <label style={{ color: '#374151', fontWeight: 600, fontSize: '0.85rem' }}>Base Membership Fee :</label>
+                  </div>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <span style={{ position: 'absolute', left: '12px', color: '#6b7280', fontWeight: 700, fontSize: '0.9rem' }}>£</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={feeBase}
+                      onChange={(e) => setFeeBase(e.target.value)}
+                      className="form-input"
+                      placeholder="0.00"
+                      style={{ paddingLeft: '28px', backgroundColor: '#ffffff', borderColor: '#d1d5db', borderRadius: '8px', fontWeight: 600, color: '#111827', width: '100%' }}
+                    />
+                  </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#4b5563', fontWeight: 600 }}>Admin Fee :</span>
-                  <span style={{ fontWeight: 700, color: '#111827' }}>£ {(parseFloat(feeAdmin) || 0).toFixed(2)}</span>
+
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <label style={{ color: '#374151', fontWeight: 600, fontSize: '0.85rem' }}>Admin Fee :</label>
+                  </div>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <span style={{ position: 'absolute', left: '12px', color: '#6b7280', fontWeight: 700, fontSize: '0.9rem' }}>£</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={feeAdmin}
+                      onChange={(e) => setFeeAdmin(e.target.value)}
+                      className="form-input"
+                      placeholder="0.00"
+                      style={{ paddingLeft: '28px', backgroundColor: '#ffffff', borderColor: '#d1d5db', borderRadius: '8px', fontWeight: 600, color: '#111827', width: '100%' }}
+                    />
+                  </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#4b5563', fontWeight: 600 }}>Payment Year :</span>
-                  <span style={{ fontWeight: 700, color: '#111827' }}>{feeYear}</span>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
+                  <span style={{ color: '#4b5563', fontWeight: 600, fontSize: '0.85rem' }}>Payment Year :</span>
+                  <span style={{ fontWeight: 700, color: '#111827', fontSize: '0.9rem' }}>{feeYear}</span>
                 </div>
               </div>
             </div>

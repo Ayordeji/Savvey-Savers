@@ -157,7 +157,9 @@ export async function POST(request: Request) {
       permissions,
       commitmentAmount,
       collectionMonth,
-      collectionYear
+      collectionYear,
+      goal,
+      savingGoal
     } = body;
 
     const name = firstName ? `${firstName} ${lastName || ''}`.trim() : (body.name || '');
@@ -233,7 +235,7 @@ export async function POST(request: Request) {
         memberName: name,
         
         amount: amtNum,
-        goal: `Savings Goal (£${amtNum}/mo)`,
+        goal: goal || savingGoal || 'Savings',
         collectionMonth: collectionMonth || 'January',
         collectionYear: parseInt(collectionYear) || new Date().getFullYear(),
         status: isMemberInvite ? 'PENDING' : 'ACTIVE',

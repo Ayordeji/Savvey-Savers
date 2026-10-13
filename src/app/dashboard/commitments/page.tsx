@@ -95,6 +95,9 @@ function CommitmentsContent() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [selectedMonthsToConfirm, setSelectedMonthsToConfirm] = useState<string[]>([]);
   const [isConfirmingMonths, setIsConfirmingMonths] = useState(false);
+  const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [drawerGoal, setDrawerGoal] = useState('');
+  const [isSavingGoal, setIsSavingGoal] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -232,6 +235,8 @@ function CommitmentsContent() {
 
   const handleOpenViewCommitmentModal = async (cmt: Commitment) => {
     setSelectedCmt(cmt);
+    setIsEditingGoal(false);
+    setDrawerGoal(cmt.goal && cmt.goal !== 'Savings Goal' ? cmt.goal : 'Savings');
     setSelectedMonthsToConfirm([]);
     setViewCmtPayments(paymentsMap[cmt.id] || []);
     setViewCmtLoading(true);
@@ -270,7 +275,7 @@ function CommitmentsContent() {
     setErrorMsg('');
     setSelectedCmt(cmt);
     setFormAmount(cmt.amount.toString());
-    setFormGoal(cmt.goal);
+    setFormGoal(cmt.goal && cmt.goal !== 'Savings Goal' ? cmt.goal : (goals[0]?.name || 'Savings'));
     setFormMonth(cmt.collectionMonth);
     setFormYear(cmt.collectionYear.toString());
     setFormStatus(cmt.status);
@@ -1616,9 +1621,107 @@ function CommitmentsContent() {
                       <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#0c4e43', fontWeight: 700, backgroundColor: '#EAF5EE', padding: '1px 6px', borderRadius: '4px' }}>
                         {selectedCmt.displayId || selectedCmt.id}
                       </span>
-                      <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                        &bull; Goal: {selectedCmt.goal || 'General Savings'}
-                      </span>
+                      {currentUser?.role === 'ADMIN' && isEditingGoal ? (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>&bull; Goal:</span>
+                          <select
+                            value={drawerGoal}
+                            onChange={(e) => setDrawerGoal(e.target.value)}
+                            style={{
+                              fontSize: '0.75rem',
+                              padding: '2px 6px',
+                              borderRadius: '6px',
+                              border: '1.5px solid #2E5A44',
+                              backgroundColor: '#FFFFFF',
+                              color: '#111827',
+                              fontWeight: 600,
+                              outline: 'none'
+                            }}
+                          >
+                            {goals.map(g => (
+                              <option key={g.name} value={g.name}>{g.name}</option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            disabled={isSavingGoal}
+                            onClick={async () => {
+                              if (!drawerGoal || !selectedCmt) return;
+                              setIsSavingGoal(true);
+                              try {
+                                const res = await fetch('/api/admin/commitments', {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ id: selectedCmt.id, goal: drawerGoal })
+                                });
+                                if (res.ok) {
+                                  setSelectedCmt(prev => prev ? { ...prev, goal: drawerGoal } : prev);
+                                  setCommitments(prev => prev.map(c => c.id === selectedCmt.id ? { ...c, goal: drawerGoal } : c));
+                                  setIsEditingGoal(false);
+                                }
+                              } catch (e) {
+                                console.error(e);
+                              } finally {
+                                setIsSavingGoal(false);
+                              }
+                            }}
+                            style={{
+                              padding: '2px 8px',
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              backgroundColor: '#2E5A44',
+                              color: '#FFFFFF',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {isSavingGoal ? '...' : 'Save'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIsEditingGoal(false)}
+                            style={{
+                              padding: '2px 6px',
+                              fontSize: '0.7rem',
+                              fontWeight: 600,
+                              backgroundColor: '#F3F4F6',
+                              color: '#4B5563',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', color: '#6B7280', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                          &bull; Goal: <strong style={{ color: '#111827' }}>{(selectedCmt.goal && selectedCmt.goal !== 'Savings Goal') ? selectedCmt.goal : 'Savings'}</strong>
+                          {currentUser?.role === 'ADMIN' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDrawerGoal((selectedCmt.goal && selectedCmt.goal !== 'Savings Goal') ? selectedCmt.goal : (goals[0]?.name || 'Savings'));
+                                setIsEditingGoal(true);
+                              }}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#2E5A44',
+                                cursor: 'pointer',
+                                padding: '1px 3px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                borderRadius: '3px'
+                              }}
+                              title="Edit Savings Goal"
+                            >
+                              <Edit size={11} />
+                            </button>
+                          )}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1949,6 +2052,30 @@ function CommitmentsContent() {
                       >
                         <ExternalLink size={14} />
                         <span>{currentUser?.role === 'ADMIN' ? "View Member's Full Profile" : "View My Profile"}</span>
+                      </button>
+
+                      {/* Edit Commitment Details */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditModal(selectedCmt)}
+                        style={{
+                          width: '100%',
+                          padding: '9px',
+                          backgroundColor: '#FFFFFF',
+                          color: '#2E5A44',
+                          border: '1px solid #2E5A44',
+                          borderRadius: '10px',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <Edit size={14} />
+                        <span>Edit Commitment Details</span>
                       </button>
 
                       <button
