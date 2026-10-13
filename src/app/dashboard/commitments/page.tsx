@@ -19,6 +19,7 @@ interface Commitment {
   endDate: string;
   status: 'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'NOT_YET_STARTED';
   createdAt: string;
+  payments?: Payment[];
 }
 
 interface Payment {
@@ -137,8 +138,15 @@ function CommitmentsContent() {
 
   const fetchInitialData = async () => {
     try {
-      // 1. Always fetch session first — this is the source of truth for role
-      const sessRes = await fetch('/api/auth/session');
+      // Parallelize all initial fetches concurrently
+      const [sessRes, meRes, cmtRes, settingsRes] = await Promise.all([
+        fetch('/api/auth/session'),
+        fetch('/api/admin/users'),
+        fetch('/api/admin/commitments'),
+        fetch('/api/admin/settings')
+      ]);
+
+      // 1. Session & Role
       if (sessRes.ok) {
         const sessData = await sessRes.json();
         if (sessData.loggedIn && sessData.user) {
@@ -150,61 +158,33 @@ function CommitmentsContent() {
         setCurrentUser({ id: 'member', role: 'MEMBER' });
       }
 
-      // 2. Fetch users list + commitments (admin-only endpoint)
-      const meRes = await fetch('/api/admin/users');
+      // 2. Users list
       if (meRes.ok) {
         const uList = await meRes.json();
-        setUsers(uList.filter((u: any) => u.role === 'MEMBER'));
+        if (Array.isArray(uList)) {
+          setUsers(uList.filter((u: any) => u.role === 'MEMBER'));
+        }
       }
 
-      // 3. Always fetch commitments (accessible by all logged-in users)
-      const cmtRes = await fetch('/api/admin/commitments');
-      if (cmtRes.ok) {
-        const cmtData = await cmtRes.json();
-        setCommitments(cmtData);
-      }
-
-      // 4. Fetch settings
-      const settingsRes = await fetch('/api/admin/settings');
+      // 3. Settings
       if (settingsRes.ok) {
         const sData = await settingsRes.json();
         setGoals(sData.savingGoals?.filter((g: any) => g.enabled) || []);
         setAmounts(sData.commitmentAmounts?.filter((a: any) => a.enabled) || []);
       }
 
-      // 5. Pre-load payments for all commitments so the dropdown shows correct state immediately
-      const allPaymentsRes = await fetch('/api/admin/payments');
-      if (allPaymentsRes.ok) {
-        const allPayments = await allPaymentsRes.json();
-        const newPaymentsMap: Record<string, Payment[]> = {};
-        
-        // Group payments by commitment ID
-        if (Array.isArray(allPayments)) {
-          allPayments.forEach((p: Payment) => {
-            if (!newPaymentsMap[p.commitmentId]) {
-              newPaymentsMap[p.commitmentId] = [];
-            }
-            newPaymentsMap[p.commitmentId].push(p);
+      // 4. Commitments + Payments (payments are already embedded in c.payments from backend)
+      if (cmtRes.ok) {
+        const cmtData = await cmtRes.json();
+        if (Array.isArray(cmtData)) {
+          setCommitments(cmtData);
+
+          const initialPaymentsMap: Record<string, Payment[]> = {};
+          cmtData.forEach((c: any) => {
+            initialPaymentsMap[c.id] = Array.isArray(c.payments) ? c.payments : [];
           });
+          setPaymentsMap(initialPaymentsMap);
         }
-        
-        // Ensure every fetched commitment at least has an empty array if no payments exist
-        if (cmtRes.ok) {
-          try {
-            // Re-fetch commitments quickly just for IDs since the original response body is used
-            const freshRes = await fetch('/api/admin/commitments');
-            if (freshRes.ok) {
-              const freshData = await freshRes.json();
-              freshData.forEach((cmt: any) => {
-                if (!newPaymentsMap[cmt.id]) {
-                  newPaymentsMap[cmt.id] = [];
-                }
-              });
-            }
-          } catch(e) {}
-        }
-        
-        setPaymentsMap(newPaymentsMap);
       }
     } catch (err) {
       console.error('Error fetching commitments page data:', err);
