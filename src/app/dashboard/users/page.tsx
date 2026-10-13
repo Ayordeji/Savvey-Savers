@@ -564,7 +564,7 @@ export default function ManageUsersPage() {
       if (res.ok) {
         fetchUsers();
         setActiveModal('NONE');
-        await dialog.alert('Fee Confirmed', `Membership fee payment of £${totalAmount.toFixed(2)} for ${selectedUser.name} has been confirmed and receipt email sent.`);
+        await dialog.alert('Fee Confirmed', `Membership fee payment of £${totalAmount.toFixed(2)} for ${selectedUser.name} has been confirmed.`);
       } else {
         const data = await res.json();
         setErrorMsg(data.error || 'Failed to confirm fee payment.');
@@ -3096,7 +3096,7 @@ export default function ManageUsersPage() {
             </h3>
             {errorMsg && <p style={{ color: '#dc2626', backgroundColor: '#fef2f2', border: '1px solid #fecaca', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center', fontWeight: 600 }}>{errorMsg}</p>}
             <p style={{ color: '#4b5563', fontSize: '0.925rem', marginBottom: '24px', lineHeight: 1.5 }}>
-              Are you sure you want to confirm membership fee payment of £{((parseFloat(feeBase) || 0) + (parseFloat(feeAdmin) || 0)).toFixed(2)} for {selectedUser.name} and send receipt email?
+              Are you sure you want to confirm membership fee payment of £{((parseFloat(feeBase) || 0) + (parseFloat(feeAdmin) || 0)).toFixed(2)} for {selectedUser.name}?
             </p>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>

@@ -203,15 +203,8 @@ export async function POST(request: Request) {
         }
       });
 
-      // Send Email confirmation
-      const paidAmount = (parsedAmount || recordToUpdate?.totalFee || 0).toFixed(2);
-      const emailYear = recordToUpdate?.year || new Date().getFullYear();
-      await sendTemplatedEmail("29", user.email, {
-        name: user.name,
-        amount: paidAmount,
-        membership_year: emailYear.toString(),
-        payment_received_date: paymentDate.toLocaleDateString('en-GB')
-      });
+      // Email notifications for membership fee confirmation are disabled per admin preference
+      // In-app notifications remain active so members see confirmation when logging into the platform
 
       // Create in-app notification
       await db.notification.create({ data: {

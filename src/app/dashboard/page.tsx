@@ -91,6 +91,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   let activeCommitmentsCount = 0;
   let pendingCommitmentsCount = 0;
   let totalCommitmentsCount = 0;
+  let outstandingCommitmentsCount = 0;
+  let totalOutstandingMonthsCount = 0;
+  let totalOutstandingAmount = 0;
   let activeUsersCount = 0;
   let invitedUsersCount = 0;
   let recentPayments: any[] = [];
@@ -167,6 +170,53 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     totalCommitmentsCount = yearCommitments.length;
     activeCommitmentsCount = yearCommitments.filter(c => c.status === 'ACTIVE').length;
     pendingCommitmentsCount = yearCommitments.filter(c => c.status === 'PENDING' || c.status === 'NOT_YET_STARTED').length;
+
+    // 2b. Outstanding payments calculation (active commitments with unconfirmed payments due to date)
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonthIdx = now.getMonth();
+
+    let maxDueMonthIdx = -1;
+    if (selectedYearNum < currentYear) {
+      maxDueMonthIdx = 11; // All 12 months for past years
+    } else if (selectedYearNum === currentYear) {
+      maxDueMonthIdx = currentMonthIdx; // Jan up to current month for the ongoing year
+    } else {
+      maxDueMonthIdx = -1; // Future year, nothing due yet
+    }
+
+    const monthOrderNames = [
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'
+    ];
+
+    if (maxDueMonthIdx >= 0) {
+      const activeYearCommitments = yearCommitments.filter(c => c.status === 'ACTIVE');
+      activeYearCommitments.forEach(c => {
+        const cPayments = relevantPayments.filter(
+          p => p.commitmentId === c.id && (Number(p.year) === selectedYearNum || !p.year)
+        );
+        const confirmedMonthNames = new Set(
+          cPayments.map(p => (p.month || '').toLowerCase().trim())
+        );
+
+        let missingMonthsForCommitment = 0;
+        for (let m = 0; m <= maxDueMonthIdx; m++) {
+          const mName = monthOrderNames[m];
+          const isConfirmed = m < cPayments.length || confirmedMonthNames.has(mName) ||
+            Array.from(confirmedMonthNames).some(cm => cm.startsWith(mName.slice(0, 3)));
+          if (!isConfirmed) {
+            missingMonthsForCommitment++;
+          }
+        }
+
+        if (missingMonthsForCommitment > 0) {
+          outstandingCommitmentsCount++;
+          totalOutstandingMonthsCount += missingMonthsForCommitment;
+          totalOutstandingAmount += missingMonthsForCommitment * (Number(c.amount) || 0);
+        }
+      });
+    }
 
     // 3. Harvests released / target
     const completedHarvests = relevantCommitments.filter(c =>
@@ -546,11 +596,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               </div>
             </Link>
 
-            {/* Pending Commitments */}
+            {/* Outstanding Payments (replacing Pending Commitments) */}
             <Link
-              href={`/dashboard/commitments?status=PENDING&year=${selectedYear}`}
+              href={`/dashboard/commitments?status=OUTSTANDING&year=${selectedYear}`}
               className="dashboard-clickable-card"
-              title={`View pending commitments for ${selectedYear}`}
+              title={`View active commitments with outstanding payments for ${selectedYear}`}
               style={{
                 background: 'linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%)',
                 borderRadius: '16px',
@@ -565,16 +615,18 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#92400E' }}>Pending Commitments</span>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#92400E' }}>Outstanding Payments</span>
                   <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #D97746 0%, #B45309 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', boxShadow: '0 3px 8px rgba(217, 119, 70, 0.3)' }}>
                     <Clock size={16} />
                   </div>
                 </div>
                 <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#78350F', marginTop: '6px' }}>
-                  {pendingCommitmentsCount} / {totalCommitmentsCount}
+                  {outstandingCommitmentsCount} / {activeCommitmentsCount}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#B45309', marginTop: '2px', fontWeight: 500 }}>
-                  {pendingCommitmentsCount === 0 ? 'All commitments confirmed' : `${pendingCommitmentsCount} awaiting confirmation`}
+                  {totalOutstandingMonthsCount === 0
+                    ? 'All monthly payments up to date'
+                    : `${totalOutstandingMonthsCount} unconfirmed months due (£${totalOutstandingAmount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`}
                 </div>
               </div>
             </Link>

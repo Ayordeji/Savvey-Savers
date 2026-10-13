@@ -90,6 +90,8 @@ function CommitmentsContent() {
   const [viewCmtLoading, setViewCmtLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [formSubmitting, setFormSubmitting] = useState(false);
+  const [selectedMonthsToConfirm, setSelectedMonthsToConfirm] = useState<string[]>([]);
+  const [isConfirmingMonths, setIsConfirmingMonths] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -248,6 +250,7 @@ function CommitmentsContent() {
 
   const handleOpenViewCommitmentModal = async (cmt: Commitment) => {
     setSelectedCmt(cmt);
+    setSelectedMonthsToConfirm([]);
     setViewCmtPayments(paymentsMap[cmt.id] || []);
     setViewCmtLoading(true);
     setDrawerOpen(true);
@@ -601,6 +604,97 @@ function CommitmentsContent() {
     }
   };
 
+  const handleToggleMonthSelection = (mName: string) => {
+    setSelectedMonthsToConfirm(prev =>
+      prev.includes(mName) ? prev.filter(m => m !== mName) : [...prev, mName]
+    );
+  };
+
+  const handleSelectAllDueMonths = () => {
+    if (!selectedCmt) return;
+    const cmtPayments = paymentsMap[selectedCmt.id] || viewCmtPayments || [];
+    const cYear = Number(selectedCmt.collectionYear) || currentYearNum;
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonthIdx = now.getMonth();
+
+    let maxIdx = 11;
+    if (cYear === currentYear) {
+      maxIdx = currentMonthIdx;
+    } else if (cYear > currentYear) {
+      maxIdx = -1;
+    }
+
+    if (maxIdx < 0) return;
+
+    const unconfirmedDue = monthNamesList.filter((mName, mIdx) => {
+      if (mIdx > maxIdx) return false;
+      const isPaid = mIdx < (cmtPayments.filter(p => p.status === 'CONFIRMED').length || 0) ||
+        cmtPayments.some(p => p.month?.toLowerCase().startsWith(mName.toLowerCase()) && p.status === 'CONFIRMED');
+      return !isPaid;
+    });
+
+    setSelectedMonthsToConfirm(unconfirmedDue);
+  };
+
+  const handleConfirmSelectedMonths = async () => {
+    if (!selectedCmt || currentUser?.role !== 'ADMIN' || selectedMonthsToConfirm.length === 0) return;
+
+    const sortedSelected = [...selectedMonthsToConfirm].sort((a, b) => {
+      const aIdx = monthNamesList.indexOf(a);
+      const bIdx = monthNamesList.indexOf(b);
+      return aIdx - bIdx;
+    });
+
+    const fullNames = sortedSelected.map(mName => months.find(m => m.toLowerCase().startsWith(mName.toLowerCase())) || mName);
+    const totalAmount = sortedSelected.length * Number(selectedCmt.amount);
+
+    const confirm = await dialog.confirm(
+      'Confirm Multiple Payments',
+      `Mark payments for ${fullNames.join(', ')} ${selectedCmt.collectionYear} (Total: £${totalAmount.toFixed(2)}) as received for ${selectedCmt.memberName}?\n\n(Note: Email receipts are muted; members access payment records directly on their portal).`,
+      `Confirm ${sortedSelected.length} Payment${sortedSelected.length > 1 ? 's' : ''}`,
+      'Cancel'
+    );
+    if (!confirm) return;
+
+    setIsConfirmingMonths(true);
+    try {
+      let successCount = 0;
+      for (const mName of sortedSelected) {
+        const fullMonthName = months.find(m => m.toLowerCase().startsWith(mName.toLowerCase())) || mName;
+        const res = await fetch('/api/admin/commitments/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'RECORD_PAST_PAYMENT',
+            commitmentId: selectedCmt.id,
+            month: fullMonthName,
+            year: selectedCmt.collectionYear,
+            amount: selectedCmt.amount,
+            sendNotification: 'no',
+            sendEmail: false
+          })
+        });
+        if (res.ok) {
+          successCount++;
+        }
+      }
+
+      await fetchPayments(selectedCmt.id);
+      await fetchInitialData();
+      setSelectedMonthsToConfirm([]);
+      await dialog.alert(
+        'Payments Recorded',
+        `Successfully confirmed payments for ${successCount} month${successCount > 1 ? 's' : ''} for ${selectedCmt.memberName}.`
+      );
+    } catch (err) {
+      console.error('Error confirming batch payments:', err);
+      await dialog.alert('Error', 'A network error occurred while confirming payments.');
+    } finally {
+      setIsConfirmingMonths(false);
+    }
+  };
+
   const handleDeleteCommitment = async (cmt: Commitment) => {
     setOpenDropdownId(null);
     const isCancelled = cmt.status === 'CANCELLED';
@@ -751,7 +845,52 @@ function CommitmentsContent() {
       matchesMonthYear = matchesPayoutMonth && matchesPayoutYear;
     }
 
-    const matchesStatus = !statusFilter || c.status === statusFilter;
+    let matchesStatus = true;
+    if (statusFilter === 'OUTSTANDING') {
+      if (c.status !== 'ACTIVE') {
+        matchesStatus = false;
+      } else {
+        const cYear = Number(c.collectionYear) || currentYearNum;
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonthIdx = now.getMonth();
+        
+        let maxMonthIdx = -1;
+        if (cYear < currentYear) {
+          maxMonthIdx = 11;
+        } else if (cYear === currentYear) {
+          maxMonthIdx = currentMonthIdx;
+        } else {
+          maxMonthIdx = -1;
+        }
+
+        if (maxMonthIdx < 0) {
+          matchesStatus = false;
+        } else {
+          const cPayments = paymentsMap[c.id] || [];
+          const confirmedCount = cPayments.filter(p => p.status === 'CONFIRMED' && (Number(p.year) === cYear || !p.year)).length;
+          const confirmedMonthNames = new Set(
+            cPayments
+              .filter(p => p.status === 'CONFIRMED' && (Number(p.year) === cYear || !p.year))
+              .map(p => (p.month || '').toLowerCase().trim())
+          );
+
+          let hasUnconfirmedDueMonth = false;
+          for (let m = 0; m <= maxMonthIdx; m++) {
+            const mName = months[m].toLowerCase();
+            const isConfirmed = m < confirmedCount || confirmedMonthNames.has(mName) || 
+              Array.from(confirmedMonthNames).some(cm => cm.startsWith(mName.slice(0, 3)));
+            if (!isConfirmed) {
+              hasUnconfirmedDueMonth = true;
+              break;
+            }
+          }
+          matchesStatus = hasUnconfirmedDueMonth;
+        }
+      }
+    } else if (statusFilter) {
+      matchesStatus = c.status === statusFilter;
+    }
 
     return matchesSearch && matchesMonthYear && matchesStatus;
   });
@@ -795,17 +934,25 @@ function CommitmentsContent() {
     return commitments.filter((c) => c.memberId === memberId && (c.status === 'ACTIVE' || c.status === 'PENDING'));
   };
 
-  // KPI card metrics
-  const activeCommitmentsCount = commitments.filter(c => c.status === 'ACTIVE').length;
-  const totalCommittedValue = commitments
+  // KPI card metrics (filtered by yearFilter when set)
+  const kpiCommitments = yearFilter
+    ? commitments.filter(c => c.collectionYear?.toString() === yearFilter)
+    : commitments;
+
+  const activeCommitmentsCount = kpiCommitments.filter(c => c.status === 'ACTIVE').length;
+  const totalCommittedValue = kpiCommitments
     .filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED')
     .reduce((sum, c) => sum + (Number(c.amount) || 0) * 12, 0);
-  const totalCollectedValue = Object.values(paymentsMap)
-    .flat()
-    .filter(p => p.status === 'CONFIRMED')
+
+  const kpiCommitmentIds = new Set(kpiCommitments.map(c => c.id));
+  const totalCollectedValue = Object.entries(paymentsMap)
+    .filter(([cmtId]) => !yearFilter || kpiCommitmentIds.has(cmtId))
+    .flatMap(([, payments]) => payments)
+    .filter(p => p.status === 'CONFIRMED' && (!yearFilter || p.year?.toString() === yearFilter))
     .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-  const completedPayoutsCount = commitments.filter(c => c.status === 'COMPLETED').length;
-  const totalPayoutsTarget = commitments.length;
+
+  const completedPayoutsCount = kpiCommitments.filter(c => c.status === 'COMPLETED').length;
+  const totalPayoutsTarget = kpiCommitments.length;
 
   const monthNamesList = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -928,7 +1075,9 @@ function CommitmentsContent() {
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
             {activeCommitmentsCount}
           </div>
-          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>All active commitments</span>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+            {yearFilter ? `${yearFilter} active commitments` : 'All active commitments'}
+          </span>
         </div>
 
         {/* Card 2: Total Committed Value */}
@@ -942,7 +1091,9 @@ function CommitmentsContent() {
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
             £{totalCommittedValue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Annual committed value</span>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+            {yearFilter ? `${yearFilter} committed value` : 'Annual committed value'}
+          </span>
         </div>
 
         {/* Card 3: Total Collected */}
@@ -956,7 +1107,9 @@ function CommitmentsContent() {
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
             £{totalCollectedValue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Current cycle collection</span>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+            {yearFilter ? `${yearFilter} total collection` : 'Total cycle collection'}
+          </span>
         </div>
 
         {/* Card 4: Payouts Completed */}
@@ -970,7 +1123,9 @@ function CommitmentsContent() {
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
             {completedPayoutsCount} / {totalPayoutsTarget}
           </div>
-          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Completed payouts</span>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+            {yearFilter ? `${yearFilter} completed payouts` : 'Completed payouts'}
+          </span>
         </div>
       </div>
 
@@ -1022,6 +1177,7 @@ function CommitmentsContent() {
             }}
           >
             <option value="">Statuses: All</option>
+            <option value="OUTSTANDING">Outstanding Payments</option>
             <option value="ACTIVE">Active</option>
             <option value="COMPLETED">Completed</option>
             <option value="NOT_YET_STARTED">Not Started</option>
@@ -1539,79 +1695,165 @@ function CommitmentsContent() {
                     </div>
                   </div>
 
-                  {/* Payment Progress Tracker (12 Month Pills) */}
+                  {/* Payment Progress Tracker (12 Month Pills with Multi-Select) */}
                   <div style={{ backgroundColor: '#FAF9F6', borderRadius: '14px', padding: '16px', border: '1px solid #ECE8E2' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827' }}>Payment Progress</span>
-                      <span style={{ fontSize: '0.72rem', color: '#6B7280' }}>
-                        {currentUser?.role === 'ADMIN' ? 'Click month to mark/unmark' : `${paidCount} of 12 completed`}
-                      </span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                      <div>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827' }}>Payment Progress</span>
+                        <span style={{ fontSize: '0.72rem', color: '#6B7280', marginLeft: '8px' }}>
+                          {paidCount} of 12 completed
+                        </span>
+                      </div>
+                      {currentUser?.role === 'ADMIN' && (
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button
+                            type="button"
+                            onClick={handleSelectAllDueMonths}
+                            style={{
+                              padding: '4px 8px',
+                              fontSize: '0.7rem',
+                              fontWeight: 600,
+                              backgroundColor: '#EAF5EE',
+                              color: '#2E5A44',
+                              border: '1px solid #A7F3D0',
+                              borderRadius: '6px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Select All Due
+                          </button>
+                          {selectedMonthsToConfirm.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedMonthsToConfirm([])}
+                              style={{
+                                padding: '4px 8px',
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                backgroundColor: '#F3F4F6',
+                                color: '#4B5563',
+                                border: '1px solid #E5E7EB',
+                                borderRadius: '6px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
 
-                    {/* Admin Email Notification Toggle */}
-                    {currentUser?.role === 'ADMIN' && (
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '8px 12px',
-                        backgroundColor: sendEmailNotification ? '#EFF6FF' : '#F3F4F6',
-                        borderRadius: '8px',
-                        marginBottom: '12px',
-                        border: sendEmailNotification ? '1px solid #BFDBFE' : '1px solid #E5E7EB'
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Mail size={14} style={{ color: sendEmailNotification ? '#2563EB' : '#6B7280' }} />
-                          <label htmlFor="drawerEmailToggle" style={{ fontSize: '0.75rem', fontWeight: 600, color: sendEmailNotification ? '#1E40AF' : '#4B5563', cursor: 'pointer', margin: 0 }}>
-                            Send confirmation email on updates
-                          </label>
-                        </div>
-                        <input
-                          id="drawerEmailToggle"
-                          type="checkbox"
-                          checked={sendEmailNotification}
-                          onChange={(e) => setSendEmailNotification(e.target.checked)}
-                          style={{ cursor: 'pointer', width: '15px', height: '15px', accentColor: '#2563EB' }}
-                          title="Toggle whether to dispatch email receipt when updating payments"
-                        />
-                      </div>
-                    )}
+                    {/* Muted Email Receipt Info */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 12px',
+                      backgroundColor: '#F9FAFB',
+                      borderRadius: '8px',
+                      marginBottom: '12px',
+                      border: '1px solid #E5E7EB',
+                      fontSize: '0.72rem',
+                      color: '#6B7280'
+                    }}>
+                      <Mail size={13} style={{ color: '#9CA3AF' }} />
+                      <span>Email receipts are muted. Members access payment receipts directly on their portal.</span>
+                    </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                       {monthNamesList.map((mName, mIdx) => {
                         const isPaid = mIdx < paidCount || cmtPayments.some(p => p.month?.toLowerCase().startsWith(mName.toLowerCase()) && p.status === 'CONFIRMED');
+                        const isSelected = selectedMonthsToConfirm.includes(mName);
                         const isCurrentDue = !isPaid && mIdx === paidCount;
 
                         return (
                           <button
                             key={mName}
                             type="button"
-                            onClick={() => currentUser?.role === 'ADMIN' && handleToggleMonthProgress(mName, mIdx)}
-                            title={currentUser?.role === 'ADMIN' ? (isPaid ? `Click to unmark ${mName}` : `Click to mark ${mName} as paid`) : undefined}
+                            onClick={() => {
+                              if (currentUser?.role !== 'ADMIN') return;
+                              if (isPaid) {
+                                handleToggleMonthProgress(mName, mIdx);
+                              } else {
+                                handleToggleMonthSelection(mName);
+                              }
+                            }}
+                            title={currentUser?.role === 'ADMIN' ? (isPaid ? `Click to unmark ${mName}` : isSelected ? `Deselect ${mName}` : `Select ${mName} to confirm`) : undefined}
                             style={{
                               padding: '8px 4px',
                               borderRadius: '8px',
                               textAlign: 'center',
                               fontSize: '0.72rem',
                               fontWeight: 600,
-                              backgroundColor: isPaid ? '#EAF5EE' : isCurrentDue ? '#FEF3C7' : '#FFFFFF',
-                              border: isPaid ? '1px solid #A7F3D0' : isCurrentDue ? '1px solid #FCD34D' : '1px solid #E5E7EB',
-                              color: isPaid ? '#2E7D32' : isCurrentDue ? '#B45309' : '#9CA3AF',
+                              backgroundColor: isSelected ? '#2E5A44' : isPaid ? '#EAF5EE' : isCurrentDue ? '#FEF3C7' : '#FFFFFF',
+                              border: isSelected ? '1.5px solid #1E3D2F' : isPaid ? '1px solid #A7F3D0' : isCurrentDue ? '1px solid #FCD34D' : '1px solid #E5E7EB',
+                              color: isSelected ? '#FFFFFF' : isPaid ? '#2E7D32' : isCurrentDue ? '#B45309' : '#9CA3AF',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               gap: '3px',
                               cursor: currentUser?.role === 'ADMIN' ? 'pointer' : 'default',
                               transition: 'all 0.15s ease',
-                              outline: 'none'
+                              outline: 'none',
+                              boxShadow: isSelected ? '0 2px 4px rgba(46, 90, 68, 0.25)' : 'none'
                             }}
                           >
-                            {isPaid && <Check size={11} strokeWidth={3} />}
+                            {(isPaid || isSelected) && <Check size={11} strokeWidth={3} />}
                             <span>{mName}</span>
                           </button>
                         );
                       })}
                     </div>
+
+                    {/* Batch Confirmation Action Bar */}
+                    {selectedMonthsToConfirm.length > 0 && currentUser?.role === 'ADMIN' && (
+                      <div style={{
+                        marginTop: '12px',
+                        padding: '12px',
+                        backgroundColor: '#F0FDF4',
+                        border: '1.5px solid #86EFAC',
+                        borderRadius: '10px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#166534' }}>
+                            {selectedMonthsToConfirm.length} Month{selectedMonthsToConfirm.length > 1 ? 's' : ''} Selected
+                          </span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#166534' }}>
+                            £{(selectedMonthsToConfirm.length * Number(selectedCmt.amount)).toFixed(2)}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#15803D' }}>
+                          Selected: {selectedMonthsToConfirm.join(', ')}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleConfirmSelectedMonths}
+                          disabled={isConfirmingMonths}
+                          style={{
+                            backgroundColor: '#2E5A44',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '9px 14px',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            cursor: isConfirmingMonths ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            opacity: isConfirmingMonths ? 0.7 : 1
+                          }}
+                        >
+                          <Check size={14} />
+                          <span>{isConfirmingMonths ? 'Confirming Payments...' : `Confirm ${selectedMonthsToConfirm.length} Payment${selectedMonthsToConfirm.length > 1 ? 's' : ''}`}</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Payment History List */}

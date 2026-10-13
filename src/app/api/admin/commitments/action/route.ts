@@ -20,11 +20,9 @@ export async function POST(request: Request) {
   try {
     const { action, commitmentId, paymentId, month, year, amount, memberId, receiptUrl, sendNotification, sendEmail } = await request.json();
 
-    const notifyByEmail =
-      sendEmail !== false &&
-      sendEmail !== 'no' &&
-      sendNotification !== false &&
-      sendNotification !== 'no';
+    // Monthly payment confirmation emails are disabled across the platform.
+    // Members can view their confirmed receipts and payment history directly on the dashboard portal.
+    const notifyByEmail = false;
 
     if (!action) {
       return NextResponse.json({ error: 'Action is required.' }, { status: 400 });
