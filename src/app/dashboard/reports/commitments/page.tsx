@@ -290,16 +290,18 @@ function CommitmentsReportContent() {
     currentPage * itemsPerPage
   );
 
-  // KPI summaries
-  const completedHarvests = commitments.filter(c => c.harvestReleasedAt !== null || (c.harvestAmount && Number(c.harvestAmount) > 0));
+  // KPI summaries (dynamically scoped to active filters)
+  const hasActiveFilters = Boolean(searchQuery.trim() || harvestFilter || paymentConfirmedFilter || periodFilter);
+
+  const completedHarvests = filteredCommitments.filter(c => c.harvestReleasedAt !== null || (c.harvestAmount && Number(c.harvestAmount) > 0));
   const totalHarvested = completedHarvests.length;
-  const totalHarvestReleasedAmount = completedHarvests.reduce((sum, c) => sum + ((Number(c.amount) || 0) * 12), 0);
+  const totalHarvestReleasedAmount = completedHarvests.reduce((sum, c) => sum + (c.harvestAmount && Number(c.harvestAmount) > 0 ? Number(c.harvestAmount) : ((Number(c.amount) || 0) * 12)), 0);
 
-  const pendingHarvests = commitments.filter(c => !c.harvestReleasedAt && (!c.harvestAmount || Number(c.harvestAmount) === 0) && c.status !== 'CANCELLED');
+  const pendingHarvests = filteredCommitments.filter(c => !c.harvestReleasedAt && (!c.harvestAmount || Number(c.harvestAmount) === 0) && c.status !== 'CANCELLED');
   const totalPendingHarvestsCount = pendingHarvests.length;
-  const totalPendingHarvestAmount = pendingHarvests.reduce((sum, c) => sum + (Number(c.amount) * 12), 0);
+  const totalPendingHarvestAmount = pendingHarvests.reduce((sum, c) => sum + ((Number(c.amount) || 0) * 12), 0);
 
-  const totalPoolValue = commitments.reduce((sum, c) => sum + (Number(c.amount) * 12), 0);
+  const totalPoolValue = filteredCommitments.reduce((sum, c) => sum + (c.harvestAmount && Number(c.harvestAmount) > 0 ? Number(c.harvestAmount) : ((Number(c.amount) || 0) * 12)), 0);
 
   const handleExportCSV = () => {
     if (filteredCommitments.length === 0) return;
@@ -385,8 +387,10 @@ function CommitmentsReportContent() {
               <FileText size={16} />
             </div>
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>{commitments.length}</div>
-          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Active &amp; completed cycles</span>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>{filteredCommitments.length}</div>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+            {hasActiveFilters ? `Filtered from ${commitments.length} total` : 'Active & completed cycles'}
+          </span>
         </div>
 
         <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -429,7 +433,9 @@ function CommitmentsReportContent() {
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
             £{totalPoolValue.toLocaleString('en-GB', { minimumFractionDigits: 0 })}
           </div>
-          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Total rotating commitment sum</span>
+          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+            {hasActiveFilters ? 'Filtered rotating pool sum' : 'Total rotating commitment sum'}
+          </span>
         </div>
       </div>
 
@@ -503,7 +509,7 @@ function CommitmentsReportContent() {
             <option value="2028">2028</option>
           </select>
 
-          {(searchQuery || harvestFilter || paymentConfirmedFilter || periodFilter) && (
+          {hasActiveFilters && (
             <button
               onClick={handleResetFilters}
               style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', fontSize: '0.8rem', color: '#6B7280', cursor: 'pointer', fontWeight: 500 }}
