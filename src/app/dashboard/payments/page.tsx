@@ -323,17 +323,8 @@ function PaymentsContent() {
     return filteredPayments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   }, [filteredPayments, currentPage, itemsPerPage]);
 
-  // KPI Calculations (scoped to selected month & year if filtered)
-  const scopedPayments = useMemo(() => {
-    if (monthFilter || yearFilter) {
-      return payments.filter(p => {
-        if (monthFilter && p.month !== monthFilter) return false;
-        if (yearFilter && p.year?.toString() !== yearFilter) return false;
-        return true;
-      });
-    }
-    return payments;
-  }, [payments, monthFilter, yearFilter]);
+  // KPI Calculations (scoped to all active filters: status, month, year, member, search)
+  const scopedPayments = filteredPayments;
 
   const receivedCount = scopedPayments.filter(p => p.status === 'CONFIRMED').length;
   const pendingCount = scopedPayments.filter(p => p.status === 'PENDING').length;
@@ -345,9 +336,16 @@ function PaymentsContent() {
     .filter(p => p.status === 'CONFIRMED')
     .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
-  const totalExpectedTarget = commitments
-    .filter(c => c.status === 'ACTIVE')
-    .reduce((sum, c) => sum + (Number(c.amount) || 0), 0) || totalCollectedThisMonth;
+  const totalExpectedTarget = useMemo(() => {
+    let activeCmts = commitments.filter(c => c.status === 'ACTIVE');
+    if (memberFilter) {
+      activeCmts = activeCmts.filter(c => {
+        const u = users.find(usr => usr.name === memberFilter);
+        return c.memberName === memberFilter || (u && c.memberId === u.id);
+      });
+    }
+    return activeCmts.reduce((sum, c) => sum + (Number(c.amount) || 0), 0) || totalCollectedThisMonth;
+  }, [commitments, memberFilter, users, totalCollectedThisMonth]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -484,9 +482,11 @@ function PaymentsContent() {
                 ? (monthFilter
                     ? `My Payments (${monthFilter}${yearFilter ? ' ' + yearFilter : ''})`
                     : (yearFilter ? `My Payments (${yearFilter})` : 'My Total Paid to Date'))
-                : (monthFilter
-                    ? `Total Collected (${monthFilter}${yearFilter ? ' ' + yearFilter : ''})`
-                    : (yearFilter ? `Total Collected (${yearFilter})` : 'Total Collected to Date'))}
+                : (memberFilter
+                    ? `Collected from ${memberFilter}${monthFilter ? ' (' + monthFilter + ')' : (yearFilter ? ' (' + yearFilter + ')' : '')}`
+                    : (monthFilter
+                        ? `Total Collected (${monthFilter}${yearFilter ? ' ' + yearFilter : ''})`
+                        : (yearFilter ? `Total Collected (${yearFilter})` : 'Total Collected to Date')))}
             </span>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Wallet size={16} />
