@@ -127,8 +127,9 @@ function CommitmentsContent() {
   const [formYear, setFormYear] = useState('2027');
   const [formStatus, setFormStatus] = useState<'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'NOT_YET_STARTED'>('ACTIVE');
 
-  // Reminder fields — now supports bulk (multiple commitments)
+  // Reminder fields — now supports bulk (multiple commitments) and template selection
   const [reminderCmtIds, setReminderCmtIds] = useState<string[]>([]);
+  const [reminderTemplateId, setReminderTemplateId] = useState<'14' | '27'>('27');
 
   // Past payment fields
   const [pastPayMonth, setPastPayMonth] = useState('January');
@@ -226,10 +227,27 @@ function CommitmentsContent() {
     setActiveModal('ADD');
   };
 
-  const handleOpenReminderModal = () => {
+  const handleOpenReminderModal = (presetTemplate?: '14' | '27' | any) => {
     setErrorMsg('');
-    // Pre-populate from selected IDs in table
-    setReminderCmtIds(selectedIds.length > 0 ? [...selectedIds] : []);
+    const chosenTemplate: '14' | '27' = presetTemplate === '14' || presetTemplate === '27' ? presetTemplate : '27';
+    setReminderTemplateId(chosenTemplate);
+    if (selectedIds.length > 0) {
+      setReminderCmtIds([...selectedIds]);
+    } else {
+      // Pre-select active commitments that do not have a confirmed payment for current month
+      const currentMonth = new Date().toLocaleString('en-GB', { month: 'long' });
+      const currentYr = new Date().getFullYear();
+      const unpaidCmts = commitments.filter(c => {
+        if (c.status !== 'ACTIVE' && c.status !== 'PENDING') return false;
+        const cPayments = paymentsMap[c.id] || [];
+        const hasConfirmed = cPayments.some(
+          p => p.month?.toLowerCase() === currentMonth.toLowerCase() && p.year === currentYr && p.status === 'CONFIRMED'
+        );
+        return !hasConfirmed;
+      }).map(c => c.id);
+
+      setReminderCmtIds(unpaidCmts.length > 0 ? unpaidCmts : commitments.filter(c => c.status === 'ACTIVE').map(c => c.id));
+    }
     setActiveModal('REMINDER');
   };
 
@@ -384,17 +402,19 @@ function CommitmentsContent() {
           body: JSON.stringify({
             action: 'SEND_REMINDER',
             memberId: cmt.memberId,
-            commitmentId: cmtId
+            commitmentId: cmtId,
+            templateId: reminderTemplateId
           })
         });
         if (res.ok) successCount++;
         else failCount++;
       }
 
+      const reminderLabel = reminderTemplateId === '27' ? 'overdue payment reminder' : 'payment reminder';
       if (failCount === 0) {
-        await dialog.alert('Reminders Dispatched', `Successfully sent ${successCount} payment reminder${successCount > 1 ? 's' : ''}!`);
+        await dialog.alert('Reminders Dispatched', `Successfully sent ${successCount} ${reminderLabel}${successCount > 1 ? 's' : ''}!`);
       } else {
-        await dialog.alert('Partial Success', `Sent ${successCount} reminders successfully. ${failCount} failed.`);
+        await dialog.alert('Partial Success', `Sent ${successCount} ${reminderLabel}s successfully. ${failCount} failed.`);
       }
       setActiveModal('NONE');
     } catch (err) {
@@ -2316,9 +2336,95 @@ function CommitmentsContent() {
             )}
 
             <form onSubmit={handleReminderSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Template Selection */}
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label" style={{ marginBottom: '8px', display: 'block' }}>Reminder Template</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setReminderTemplateId('27')}
+                    style={{
+                      padding: '10px 12px',
+                      borderRadius: '10px',
+                      border: reminderTemplateId === '27' ? '2px solid #D97706' : '1px solid var(--border-color)',
+                      backgroundColor: reminderTemplateId === '27' ? '#FEF3C7' : 'var(--bg-surface)',
+                      color: reminderTemplateId === '27' ? '#92400E' : 'var(--text-main)',
+                      fontWeight: 700,
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '2px'
+                    }}
+                  >
+                    <span>Overdue Payment Notice</span>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 400, opacity: 0.85 }}>Template 27 (Urgent Notice)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setReminderTemplateId('14')}
+                    style={{
+                      padding: '10px 12px',
+                      borderRadius: '10px',
+                      border: reminderTemplateId === '14' ? '2px solid #2E5A44' : '1px solid var(--border-color)',
+                      backgroundColor: reminderTemplateId === '14' ? 'rgba(46,90,68,0.1)' : 'var(--bg-surface)',
+                      color: reminderTemplateId === '14' ? '#2E5A44' : 'var(--text-main)',
+                      fontWeight: 700,
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '2px'
+                    }}
+                  >
+                    <span>Due Payment Reminder</span>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 400, opacity: 0.85 }}>Template 14 (Friendly Notice)</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Multi-select commitments */}
               <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Savings Commitments (select multiple)</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label className="form-label" style={{ margin: 0 }}>Recipients</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const currentMonth = new Date().toLocaleString('en-GB', { month: 'long' });
+                        const currentYr = new Date().getFullYear();
+                        const unpaid = commitments.filter(c => {
+                          if (c.status !== 'ACTIVE' && c.status !== 'PENDING') return false;
+                          const cPay = paymentsMap[c.id] || [];
+                          return !cPay.some(p => p.month?.toLowerCase() === currentMonth.toLowerCase() && p.year === currentYr && p.status === 'CONFIRMED');
+                        }).map(c => c.id);
+                        setReminderCmtIds(unpaid);
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#D97706', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                    >
+                      Select Unpaid This Month
+                    </button>
+                    <span style={{ color: 'var(--border-color)' }}>•</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const activeIds = commitments.filter(c => c.status === 'ACTIVE' || c.status === 'PENDING').map(c => c.id);
+                        if (reminderCmtIds.length === activeIds.length) {
+                          setReminderCmtIds([]);
+                        } else {
+                          setReminderCmtIds(activeIds);
+                        }
+                      }}
+                      style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+                    >
+                      {reminderCmtIds.length > 0 ? 'Clear' : 'Select All'}
+                    </button>
+                  </div>
+                </div>
+
                 <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', maxHeight: '240px', overflowY: 'auto', backgroundColor: 'var(--bg-surface)' }}>
                   {commitments.filter((c) => c.status === 'ACTIVE' || c.status === 'PENDING').map((c) => {
                     const isChecked = reminderCmtIds.includes(c.id);
@@ -2342,20 +2448,23 @@ function CommitmentsContent() {
                               setReminderCmtIds((prev) => prev.filter((id) => id !== c.id));
                             }
                           }}
-                          style={{ width: '16px', height: '16px', accentColor: '#2e3a4e', flexShrink: 0 }}
+                          style={{ width: '16px', height: '16px', accentColor: reminderTemplateId === '27' ? '#D97706' : '#2e3a4e', flexShrink: 0 }}
                         />
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1 }}>
                           <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-main)' }}>{c.memberName}</span>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                             {c.displayId || c.id} • £{c.amount}/mo • Payout: {c.collectionMonth} {c.collectionYear}
                           </span>
                         </div>
+                        <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                          £{c.amount}
+                        </span>
                       </label>
                     );
                   })}
                 </div>
                 {reminderCmtIds.length > 0 && (
-                  <p style={{ fontSize: '0.78rem', color: 'var(--primary)', marginTop: '6px', fontWeight: 600 }}>
+                  <p style={{ fontSize: '0.78rem', color: reminderTemplateId === '27' ? '#D97706' : 'var(--primary)', marginTop: '6px', fontWeight: 600 }}>
                     {reminderCmtIds.length} commitment{reminderCmtIds.length > 1 ? 's' : ''} selected
                   </p>
                 )}
@@ -2369,10 +2478,20 @@ function CommitmentsContent() {
                   type="submit"
                   disabled={formSubmitting || reminderCmtIds.length === 0}
                   className="btn btn-primary"
-                  style={{ flex: 1.2 }}
+                  style={{
+                    flex: 1.2,
+                    backgroundColor: reminderTemplateId === '27' ? '#D97706' : undefined,
+                    borderColor: reminderTemplateId === '27' ? '#D97706' : undefined
+                  }}
                 >
                   <BellRing size={16} />
-                  <span>{formSubmitting ? 'Sending...' : `Send ${reminderCmtIds.length > 1 ? `${reminderCmtIds.length} Reminders` : 'Reminder'}`}</span>
+                  <span>
+                    {formSubmitting
+                      ? 'Sending...'
+                      : reminderTemplateId === '27'
+                      ? `Send ${reminderCmtIds.length > 1 ? `${reminderCmtIds.length} Overdue Notices` : 'Overdue Notice'}`
+                      : `Send ${reminderCmtIds.length > 1 ? `${reminderCmtIds.length} Reminders` : 'Reminder'}`}
+                  </span>
                 </button>
               </div>
             </form>

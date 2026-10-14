@@ -22,7 +22,11 @@ import {
   Check,
   X,
   Copy,
-  ExternalLink
+  ExternalLink,
+  ChevronUp,
+  Bell,
+  Send,
+  Users
 } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import PaginationControls from '../PaginationControls';
@@ -56,6 +60,20 @@ interface User {
   name: string;
   email: string;
   role: string;
+}
+
+interface OverdueMember {
+  commitmentId: string;
+  displayId: string;
+  memberId: string;
+  memberName: string;
+  email: string;
+  userDisplayId: string | null;
+  userActive: boolean;
+  amount: number;
+  goal: string;
+  hasPendingPayment: boolean;
+  pendingPaymentId: string | null;
 }
 
 export default function PaymentsPage() {
@@ -109,6 +127,98 @@ function PaymentsContent() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Overdue Reminders Modal state
+  const [isOverdueModalOpen, setIsOverdueModalOpen] = useState(false);
+  const [overdueLoading, setOverdueLoading] = useState(false);
+  const [overdueSending, setOverdueSending] = useState(false);
+  const [overdueData, setOverdueData] = useState<{
+    month: string;
+    year: number;
+    template: any;
+    totalActive: number;
+    overdueCount: number;
+    overdueList: OverdueMember[];
+  } | null>(null);
+  const [selectedOverdueCmtIds, setSelectedOverdueCmtIds] = useState<string[]>([]);
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
+  const [overdueModalMonth, setOverdueModalMonth] = useState<string>(() => new Date().toLocaleString('en-GB', { month: 'long' }));
+  const [overdueModalYear, setOverdueModalYear] = useState<number>(() => new Date().getFullYear());
+
+  const fetchOverdueList = async (m: string, y: number) => {
+    setOverdueLoading(true);
+    try {
+      const res = await fetch(`/api/admin/payments/overdue-reminders?month=${encodeURIComponent(m)}&year=${y}`);
+      if (res.ok) {
+        const data = await res.json();
+        setOverdueData(data);
+        // Pre-select all overdue members who DO NOT have a pending payment waiting for approval
+        const defaultSelected = (data.overdueList || [])
+          .filter((item: OverdueMember) => !item.hasPendingPayment)
+          .map((item: OverdueMember) => item.commitmentId);
+        setSelectedOverdueCmtIds(defaultSelected);
+      } else {
+        await dialog.alert('Error', 'Failed to fetch overdue members list.');
+      }
+    } catch (err) {
+      console.error('Failed to fetch overdue data', err);
+      await dialog.alert('Error', 'Network error while fetching overdue data.');
+    } finally {
+      setOverdueLoading(false);
+    }
+  };
+
+  const handleOpenOverdueReminders = (targetMonth?: string, targetYear?: number) => {
+    const m = targetMonth || monthFilter || new Date().toLocaleString('en-GB', { month: 'long' });
+    const y = targetYear || (yearFilter ? parseInt(yearFilter, 10) : new Date().getFullYear());
+    setOverdueModalMonth(m);
+    setOverdueModalYear(y);
+    setIsOverdueModalOpen(true);
+    fetchOverdueList(m, y);
+  };
+
+  const handleSendOverdueReminders = async () => {
+    if (selectedOverdueCmtIds.length === 0) {
+      await dialog.alert('No Members Selected', 'Please select at least one overdue member to send a reminder to.');
+      return;
+    }
+
+    const confirmed = await dialog.confirm(
+      'Send Overdue Reminders?',
+      `Are you sure you want to send overdue payment reminder emails to ${selectedOverdueCmtIds.length} member${selectedOverdueCmtIds.length > 1 ? 's' : ''} for ${overdueModalMonth} ${overdueModalYear}?`
+    );
+    if (!confirmed) return;
+
+    setOverdueSending(true);
+    try {
+      const res = await fetch('/api/admin/payments/overdue-reminders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          commitmentIds: selectedOverdueCmtIds,
+          month: overdueModalMonth,
+          year: overdueModalYear
+        })
+      });
+
+      const result = await res.json();
+      if (res.ok && result.success) {
+        await dialog.alert(
+          'Reminders Dispatched',
+          `Successfully dispatched ${result.count} overdue payment reminder email${result.count > 1 ? 's' : ''} for ${overdueModalMonth} ${overdueModalYear}!`
+        );
+        setIsOverdueModalOpen(false);
+        fetchData();
+      } else {
+        await dialog.alert('Dispatch Failed', result.error || 'Failed to send overdue reminders.');
+      }
+    } catch (err) {
+      console.error('Error dispatching overdue reminders:', err);
+      await dialog.alert('Error', 'A network error occurred while sending reminders.');
+    } finally {
+      setOverdueSending(false);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -328,7 +438,32 @@ function PaymentsContent() {
 
   const receivedCount = scopedPayments.filter(p => p.status === 'CONFIRMED').length;
   const pendingCount = scopedPayments.filter(p => p.status === 'PENDING').length;
-  const overdueCount = 0; // In standard cycle, overdue is 0 when all active are verified
+  const currentMonthForOverdue = monthFilter || new Date().toLocaleString('en-GB', { month: 'long' });
+  const currentYearForOverdue = parseInt(yearFilter || new Date().getFullYear().toString(), 10);
+
+  const computedOverdueCmts = useMemo(() => {
+    let targetCmts = commitments.filter(c => c.status === 'ACTIVE');
+    if (currentUser?.role === 'MEMBER') {
+      targetCmts = targetCmts.filter(c => c.memberId === currentUser.id || c.memberName === currentUser.name);
+    } else if (memberFilter) {
+      targetCmts = targetCmts.filter(c => {
+        const u = users.find(usr => usr.name === memberFilter);
+        return c.memberName === memberFilter || (u && c.memberId === u.id);
+      });
+    }
+
+    return targetCmts.filter(c => {
+      const hasConfirmed = payments.some(
+        p => p.commitmentId === c.id &&
+             p.month?.toLowerCase() === currentMonthForOverdue.toLowerCase() &&
+             p.year === currentYearForOverdue &&
+             p.status === 'CONFIRMED'
+      );
+      return !hasConfirmed;
+    });
+  }, [commitments, payments, currentMonthForOverdue, currentYearForOverdue, currentUser, memberFilter, users]);
+
+  const overdueCount = computedOverdueCmts.length;
   const totalScopePayments = scopedPayments.length || 1;
   const receivedPct = Math.min(100, Math.round((receivedCount / totalScopePayments) * 100));
 
@@ -449,6 +584,41 @@ function PaymentsContent() {
         </div>
 
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {currentUser?.role === 'ADMIN' && (
+            <button
+              onClick={() => handleOpenOverdueReminders()}
+              style={{
+                backgroundColor: '#FEF3C7',
+                color: '#92400E',
+                border: '1px solid #FDE68A',
+                borderRadius: '10px',
+                padding: '9px 16px',
+                fontWeight: 600,
+                fontSize: '0.82rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer'
+              }}
+              title="Send overdue reminder emails to members who have not yet paid for this month"
+            >
+              <Mail size={15} />
+              <span>Send Overdue Reminders</span>
+              {overdueCount > 0 && (
+                <span style={{
+                  backgroundColor: '#D97706',
+                  color: '#FFFFFF',
+                  borderRadius: '999px',
+                  padding: '1px 6px',
+                  fontSize: '0.72rem',
+                  fontWeight: 700
+                }}>
+                  {overdueCount}
+                </span>
+              )}
+            </button>
+          )}
+
           <button
             onClick={handleExport}
             style={{
@@ -537,12 +707,35 @@ function PaymentsContent() {
         </div>
 
         {/* Card 4: Overdue / Status */}
-        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div 
+          onClick={currentUser?.role === 'ADMIN' ? () => handleOpenOverdueReminders() : undefined}
+          style={{ 
+            backgroundColor: '#FFFFFF', 
+            border: '1px solid #ECE8E2', 
+            borderRadius: '16px', 
+            padding: '20px', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '8px',
+            cursor: currentUser?.role === 'ADMIN' ? 'pointer' : 'default',
+            transition: 'all 0.15s ease'
+          }}
+          title={currentUser?.role === 'ADMIN' ? 'Click to view overdue members and send reminders' : undefined}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>
               {currentUser?.role === 'MEMBER' ? 'Account Status' : 'Overdue Payments'}
             </span>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ 
+              width: '32px', 
+              height: '32px', 
+              borderRadius: '50%', 
+              backgroundColor: overdueCount > 0 ? '#FEF3C7' : '#EAF5EE', 
+              color: overdueCount > 0 ? '#D97706' : '#2E7D32', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center' 
+            }}>
               <AlertCircle size={16} />
             </div>
           </div>
@@ -551,10 +744,14 @@ function PaymentsContent() {
               ? (overdueCount === 0 ? 'Up to Date' : `${overdueCount} Overdue`)
               : overdueCount}
           </div>
-          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+          <span style={{ 
+            fontSize: '0.75rem', 
+            color: overdueCount > 0 && currentUser?.role === 'ADMIN' ? '#D97706' : '#6B7280', 
+            fontWeight: overdueCount > 0 && currentUser?.role === 'ADMIN' ? 600 : 400 
+          }}>
             {currentUser?.role === 'MEMBER'
-              ? 'No outstanding payments'
-              : 'No overdue accounts'}
+              ? (overdueCount === 0 ? 'No outstanding payments' : `${overdueCount} payment pending`)
+              : (overdueCount === 0 ? 'All accounts up to date' : `${overdueCount} account${overdueCount > 1 ? 's' : ''} unpaid this month • Click to notify`)}
           </span>
         </div>
       </div>
@@ -1410,7 +1607,7 @@ function PaymentsContent() {
                 </button>
 
                 <button
-                  onClick={() => router.push('/dashboard/commitments')}
+                  onClick={() => handleOpenOverdueReminders()}
                   style={{
                     width: '100%',
                     padding: '10px 14px',
@@ -1427,7 +1624,7 @@ function PaymentsContent() {
                     justifyContent: 'space-between'
                   }}
                 >
-                  <span>Send Bulk Payment Reminder</span>
+                  <span>Send Overdue Reminders</span>
                   <Mail size={14} color="#6B7280" />
                 </button>
 
@@ -1457,6 +1654,357 @@ function PaymentsContent() {
           </div>
         ) : null}
       </div>
+
+      {/* --- OVERDUE PAYMENT REMINDERS MODAL --- */}
+      {isOverdueModalOpen && (
+        <div
+          className="modal-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsOverdueModalOpen(false); }}
+          style={{ zIndex: 10000 }}
+        >
+          <div
+            className="modal-content"
+            style={{
+              maxWidth: '680px',
+              width: '95%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              borderRadius: '20px',
+              padding: '28px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #ECE8E2',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              position: 'relative'
+            }}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setIsOverdueModalOpen(false)}
+              style={{
+                position: 'absolute',
+                right: '20px',
+                top: '20px',
+                color: '#6B7280',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px',
+                borderRadius: '6px'
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#FEF3C7', color: '#92400E', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Mail size={18} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+                Send Overdue Payment Reminders
+              </h3>
+            </div>
+            <p style={{ color: '#6B7280', fontSize: '0.85rem', margin: '4px 0 20px 0' }}>
+              Notify active members who have not yet submitted their monthly savings contribution.
+            </p>
+
+            {/* Month & Year Bar */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: '#FAF9F6',
+              border: '1px solid #ECE8E2',
+              borderRadius: '12px',
+              padding: '12px 16px',
+              marginBottom: '16px',
+              flexWrap: 'wrap',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#374151' }}>Target Month:</span>
+                <select
+                  value={overdueModalMonth}
+                  onChange={(e) => {
+                    setOverdueModalMonth(e.target.value);
+                    fetchOverdueList(e.target.value, overdueModalYear);
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #ECE8E2',
+                    backgroundColor: '#FFFFFF',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    color: '#111827',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {monthsList.map(m => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={overdueModalYear.toString()}
+                  onChange={(e) => {
+                    const y = parseInt(e.target.value, 10);
+                    setOverdueModalYear(y);
+                    fetchOverdueList(overdueModalMonth, y);
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #ECE8E2',
+                    backgroundColor: '#FFFFFF',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    color: '#111827',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {availableYears.map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ fontSize: '0.8rem', color: '#6B7280' }}>
+                {overdueLoading ? (
+                  <span>Checking payments...</span>
+                ) : (
+                  <span><strong>{overdueData?.overdueCount ?? 0}</strong> of {overdueData?.totalActive ?? 0} active unpaid</span>
+                )}
+              </div>
+            </div>
+
+            {/* Email Template Preview Toggle */}
+            <div style={{ marginBottom: '16px' }}>
+              <button
+                type="button"
+                onClick={() => setShowEmailPreview(!showEmailPreview)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#2E5A44',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: 0
+                }}
+              >
+                <span>{showEmailPreview ? 'Hide' : 'Preview'} Overdue Reminder Email Template</span>
+                {showEmailPreview ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+
+              {showEmailPreview && (
+                <div style={{
+                  marginTop: '10px',
+                  padding: '14px 16px',
+                  backgroundColor: '#FAF9F6',
+                  border: '1px solid #ECE8E2',
+                  borderRadius: '12px',
+                  fontSize: '0.82rem',
+                  color: '#374151',
+                  lineHeight: 1.5
+                }}
+                >
+                  <div style={{ fontWeight: 700, marginBottom: '6px', color: '#111827' }}>
+                    Subject: Overdue Payment Reminder
+                  </div>
+                  <div style={{ whiteSpace: 'pre-line', color: '#4B5563', fontSize: '0.8rem' }}>
+                    {`Dear {name},
+
+This is to inform you that your payment for ${overdueModalMonth} ${overdueModalYear} is now overdue. In order to avoid late payment charges and to ensure that we can release funds to the Network members due a collection this month in a timely manner, we kindly ask that you submit your payment within the next 24 hours please.
+
+If you continue to delay payments, we may be forced to remove you from the Network as stipulated in the terms of your Membership Agreement.
+
+Please note that we will never ask for your bank details via email or text messaging, if you receive such a request, please disregard and delete the message and notify your dedicated Platform Admin as soon as possible so that the relevant action can be taken.
+
+Kind Regards,
+Platform Support
+Savvey Savers Network`}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Overdue Members Selection List */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151' }}>
+                  Recipients ({selectedOverdueCmtIds.length} selected)
+                </span>
+                {overdueData && overdueData.overdueList.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedOverdueCmtIds.length === overdueData.overdueList.length) {
+                        setSelectedOverdueCmtIds([]);
+                      } else {
+                        setSelectedOverdueCmtIds(overdueData.overdueList.map(o => o.commitmentId));
+                      }
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#2E5A44',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {selectedOverdueCmtIds.length === overdueData.overdueList.length ? 'Deselect All' : 'Select All'}
+                  </button>
+                )}
+              </div>
+
+              {overdueLoading ? (
+                <div style={{ padding: '36px', textAlign: 'center', color: '#6B7280', fontSize: '0.85rem' }}>
+                  <div className="loading-spinner" style={{ margin: '0 auto 12px auto' }}></div>
+                  Scanning active commitments & payments for {overdueModalMonth} {overdueModalYear}...
+                </div>
+              ) : overdueData && overdueData.overdueList.length === 0 ? (
+                <div style={{
+                  padding: '36px',
+                  textAlign: 'center',
+                  backgroundColor: '#FAF9F6',
+                  borderRadius: '12px',
+                  border: '1px solid #ECE8E2'
+                }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px auto' }}>
+                    <CheckCircle size={20} />
+                  </div>
+                  <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: 700, color: '#111827' }}>
+                    All Payments Received!
+                  </h4>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#6B7280' }}>
+                    Every active member has a confirmed payment for {overdueModalMonth} {overdueModalYear}. No overdue reminders needed.
+                  </p>
+                </div>
+              ) : (
+                <div style={{
+                  border: '1px solid #ECE8E2',
+                  borderRadius: '12px',
+                  maxHeight: '280px',
+                  overflowY: 'auto',
+                  backgroundColor: '#FFFFFF'
+                }}>
+                  {overdueData?.overdueList.map((m) => {
+                    const isChecked = selectedOverdueCmtIds.includes(m.commitmentId);
+                    return (
+                      <label
+                        key={m.commitmentId}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '12px 14px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #ECE8E2',
+                          backgroundColor: isChecked ? 'rgba(254, 243, 199, 0.25)' : 'transparent',
+                          transition: 'background 0.1s ease'
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedOverdueCmtIds(prev => [...prev, m.commitmentId]);
+                            } else {
+                              setSelectedOverdueCmtIds(prev => prev.filter(id => id !== m.commitmentId));
+                            }
+                          }}
+                          style={{ width: '16px', height: '16px', accentColor: '#D97706', cursor: 'pointer', flexShrink: 0 }}
+                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, gap: '2px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#111827' }}>
+                              {m.memberName}
+                            </span>
+                            <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                              ({m.userDisplayId || m.displayId})
+                            </span>
+                            {m.hasPendingPayment && (
+                              <span style={{
+                                backgroundColor: '#FEF3C7',
+                                color: '#92400E',
+                                padding: '1px 8px',
+                                borderRadius: '999px',
+                                fontSize: '0.7rem',
+                                fontWeight: 600
+                              }}>
+                                Payment Pending Approval
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: '0.78rem', color: '#6B7280' }}>
+                            {m.email} • £{m.amount}/mo • {m.goal}
+                          </div>
+                        </div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#111827', flexShrink: 0 }}>
+                          £{m.amount}
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Actions */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setIsOverdueModalOpen(false)}
+                style={{
+                  padding: '10px 18px',
+                  backgroundColor: '#FAF9F6',
+                  color: '#374151',
+                  border: '1px solid #ECE8E2',
+                  borderRadius: '10px',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={overdueSending || selectedOverdueCmtIds.length === 0}
+                onClick={handleSendOverdueReminders}
+                style={{
+                  padding: '10px 22px',
+                  backgroundColor: selectedOverdueCmtIds.length === 0 ? '#E5E7EB' : '#D97706',
+                  color: selectedOverdueCmtIds.length === 0 ? '#9CA3AF' : '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: selectedOverdueCmtIds.length === 0 || overdueSending ? 'not-allowed' : 'pointer',
+                  boxShadow: selectedOverdueCmtIds.length > 0 ? '0 4px 12px rgba(217, 119, 6, 0.25)' : 'none'
+                }}
+              >
+                <Send size={16} />
+                <span>
+                  {overdueSending
+                    ? 'Dispatching Reminders...'
+                    : `Send ${selectedOverdueCmtIds.length} Overdue Reminder${selectedOverdueCmtIds.length === 1 ? '' : 's'}`}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { action, commitmentId, paymentId, month, year, amount, memberId, receiptUrl, sendNotification, sendEmail } = await request.json();
+    const { action, commitmentId, paymentId, month, year, amount, memberId, receiptUrl, sendNotification, sendEmail, templateId, memberIds, commitmentIds } = await request.json();
 
     // Monthly payment confirmation emails are disabled across the platform.
     // Members can view their confirmed receipts and payment history directly on the dashboard portal.
@@ -259,7 +259,8 @@ export async function POST(request: Request) {
 
     // --- Action 4: SEND_REMINDER ---
     if (action === 'SEND_REMINDER') {
-      const { memberIds, commitmentIds } = await request.json().catch(() => ({})) || {};
+      const chosenTemplate = String(templateId || '14') === '27' ? '27' : '14';
+      const isOverdue = chosenTemplate === '27';
       const targetMemberIds: string[] = Array.isArray(memberIds)
         ? memberIds
         : memberId
@@ -276,6 +277,7 @@ export async function POST(request: Request) {
       }
 
       let count = 0;
+      const currentMonthStr = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
 
       if (targetCommitmentIds.length > 0) {
         for (const cId of targetCommitmentIds) {
@@ -283,13 +285,15 @@ export async function POST(request: Request) {
           if (cmt) {
             const member = await db.user.findUnique({ where: { id: cmt.memberId } });
             if (member) {
-              await sendTemplatedEmail("14", member.email, {
+              await sendTemplatedEmail(chosenTemplate, member.email, {
                 name: member.name,
-                current_month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
+                current_month: currentMonthStr
               });
               await db.notification.create({ data: {
                 userId: member.id,
-                message: `Friendly reminder regarding your savings commitment "${cmt.goal}".`,
+                message: isOverdue
+                  ? `Overdue Notice: Your savings payment for ${currentMonthStr} is now overdue.`
+                  : `Friendly reminder regarding your savings commitment "${cmt.goal}".`,
                 type: 'REMINDER_SENT',
                 isRead: false
               } });
@@ -301,13 +305,15 @@ export async function POST(request: Request) {
         for (const mId of targetMemberIds) {
           const member = await db.user.findUnique({ where: { id: mId } });
           if (member) {
-            await sendTemplatedEmail("14", member.email, {
+            await sendTemplatedEmail(chosenTemplate, member.email, {
               name: member.name,
-              current_month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
+              current_month: currentMonthStr
             });
             await db.notification.create({ data: {
               userId: member.id,
-              message: `Friendly reminder sent by coordinator regarding your savings commitments.`,
+              message: isOverdue
+                ? `Overdue Notice: Your savings payment for ${currentMonthStr} is now overdue.`
+                : `Friendly reminder sent by coordinator regarding your savings commitments.`,
               type: 'REMINDER_SENT',
               isRead: false
             } });
@@ -317,8 +323,10 @@ export async function POST(request: Request) {
       }
 
       await db.auditLog.create({ data: {
-        action: 'SEND_REMINDER',
-        details: `Sent bulk contribution reminder emails to ${count} recipient(s).`,
+        action: isOverdue ? 'SEND_OVERDUE_REMINDER' : 'SEND_REMINDER',
+        details: isOverdue
+          ? `Sent bulk overdue contribution reminder emails to ${count} recipient(s).`
+          : `Sent bulk contribution reminder emails to ${count} recipient(s).`,
         userId: session.id
       } });
 
