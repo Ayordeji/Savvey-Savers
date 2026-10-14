@@ -452,8 +452,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         >
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#854D0E', fontSize: '0.85rem', fontWeight: 600 }}>
-                Total Savings Contributions
+              <span style={{ color: '#854D0E', fontSize: '0.9rem', fontWeight: 700 }}>
+                {isAdmin ? 'Total Savings Contributions' : 'My Total Savings Contributions'}
               </span>
               <div style={{
                 width: '36px',
@@ -474,9 +474,18 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               £{allTimeRevenue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
 
-            <div style={{ fontSize: '0.78rem', color: '#C2410C', marginTop: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span>{isAdmin ? 'All-time confirmed collections' : 'All-time confirmed savings pool'}</span>
-              <ArrowRight size={13} />
+            <div style={{
+              fontSize: '0.82rem',
+              color: '#57655c',
+              marginTop: '8px',
+              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '6px'
+            }}>
+              <span>{isAdmin ? 'All-time confirmed collections' : 'Total amount paid in since joining SSC.'}</span>
+              <ArrowRight size={16} color="#C2410C" />
             </div>
           </div>
         </Link>
