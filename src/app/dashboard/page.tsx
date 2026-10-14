@@ -194,7 +194,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       const activeYearCommitments = yearCommitments.filter(c => c.status === 'ACTIVE');
       activeYearCommitments.forEach(c => {
         const cPayments = relevantPayments.filter(
-          p => p.commitmentId === c.id && (Number(p.year) === selectedYearNum || !p.year)
+          p => p.commitmentId === c.id && (Number(p.year) === selectedYearNum || !p.year) && p.status === 'CONFIRMED'
         );
         const confirmedMonthNames = new Set(
           cPayments.map(p => (p.month || '').toLowerCase().trim())
@@ -1049,66 +1049,169 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         </div>
       )}
 
-      {/* 5. Attention Alert Banner */}
-      <div style={{
-        backgroundColor: '#FCF7ED',
-        border: '1px solid #F4E4C6',
-        borderRadius: '16px',
-        padding: '16px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '16px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8C5815', fontWeight: 700, fontSize: '0.9rem' }}>
-            <AlertTriangle size={18} />
-            <span>
-              {isAdmin
-                ? (invitedUsersCount > 0
-                    ? `${invitedUsersCount} pending action item${invitedUsersCount > 1 ? 's' : ''}`
-                    : 'All accounts and contributions are fully up to date')
+      {/* 4b. Member Combined Tile: "Your Account at a glance." */}
+      {!isAdmin && (
+        <div style={{
+          backgroundColor: '#0c4e43',
+          background: 'linear-gradient(145deg, #0c4e43 0%, #083830 100%)',
+          borderRadius: '18px',
+          padding: '24px 28px',
+          color: '#FFFFFF',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+          boxShadow: '0 10px 25px -4px rgba(12, 78, 67, 0.35)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Header row: Title + Pill Badge */}
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FFFFFF', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+              Your Account at a glance.
+            </h3>
+            <div style={{
+              padding: '6px 14px',
+              backgroundColor: totalOutstandingMonthsCount > 0 ? '#FEE2E2' : 'rgba(255, 255, 255, 0.15)',
+              border: totalOutstandingMonthsCount > 0 ? '1px solid #FECACA' : '1px solid rgba(255, 255, 255, 0.25)',
+              borderRadius: '9999px',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              color: totalOutstandingMonthsCount > 0 ? '#DC2626' : '#FFFFFF'
+            }}>
+              {totalOutstandingMonthsCount > 0
+                ? `${totalOutstandingMonthsCount} Payment${totalOutstandingMonthsCount > 1 ? 's' : ''} Due`
+                : `${activeCommitmentsCount} Active Commitment${activeCommitmentsCount === 1 ? '' : 's'}`}
+            </div>
+          </div>
+
+          {/* Center visual: Glowing ring with Check or Alert */}
+          <div style={{
+            position: 'relative',
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '22px 0 16px 0'
+          }}>
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              borderRadius: '50%',
+              border: totalOutstandingMonthsCount > 0 ? '2.5px solid #EF4444' : '2.5px solid #d97746',
+              boxShadow: totalOutstandingMonthsCount > 0
+                ? '0 0 20px rgba(239, 68, 68, 0.45)'
+                : '0 0 20px rgba(217, 119, 70, 0.45)'
+            }} />
+            {totalOutstandingMonthsCount > 0 ? (
+              <AlertTriangle size={36} color="#FFFFFF" strokeWidth={2.5} />
+            ) : (
+              <Check size={36} color="#FFFFFF" strokeWidth={3} />
+            )}
+          </div>
+
+          {/* Status Message */}
+          <div style={{ maxWidth: '580px', marginBottom: '22px' }}>
+            <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '6px' }}>
+              {totalOutstandingMonthsCount > 0
+                ? `${totalOutstandingMonthsCount} overdue contribution payment${totalOutstandingMonthsCount > 1 ? 's' : ''} (£${totalOutstandingAmount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`
                 : (activeCommitmentsCount > 0
                     ? 'Your savings contributions and account status are in good standing'
                     : 'Get started by exploring available savings commitments')}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.82rem', color: '#57655c' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#0c4e43' }} />
-              <span>0 overdue payments</span>
             </div>
-            {isAdmin && invitedUsersCount > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#d97746' }} />
-                <span>{invitedUsersCount} member invitation{invitedUsersCount > 1 ? 's' : ''} awaiting activation</span>
-              </div>
-            )}
+            <div style={{ color: '#c2d6cf', fontSize: '0.85rem' }}>
+              {totalOutstandingMonthsCount > 0
+                ? 'Please complete your scheduled monthly contributions to maintain your network standing and ensure timely harvest releases.'
+                : (activeCommitmentsCount > 0
+                    ? '0 overdue payments • Your personal savings cycle is active and on track.'
+                    : 'No active savings commitments currently found for this cycle year.')}
+            </div>
           </div>
-        </div>
 
-        <Link
-          href={isAdmin ? (invitedUsersCount > 0 ? "/dashboard/users?status=INVITED" : "/dashboard/commitments") : "/dashboard/commitments"}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            backgroundColor: '#0c4e43',
-            color: '#FFFFFF',
-            padding: '8px 18px',
-            borderRadius: '9999px',
-            fontSize: '0.82rem',
-            fontWeight: 600,
-            textDecoration: 'none',
-            transition: 'background-color 0.15s'
-          }}
-        >
-          <span>{isAdmin ? (invitedUsersCount > 0 ? "Review Invitations" : "View Commitments") : "View My Commitments"}</span>
-          <ArrowRight size={14} />
-        </Link>
-      </div>
+          {/* Action Button: "View all active commitments" */}
+          <Link
+            href="/dashboard/commitments"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              backgroundColor: '#FFFFFF',
+              color: '#0c4e43',
+              padding: '10px 24px',
+              borderRadius: '9999px',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              textDecoration: 'none',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              transition: 'transform 0.15s, box-shadow 0.15s'
+            }}
+          >
+            <span>View all active commitments</span>
+            <ArrowRight size={15} />
+          </Link>
+        </div>
+      )}
+
+      {/* 5. Admin Attention Alert Banner */}
+      {isAdmin && (
+        <div style={{
+          backgroundColor: '#FCF7ED',
+          border: '1px solid #F4E4C6',
+          borderRadius: '16px',
+          padding: '16px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8C5815', fontWeight: 700, fontSize: '0.9rem' }}>
+              <AlertTriangle size={18} />
+              <span>
+                {invitedUsersCount > 0
+                  ? `${invitedUsersCount} pending action item${invitedUsersCount > 1 ? 's' : ''}`
+                  : 'All accounts and contributions are fully up to date'}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.82rem', color: '#57655c' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#0c4e43' }} />
+                <span>0 overdue payments</span>
+              </div>
+              {invitedUsersCount > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#d97746' }} />
+                  <span>{invitedUsersCount} member invitation{invitedUsersCount > 1 ? 's' : ''} awaiting activation</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Link
+            href={invitedUsersCount > 0 ? "/dashboard/users?status=INVITED" : "/dashboard/commitments"}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: '#0c4e43',
+              color: '#FFFFFF',
+              padding: '8px 18px',
+              borderRadius: '9999px',
+              fontSize: '0.82rem',
+              fontWeight: 600,
+              textDecoration: 'none',
+              transition: 'background-color 0.15s'
+            }}
+          >
+            <span>{invitedUsersCount > 0 ? "Review Invitations" : "View Commitments"}</span>
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+      )}
 
       {/* 6. Recent Activity & Group Savings Metrics */}
       <div className="dashboard-activity-grid" style={{
