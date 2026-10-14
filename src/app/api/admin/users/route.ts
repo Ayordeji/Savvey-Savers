@@ -266,7 +266,7 @@ export async function POST(request: Request) {
     }
 
     // Handle email triggering using template settings
-    const host = request.headers.get('host') || 'savvey-savers.vercel.app';
+    const host = request.headers.get('host') || 'savveysavers.com';
     const protocol = request.headers.get('x-forwarded-proto') || 'https';
     const origin = `${protocol}://${host}`;
     const activationLink = `${origin}/activate?invite=${invitationId}`;
@@ -345,7 +345,7 @@ export async function PUT(request: Request) {
         data: { invitationId, invitationExpiresAt }
       });
 
-      const host = request.headers.get('host') || 'savvey-savers.vercel.app';
+      const host = request.headers.get('host') || 'savveysavers.com';
       const protocol = request.headers.get('x-forwarded-proto') || 'https';
       const origin = `${protocol}://${host}`;
       const link = body.action === 'send_reset' 
@@ -475,7 +475,9 @@ export async function PUT(request: Request) {
           const allUsers = await db.user.findMany();
           const superAdminUser = allUsers.find(u => u.isSuperAdmin === true || u.id === 'usr_admin');
           const superAdminEmail = superAdminUser?.email || 'savveysaverscollective@gmail.com';
-          const approvalLink = `https://savvey-savers.vercel.app/dashboard/users?approveSuperAdmin=${user.id}`;
+          const reqHost = request.headers.get('host') || 'savveysavers.com';
+          const reqProto = request.headers.get('x-forwarded-proto') || 'https';
+          const approvalLink = `${reqProto}://${reqHost}/dashboard/users?approveSuperAdmin=${user.id}`;
 
           await sendEmail({
             to: superAdminEmail,

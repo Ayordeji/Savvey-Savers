@@ -182,7 +182,7 @@ export async function POST(request: Request) {
     await db.waitingList.delete({ where: { id: waitingListId } });
 
     // Send Welcome Email
-    const host = request.headers.get('host') || 'savvey-savers.vercel.app';
+    const host = request.headers.get('host') || 'savveysavers.com';
     const protocol = request.headers.get('x-forwarded-proto') || 'https';
     const origin = `${protocol}://${host}`;
     const activationLink = `${origin}/activate?invite=${invitationId}`;

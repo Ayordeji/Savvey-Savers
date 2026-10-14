@@ -221,7 +221,7 @@ export async function POST(request: Request) {
       });
 
       if (member) {
-        const host = request.headers.get('host') || 'savvey-savers.vercel.app';
+        const host = request.headers.get('host') || 'savveysavers.com';
         const protocol = request.headers.get('x-forwarded-proto') || 'https';
         const origin = `${protocol}://${host}`;
         

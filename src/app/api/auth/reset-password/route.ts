@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       }
     });
 
-    const host = request.headers.get('host') || 'savvey-savers.vercel.app';
+    const host = request.headers.get('host') || 'savveysavers.com';
     const protocol = request.headers.get('x-forwarded-proto') || 'https';
     const origin = `${protocol}://${host}`;
     
@@ -50,7 +50,8 @@ export async function POST(request: Request) {
     });
 
     if (!sendResult.success) {
-      return NextResponse.json({ error: `Failed to send email: ${sendResult.error}` }, { status: 500 });
+      const errMsg = 'error' in sendResult ? (sendResult as any).error : 'Failed to send reset email';
+      return NextResponse.json({ error: `Failed to send email: ${errMsg}` }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
