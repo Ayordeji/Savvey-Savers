@@ -63,8 +63,8 @@ function ResetPasswordContent() {
       if (res.ok) {
         setSuccess(true);
         setTimeout(() => {
-          router.push('/');
-        }, 3000);
+          router.push('/login');
+        }, 2500);
       } else {
         setError(data.error || 'Failed to reset password.');
       }
@@ -78,7 +78,7 @@ function ResetPasswordContent() {
   if (success) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc' }}>
-        <div className="glass-panel" style={{ padding: '48px', textAlign: 'center', maxWidth: '450px', backgroundColor: '#ffffff', borderRadius: '16px' }}>
+        <div className="glass-panel" style={{ padding: '48px', textAlign: 'center', maxWidth: '450px', backgroundColor: '#ffffff', borderRadius: '16px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.08)' }}>
           <CheckCircle2 size={64} color="#10b981" style={{ margin: '0 auto 24px auto' }} />
           <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '16px', color: '#1e293b' }}>
             Password Reset Complete
@@ -86,6 +86,24 @@ function ResetPasswordContent() {
           <p style={{ color: '#64748b', fontSize: '1rem', lineHeight: 1.6, marginBottom: '24px' }}>
             Your password has been successfully updated. You will be redirected to the login page shortly.
           </p>
+          <Link
+            href="/login"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '12px 28px',
+              backgroundColor: '#2E5A44',
+              color: '#ffffff',
+              borderRadius: '10px',
+              fontWeight: 700,
+              fontSize: '0.92rem',
+              textDecoration: 'none',
+              boxShadow: '0 4px 12px rgba(46, 90, 68, 0.25)'
+            }}
+          >
+            Go to Login Now
+          </Link>
         </div>
       </div>
     );
