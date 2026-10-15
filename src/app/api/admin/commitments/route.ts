@@ -125,14 +125,15 @@ export async function GET() {
 
     const displayId = (c as any).displayId || (c.id && /^SC-\d+$/.test(c.id) ? c.id : c.id);
 
-    // Status driven by cycle year & harvest release
+    // Status driven by cycle year
     let status = c.status;
     if (status !== 'CANCELLED') {
-      if (c.harvestReleasedAt || c.status === 'COMPLETED' || c.collectionYear < currentYear) {
+      if (c.collectionYear < currentYear) {
         status = 'COMPLETED';
       } else if (c.collectionYear > currentYear) {
         status = 'NOT_YET_STARTED';
-      } else if (!status || status === 'NOT_YET_STARTED') {
+      } else {
+        // Current cycle year is ongoing and active
         status = 'ACTIVE';
       }
     }
