@@ -57,6 +57,7 @@ export async function GET() {
         name: user.name,
         email: user.email,
         role: user.role,
+        isSuperAdmin: Boolean(user.isSuperAdmin === true || (user.id === 'usr_admin' && user.isSuperAdmin !== false)),
         termsAccepted: Boolean(user.termsAccepted)
       }
     });

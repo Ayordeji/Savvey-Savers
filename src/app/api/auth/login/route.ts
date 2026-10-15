@@ -87,6 +87,7 @@ export async function POST(request: Request) {
         name: user.name,
         email: user.email,
         role: user.role,
+        isSuperAdmin: Boolean(user.isSuperAdmin === true || (user.id === 'usr_admin' && user.isSuperAdmin !== false)),
         isActive: user.isActive,
       }
     });

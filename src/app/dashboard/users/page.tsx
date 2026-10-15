@@ -43,6 +43,7 @@ export default function ManageUsersPage() {
   const handleResetFilters = () => {
     setSearchQuery('');
     setUserStatusFilter('');
+    setMembershipFilter('');
     setUsersPage(1);
   };
   const [loading, setLoading] = useState(true);
@@ -984,7 +985,18 @@ export default function ManageUsersPage() {
     if (!matchesStatus) return false;
 
     // Role / Membership matching
-    if (membershipFilter && u.role !== membershipFilter) return false;
+    if (membershipFilter) {
+      const isSuper = u.isSuperAdmin === true || (u.id === 'usr_admin' && u.isSuperAdmin !== false);
+      if (membershipFilter === 'SUPER_ADMIN') {
+        if (!isSuper) return false;
+      } else if (membershipFilter === 'ADMIN') {
+        if (u.role !== 'ADMIN' || isSuper) return false;
+      } else if (membershipFilter === 'MEMBER') {
+        if (u.role !== 'MEMBER') return false;
+      } else if (u.role !== membershipFilter) {
+        return false;
+      }
+    }
     
     if (!q) return true;
     return (
@@ -1316,8 +1328,9 @@ export default function ManageUsersPage() {
           }}
         >
           <option value="">All Roles</option>
-          <option value="ADMIN">ADMIN</option>
-          <option value="MEMBER">MEMBER</option>
+          <option value="SUPER_ADMIN">👑 Super Admin</option>
+          <option value="ADMIN">🛡️ Admin</option>
+          <option value="MEMBER">Member</option>
         </select>
 
         <button
@@ -1424,6 +1437,8 @@ export default function ManageUsersPage() {
                         const userCommitmentsCount = allCommitmentsList.filter((c: any) => c.memberId === u.id).length;
                         const initials = u.name.split(' ').filter(Boolean).map((n) => n[0]).join('').substring(0, 2).toUpperCase() || 'M';
                         const isPendingPayment = u.role !== 'ADMIN' && !u.membershipFeeConfirmed;
+                        const isSuper = u.isSuperAdmin === true || (u.id === 'usr_admin' && u.isSuperAdmin !== false);
+                        const isAdmin = u.role === 'ADMIN' && !isSuper;
 
                         return (
                           <tr
@@ -1438,7 +1453,7 @@ export default function ManageUsersPage() {
                           >
                             {/* Checkbox */}
                             <td style={{ paddingLeft: '16px' }} onClick={(e) => e.stopPropagation()}>
-                              {!u.isSuperAdmin && u.id !== currentUser?.id && (
+                              {!isSuper && u.id !== currentUser?.id && (
                                 <input
                                   type="checkbox"
                                   checked={selectedUserIds.includes(u.id)}
@@ -1455,7 +1470,8 @@ export default function ManageUsersPage() {
                                   width: '38px',
                                   height: '38px',
                                   borderRadius: '50%',
-                                  backgroundColor: '#1E3A2F',
+                                  backgroundColor: isSuper ? '#D97706' : isAdmin ? '#1D4ED8' : '#1E3A2F',
+                                  boxShadow: isSuper ? '0 0 0 2px #FCD34D' : isAdmin ? '0 0 0 2px #93C5FD' : 'none',
                                   color: '#FFFFFF',
                                   display: 'flex',
                                   alignItems: 'center',
@@ -1467,8 +1483,43 @@ export default function ManageUsersPage() {
                                   {initials}
                                 </div>
                                 <div>
-                                  <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#111827' }}>
-                                    {u.name}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#111827' }}>
+                                      {u.name}
+                                    </span>
+                                    {isSuper ? (
+                                      <span style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '3px',
+                                        padding: '1px 6px',
+                                        borderRadius: '9999px',
+                                        fontSize: '0.68rem',
+                                        fontWeight: 800,
+                                        backgroundColor: '#FEF3C7',
+                                        color: '#92400E',
+                                        border: '1px solid #FCD34D',
+                                        lineHeight: 1.2
+                                      }}>
+                                        👑 Super Admin
+                                      </span>
+                                    ) : isAdmin ? (
+                                      <span style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '3px',
+                                        padding: '1px 6px',
+                                        borderRadius: '9999px',
+                                        fontSize: '0.68rem',
+                                        fontWeight: 700,
+                                        backgroundColor: '#EFF6FF',
+                                        color: '#1D4ED8',
+                                        border: '1px solid #BFDBFE',
+                                        lineHeight: 1.2
+                                      }}>
+                                        🛡️ Admin
+                                      </span>
+                                    ) : null}
                                   </div>
                                   <div style={{ fontSize: '0.72rem', color: '#9CA3AF', fontFamily: 'monospace' }}>
                                     {u.displayId || u.invitationId || u.id}
@@ -1482,18 +1533,51 @@ export default function ManageUsersPage() {
 
                             {/* Role */}
                             <td style={{ padding: '14px' }}>
-                              <span style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                padding: '3px 8px',
-                                borderRadius: '6px',
-                                fontSize: '0.72rem',
-                                fontWeight: 700,
-                                backgroundColor: u.role === 'ADMIN' ? '#EFF6FF' : '#F3F4F6',
-                                color: u.role === 'ADMIN' ? '#1D4ED8' : '#4B5563'
-                              }}>
-                                {u.role || 'MEMBER'}
-                              </span>
+                              {isSuper ? (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  padding: '4px 10px',
+                                  borderRadius: '6px',
+                                  fontSize: '0.74rem',
+                                  fontWeight: 800,
+                                  backgroundColor: '#FEF3C7',
+                                  color: '#92400E',
+                                  border: '1px solid #FCD34D'
+                                }}>
+                                  👑 SUPER ADMIN
+                                </span>
+                              ) : isAdmin ? (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  padding: '4px 10px',
+                                  borderRadius: '6px',
+                                  fontSize: '0.74rem',
+                                  fontWeight: 700,
+                                  backgroundColor: '#EFF6FF',
+                                  color: '#1D4ED8',
+                                  border: '1px solid #BFDBFE'
+                                }}>
+                                  🛡️ ADMIN
+                                </span>
+                              ) : (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '4px 10px',
+                                  borderRadius: '6px',
+                                  fontSize: '0.74rem',
+                                  fontWeight: 600,
+                                  backgroundColor: '#F3F4F6',
+                                  color: '#4B5563',
+                                  border: '1px solid #E5E7EB'
+                                }}>
+                                  MEMBER
+                                </span>
+                              )}
                             </td>
 
                             {/* Membership */}
@@ -1663,98 +1747,137 @@ export default function ManageUsersPage() {
             </div>
 
             {/* Profile Avatar & Details */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{
-                  width: '54px',
-                  height: '54px',
-                  borderRadius: '50%',
-                  backgroundColor: '#1B4332',
-                  color: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  fontSize: '1.25rem',
-                  flexShrink: 0
-                }}>
-                  {selectedUser.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                </div>
+            {(() => {
+              const isDrawerSuper = selectedUser.isSuperAdmin === true || (selectedUser.id === 'usr_admin' && selectedUser.isSuperAdmin !== false);
+              const isDrawerAdmin = selectedUser.role === 'ADMIN' && !isDrawerSuper;
+
+              return (
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827' }}>
-                      {selectedUser.name}
-                    </span>
-                    <span style={{
-                      padding: '2px 8px',
-                      borderRadius: '9999px',
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                      backgroundColor: selectedUser.isActive ? '#EAF5EE' : '#FEF3C7',
-                      color: selectedUser.isActive ? '#2E7D32' : '#B45309'
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{
+                      width: '54px',
+                      height: '54px',
+                      borderRadius: '50%',
+                      backgroundColor: isDrawerSuper ? '#D97706' : isDrawerAdmin ? '#1D4ED8' : '#1B4332',
+                      boxShadow: isDrawerSuper ? '0 0 0 3px #FCD34D' : isDrawerAdmin ? '0 0 0 3px #93C5FD' : 'none',
+                      color: '#FFFFFF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 700,
+                      fontSize: '1.25rem',
+                      flexShrink: 0
                     }}>
-                      {selectedUser.isActive ? 'Active' : 'Invited'}
-                    </span>
+                      {selectedUser.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827' }}>
+                          {selectedUser.name}
+                        </span>
+                        {isDrawerSuper ? (
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            padding: '2px 8px',
+                            borderRadius: '9999px',
+                            fontSize: '0.7rem',
+                            fontWeight: 800,
+                            backgroundColor: '#FEF3C7',
+                            color: '#92400E',
+                            border: '1px solid #FCD34D'
+                          }}>
+                            👑 Super Admin
+                          </span>
+                        ) : isDrawerAdmin ? (
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            padding: '2px 8px',
+                            borderRadius: '9999px',
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            backgroundColor: '#EFF6FF',
+                            color: '#1D4ED8',
+                            border: '1px solid #BFDBFE'
+                          }}>
+                            🛡️ Admin
+                          </span>
+                        ) : null}
+                        <span style={{
+                          padding: '2px 8px',
+                          borderRadius: '9999px',
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          backgroundColor: selectedUser.isActive ? '#EAF5EE' : '#FEF3C7',
+                          color: selectedUser.isActive ? '#2E7D32' : '#B45309'
+                        }}>
+                          {selectedUser.isActive ? 'Active' : 'Invited'}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#6B7280', fontFamily: 'monospace', marginTop: '2px' }}>
+                        {selectedUser.displayId || selectedUser.invitationId || selectedUser.id}
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#6B7280', fontFamily: 'monospace', marginTop: '2px' }}>
-                    {selectedUser.displayId || selectedUser.invitationId || selectedUser.id}
+
+                  <div style={{ fontSize: '0.78rem', color: '#6B7280', marginTop: '10px' }}>
+                    {selectedUser.email} {selectedUser.phone ? `• ${selectedUser.phone}` : ''}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#9CA3AF', marginTop: '2px' }}>
+                    {selectedUser.createdAt ? `Member since ${new Date(selectedUser.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}` : ''}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
+                    <button
+                      onClick={() => handleOpenEditModal(selectedUser)}
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        padding: '8px 14px',
+                        backgroundColor: '#FFFFFF',
+                        border: '1px solid #ECE8E2',
+                        borderRadius: '8px',
+                        fontSize: '0.82rem',
+                        fontWeight: 600,
+                        color: '#374151',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <Edit size={14} />
+                      <span>Edit Member</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleOpenRequestFeeModal(selectedUser)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                        padding: '8px 14px',
+                        backgroundColor: '#FFFFFF',
+                        border: '1px solid #ECE8E2',
+                        borderRadius: '8px',
+                        fontSize: '0.82rem',
+                        fontWeight: 600,
+                        color: '#374151',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <span>More</span>
+                      <ChevronDown size={14} />
+                    </button>
                   </div>
                 </div>
-              </div>
-
-              <div style={{ fontSize: '0.78rem', color: '#6B7280', marginTop: '10px' }}>
-                {selectedUser.email} {selectedUser.phone ? `• ${selectedUser.phone}` : ''}
-              </div>
-              <div style={{ fontSize: '0.72rem', color: '#9CA3AF', marginTop: '2px' }}>
-                {selectedUser.createdAt ? `Member since ${new Date(selectedUser.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}` : ''}
-              </div>
-
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
-                <button
-                  onClick={() => handleOpenEditModal(selectedUser)}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    padding: '8px 14px',
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid #ECE8E2',
-                    borderRadius: '8px',
-                    fontSize: '0.82rem',
-                    fontWeight: 600,
-                    color: '#374151',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Edit size={14} />
-                  <span>Edit Member</span>
-                </button>
-
-                <button
-                  onClick={() => handleOpenRequestFeeModal(selectedUser)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px',
-                    padding: '8px 14px',
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid #ECE8E2',
-                    borderRadius: '8px',
-                    fontSize: '0.82rem',
-                    fontWeight: 600,
-                    color: '#374151',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <span>More</span>
-                  <ChevronDown size={14} />
-                </button>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* Drawer Tabs Bar */}
             <div style={{
@@ -2002,7 +2125,61 @@ export default function ManageUsersPage() {
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ color: '#6B7280' }}>Role</span>
-                      <span style={{ color: '#111827', fontWeight: 600 }}>{selectedUser.role || 'MEMBER'}</span>
+                      {(() => {
+                        const isSuper = selectedUser.isSuperAdmin === true || (selectedUser.id === 'usr_admin' && selectedUser.isSuperAdmin !== false);
+                        const isAdmin = selectedUser.role === 'ADMIN' && !isSuper;
+                        if (isSuper) {
+                          return (
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
+                              fontWeight: 800,
+                              backgroundColor: '#FEF3C7',
+                              color: '#92400E',
+                              border: '1px solid #FCD34D'
+                            }}>
+                              👑 Super Admin
+                            </span>
+                          );
+                        }
+                        if (isAdmin) {
+                          return (
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              backgroundColor: '#EFF6FF',
+                              color: '#1D4ED8',
+                              border: '1px solid #BFDBFE'
+                            }}>
+                              🛡️ Admin
+                            </span>
+                          );
+                        }
+                        return (
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            padding: '2px 8px',
+                            borderRadius: '6px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            backgroundColor: '#F3F4F6',
+                            color: '#4B5563',
+                            border: '1px solid #E5E7EB'
+                          }}>
+                            Member
+                          </span>
+                        );
+                      })()}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ color: '#6B7280' }}>Joined On</span>

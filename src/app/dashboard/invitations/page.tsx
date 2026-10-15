@@ -14,6 +14,7 @@ interface User {
   phone: string;
   role: 'ADMIN' | 'MEMBER';
   isActive: boolean;
+  isSuperAdmin?: boolean;
   membership?: string;
   membershipFeeConfirmed?: boolean;
   createdAt: string;
@@ -344,8 +345,15 @@ export default function MyInvitationsPage() {
       if (statusFilter === 'EXPIRED' || statusFilter === 'DECLINED') return false;
     }
 
-    if (roleFilter && u.role !== roleFilter) {
-      return false;
+    if (roleFilter) {
+      const isSuper = u.isSuperAdmin === true || (u.id === 'usr_admin' && u.isSuperAdmin !== false);
+      if (roleFilter === 'SUPER_ADMIN') {
+        if (!isSuper) return false;
+      } else if (roleFilter === 'ADMIN') {
+        if (u.role !== 'ADMIN' || isSuper) return false;
+      } else if (roleFilter === 'MEMBER') {
+        if (u.role !== 'MEMBER') return false;
+      }
     }
 
     const q = searchQuery.toLowerCase().trim();
@@ -575,8 +583,9 @@ export default function MyInvitationsPage() {
             }}
           >
             <option value="">Roles: All</option>
+            <option value="SUPER_ADMIN">👑 Super Admin</option>
+            <option value="ADMIN">🛡️ Admin</option>
             <option value="MEMBER">Member</option>
-            <option value="ADMIN">Admin</option>
           </select>
 
           {(searchQuery || statusFilter || roleFilter) && (
@@ -659,6 +668,8 @@ export default function MyInvitationsPage() {
                       const dateSent = new Date(u.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
                       const expiresOn = new Date(new Date(u.createdAt).getTime() + 14 * 86400000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
                       const isRowSelected = selectedUser?.id === u.id && drawerOpen;
+                      const isSuper = u.isSuperAdmin === true || (u.id === 'usr_admin' && u.isSuperAdmin !== false);
+                      const isAdmin = u.role === 'ADMIN' && !isSuper;
 
                       return (
                         <tr
@@ -711,7 +722,8 @@ export default function MyInvitationsPage() {
                                 width: '36px',
                                 height: '36px',
                                 borderRadius: '50%',
-                                backgroundColor: '#1B4332',
+                                backgroundColor: isSuper ? '#D97706' : isAdmin ? '#1D4ED8' : '#1B4332',
+                                boxShadow: isSuper ? '0 0 0 2px #FCD34D' : isAdmin ? '0 0 0 2px #93C5FD' : 'none',
                                 color: '#FFFFFF',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -723,8 +735,43 @@ export default function MyInvitationsPage() {
                                 {initials}
                               </div>
                               <div>
-                                <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.88rem' }}>
-                                  {u.name}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ fontWeight: 600, color: '#111827', fontSize: '0.88rem' }}>
+                                    {u.name}
+                                  </span>
+                                  {isSuper ? (
+                                    <span style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                      padding: '1px 6px',
+                                      borderRadius: '9999px',
+                                      fontSize: '0.68rem',
+                                      fontWeight: 800,
+                                      backgroundColor: '#FEF3C7',
+                                      color: '#92400E',
+                                      border: '1px solid #FCD34D',
+                                      lineHeight: 1.2
+                                    }}>
+                                      👑 Super Admin
+                                    </span>
+                                  ) : isAdmin ? (
+                                    <span style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                      padding: '1px 6px',
+                                      borderRadius: '9999px',
+                                      fontSize: '0.68rem',
+                                      fontWeight: 700,
+                                      backgroundColor: '#EFF6FF',
+                                      color: '#1D4ED8',
+                                      border: '1px solid #BFDBFE',
+                                      lineHeight: 1.2
+                                    }}>
+                                      🛡️ Admin
+                                    </span>
+                                  ) : null}
                                 </div>
                                 <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
                                   {u.email}
@@ -735,9 +782,41 @@ export default function MyInvitationsPage() {
 
                           {/* Role */}
                           <td style={{ padding: '14px 16px' }}>
-                            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>
-                              {u.role === 'ADMIN' ? 'ADMIN' : 'CONTRIBUTING MEMBER'}
-                            </span>
+                            {isSuper ? (
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                                fontSize: '0.74rem',
+                                fontWeight: 800,
+                                backgroundColor: '#FEF3C7',
+                                color: '#92400E',
+                                border: '1px solid #FCD34D'
+                              }}>
+                                👑 SUPER ADMIN
+                              </span>
+                            ) : isAdmin ? (
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                                fontSize: '0.74rem',
+                                fontWeight: 700,
+                                backgroundColor: '#EFF6FF',
+                                color: '#1D4ED8',
+                                border: '1px solid #BFDBFE'
+                              }}>
+                                🛡️ ADMIN
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>
+                                CONTRIBUTING MEMBER
+                              </span>
+                            )}
                           </td>
 
                           {/* Status */}
@@ -913,6 +992,8 @@ export default function MyInvitationsPage() {
               const expiresOn = expiryDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
               const daysLeft = Math.max(0, Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
               const cmt = commitmentsMap[selectedUser.id] || commitmentsMap[selectedUser.email] || commitmentsMap[selectedUser.name.toLowerCase()];
+              const isSuper = selectedUser.isSuperAdmin === true || (selectedUser.id === 'usr_admin' && selectedUser.isSuperAdmin !== false);
+              const isAdmin = selectedUser.role === 'ADMIN' && !isSuper;
 
               return (
                 <>
@@ -936,7 +1017,8 @@ export default function MyInvitationsPage() {
                       width: '48px',
                       height: '48px',
                       borderRadius: '50%',
-                      backgroundColor: '#1B4332',
+                      backgroundColor: isSuper ? '#D97706' : isAdmin ? '#1D4ED8' : '#1B4332',
+                      boxShadow: isSuper ? '0 0 0 3px #FCD34D' : isAdmin ? '0 0 0 3px #93C5FD' : 'none',
                       color: '#FFFFFF',
                       display: 'flex',
                       alignItems: 'center',
@@ -952,6 +1034,37 @@ export default function MyInvitationsPage() {
                         <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#111827' }}>
                           {selectedUser.name}
                         </span>
+                        {isSuper ? (
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            padding: '1px 6px',
+                            borderRadius: '9999px',
+                            fontSize: '0.68rem',
+                            fontWeight: 800,
+                            backgroundColor: '#FEF3C7',
+                            color: '#92400E',
+                            border: '1px solid #FCD34D'
+                          }}>
+                            👑 Super Admin
+                          </span>
+                        ) : isAdmin ? (
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            padding: '1px 6px',
+                            borderRadius: '9999px',
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            backgroundColor: '#EFF6FF',
+                            color: '#1D4ED8',
+                            border: '1px solid #BFDBFE'
+                          }}>
+                            🛡️ Admin
+                          </span>
+                        ) : null}
                         <span style={{
                           padding: '2px 8px',
                           borderRadius: '9999px',
@@ -968,7 +1081,7 @@ export default function MyInvitationsPage() {
                           {displayId}
                         </span>
                         <span style={{ fontSize: '0.72rem', color: '#6B7280' }}>
-                          • {selectedUser.role === 'ADMIN' ? 'Admin' : 'Contributing Member'}
+                          • {isSuper ? 'Super Admin' : selectedUser.role === 'ADMIN' ? 'Admin' : 'Contributing Member'}
                         </span>
                       </div>
                       {selectedUser.email && (

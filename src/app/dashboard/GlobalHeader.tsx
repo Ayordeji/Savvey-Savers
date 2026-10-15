@@ -14,6 +14,7 @@ interface GlobalHeaderProps {
     role: string;
     membership?: string;
     displayId?: string;
+    isSuperAdmin?: boolean;
   };
   unreadCount: number;
 }
@@ -233,6 +234,9 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
     .substring(0, 2)
     .toUpperCase() || 'PI';
 
+  const isSuperAdmin = Boolean(user.isSuperAdmin || (user.id === 'usr_admin' && user.isSuperAdmin !== false));
+  const isAdmin = user.role === 'ADMIN' && !isSuperAdmin;
+
   // Listen to open-resource-modal events from Sidebar
   useEffect(() => {
     const handleResourceModal = (e: any) => {
@@ -424,12 +428,13 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
                 borderRadius: '8px'
               }}
             >
-              {/* Dark circle avatar with initials */}
+              {/* Circle avatar with initials and role accent */}
               <div style={{
                 width: '36px',
                 height: '36px',
                 borderRadius: '50%',
-                backgroundColor: '#11161b',
+                backgroundColor: isSuperAdmin ? '#D97706' : isAdmin ? '#1D4ED8' : '#11161b',
+                boxShadow: isSuperAdmin ? '0 0 0 2px #FCD34D' : isAdmin ? '0 0 0 2px #93C5FD' : 'none',
                 color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
@@ -449,16 +454,48 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
                   fontWeight: 600,
                   color: '#111827',
                   lineHeight: 1.2,
-                  whiteSpace: 'nowrap'
+                  whiteSpace: 'nowrap',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
                 }}>
-                  {user.name || 'Iyore'}
+                  <span>{user.name || 'Iyore'}</span>
+                  {isSuperAdmin && (
+                    <span style={{
+                      fontSize: '0.62rem',
+                      fontWeight: 800,
+                      backgroundColor: '#FEF3C7',
+                      color: '#92400E',
+                      border: '1px solid #FCD34D',
+                      padding: '1px 5px',
+                      borderRadius: '9999px',
+                      lineHeight: 1.2
+                    }}>
+                      👑 Super Admin
+                    </span>
+                  )}
+                  {isAdmin && (
+                    <span style={{
+                      fontSize: '0.62rem',
+                      fontWeight: 700,
+                      backgroundColor: '#EFF6FF',
+                      color: '#1D4ED8',
+                      border: '1px solid #BFDBFE',
+                      padding: '1px 5px',
+                      borderRadius: '9999px',
+                      lineHeight: 1.2
+                    }}>
+                      🛡️ Admin
+                    </span>
+                  )}
                 </span>
                 <span style={{
                   fontSize: '0.72rem',
-                  color: '#6b7280',
+                  color: isSuperAdmin ? '#B45309' : isAdmin ? '#1D4ED8' : '#6b7280',
+                  fontWeight: isSuperAdmin || isAdmin ? 700 : 500,
                   lineHeight: 1.2
                 }}>
-                  {user.role === 'ADMIN' ? 'Administrator' : 'Member'}
+                  {isSuperAdmin ? 'Super Administrator' : isAdmin ? 'Administrator' : 'Member'}
                 </span>
               </div>
 
@@ -487,7 +524,34 @@ export default function GlobalHeader({ user, unreadCount }: GlobalHeaderProps) {
                 zIndex: 10001
               }}>
                 <div style={{ paddingBottom: '10px', borderBottom: '1px solid var(--border-subtle)', marginBottom: '8px' }}>
-                  <p style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111827', margin: 0 }}>{user.name}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <p style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111827', margin: 0 }}>{user.name}</p>
+                    {isSuperAdmin ? (
+                      <span style={{
+                        fontSize: '0.65rem',
+                        fontWeight: 800,
+                        backgroundColor: '#FEF3C7',
+                        color: '#92400E',
+                        border: '1px solid #FCD34D',
+                        padding: '1px 6px',
+                        borderRadius: '9999px'
+                      }}>
+                        👑 Super Admin
+                      </span>
+                    ) : isAdmin ? (
+                      <span style={{
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        backgroundColor: '#EFF6FF',
+                        color: '#1D4ED8',
+                        border: '1px solid #BFDBFE',
+                        padding: '1px 6px',
+                        borderRadius: '9999px'
+                      }}>
+                        🛡️ Admin
+                      </span>
+                    ) : null}
+                  </div>
                   <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '2px 0 0 0' }}>{cleanDisplayId} • {user.email}</p>
                 </div>
                 

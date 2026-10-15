@@ -98,7 +98,8 @@ export default async function DashboardLayout({
             email: user.email,
             role: user.role as 'ADMIN' | 'MEMBER',
             membership: user.membership || undefined,
-            displayId: (user as any).displayId || user.id
+            displayId: (user as any).displayId || user.id,
+            isSuperAdmin: user.isSuperAdmin === true || (user.id === 'usr_admin' && user.isSuperAdmin !== false)
           }}
           unreadCount={unreadCount}
         />

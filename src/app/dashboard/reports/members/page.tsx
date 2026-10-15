@@ -123,7 +123,16 @@ function MemberReportContent() {
       if (statusFilter === 'Inactive' && u.isActive) return false;
 
       // Role matching
-      if (roleFilter && u.role !== roleFilter) return false;
+      if (roleFilter) {
+        const isSuper = u.isSuperAdmin === true || (u.id === 'usr_admin' && u.isSuperAdmin !== false);
+        if (roleFilter === 'SUPER_ADMIN') {
+          if (!isSuper) return false;
+        } else if (roleFilter === 'ADMIN') {
+          if (u.role !== 'ADMIN' || isSuper) return false;
+        } else if (roleFilter === 'MEMBER') {
+          if (u.role !== 'MEMBER') return false;
+        }
+      }
 
       if (!q) return true;
       return (
@@ -179,7 +188,7 @@ function MemberReportContent() {
       `"${u.name.replace(/"/g, '""')}"`,
       `"${u.email}"`,
       `"${u.phone || 'N/A'}"`,
-      `"${u.role === 'ADMIN' ? 'Admin' : 'Member'}"`,
+      `"${u.isSuperAdmin || (u.id === 'usr_admin' && u.isSuperAdmin !== false) ? 'Super Admin' : u.role === 'ADMIN' ? 'Admin' : 'Member'}"`,
       `"${u.isActive ? 'Active' : 'Pending / Inactive'}"`,
       `"${new Date(u.createdAt || Date.now()).toLocaleDateString('en-GB')}"`,
       `"${u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString('en-GB') : 'Never'}"`,
@@ -383,8 +392,9 @@ function MemberReportContent() {
             }}
           >
             <option value="">All Roles</option>
+            <option value="SUPER_ADMIN">👑 Super Admin</option>
+            <option value="ADMIN">🛡️ Admin</option>
             <option value="MEMBER">Member (Savers)</option>
-            <option value="ADMIN">Admin</option>
           </select>
 
           {(searchQuery || statusFilter || roleFilter) && (
@@ -497,7 +507,8 @@ function MemberReportContent() {
               currentUsers.map((u) => {
                 const initials = u.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'MB';
                 const displayId = u.displayId || u.invitationId || u.id;
-                const isAdmin = u.role === 'ADMIN' || u.isSuperAdmin;
+                const isSuper = u.isSuperAdmin === true || (u.id === 'usr_admin' && u.isSuperAdmin !== false);
+                const isAdmin = u.role === 'ADMIN' && !isSuper;
 
                 return (
                   <tr key={u.id} style={{ borderBottom: '1px solid #ECE8E2', transition: 'background-color 0.15s ease' }}>
@@ -524,7 +535,8 @@ function MemberReportContent() {
                           width: '36px',
                           height: '36px',
                           borderRadius: '50%',
-                          backgroundColor: '#0c4e43',
+                          backgroundColor: isSuper ? '#D97706' : isAdmin ? '#1D4ED8' : '#0c4e43',
+                          boxShadow: isSuper ? '0 0 0 2px #FCD34D' : isAdmin ? '0 0 0 2px #93C5FD' : 'none',
                           color: '#FFFFFF',
                           display: 'flex',
                           alignItems: 'center',
@@ -536,8 +548,43 @@ function MemberReportContent() {
                           {initials}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.88rem' }}>
-                            {u.name}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontWeight: 600, color: '#111827', fontSize: '0.88rem' }}>
+                              {u.name}
+                            </span>
+                            {isSuper ? (
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px',
+                                padding: '1px 6px',
+                                borderRadius: '9999px',
+                                fontSize: '0.68rem',
+                                fontWeight: 800,
+                                backgroundColor: '#FEF3C7',
+                                color: '#92400E',
+                                border: '1px solid #FCD34D',
+                                lineHeight: 1.2
+                              }}>
+                                👑 Super Admin
+                              </span>
+                            ) : isAdmin ? (
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px',
+                                padding: '1px 6px',
+                                borderRadius: '9999px',
+                                fontSize: '0.68rem',
+                                fontWeight: 700,
+                                backgroundColor: '#EFF6FF',
+                                color: '#1D4ED8',
+                                border: '1px solid #BFDBFE',
+                                lineHeight: 1.2
+                              }}>
+                                🛡️ Admin
+                              </span>
+                            ) : null}
                           </div>
                           {u.invitedBy ? (
                             <div style={{ fontSize: '0.72rem', color: '#6B7280' }}>
@@ -560,16 +607,51 @@ function MemberReportContent() {
 
                     {/* Role Badge */}
                     <td style={{ padding: '14px 16px' }}>
-                      <span style={{
-                        padding: '3px 9px',
-                        borderRadius: '9999px',
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        backgroundColor: isAdmin ? '#EDE9FE' : '#EAF5EE',
-                        color: isAdmin ? '#6D28D9' : '#0c4e43'
-                      }}>
-                        {isAdmin ? 'Admin' : 'Saver'}
-                      </span>
+                      {isSuper ? (
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '3px 9px',
+                          borderRadius: '9999px',
+                          fontSize: '0.75rem',
+                          fontWeight: 800,
+                          backgroundColor: '#FEF3C7',
+                          color: '#92400E',
+                          border: '1px solid #FCD34D'
+                        }}>
+                          👑 Super Admin
+                        </span>
+                      ) : isAdmin ? (
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '3px 9px',
+                          borderRadius: '9999px',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          backgroundColor: '#EFF6FF',
+                          color: '#1D4ED8',
+                          border: '1px solid #BFDBFE'
+                        }}>
+                          🛡️ Admin
+                        </span>
+                      ) : (
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          padding: '3px 9px',
+                          borderRadius: '9999px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          backgroundColor: '#F3F4F6',
+                          color: '#4B5563',
+                          border: '1px solid #E5E7EB'
+                        }}>
+                          Saver
+                        </span>
+                      )}
                     </td>
 
                     {/* Status Badge */}
