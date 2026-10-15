@@ -474,7 +474,7 @@ export async function PUT(request: Request) {
           // Send request email to Super Admin for confirmation
           const allUsers = await db.user.findMany();
           const superAdminUser = allUsers.find(u => u.isSuperAdmin === true || u.id === 'usr_admin');
-          const superAdminEmail = superAdminUser?.email || 'savveysaverscollective@gmail.com';
+          const superAdminEmail = superAdminUser?.email || 'admin@savveysavers.com';
           const reqHost = request.headers.get('host') || 'savveysavers.com';
           const reqProto = request.headers.get('x-forwarded-proto') || 'https';
           const approvalLink = `${reqProto}://${reqHost}/dashboard/users?approveSuperAdmin=${user.id}`;

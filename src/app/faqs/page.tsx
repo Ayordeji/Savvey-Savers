@@ -120,7 +120,7 @@ export default function FaqsPage() {
             >
               Everything you need to know about Savvey Savers Collective. Can’t find what you are looking for?{' '}
               <a
-                href="mailto:Support@SavveySaver.com"
+                href="mailto:admin@savveysavers.com"
                 style={{ color: '#0E4F45', fontWeight: 600, textDecoration: 'underline' }}
               >
                 Contact us
