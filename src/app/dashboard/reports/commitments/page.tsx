@@ -111,10 +111,26 @@ function CommitmentsReportContent() {
   };
 
   useEffect(() => {
-    const h = searchParams.get('harvest');
-    if (h) setHarvestFilter(h);
-    const id = searchParams.get('id');
+    const rawH = searchParams.get('harvest');
+    if (rawH) {
+      const normH = rawH.toUpperCase();
+      if (['YES', 'RELEASED', 'PAID', 'COMPLETED', 'TRUE'].includes(normH)) {
+        setHarvestFilter('YES');
+      } else if (['NO', 'PENDING', 'SCHEDULED', 'FALSE'].includes(normH)) {
+        setHarvestFilter('NO');
+      } else {
+        setHarvestFilter(rawH);
+      }
+    }
+    const yr = searchParams.get('year') || searchParams.get('period');
+    if (yr) setPeriodFilter(yr);
+
+    const status = searchParams.get('status');
+    if (status) setPaymentConfirmedFilter(status.toUpperCase());
+
+    const id = searchParams.get('id') || searchParams.get('q') || searchParams.get('search');
     if (id) setSearchQuery(id);
+
     fetchData();
   }, [searchParams]);
 

@@ -492,9 +492,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
         {/* Card 3: 2026 Harvest Payout (Fixed Payout, Not Target) */}
         <Link
-          href={isAdmin ? "/dashboard/reports/commitments" : "/dashboard/commitments"}
+          href={isAdmin ? `/dashboard/reports/commitments?harvest=YES&year=${selectedYear}` : `/dashboard/commitments`}
           className="dashboard-clickable-card"
-          title={isAdmin ? "View harvest reports" : "View my savings commitments"}
+          title={isAdmin ? `View released harvests for ${selectedYear}` : `View my savings commitments for ${selectedYear}`}
           style={{
             background: 'linear-gradient(145deg, #F0FDF4 0%, #ECFDF5 50%, #D1FAE5 100%)',
             borderRadius: '18px',
