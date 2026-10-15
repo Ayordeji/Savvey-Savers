@@ -7,7 +7,7 @@ const resendApiKey = process.env.RESEND_API_KEY;
 export function getMailFrom(): string {
   const envFrom = process.env.MAIL_FROM;
   if (!envFrom || envFrom.includes('crevianstudios.com') || envFrom.includes('resend.dev')) {
-    return 'Savvey Savers <notifications@savveysavers.com>';
+    return 'Savvey Savers <admin@savveysavers.com>';
   }
   return envFrom;
 }
