@@ -962,7 +962,9 @@ function CommitmentsContent() {
     .filter(p => p.status === 'CONFIRMED' && (!yearFilter || p.year?.toString() === yearFilter || !p.year))
     .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
-  const completedPayoutsCount = kpiCommitments.filter(c => c.status === 'COMPLETED').length;
+  const completedPayoutsCount = kpiCommitments.filter(c =>
+    Boolean(c.harvestReleasedAt || (c.harvestAmount && Number(c.harvestAmount) > 0) || c.status === 'COMPLETED')
+  ).length;
   const totalPayoutsTarget = kpiCommitments.length;
 
   const filterLabel = [

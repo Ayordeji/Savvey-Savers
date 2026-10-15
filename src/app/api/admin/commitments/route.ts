@@ -125,14 +125,14 @@ export async function GET() {
 
     const displayId = (c as any).displayId || (c.id && /^SC-\d+$/.test(c.id) ? c.id : c.id);
 
-    // Status driven by cycle year
+    // Status driven by cycle year & harvest release
     let status = c.status;
     if (status !== 'CANCELLED') {
-      if (c.collectionYear < currentYear) {
+      if (c.harvestReleasedAt || c.status === 'COMPLETED' || c.collectionYear < currentYear) {
         status = 'COMPLETED';
       } else if (c.collectionYear > currentYear) {
         status = 'NOT_YET_STARTED';
-      } else if (!status || status === 'COMPLETED' || status === 'NOT_YET_STARTED') {
+      } else if (!status || status === 'NOT_YET_STARTED') {
         status = 'ACTIVE';
       }
     }
