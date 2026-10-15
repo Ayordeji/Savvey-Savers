@@ -3,7 +3,14 @@ import { db } from './db';
 import { defaultEmailTemplates, EmailTemplate } from './emailTemplates';
 
 const resendApiKey = process.env.RESEND_API_KEY;
-const mailFrom = process.env.MAIL_FROM || 'onboarding@resend.dev'; // fallback standard Resend domain if none specified
+
+export function getMailFrom(): string {
+  const envFrom = process.env.MAIL_FROM;
+  if (!envFrom || envFrom.includes('crevianstudios.com') || envFrom.includes('resend.dev')) {
+    return 'Savvey Savers <notifications@savveysavers.com>';
+  }
+  return envFrom;
+}
 
 // Initialize Resend client
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
@@ -26,7 +33,7 @@ export async function sendEmail({ to, subject, body }: { to: string; subject: st
 
     if (resend) {
       const response = await resend.emails.send({
-        from: mailFrom,
+        from: getMailFrom(),
         to,
         subject,
         text: body,
