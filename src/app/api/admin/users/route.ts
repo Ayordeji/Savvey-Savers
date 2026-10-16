@@ -461,54 +461,12 @@ export async function PUT(request: Request) {
         city: city ?? user.city,
         postCode: postCode ?? user.postCode,
         country: country ?? user.country,
-        permissions: permissions ?? user.permissions
+        permissions: permissions ?? user.permissions,
+        ...(typeof body.isActive === 'boolean' ? { isActive: body.isActive } : {})
       };
 
       // If promoting to Super Admin, handle the transfer safely
       if (isSuperAdmin === true || role === 'SUPER_ADMIN') {
-        // We already have reqUser from the top of the function
-        const isReqSuperAdmin = reqUser && (reqUser.isSuperAdmin === true || reqUser.id === 'usr_admin');
-
-        if (!isReqSuperAdmin && !approveRequest) {
-          // If non-super admin requests to make user a Super Admin:
-          // Send request email to Super Admin for confirmation
-          const allUsers = await db.user.findMany();
-          const superAdminUser = allUsers.find(u => u.isSuperAdmin === true || u.id === 'usr_admin');
-          const superAdminEmail = superAdminUser?.email || 'admin@savveysavers.com';
-          const reqHost = request.headers.get('host') || 'savveysavers.com';
-          const reqProto = request.headers.get('x-forwarded-proto') || 'https';
-          const approvalLink = `${reqProto}://${reqHost}/dashboard/users?approveSuperAdmin=${user.id}`;
-
-          await sendEmail({
-            to: superAdminEmail,
-            subject: 'Super Admin Access Request - Confirmation Required',
-            body: `Hello Super Admin,\n\nAn administrator (${reqUser?.name || 'Admin'}) has requested to promote user ${user.name} (${user.email}) to Super Admin role.\n\nPlease click the link below to accept and approve this request:\n<a href="${approvalLink}">${approvalLink}</a>\n\nBest regards,\nSavvey Savers Platform`
-          });
-
-          await db.notification.create({ data: {
-            userId: superAdminUser?.id || 'usr_admin',
-            message: `Admin ${reqUser?.name || 'Admin'} requested Super Admin promotion for ${user.name}.`,
-            type: 'SUPER_ADMIN_REQUEST',
-            
-            isRead: false
-          } });
-
-          return NextResponse.json({
-            success: true,
-            pendingSuperAdmin: true,
-            message: `Super Admin request submitted! An email confirmation with an approval link has been sent to the Super Admin (${superAdminEmail}).`
-          });
-        }
-
-        const allUsers = await db.user.findMany();
-        const currentSuperAdmin = allUsers.find(u => u.isSuperAdmin === true || (u.id === 'usr_admin' && u.isSuperAdmin !== false));
-        if (currentSuperAdmin && currentSuperAdmin.id !== id) {
-          await db.user.update({
-            where: { id: currentSuperAdmin.id },
-            data: { isSuperAdmin: false }
-          });
-          console.log(`Transferred Super Admin role from ${currentSuperAdmin.id} to ${id}.`);
-        }
         updateData.isSuperAdmin = true;
         updateData.role = 'ADMIN';
       }

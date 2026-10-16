@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle, Download, Upload, Filter, Send, Wallet, Clock, Check, ChevronDown, ArrowRight, UserCheck, User, Shield } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle, Download, Upload, Filter, Send, Wallet, Clock, Check, ChevronDown, ArrowRight, UserCheck, UserX, User, Shield } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import PaginationControls from '../PaginationControls';
 import styles from './users.module.css';
@@ -207,6 +207,7 @@ export default function ManageUsersPage() {
   // Permissions checked array
   const [formPermissions, setFormPermissions] = useState<string[]>([]);
   const [formIsSuperAdmin, setFormIsSuperAdmin] = useState(false);
+  const [formIsActive, setFormIsActive] = useState(true);
 
   // Dropdown menus active index
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -347,6 +348,7 @@ export default function ManageUsersPage() {
     setFormPostCode('');
     setFormCountry('United Kingdom');
     setFormPermissions(['INVITE_USER', 'ASSIGN_UNAVAILABLE_MONTH']);
+    setFormIsActive(true);
     setActiveModal('ADD');
   };
 
@@ -364,6 +366,7 @@ export default function ManageUsersPage() {
     setFormPhone(user.phone);
     setFormRole(user.role);
     setFormIsSuperAdmin(!!user.isSuperAdmin);
+    setFormIsActive(user.isActive !== false);
     setFormMembership(user.membership || 'Standard Saver');
     setFormAddressLine1(user.addressLine1 || '');
     setFormAddressLine2(user.addressLine2 || '');
@@ -681,6 +684,7 @@ export default function ManageUsersPage() {
           phone: formPhone,
           role: formRole,
           isSuperAdmin: formIsSuperAdmin,
+          isActive: formIsActive,
           membership: formMembership,
           addressLine1: formAddressLine1,
           addressLine2: formAddressLine2,
@@ -1623,19 +1627,46 @@ export default function ManageUsersPage() {
                             </td>
 
                             {/* Status */}
-                            <td style={{ padding: '14px' }}>
-                              <span style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                padding: '3px 10px',
-                                borderRadius: '9999px',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                backgroundColor: u.isActive ? '#EAF5EE' : '#FEF3C7',
-                                color: u.isActive ? '#2E7D32' : '#B45309'
-                              }}>
-                                {u.isActive ? 'Active' : 'Invited'}
-                              </span>
+                            <td style={{ padding: '14px' }} onClick={(e) => e.stopPropagation()}>
+                              {!isSuper && u.id !== currentUser?.id ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleActive(u, !u.isActive)}
+                                  title={`Click to mark as ${u.isActive ? 'Inactive' : 'Active'}`}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
+                                    padding: '4px 10px',
+                                    borderRadius: '9999px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600,
+                                    backgroundColor: u.isActive ? '#EAF5EE' : '#FEF3C7',
+                                    color: u.isActive ? '#2E7D32' : '#B45309',
+                                    border: u.isActive ? '1px solid #A7F3D0' : '1px solid #FDE68A',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease'
+                                  }}
+                                >
+                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: u.isActive ? '#16A34A' : '#D97706' }} />
+                                  <span>{u.isActive ? 'Active' : 'Inactive'}</span>
+                                </button>
+                              ) : (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  padding: '4px 10px',
+                                  borderRadius: '9999px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  backgroundColor: u.isActive ? '#EAF5EE' : '#FEF3C7',
+                                  color: u.isActive ? '#2E7D32' : '#B45309'
+                                }}>
+                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: u.isActive ? '#16A34A' : '#D97706' }} />
+                                  <span>{u.isActive ? 'Active' : 'Inactive'}</span>
+                                </span>
+                              )}
                             </td>
 
                             {/* Commitments count */}
@@ -1674,6 +1705,27 @@ export default function ManageUsersPage() {
                                       <Edit size={14} />
                                       <span>Edit Member</span>
                                     </button>
+                                    {!isSuper && u.id !== currentUser?.id && (
+                                      u.isActive ? (
+                                        <button 
+                                          onClick={() => { setOpenDropdownId(null); handleToggleActive(u, false); }} 
+                                          className={styles.dropdownItem}
+                                          style={{ color: '#D97706' }}
+                                        >
+                                          <UserX size={14} />
+                                          <span>Mark as Inactive</span>
+                                        </button>
+                                      ) : (
+                                        <button 
+                                          onClick={() => { setOpenDropdownId(null); handleToggleActive(u, true); }} 
+                                          className={styles.dropdownItem}
+                                          style={{ color: '#16A34A' }}
+                                        >
+                                          <UserCheck size={14} />
+                                          <span>Mark as Active</span>
+                                        </button>
+                                      )
+                                    )}
                                     {u.role !== 'ADMIN' && (
                                       <>
                                         <button onClick={() => handleOpenRequestFeeModal(u)} className={styles.dropdownItem}>
@@ -1840,7 +1892,7 @@ export default function ManageUsersPage() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
                     <button
                       onClick={() => handleOpenEditModal(selectedUser)}
                       style={{
@@ -1863,26 +1915,74 @@ export default function ManageUsersPage() {
                       <span>Edit Member</span>
                     </button>
 
-                    <button
-                      onClick={() => handleOpenRequestFeeModal(selectedUser)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '4px',
-                        padding: '8px 14px',
-                        backgroundColor: '#FFFFFF',
-                        border: '1px solid #ECE8E2',
-                        borderRadius: '8px',
-                        fontSize: '0.82rem',
-                        fontWeight: 600,
-                        color: '#374151',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <span>More</span>
-                      <ChevronDown size={14} />
-                    </button>
+                    {!isDrawerSuper && selectedUser.id !== currentUser?.id && (
+                      selectedUser.isActive ? (
+                        <button
+                          onClick={() => handleToggleActive(selectedUser, false)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            padding: '8px 14px',
+                            backgroundColor: '#FFFBEB',
+                            border: '1px solid #FDE68A',
+                            borderRadius: '8px',
+                            fontSize: '0.82rem',
+                            fontWeight: 600,
+                            color: '#B45309',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <UserX size={14} />
+                          <span>Mark Inactive</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleToggleActive(selectedUser, true)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            padding: '8px 14px',
+                            backgroundColor: '#F0FDF4',
+                            border: '1px solid #BBF7D0',
+                            borderRadius: '8px',
+                            fontSize: '0.82rem',
+                            fontWeight: 600,
+                            color: '#15803D',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <UserCheck size={14} />
+                          <span>Mark Active</span>
+                        </button>
+                      )
+                    )}
+
+                    {selectedUser.role !== 'ADMIN' && (
+                      <button
+                        onClick={() => handleOpenRequestFeeModal(selectedUser)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          padding: '8px 14px',
+                          backgroundColor: '#FFFFFF',
+                          border: '1px solid #ECE8E2',
+                          borderRadius: '8px',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          color: '#374151',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <FileText size={14} />
+                        <span>Fee</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -2716,27 +2816,42 @@ export default function ManageUsersPage() {
                 </div>
               </div>
 
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ marginBottom: '6px', fontWeight: 600, color: '#334155' }}>Select Role *</label>
-                <select
-                  value={formIsSuperAdmin ? 'SUPER_ADMIN' : formRole}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === 'SUPER_ADMIN') {
-                      setFormRole('ADMIN');
-                      setFormIsSuperAdmin(true);
-                    } else {
-                      setFormRole(val as 'ADMIN' | 'MEMBER');
-                      setFormIsSuperAdmin(false);
-                    }
-                  }}
-                  className="form-select"
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-                >
-                  <option value="MEMBER">Savers</option>
-                  <option value="ADMIN">Admin</option>
-                  <option value="SUPER_ADMIN">Super Admin</option>
-                </select>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ marginBottom: '6px', fontWeight: 600, color: '#334155' }}>Select Role *</label>
+                  <select
+                    value={formIsSuperAdmin ? 'SUPER_ADMIN' : formRole}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === 'SUPER_ADMIN') {
+                        setFormRole('ADMIN');
+                        setFormIsSuperAdmin(true);
+                      } else {
+                        setFormRole(val as 'ADMIN' | 'MEMBER');
+                        setFormIsSuperAdmin(false);
+                      }
+                    }}
+                    className="form-select"
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                  >
+                    <option value="MEMBER">Savers</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="SUPER_ADMIN">Super Admin</option>
+                  </select>
+                </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ marginBottom: '6px', fontWeight: 600, color: '#334155' }}>Account Status</label>
+                  <select
+                    value={formIsActive ? 'ACTIVE' : 'INACTIVE'}
+                    onChange={(e) => setFormIsActive(e.target.value === 'ACTIVE')}
+                    className="form-select"
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                  >
+                    <option value="ACTIVE">Active</option>
+                    <option value="INACTIVE">Inactive</option>
+                  </select>
+                </div>
               </div>
 
               {/* Permissions Checkboxes Section matching Savvey Savers */}
