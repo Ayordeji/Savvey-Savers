@@ -906,9 +906,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                     <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#4C1D95', marginTop: '3px', lineHeight: 1.2 }}>
                       {lastHarvestPayout}
                     </div>
-                    <div style={{ fontSize: '0.68rem', color: '#6B21A8', marginTop: '2px', fontWeight: 500 }}>
-                      {lastHarvestPayout === 'None yet' ? 'No past releases' : 'Previously paid'}
-                    </div>
                   </div>
 
                   {/* Next Harvest Payout */}
@@ -918,9 +915,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                     </div>
                     <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#4C1D95', marginTop: '3px', lineHeight: 1.2 }}>
                       {nextHarvestPayout}
-                    </div>
-                    <div style={{ fontSize: '0.68rem', color: '#6B21A8', marginTop: '2px', fontWeight: 500 }}>
-                      Scheduled payout
                     </div>
                   </div>
                 </div>
