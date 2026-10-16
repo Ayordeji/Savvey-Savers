@@ -97,6 +97,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   let outstandingCommitmentsCount = 0;
   let totalOutstandingMonthsCount = 0;
   let totalOutstandingAmount = 0;
+  let nextPaymentDueText = '';
   let activeUsersCount = 0;
   let invitedUsersCount = 0;
   let recentPayments: any[] = [];
@@ -193,25 +194,32 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     activeCommitmentsCount = yearCommitments.filter(c => c.status === 'ACTIVE').length;
     pendingCommitmentsCount = yearCommitments.filter(c => c.status === 'PENDING' || c.status === 'NOT_YET_STARTED').length;
 
-    // 2b. Outstanding payments calculation (active commitments with unconfirmed payments due to date)
+    // 2b. Outstanding / Overdue payments & Next Payment Due calculation
+    // A month's contribution is strictly OVERDUE only if that calendar month has ended without confirmed payment.
+    // The current month's payment is not overdue until after the final day of the month (e.g., Nov 1st for October).
     const currentMonthIdx = now.getMonth();
 
-    let maxDueMonthIdx = -1;
+    let maxOverdueMonthIdx = -1;
     if (selectedYearNum < currentYear) {
-      maxDueMonthIdx = 11; // All 12 months for past years
+      maxOverdueMonthIdx = 11; // All 12 months for past years are overdue if unpaid
     } else if (selectedYearNum === currentYear) {
-      maxDueMonthIdx = currentMonthIdx; // Jan up to current month for the ongoing year
+      maxOverdueMonthIdx = currentMonthIdx - 1; // Prior completed months only
     } else {
-      maxDueMonthIdx = -1; // Future year, nothing due yet
+      maxOverdueMonthIdx = -1; // Future year, nothing overdue
     }
 
     const monthOrderNames = [
       'january', 'february', 'march', 'april', 'may', 'june',
       'july', 'august', 'september', 'october', 'november', 'december'
     ];
+    const monthOrderShort = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
 
-    if (maxDueMonthIdx >= 0) {
-      const activeYearCommitments = yearCommitments.filter(c => c.status === 'ACTIVE');
+    const activeYearCommitments = yearCommitments.filter(c => c.status === 'ACTIVE');
+
+    if (maxOverdueMonthIdx >= 0) {
       activeYearCommitments.forEach(c => {
         const cPayments = relevantPayments.filter(
           p => p.commitmentId === c.id && (Number(p.year) === selectedYearNum || !p.year) && p.status === 'CONFIRMED'
@@ -221,7 +229,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         );
 
         let missingMonthsForCommitment = 0;
-        for (let m = 0; m <= maxDueMonthIdx; m++) {
+        for (let m = 0; m <= maxOverdueMonthIdx; m++) {
           const mName = monthOrderNames[m];
           const isConfirmed = m < cPayments.length || confirmedMonthNames.has(mName) ||
             Array.from(confirmedMonthNames).some(cm => cm.startsWith(mName.slice(0, 3)));
@@ -236,6 +244,38 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           totalOutstandingAmount += missingMonthsForCommitment * (Number(c.amount) || 0);
         }
       });
+    }
+
+    // Determine the next payment due date (earliest unpaid month in the cycle)
+    if (activeYearCommitments.length > 0) {
+      let nextUnpaidMonthIdx = -1;
+      for (let m = 0; m < 12; m++) {
+        const mName = monthOrderNames[m];
+        const allConfirmedForMonth = activeYearCommitments.every(c => {
+          const cPayments = relevantPayments.filter(
+            p => p.commitmentId === c.id && (Number(p.year) === selectedYearNum || !p.year) && p.status === 'CONFIRMED'
+          );
+          const confirmedMonthNames = new Set(
+            cPayments.map(p => (p.month || '').toLowerCase().trim())
+          );
+          return m < cPayments.length || confirmedMonthNames.has(mName) ||
+            Array.from(confirmedMonthNames).some(cm => cm.startsWith(mName.slice(0, 3)));
+        });
+
+        if (!allConfirmedForMonth) {
+          nextUnpaidMonthIdx = m;
+          break;
+        }
+      }
+
+      if (nextUnpaidMonthIdx >= 0) {
+        const lastDayDate = new Date(selectedYearNum, nextUnpaidMonthIdx + 1, 0);
+        const lastDay = lastDayDate.getDate();
+        const monthShort = monthOrderShort[nextUnpaidMonthIdx];
+        nextPaymentDueText = `Next payment due - ${lastDay} ${monthShort} ${selectedYearNum}`;
+      } else {
+        nextPaymentDueText = `All ${selectedYearNum} payments completed`;
+      }
     }
 
     // 3. Harvests released / target
@@ -641,7 +681,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 <div style={{ fontSize: '0.75rem', color: '#B45309', marginTop: '2px', fontWeight: 500 }}>
                   {totalOutstandingMonthsCount === 0
                     ? 'All monthly payments up to date'
-                    : `${totalOutstandingMonthsCount} unconfirmed months due (£${totalOutstandingAmount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`}
+                    : `${totalOutstandingMonthsCount} overdue month${totalOutstandingMonthsCount > 1 ? 's' : ''} (£${totalOutstandingAmount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`}
                 </div>
               </div>
             </Link>
@@ -1117,8 +1157,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 color: totalOutstandingMonthsCount > 0 ? '#DC2626' : '#FFFFFF'
               }}>
                 {totalOutstandingMonthsCount > 0
-                  ? `${totalOutstandingMonthsCount} Payment${totalOutstandingMonthsCount > 1 ? 's' : ''} Due`
-                  : '0 Overdue Payments'}
+                  ? `${totalOutstandingMonthsCount} Payment${totalOutstandingMonthsCount > 1 ? 's' : ''} Overdue`
+                  : (nextPaymentDueText || 'Contributions up to date')}
               </div>
             </div>
           </div>
