@@ -499,7 +499,7 @@ function CommitmentsContent() {
 
   const handleReleaseHarvest = async (cmtId: string) => {
     setOpenDropdownId(null);
-    if (!(await dialog.confirm('Release Harvest Payout', 'Are you sure you want to release the harvest payout? This will mark the rotating cycle commitment as Completed and notify the member.'))) return;
+    if (!(await dialog.confirm('Release Harvest Payout', 'Are you sure you want to release the harvest payout? This will record the harvest payout as released and notify the member.'))) return;
 
     try {
       const res = await fetch('/api/admin/commitments/action', {

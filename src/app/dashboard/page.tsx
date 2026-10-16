@@ -134,6 +134,25 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       })
     ]);
 
+    const now = new Date();
+    const currentYear = now.getFullYear();
+
+    // Normalize commitment lifecycle status by cycle year
+    const normalizedCommitments = allCommitments.map(c => {
+      let status = c.status;
+      if (status !== 'CANCELLED') {
+        if (Number(c.collectionYear) < currentYear) {
+          status = 'COMPLETED';
+        } else if (Number(c.collectionYear) > currentYear) {
+          status = 'NOT_YET_STARTED';
+        } else {
+          // Current ongoing cycle year is always ACTIVE
+          status = 'ACTIVE';
+        }
+      }
+      return { ...c, status };
+    });
+
     const userKeys = Array.from(new Set([
       user.id,
       user.displayId,
@@ -143,8 +162,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
     // Scope data if user is not admin
     relevantCommitments = isAdmin
-      ? allCommitments
-      : allCommitments.filter(c => 
+      ? normalizedCommitments
+      : normalizedCommitments.filter(c => 
           userKeys.includes(c.memberId) || 
           (c.user?.email && userKeys.includes(c.user.email)) ||
           (user.name && c.memberName?.toLowerCase() === user.name.toLowerCase())
@@ -172,8 +191,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     pendingCommitmentsCount = yearCommitments.filter(c => c.status === 'PENDING' || c.status === 'NOT_YET_STARTED').length;
 
     // 2b. Outstanding payments calculation (active commitments with unconfirmed payments due to date)
-    const now = new Date();
-    const currentYear = now.getFullYear();
     const currentMonthIdx = now.getMonth();
 
     let maxDueMonthIdx = -1;
@@ -299,7 +316,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     totalGroupPaymentsCount = allPayments.length;
 
     // 9. Projected Group Savings for Current/Selected Year (all active commitments * 12)
-    const activeGroupCommitmentsForYear = allCommitments.filter(
+    const activeGroupCommitmentsForYear = normalizedCommitments.filter(
       c => Number(c.collectionYear) === selectedYearNum && c.status === 'ACTIVE'
     );
     projectedGroupSavingsForYear = activeGroupCommitmentsForYear.reduce(

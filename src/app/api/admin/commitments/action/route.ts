@@ -210,11 +210,16 @@ export async function POST(request: Request) {
       // Compute total payout amount (total target pot = monthly amount * 12)
       const harvestAmount = (Number(cmt.amount) || 0) * 12;
 
-      // Update commitment status to COMPLETED and record the harvest amount
+      // Update commitment: record the harvest amount and harvestReleasedAt.
+      // In rotating savings (Ajo), receiving the harvest does not end the commitment during the active year,
+      // as members continue making monthly contributions through December. Only mark COMPLETED if the cycle year has ended.
+      const currentYear = new Date().getFullYear();
+      const isPastCycle = Number(cmt.collectionYear) < currentYear;
+
       await db.commitment.update({
         where: { id: commitmentId },
         data: {
-          status: 'COMPLETED',
+          status: isPastCycle ? 'COMPLETED' : 'ACTIVE',
           harvestAmount,
           harvestReleasedAt: new Date()
         }
