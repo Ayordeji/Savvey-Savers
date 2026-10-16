@@ -514,9 +514,9 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Unauthorized: Admin access required.' }, { status: 403 });
   }
 
-  // Check if requesting user has DELETE_USER permission or is Super Admin
-  const isReqSuperAdmin = reqUser.isSuperAdmin === true || reqUser.id === 'usr_admin';
-  const hasDeletePerm = isReqSuperAdmin || (reqUser.permissions && reqUser.permissions.includes('DELETE_USER'));
+  // Check if requesting user is Admin or Super Admin or has DELETE_USER permission
+  const isReqAdmin = reqUser.role === 'ADMIN' || reqUser.isSuperAdmin === true || reqUser.id === 'usr_admin';
+  const hasDeletePerm = isReqAdmin || (reqUser.permissions && reqUser.permissions.includes('DELETE_USER'));
 
   if (!hasDeletePerm) {
     return NextResponse.json(
