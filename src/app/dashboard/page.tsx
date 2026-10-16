@@ -1076,23 +1076,50 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           position: 'relative',
           overflow: 'hidden'
         }}>
-          {/* Header row: Title + Pill Badge */}
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FFFFFF', margin: 0, fontFamily: 'var(--font-family-title)' }}>
+          {/* Header row: Title & Pill Badges Centered */}
+          <div style={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: '10px'
+          }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#FFFFFF', margin: 0, fontFamily: 'var(--font-family-title)' }}>
               Your Account at a glance.
             </h3>
             <div style={{
-              padding: '6px 14px',
-              backgroundColor: totalOutstandingMonthsCount > 0 ? '#FEE2E2' : 'rgba(255, 255, 255, 0.15)',
-              border: totalOutstandingMonthsCount > 0 ? '1px solid #FECACA' : '1px solid rgba(255, 255, 255, 0.25)',
-              borderRadius: '9999px',
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              color: totalOutstandingMonthsCount > 0 ? '#DC2626' : '#FFFFFF'
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              flexWrap: 'wrap'
             }}>
-              {totalOutstandingMonthsCount > 0
-                ? `${totalOutstandingMonthsCount} Payment${totalOutstandingMonthsCount > 1 ? 's' : ''} Due`
-                : `${activeCommitmentsCount} Active Commitment${activeCommitmentsCount === 1 ? '' : 's'}`}
+              <div style={{
+                padding: '6px 14px',
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                borderRadius: '9999px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                color: '#FFFFFF'
+              }}>
+                {activeCommitmentsCount} Active Commitment{activeCommitmentsCount === 1 ? '' : 's'}
+              </div>
+              <div style={{
+                padding: '6px 14px',
+                backgroundColor: totalOutstandingMonthsCount > 0 ? '#FEE2E2' : 'rgba(255, 255, 255, 0.15)',
+                border: totalOutstandingMonthsCount > 0 ? '1px solid #FECACA' : '1px solid rgba(255, 255, 255, 0.25)',
+                borderRadius: '9999px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                color: totalOutstandingMonthsCount > 0 ? '#DC2626' : '#FFFFFF'
+              }}>
+                {totalOutstandingMonthsCount > 0
+                  ? `${totalOutstandingMonthsCount} Payment${totalOutstandingMonthsCount > 1 ? 's' : ''} Due`
+                  : '0 Overdue Payments'}
+              </div>
             </div>
           </div>
 
@@ -1136,7 +1163,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               {totalOutstandingMonthsCount > 0
                 ? 'Please complete your scheduled monthly contributions to maintain your network standing and ensure timely harvest releases.'
                 : (activeCommitmentsCount > 0
-                    ? '0 overdue payments • Your personal savings cycle is active and on track.'
+                    ? 'Your personal savings record is on track.'
                     : 'No active savings commitments currently found for this cycle year.')}
             </div>
           </div>
