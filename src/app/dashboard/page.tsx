@@ -318,12 +318,12 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     totalGroupSavingsToDate = allPayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
     totalGroupPaymentsCount = allPayments.length;
 
-    // 9. Projected Group Savings for Current/Selected Year (all active commitments * 12)
+    // 9. Total Group Savings for Current/Selected Year (total target value of all commitments for the year)
     const activeGroupCommitmentsForYear = normalizedCommitments.filter(
-      c => Number(c.collectionYear) === selectedYearNum && c.status === 'ACTIVE'
+      c => Number(c.collectionYear) === selectedYearNum && c.status !== 'CANCELLED'
     );
     projectedGroupSavingsForYear = activeGroupCommitmentsForYear.reduce(
-      (acc, c) => acc + (Number(c.amount) * 12),
+      (acc, c) => acc + (c.harvestAmount && Number(c.harvestAmount) > 0 ? Number(c.harvestAmount) : ((Number(c.amount) || 0) * 12)),
       0
     );
     activeGroupCommitmentsCount = activeGroupCommitmentsForYear.length;
@@ -1312,11 +1312,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: '#1a1a1a', fontFamily: 'var(--font-family-title)', margin: 0 }}>
                   {selectedYearNum === new Date().getFullYear() || selectedYear === '2026'
-                    ? 'Projected Group Savings for Current Year'
-                    : `Projected Group Savings for ${selectedYear}`}
+                    ? 'Total Group Savings for Current Year'
+                    : `Total Group Savings for ${selectedYear}`}
                 </h3>
                 <p style={{ fontSize: '0.75rem', color: '#57655c', marginTop: '3px', margin: 0 }}>
-                  Projected based on all active {selectedYear} savings commitment amounts
+                  Total target payout value for all {selectedYear} commitments
                 </p>
               </div>
               <div style={{
@@ -1337,6 +1337,16 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             <div style={{ fontSize: '1.95rem', fontWeight: 800, color: '#1a1a1a', marginTop: '16px', lineHeight: 1.1 }}>
               £{projectedGroupSavingsForYear.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
+          </div>
+
+          <div style={{
+            marginTop: '16px',
+            paddingTop: '12px',
+            borderTop: '1px solid #F5F3EF',
+            fontSize: '0.78rem',
+            color: '#57655c'
+          }}>
+            <span>Total target value across all {activeGroupCommitmentsCount} commitments</span>
           </div>
         </div>
       </div>
