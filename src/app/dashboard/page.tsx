@@ -347,8 +347,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
       {/* 1. Header Greeting & Year Selector */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
-        <div>
+      <div className="dashboard-header-greeting-row">
+        <div style={{ flex: '1 1 300px', minWidth: 0 }}>
           <h2 style={{
             fontSize: '1.65rem',
             fontWeight: 700,
@@ -366,22 +366,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         </div>
 
         {/* Date range & Year Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '8px 16px',
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #dcd7ca',
-            borderRadius: '9999px',
-            fontSize: '0.85rem',
-            fontWeight: 600,
-            color: '#1a1a1a',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)'
-          }}>
+        <div className="dashboard-date-filter-row">
+          <div className="dashboard-date-badge">
             <span>1 Jan – 31 Dec {selectedYear}</span>
-            <Calendar size={15} style={{ color: '#57655c' }} />
+            <Calendar size={15} style={{ color: '#57655c', flexShrink: 0 }} />
           </div>
           <YearSelect selectedYear={selectedYear} />
         </div>

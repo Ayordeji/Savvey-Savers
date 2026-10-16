@@ -1047,5 +1047,104 @@ button {
   }
 }
 
+/* Dashboard Greeting & Filter Header Responsive Layout */
+.dashboard-header-greeting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+}
+
+.dashboard-date-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #FFFFFF;
+  border: 1px solid #dcd7ca;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  height: 38px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.year-select-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.year-select-dropdown {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #FFFFFF;
+  border: 1px solid #dcd7ca;
+  border-radius: 9999px;
+  padding: 8px 32px 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  cursor: pointer;
+  font-family: var(--font-family-body);
+  outline: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  height: 38px;
+  box-sizing: border-box;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  white-space: nowrap;
+}
+
+.year-select-dropdown:hover,
+.year-select-dropdown:focus {
+  border-color: #0c4e43;
+}
+
+.year-select-chevron {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #57655c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .dashboard-date-filter-row {
+    width: 100% !important;
+    justify-content: space-between !important;
+    margin-top: 4px;
+  }
+
+  .dashboard-date-badge {
+    padding: 8px 14px !important;
+    font-size: 0.82rem !important;
+  }
+
+  /* Prevent iOS Safari from auto-zooming when tapping the dropdown */
+  .year-select-dropdown {
+    font-size: 16px !important;
+    padding: 8px 32px 8px 16px !important;
+  }
+}
+
+
 
 
