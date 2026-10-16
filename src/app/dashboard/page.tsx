@@ -1461,22 +1461,12 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       </div>
 
       {/* 7. Footer */}
-      <footer style={{
-        marginTop: '24px',
-        paddingTop: '20px',
-        borderTop: '1px solid #ECE8E2',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '12px',
-        fontSize: '0.75rem',
-        color: '#9CA3AF'
-      }}>
+      <footer className="dashboard-footer">
         <span>© 2026 Savvey Savers Networks. All rights reserved.</span>
-        <div style={{ display: 'flex', gap: '20px' }}>
-          <Link href="#" style={{ color: '#9CA3AF', textDecoration: 'none' }}>Privacy Policy</Link>
-          <Link href="#" style={{ color: '#9CA3AF', textDecoration: 'none' }}>Terms of Service</Link>
+        <div className="dashboard-footer-links">
+          <Link href="/terms-and-conditions" className="dashboard-footer-link">Privacy Policy</Link>
+          <span style={{ color: '#D1D5DB' }}>•</span>
+          <Link href="/terms-and-conditions" className="dashboard-footer-link">Terms of Service</Link>
         </div>
       </footer>
     </div>
