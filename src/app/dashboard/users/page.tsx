@@ -19,6 +19,7 @@ interface User {
   isActive: boolean;
   membership?: string;
   createdAt: string;
+  lastLoginAt?: string;
   invitationId?: string;
   addressLine1?: string;
   addressLine2?: string;
@@ -980,7 +981,13 @@ export default function ManageUsersPage() {
     // Status matching
     const isActiveStatus = userStatusFilter === 'ACTIVE';
     const isInvitedStatus = userStatusFilter === 'INVITED' || userStatusFilter === 'PENDING';
-    const matchesStatus = !userStatusFilter || (isActiveStatus && u.isActive) || (isInvitedStatus && !u.isActive);
+    const isLoggedInStatus = userStatusFilter === 'LOGGED_IN';
+    const isNeverLoggedInStatus = userStatusFilter === 'NEVER_LOGGED_IN';
+    const matchesStatus = !userStatusFilter || 
+      (isActiveStatus && u.isActive) || 
+      (isInvitedStatus && !u.isActive) ||
+      (isLoggedInStatus && !!u.lastLoginAt) ||
+      (isNeverLoggedInStatus && !u.lastLoginAt);
     
     if (!matchesStatus) return false;
 
@@ -1304,9 +1311,11 @@ export default function ManageUsersPage() {
             outline: 'none'
           }}
         >
-          <option value="">All Status</option>
-          <option value="ACTIVE">Active</option>
-          <option value="INVITED">Invited / Pending</option>
+          <option value="">All Status ({users.length})</option>
+          <option value="LOGGED_IN">Logged In ({users.filter(u => !!u.lastLoginAt).length})</option>
+          <option value="NEVER_LOGGED_IN">Never Logged In ({users.filter(u => !u.lastLoginAt).length})</option>
+          <option value="ACTIVE">Active ({users.filter(u => u.isActive).length})</option>
+          <option value="INVITED">Invited / Pending ({users.filter(u => !u.isActive).length})</option>
         </select>
 
         <select
@@ -2408,6 +2417,25 @@ export default function ManageUsersPage() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {/* Event: Portal Login Activity */}
+                  <div style={{ padding: '12px 14px', backgroundColor: '#FAF9F6', borderRadius: '10px', fontSize: '0.78rem', border: '1px solid #ECE8E2' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 600, color: '#111827' }}>
+                        {selectedUser.lastLoginAt ? 'Portal Login Active' : 'Portal Login Pending'}
+                      </span>
+                      <span style={{ color: selectedUser.lastLoginAt ? '#0c4e43' : '#9CA3AF', fontSize: '0.7rem', fontWeight: selectedUser.lastLoginAt ? 600 : 400 }}>
+                        {selectedUser.lastLoginAt
+                          ? new Date(selectedUser.lastLoginAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                          : 'Never logged in'}
+                      </span>
+                    </div>
+                    <div style={{ color: '#57655c', marginTop: '3px', fontSize: '0.75rem' }}>
+                      {selectedUser.lastLoginAt
+                        ? `Member signed into the portal on ${new Date(selectedUser.lastLoginAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}.`
+                        : 'Member account is created but has not yet signed into the platform.'}
+                    </div>
+                  </div>
+
                   {/* Event 1: Member profile status */}
                   <div style={{ padding: '12px 14px', backgroundColor: '#FAF9F6', borderRadius: '10px', fontSize: '0.78rem', border: '1px solid #ECE8E2' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

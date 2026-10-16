@@ -14,7 +14,8 @@ import {
   ExternalLink,
   Mail,
   Phone,
-  ArrowUpDown
+  ArrowUpDown,
+  LogIn
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -51,6 +52,7 @@ function MemberReportContent() {
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [loginFilter, setLoginFilter] = useState(''); // '' | 'LOGGED_IN' | 'NEVER_LOGGED_IN'
   const [statusFilter, setStatusFilter] = useState(''); // 'Active' or 'Inactive'
   const [roleFilter, setRoleFilter] = useState(''); // 'ADMIN' or 'MEMBER'
 
@@ -102,6 +104,7 @@ function MemberReportContent() {
 
   const handleResetFilters = () => {
     setSearchQuery('');
+    setLoginFilter('');
     setStatusFilter('');
     setRoleFilter('');
     setCurrentPage(1);
@@ -112,11 +115,17 @@ function MemberReportContent() {
   const activeMembers = users.filter(u => u.isActive).length;
   const pendingMembers = users.filter(u => !u.isActive).length;
   const adminMembers = users.filter(u => u.role === 'ADMIN' || u.isSuperAdmin).length;
+  const loggedInMembers = users.filter(u => !!u.lastLoginAt).length;
+  const neverLoggedInMembers = users.filter(u => !u.lastLoginAt).length;
 
   // Filter Logic
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
       const q = searchQuery.toLowerCase().trim();
+
+      // Login status matching
+      if (loginFilter === 'LOGGED_IN' && !u.lastLoginAt) return false;
+      if (loginFilter === 'NEVER_LOGGED_IN' && !!u.lastLoginAt) return false;
 
       // Status matching
       if (statusFilter === 'Active' && !u.isActive) return false;
@@ -144,7 +153,7 @@ function MemberReportContent() {
         (u.invitationId && u.invitationId.toLowerCase().includes(q))
       );
     });
-  }, [users, searchQuery, statusFilter, roleFilter]);
+  }, [users, searchQuery, loginFilter, statusFilter, roleFilter]);
 
   const sortedUsers = useMemo(() => {
     return [...filteredUsers].sort((a, b) => {
@@ -247,9 +256,22 @@ function MemberReportContent() {
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
         {/* Total Members */}
-        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div
+          onClick={() => { setLoginFilter(''); setStatusFilter(''); setCurrentPage(1); }}
+          style={{
+            backgroundColor: '#FFFFFF',
+            border: loginFilter === '' && statusFilter === '' ? '2px solid #0c4e43' : '1px solid #ECE8E2',
+            borderRadius: '16px',
+            padding: '18px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Total Members</span>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -257,35 +279,90 @@ function MemberReportContent() {
             </div>
           </div>
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>{totalMembers}</div>
-          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Registered directory</span>
+          <span style={{ fontSize: '0.74rem', color: '#6B7280' }}>Registered directory</span>
         </div>
 
-        {/* Active Members */}
-        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {/* Logged In */}
+        <div
+          onClick={() => { setLoginFilter(loginFilter === 'LOGGED_IN' ? '' : 'LOGGED_IN'); setCurrentPage(1); }}
+          style={{
+            backgroundColor: loginFilter === 'LOGGED_IN' ? '#F0FDF4' : '#FFFFFF',
+            border: loginFilter === 'LOGGED_IN' ? '2px solid #16A34A' : '1px solid #ECE8E2',
+            borderRadius: '16px',
+            padding: '18px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Active Members</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#166534' }}>Logged In</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <LogIn size={16} />
+            </div>
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#15803D', lineHeight: 1 }}>{loggedInMembers}</div>
+          <span style={{ fontSize: '0.74rem', color: '#166534', fontWeight: 500 }}>
+            {loginFilter === 'LOGGED_IN' ? '● Filtering active logins' : 'Activated platform login'}
+          </span>
+        </div>
+
+        {/* Never Logged In */}
+        <div
+          onClick={() => { setLoginFilter(loginFilter === 'NEVER_LOGGED_IN' ? '' : 'NEVER_LOGGED_IN'); setCurrentPage(1); }}
+          style={{
+            backgroundColor: loginFilter === 'NEVER_LOGGED_IN' ? '#FFFBEB' : '#FFFFFF',
+            border: loginFilter === 'NEVER_LOGGED_IN' ? '2px solid #D97706' : '1px solid #ECE8E2',
+            borderRadius: '16px',
+            padding: '18px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#92400E' }}>Never Logged In</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#FEF3C7', color: '#B45309', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Clock size={16} />
+            </div>
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#B45309', lineHeight: 1 }}>{neverLoggedInMembers}</div>
+          <span style={{ fontSize: '0.74rem', color: '#92400E', fontWeight: 500 }}>
+            {loginFilter === 'NEVER_LOGGED_IN' ? '● Filtering pending logins' : 'Awaiting first login'}
+          </span>
+        </div>
+
+        {/* Active Accounts */}
+        <div
+          onClick={() => { setStatusFilter(statusFilter === 'Active' ? '' : 'Active'); setCurrentPage(1); }}
+          style={{
+            backgroundColor: statusFilter === 'Active' ? '#EAF5EE' : '#FFFFFF',
+            border: statusFilter === 'Active' ? '2px solid #0c4e43' : '1px solid #ECE8E2',
+            borderRadius: '16px',
+            padding: '18px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Active Accounts</span>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#0c4e43', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <UserCheck size={16} />
             </div>
           </div>
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>{activeMembers}</div>
-          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Active platform accounts</span>
-        </div>
-
-        {/* Pending / Inactive */}
-        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Pending / Inactive</span>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#FEF3C7', color: '#B45309', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Clock size={16} />
-            </div>
-          </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>{pendingMembers}</div>
-          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Awaiting activation or suspended</span>
+          <span style={{ fontSize: '0.74rem', color: '#6B7280' }}>Active platform accounts</span>
         </div>
 
         {/* Administrators */}
-        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Administrators</span>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EDE9FE', color: '#6D28D9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -293,8 +370,71 @@ function MemberReportContent() {
             </div>
           </div>
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>{adminMembers}</div>
-          <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Admin privilege accounts</span>
+          <span style={{ fontSize: '0.74rem', color: '#6B7280' }}>Admin privilege accounts</span>
         </div>
+      </div>
+
+      {/* Quick Login Filter Tabs */}
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280', marginRight: '4px' }}>
+          Quick Filter:
+        </span>
+        <button
+          onClick={() => { setLoginFilter(''); setCurrentPage(1); }}
+          style={{
+            padding: '6px 14px',
+            borderRadius: '9999px',
+            fontSize: '0.82rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: loginFilter === '' ? '1.5px solid #0c4e43' : '1px solid #ECE8E2',
+            backgroundColor: loginFilter === '' ? '#0c4e43' : '#FFFFFF',
+            color: loginFilter === '' ? '#FFFFFF' : '#374151',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          All Members ({totalMembers})
+        </button>
+        <button
+          onClick={() => { setLoginFilter('LOGGED_IN'); setCurrentPage(1); }}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 14px',
+            borderRadius: '9999px',
+            fontSize: '0.82rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: loginFilter === 'LOGGED_IN' ? '1.5px solid #16A34A' : '1px solid #ECE8E2',
+            backgroundColor: loginFilter === 'LOGGED_IN' ? '#16A34A' : '#FFFFFF',
+            color: loginFilter === 'LOGGED_IN' ? '#FFFFFF' : '#166534',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <LogIn size={13} />
+          <span>Logged In ({loggedInMembers})</span>
+        </button>
+        <button
+          onClick={() => { setLoginFilter('NEVER_LOGGED_IN'); setCurrentPage(1); }}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 14px',
+            borderRadius: '9999px',
+            fontSize: '0.82rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: loginFilter === 'NEVER_LOGGED_IN' ? '1.5px solid #D97706' : '1px solid #ECE8E2',
+            backgroundColor: loginFilter === 'NEVER_LOGGED_IN' ? '#D97706' : '#FFFFFF',
+            color: loginFilter === 'NEVER_LOGGED_IN' ? '#FFFFFF' : '#92400E',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <Clock size={13} />
+          <span>Never Logged In ({neverLoggedInMembers})</span>
+        </button>
       </div>
 
       {/* Filter & Search Bar */}
@@ -348,7 +488,31 @@ function MemberReportContent() {
             />
           </div>
 
-          {/* Status Filter */}
+          {/* Login Activity Filter */}
+          <select
+            value={loginFilter}
+            onChange={(e) => {
+              setLoginFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            style={{
+              padding: '7px 12px',
+              fontSize: '0.82rem',
+              borderRadius: '8px',
+              border: loginFilter ? '1.5px solid #0c4e43' : '1px solid #ECE8E2',
+              backgroundColor: loginFilter ? '#F0FDF4' : '#FAF9F6',
+              color: loginFilter ? '#166534' : '#374151',
+              fontWeight: loginFilter ? 700 : 500,
+              cursor: 'pointer',
+              minWidth: '170px'
+            }}
+          >
+            <option value="">All Login Statuses</option>
+            <option value="LOGGED_IN">✅ Logged In ({loggedInMembers})</option>
+            <option value="NEVER_LOGGED_IN">⏳ Never Logged In ({neverLoggedInMembers})</option>
+          </select>
+
+          {/* Account Status Filter */}
           <select
             value={statusFilter}
             onChange={(e) => {
@@ -367,9 +531,9 @@ function MemberReportContent() {
               minWidth: '150px'
             }}
           >
-            <option value="">All Statuses</option>
-            <option value="Active">Active Only</option>
-            <option value="Inactive">Inactive / Pending</option>
+            <option value="">All Account Statuses</option>
+            <option value="Active">Active Accounts ({activeMembers})</option>
+            <option value="Inactive">Pending / Inactive ({pendingMembers})</option>
           </select>
 
           {/* Role Filter */}
@@ -397,7 +561,7 @@ function MemberReportContent() {
             <option value="MEMBER">Member (Savers)</option>
           </select>
 
-          {(searchQuery || statusFilter || roleFilter) && (
+          {(searchQuery || loginFilter || statusFilter || roleFilter) && (
             <button
               onClick={handleResetFilters}
               style={{
@@ -674,10 +838,16 @@ function MemberReportContent() {
                     </td>
 
                     {/* Last Active */}
-                    <td style={{ padding: '14px 16px', fontSize: '0.82rem', color: '#6B7280', whiteSpace: 'nowrap' }}>
-                      {u.lastLoginAt
-                        ? new Date(u.lastLoginAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                        : 'Never'}
+                    <td style={{ padding: '14px 16px', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
+                      {u.lastLoginAt ? (
+                        <span style={{ color: '#0c4e43', fontWeight: 600 }}>
+                          {new Date(u.lastLoginAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#9CA3AF', fontSize: '0.78rem', fontStyle: 'italic' }}>
+                          Never
+                        </span>
+                      )}
                     </td>
 
                     {/* Action */}
