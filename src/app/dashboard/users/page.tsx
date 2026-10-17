@@ -71,6 +71,8 @@ export default function ManageUsersPage() {
   const [broadcastAudience, setBroadcastAudience] = useState<'ACTIVE' | 'ALL' | 'SELECTED' | 'INACTIVE'>('ACTIVE');
   const [broadcastSending, setBroadcastSending] = useState(false);
   const [broadcastError, setBroadcastError] = useState('');
+  const [broadcastSelectedUserIds, setBroadcastSelectedUserIds] = useState<string[]>([]);
+  const [broadcastSearchQuery, setBroadcastSearchQuery] = useState('');
 
   const [feeBase, setFeeBase] = useState('35.99');
   const [feeAdmin, setFeeAdmin] = useState('0');
@@ -851,6 +853,10 @@ export default function ManageUsersPage() {
       setBroadcastError('Subject and message are required.');
       return;
     }
+    if (broadcastAudience === 'SELECTED' && broadcastSelectedUserIds.length === 0) {
+      setBroadcastError('Please select at least one recipient member.');
+      return;
+    }
     setBroadcastSending(true);
     setBroadcastError('');
 
@@ -862,7 +868,7 @@ export default function ManageUsersPage() {
           subject: broadcastSubject,
           message: broadcastMessage,
           audience: broadcastAudience,
-          userIds: selectedUserIds
+          userIds: broadcastSelectedUserIds
         })
       });
 
@@ -1191,6 +1197,8 @@ export default function ManageUsersPage() {
           <button
             onClick={() => {
               setBroadcastAudience(selectedUserIds.length > 0 ? 'SELECTED' : 'ACTIVE');
+              setBroadcastSelectedUserIds(selectedUserIds.length > 0 ? [...selectedUserIds] : []);
+              setBroadcastSearchQuery('');
               setBroadcastSubject('');
               setBroadcastMessage('');
               setBroadcastError('');
@@ -1500,6 +1508,8 @@ export default function ManageUsersPage() {
             <button
               onClick={() => {
                 setBroadcastAudience('SELECTED');
+                setBroadcastSelectedUserIds([...selectedUserIds]);
+                setBroadcastSearchQuery('');
                 setBroadcastSubject('');
                 setBroadcastMessage('');
                 setBroadcastError('');
@@ -4560,7 +4570,7 @@ export default function ManageUsersPage() {
       {/* --- BULK EMAIL ANNOUNCEMENT MODAL --- */}
       {activeModal === 'BULK_EMAIL_ANNOUNCEMENT' && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
-          <div className="modal-content" style={{ maxWidth: '560px', padding: '28px', position: 'relative' }}>
+          <div className="modal-content" style={{ maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto', padding: '28px', position: 'relative' }}>
             <button
               onClick={() => setActiveModal('NONE')}
               style={{ position: 'absolute', right: '20px', top: '20px', color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}
@@ -4594,7 +4604,7 @@ export default function ManageUsersPage() {
                   value={broadcastAudience}
                   onChange={(e) => setBroadcastAudience(e.target.value as any)}
                   className="form-select"
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '0.88rem' }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #ECE8E2', backgroundColor: '#FFFFFF', fontSize: '0.88rem' }}
                 >
                   <option value="ACTIVE">
                     All Active Members ({users.filter(u => u.isActive && u.role === 'MEMBER').length})
@@ -4602,16 +4612,164 @@ export default function ManageUsersPage() {
                   <option value="ALL">
                     All Members ({users.filter(u => u.role === 'MEMBER').length})
                   </option>
-                  {selectedUserIds.length > 0 && (
-                    <option value="SELECTED">
-                      Selected Members Only ({selectedUserIds.length})
-                    </option>
-                  )}
+                  <option value="SELECTED">
+                    Select Individual Members ({broadcastSelectedUserIds.length} selected)
+                  </option>
                   <option value="INACTIVE">
                     Inactive Members ({users.filter(u => !u.isActive).length})
                   </option>
                 </select>
               </div>
+
+              {/* Individual Member Selection Container */}
+              {broadcastAudience === 'SELECTED' && (
+                <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '16px', border: '1px solid #ECE8E2' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Users size={15} style={{ color: '#0c4e43' }} />
+                      <span>Choose Members ({broadcastSelectedUserIds.length} selected)</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const allFiltered = users
+                            .filter(u => {
+                              if (!broadcastSearchQuery.trim()) return true;
+                              const q = broadcastSearchQuery.toLowerCase();
+                              return (
+                                u.name?.toLowerCase().includes(q) ||
+                                u.email?.toLowerCase().includes(q) ||
+                                u.phone?.toLowerCase().includes(q)
+                              );
+                            })
+                            .map(u => u.id);
+                          setBroadcastSelectedUserIds(prev => Array.from(new Set([...prev, ...allFiltered])));
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#0c4e43', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', padding: '2px 4px', textDecoration: 'underline' }}
+                      >
+                        Select All Filtered
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBroadcastSelectedUserIds([])}
+                        style={{ background: 'none', border: 'none', color: '#DC2626', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', padding: '2px 4px', textDecoration: 'underline' }}
+                      >
+                        Clear Selection
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Search Filter */}
+                  <div style={{ position: 'relative', marginBottom: '10px' }}>
+                    <Search size={14} style={{ position: 'absolute', left: '10px', top: '11px', color: '#9CA3AF' }} />
+                    <input
+                      type="text"
+                      value={broadcastSearchQuery}
+                      onChange={(e) => setBroadcastSearchQuery(e.target.value)}
+                      placeholder="Filter members by name, email, or phone..."
+                      className="form-input"
+                      style={{ paddingLeft: '32px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px', fontSize: '0.82rem', backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid #ECE8E2' }}
+                    />
+                  </div>
+
+                  {/* Member List */}
+                  <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
+                    {(() => {
+                      const filtered = users.filter(u => {
+                        if (!broadcastSearchQuery.trim()) return true;
+                        const q = broadcastSearchQuery.toLowerCase();
+                        return (
+                          u.name?.toLowerCase().includes(q) ||
+                          u.email?.toLowerCase().includes(q) ||
+                          u.phone?.toLowerCase().includes(q)
+                        );
+                      });
+
+                      if (filtered.length === 0) {
+                        return (
+                          <div style={{ padding: '16px', textAlign: 'center', color: '#9CA3AF', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                            No members found matching &quot;{broadcastSearchQuery}&quot;
+                          </div>
+                        );
+                      }
+
+                      return filtered.map(u => {
+                        const isChecked = broadcastSelectedUserIds.includes(u.id);
+                        return (
+                          <div
+                            key={u.id}
+                            onClick={() => {
+                              setBroadcastSelectedUserIds(prev =>
+                                prev.includes(u.id) ? prev.filter(id => id !== u.id) : [...prev, u.id]
+                              );
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '8px 12px',
+                              borderRadius: '8px',
+                              border: isChecked ? '1px solid #0c4e43' : '1px solid #ECE8E2',
+                              backgroundColor: isChecked ? '#EAF5EE' : '#FFFFFF',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  setBroadcastSelectedUserIds(prev =>
+                                    e.target.checked ? [...prev, u.id] : prev.filter(id => id !== u.id)
+                                  );
+                                }}
+                                style={{ accentColor: '#0c4e43', cursor: 'pointer', width: '15px', height: '15px' }}
+                              />
+                              <div style={{
+                                width: '28px',
+                                height: '28px',
+                                borderRadius: '50%',
+                                backgroundColor: isChecked ? '#0c4e43' : '#E2E8F0',
+                                color: isChecked ? '#FFFFFF' : '#475569',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                flexShrink: 0
+                              }}>
+                                {u.name ? u.name.charAt(0).toUpperCase() : 'M'}
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#111827' }}>
+                                  {u.name}
+                                </span>
+                                <span style={{ fontSize: '0.72rem', color: '#6B7280' }}>
+                                  {u.email} {u.phone ? `• ${u.phone}` : ''}
+                                </span>
+                              </div>
+                            </div>
+                            <span style={{
+                              fontSize: '0.7rem',
+                              padding: '2px 8px',
+                              borderRadius: '9999px',
+                              fontWeight: 600,
+                              backgroundColor: u.isActive ? '#DCFCE7' : '#FEF3C7',
+                              color: u.isActive ? '#15803D' : '#D97706',
+                              flexShrink: 0
+                            }}>
+                              {u.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+              )}
 
               {/* Subject */}
               <div className="form-group" style={{ margin: 0 }}>
@@ -4625,7 +4783,7 @@ export default function ManageUsersPage() {
                   onChange={(e) => setBroadcastSubject(e.target.value)}
                   placeholder="e.g. Important Notice: Savvey Savers 2027 Fee Schedule & Cycle Dates"
                   className="form-input"
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '0.88rem' }}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ECE8E2', backgroundColor: '#FFFFFF', fontSize: '0.88rem' }}
                 />
               </div>
 
@@ -4641,7 +4799,7 @@ export default function ManageUsersPage() {
                   onChange={(e) => setBroadcastMessage(e.target.value)}
                   placeholder="Type your message here. You can include details on updated fee schedules, savings deadlines, or meeting notes..."
                   className="form-input"
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '0.88rem', fontFamily: 'inherit', lineHeight: 1.5 }}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ECE8E2', backgroundColor: '#FFFFFF', fontSize: '0.88rem', fontFamily: 'inherit', lineHeight: 1.5 }}
                 />
               </div>
 
