@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle2, AlertCircle, Save } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Save, Users } from 'lucide-react';
 
 export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
@@ -287,11 +287,14 @@ export default function ProfilePage() {
         </div>
 
         {/* --- NEXT OF KIN SECTION --- */}
-        <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1e293b', marginBottom: '4px' }}>
-            Next of Kin Details
-          </h3>
-          <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '16px' }}>
+        <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '20px', border: '1px solid #ECE8E2', marginTop: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <Users size={18} style={{ color: '#0c4e43' }} />
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#111827', margin: 0 }}>
+              Next of Kin Details
+            </h3>
+          </div>
+          <p style={{ fontSize: '0.82rem', color: '#6B7280', marginBottom: '16px' }}>
             Emergency and nominated contact for your membership records.
           </p>
 
@@ -306,7 +309,7 @@ export default function ProfilePage() {
                 onChange={(e) => setNextOfKinName(e.target.value)}
                 placeholder="e.g. Jane Doe"
                 className="form-input"
-                style={{ width: '100%', padding: '12px 16px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '0.95rem', color: '#1e293b' }}
+                style={{ width: '100%', padding: '12px 16px', backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '8px', fontSize: '0.95rem', color: '#111827' }}
               />
             </div>
 
@@ -317,8 +320,8 @@ export default function ProfilePage() {
               <select
                 value={nextOfKinRelationship}
                 onChange={(e) => setNextOfKinRelationship(e.target.value)}
-                className="form-input"
-                style={{ width: '100%', padding: '12px 16px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '0.95rem', color: '#1e293b' }}
+                className="form-select"
+                style={{ width: '100%', padding: '12px 16px', backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '8px', fontSize: '0.95rem', color: '#111827' }}
               >
                 <option value="">Select relationship</option>
                 <option value="Spouse">Spouse</option>
@@ -344,7 +347,7 @@ export default function ProfilePage() {
                 onChange={(e) => setNextOfKinPhone(e.target.value)}
                 placeholder="e.g. +44 7700 900123"
                 className="form-input"
-                style={{ width: '100%', padding: '12px 16px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '0.95rem', color: '#1e293b' }}
+                style={{ width: '100%', padding: '12px 16px', backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '8px', fontSize: '0.95rem', color: '#111827' }}
               />
             </div>
 
@@ -358,7 +361,7 @@ export default function ProfilePage() {
                 onChange={(e) => setNextOfKinEmail(e.target.value)}
                 placeholder="e.g. nextofkin@example.com"
                 className="form-input"
-                style={{ width: '100%', padding: '12px 16px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '0.95rem', color: '#1e293b' }}
+                style={{ width: '100%', padding: '12px 16px', backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '8px', fontSize: '0.95rem', color: '#111827' }}
               />
             </div>
           </div>
@@ -373,7 +376,7 @@ export default function ProfilePage() {
               onChange={(e) => setNextOfKinAddress(e.target.value)}
               placeholder="e.g. 12 High Street, London, SW1A 1AA"
               className="form-input"
-              style={{ width: '100%', padding: '12px 16px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '0.95rem', color: '#1e293b' }}
+              style={{ width: '100%', padding: '12px 16px', backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '8px', fontSize: '0.95rem', color: '#111827' }}
             />
           </div>
         </div>

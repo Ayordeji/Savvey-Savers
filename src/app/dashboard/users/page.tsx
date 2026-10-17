@@ -2884,8 +2884,8 @@ export default function ManageUsersPage() {
               </div>
 
               {/* Next of Kin Details Section */}
-              <div style={{ backgroundColor: '#F8FAFC', borderRadius: '10px', padding: '16px', border: '1px solid #E2E8F0', marginTop: '4px', marginBottom: '4px' }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1E293B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '16px', border: '1px solid #ECE8E2', marginTop: '4px', marginBottom: '4px' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Users size={16} style={{ color: '#0c4e43' }} />
                   <span>Next of Kin Details (Optional)</span>
                 </div>
@@ -2907,7 +2907,7 @@ export default function ManageUsersPage() {
                       value={formNextOfKinRelationship}
                       onChange={(e) => setFormNextOfKinRelationship(e.target.value)}
                       className="form-select"
-                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ECE8E2', backgroundColor: '#FFFFFF', color: '#111827' }}
                     >
                       <option value="">Select relationship</option>
                       <option value="Spouse">Spouse</option>
@@ -3107,8 +3107,8 @@ export default function ManageUsersPage() {
               </div>
 
               {/* Next of Kin Details Section */}
-              <div style={{ backgroundColor: '#F8FAFC', borderRadius: '10px', padding: '16px', border: '1px solid #E2E8F0', marginTop: '4px', marginBottom: '4px' }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1E293B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '16px', border: '1px solid #ECE8E2', marginTop: '4px', marginBottom: '4px' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Users size={16} style={{ color: '#0c4e43' }} />
                   <span>Next of Kin Details</span>
                 </div>
@@ -3130,7 +3130,7 @@ export default function ManageUsersPage() {
                       value={formNextOfKinRelationship}
                       onChange={(e) => setFormNextOfKinRelationship(e.target.value)}
                       className="form-select"
-                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ECE8E2', backgroundColor: '#FFFFFF', color: '#111827' }}
                     >
                       <option value="">Select relationship</option>
                       <option value="Spouse">Spouse</option>
@@ -3330,9 +3330,9 @@ export default function ManageUsersPage() {
             {(() => {
               if (selectedUser.role === 'ADMIN') {
                 return (
-                  <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
+                  <div style={{ backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid #ECE8E2', paddingBottom: '10px' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827' }}>
                         Membership Fee Details
                       </span>
                       <span style={{ fontSize: '0.75rem', padding: '3px 10px', borderRadius: '9999px', fontWeight: 600, backgroundColor: '#EFF6FF', color: '#1D4ED8' }}>
@@ -3348,7 +3348,7 @@ export default function ManageUsersPage() {
 
                       <div>
                         <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Fee Status</span>
-                        <strong style={{ fontSize: '0.9rem', color: '#1e293b' }}>Exempt from fee</strong>
+                        <strong style={{ fontSize: '0.9rem', color: '#111827' }}>Exempt from fee</strong>
                       </div>
 
                       <div>
@@ -3358,7 +3358,7 @@ export default function ManageUsersPage() {
 
                       <div>
                         <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Member Since</span>
-                        <strong style={{ fontSize: '0.9rem', color: '#1e293b' }}>
+                        <strong style={{ fontSize: '0.9rem', color: '#111827' }}>
                           {new Date(selectedUser.createdAt || Date.now()).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
                         </strong>
                       </div>
@@ -3379,9 +3379,9 @@ export default function ManageUsersPage() {
                     : (selectedUser.membershipFeeConfirmed ? new Date(selectedUser.createdAt || Date.now()).toLocaleDateString('en-GB') : 'N/A'));
 
               return (
-                <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
+                <div style={{ backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid #ECE8E2', paddingBottom: '10px' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827' }}>
                       Membership Fee Details ({yearValue})
                     </span>
                     <span className={`status-pill ${isPaid ? 'completed' : 'pending'}`} style={{ fontSize: '0.75rem', padding: '3px 10px' }}>
@@ -3397,7 +3397,7 @@ export default function ManageUsersPage() {
 
                     <div>
                       <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Payment Received Date</span>
-                      <strong style={{ fontSize: '0.9rem', color: '#1e293b' }}>{datePaidStr}</strong>
+                      <strong style={{ fontSize: '0.9rem', color: '#111827' }}>{datePaidStr}</strong>
                     </div>
 
                     <div>
@@ -3409,7 +3409,7 @@ export default function ManageUsersPage() {
 
                     <div>
                       <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Member Since</span>
-                      <strong style={{ fontSize: '0.9rem', color: '#1e293b' }}>
+                      <strong style={{ fontSize: '0.9rem', color: '#111827' }}>
                         {new Date(selectedUser.createdAt || Date.now()).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
                       </strong>
                     </div>
@@ -3476,9 +3476,9 @@ export default function ManageUsersPage() {
             })()}
 
             {/* Residential Address Card */}
-            <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
+            <div style={{ backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid #ECE8E2', paddingBottom: '8px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827' }}>
                   Residential Address
                 </span>
                 <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
@@ -3487,7 +3487,7 @@ export default function ManageUsersPage() {
               </div>
 
               {selectedUser.addressLine1 || selectedUser.city || selectedUser.postCode ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.85rem', color: '#1e293b' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.85rem', color: '#111827' }}>
                   {selectedUser.addressLine1 && <div style={{ fontWeight: 600 }}>{selectedUser.addressLine1}</div>}
                   {selectedUser.addressLine2 && <div style={{ color: '#475569' }}>{selectedUser.addressLine2}</div>}
                   <div style={{ color: '#475569' }}>
@@ -3502,35 +3502,38 @@ export default function ManageUsersPage() {
             </div>
 
             {/* Next of Kin Details Card in View Modal */}
-            <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
-                  Next of Kin Details
-                </span>
+            <div style={{ backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid #ECE8E2', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Users size={16} style={{ color: '#0c4e43' }} />
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827' }}>
+                    Next of Kin Details
+                  </span>
+                </div>
               </div>
 
               {selectedUser.nextOfKinName || selectedUser.nextOfKinPhone ? (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '0.85rem' }}>
                   <div>
-                    <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Full Name:</span>
-                    <div style={{ fontWeight: 600, color: '#1e293b' }}>{selectedUser.nextOfKinName || '—'}</div>
+                    <span style={{ color: '#6B7280', fontSize: '0.75rem' }}>Full Name:</span>
+                    <div style={{ fontWeight: 600, color: '#111827' }}>{selectedUser.nextOfKinName || '—'}</div>
                   </div>
                   <div>
-                    <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Relationship:</span>
-                    <div style={{ fontWeight: 500, color: '#1e293b' }}>{selectedUser.nextOfKinRelationship || '—'}</div>
+                    <span style={{ color: '#6B7280', fontSize: '0.75rem' }}>Relationship:</span>
+                    <div style={{ fontWeight: 500, color: '#111827' }}>{selectedUser.nextOfKinRelationship || '—'}</div>
                   </div>
                   <div>
-                    <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Phone Number:</span>
-                    <div style={{ fontWeight: 500, color: '#1e293b' }}>{selectedUser.nextOfKinPhone || '—'}</div>
+                    <span style={{ color: '#6B7280', fontSize: '0.75rem' }}>Phone Number:</span>
+                    <div style={{ fontWeight: 500, color: '#111827' }}>{selectedUser.nextOfKinPhone || '—'}</div>
                   </div>
                   <div>
-                    <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Email Address:</span>
-                    <div style={{ fontWeight: 500, color: '#1e293b', wordBreak: 'break-all' }}>{selectedUser.nextOfKinEmail || '—'}</div>
+                    <span style={{ color: '#6B7280', fontSize: '0.75rem' }}>Email Address:</span>
+                    <div style={{ fontWeight: 500, color: '#111827', wordBreak: 'break-all' }}>{selectedUser.nextOfKinEmail || '—'}</div>
                   </div>
                   {selectedUser.nextOfKinAddress && (
-                    <div style={{ gridColumn: 'span 2', borderTop: '1px dashed #e2e8f0', paddingTop: '6px' }}>
-                      <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Address:</span>
-                      <div style={{ fontWeight: 500, color: '#1e293b' }}>{selectedUser.nextOfKinAddress}</div>
+                    <div style={{ gridColumn: 'span 2', borderTop: '1px dashed #ECE8E2', paddingTop: '6px' }}>
+                      <span style={{ color: '#6B7280', fontSize: '0.75rem' }}>Address:</span>
+                      <div style={{ fontWeight: 500, color: '#111827' }}>{selectedUser.nextOfKinAddress}</div>
                     </div>
                   )}
                 </div>
@@ -3542,9 +3545,9 @@ export default function ManageUsersPage() {
             </div>
 
             {/* Savings Commitments List Section */}
-            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
+            <div style={{ backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid #ECE8E2', paddingBottom: '8px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827' }}>
                   Savings Commitments ({userCommitmentsList.length})
                 </span>
               </div>
