@@ -121,7 +121,12 @@ export async function GET() {
       postCode: u.postCode,
       country: u.country,
       permissions: u.permissions,
-      invitedBy: u.invitedBy
+      invitedBy: u.invitedBy,
+      nextOfKinName: u.nextOfKinName || '',
+      nextOfKinRelationship: u.nextOfKinRelationship || '',
+      nextOfKinPhone: u.nextOfKinPhone || '',
+      nextOfKinEmail: u.nextOfKinEmail || '',
+      nextOfKinAddress: u.nextOfKinAddress || ''
     };
   });
 
@@ -159,7 +164,12 @@ export async function POST(request: Request) {
       collectionMonth,
       collectionYear,
       goal,
-      savingGoal
+      savingGoal,
+      nextOfKinName,
+      nextOfKinRelationship,
+      nextOfKinPhone,
+      nextOfKinEmail,
+      nextOfKinAddress
     } = body;
 
     const name = firstName ? `${firstName} ${lastName || ''}`.trim() : (body.name || '');
@@ -224,7 +234,12 @@ export async function POST(request: Request) {
       country: country || 'United Kingdom',
       permissions: isMemberInvite ? [] : (permissions || []),
       membershipFeeConfirmed: role === 'ADMIN',
-      termsAccepted: true
+      termsAccepted: true,
+      nextOfKinName: nextOfKinName || '',
+      nextOfKinRelationship: nextOfKinRelationship || '',
+      nextOfKinPhone: nextOfKinPhone || '',
+      nextOfKinEmail: nextOfKinEmail || '',
+      nextOfKinAddress: nextOfKinAddress || ''
     } });
 
     // Create commitment if specified
@@ -380,9 +395,6 @@ export async function PUT(request: Request) {
     if ('isActive' in body) {
       const newActiveState = !!body.isActive;
       updateData.isActive = newActiveState;
-      if (!newActiveState) {
-        updateData.deactivationReason = body.deactivationReason || 'Inactive Member / User';
-      }
 
       // Handle email notification on activation/deactivation
       if (!newActiveState) {
@@ -395,23 +407,31 @@ export async function PUT(request: Request) {
           tplId = '31';
         }
 
-        await sendTemplatedEmail(tplId, user.email, {
-          name: user.name,
-          MemberName: user.name,
-          first_name: user.firstName || user.name.split(' ')[0] || user.name,
-          last_name: user.lastName || user.name.split(' ').slice(1).join(' ') || '',
-          email: user.email,
-        });
+        try {
+          await sendTemplatedEmail(tplId, user.email, {
+            name: user.name,
+            MemberName: user.name,
+            first_name: user.firstName || user.name.split(' ')[0] || user.name,
+            last_name: user.lastName || user.name.split(' ').slice(1).join(' ') || '',
+            email: user.email,
+          });
+        } catch (emailErr) {
+          console.error('[Deactivation Email Error]:', emailErr);
+        }
       } else {
         // Reactivation email logic
-        const subject = 'Account Reactivated - Savvey Savers Network';
-        const bodyText = `Dear ${user.firstName || user.name.split(' ')[0] || user.name},\n\nYour account on the Savvey Savers Network has been reactivated by your Administrator. You can now log into your dashboard using your credentials.\n\nKind regards,\nPlatform Support\nSavvey Savers Network`;
-        
-        await sendEmail({
-          to: user.email,
-          subject,
-          body: bodyText
-        });
+        try {
+          const subject = 'Account Reactivated - Savvey Savers Network';
+          const bodyText = `Dear ${user.firstName || user.name.split(' ')[0] || user.name},\n\nYour account on the Savvey Savers Network has been reactivated by your Administrator. You can now log into your dashboard using your credentials.\n\nKind regards,\nPlatform Support\nSavvey Savers Network`;
+          
+          await sendEmail({
+            to: user.email,
+            subject,
+            body: bodyText
+          });
+        } catch (emailErr) {
+          console.error('[Reactivation Email Error]:', emailErr);
+        }
       }
     } else if ('membershipFeeConfirmed' in body) {
       updateData.membershipFeeConfirmed = !!body.membershipFeeConfirmed;
@@ -431,7 +451,12 @@ export async function PUT(request: Request) {
         postCode,
         country,
         permissions,
-        approveRequest
+        approveRequest,
+        nextOfKinName,
+        nextOfKinRelationship,
+        nextOfKinPhone,
+        nextOfKinEmail,
+        nextOfKinAddress
       } = body;
 
       isRoleChanging = role && role !== user.role;
@@ -462,6 +487,11 @@ export async function PUT(request: Request) {
         postCode: postCode ?? user.postCode,
         country: country ?? user.country,
         permissions: permissions ?? user.permissions,
+        nextOfKinName: nextOfKinName !== undefined ? nextOfKinName : user.nextOfKinName,
+        nextOfKinRelationship: nextOfKinRelationship !== undefined ? nextOfKinRelationship : user.nextOfKinRelationship,
+        nextOfKinPhone: nextOfKinPhone !== undefined ? nextOfKinPhone : user.nextOfKinPhone,
+        nextOfKinEmail: nextOfKinEmail !== undefined ? nextOfKinEmail : user.nextOfKinEmail,
+        nextOfKinAddress: nextOfKinAddress !== undefined ? nextOfKinAddress : user.nextOfKinAddress,
         ...(typeof body.isActive === 'boolean' ? { isActive: body.isActive } : {})
       };
 
@@ -494,9 +524,19 @@ export async function PUT(request: Request) {
       console.log(`Role update notification email sent to ${user.email} (New Role: ${targetRoleName}).`);
     }
 
+    const actionType = 'isActive' in body
+      ? (body.isActive ? 'ADMIN_USER_ACTIVATE' : 'ADMIN_USER_DEACTIVATE')
+      : 'ADMIN_USER_UPDATE';
+
+    const actionDetails = 'isActive' in body
+      ? (!body.isActive
+          ? `Admin deactivated user ${user.name} (${user.email}). Reason: ${body.deactivationReason || 'Inactive Member / User'}.`
+          : `Admin reactivated user ${user.name} (${user.email}).`)
+      : `Admin updated user details for ${user.email}.`;
+
     await db.auditLog.create({ data: {
-      action: 'ADMIN_USER_UPDATE',
-      details: `Admin updated user details for ${user.email}.`,
+      action: actionType,
+      details: actionDetails,
       userId: reqUser.id
     } });
 

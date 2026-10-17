@@ -32,6 +32,11 @@ model User {
   isSuperAdmin             Boolean?
   lastLoginAt              DateTime?
   invitedBy                String?
+  nextOfKinName            String?
+  nextOfKinRelationship    String?
+  nextOfKinPhone           String?
+  nextOfKinEmail           String?
+  nextOfKinAddress         String?
   createdAt                DateTime  @default(now())
   updatedAt                DateTime  @updatedAt
 

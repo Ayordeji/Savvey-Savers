@@ -19,6 +19,13 @@ export default function ProfilePage() {
   const [postCode, setPostCode] = useState('');
   const [country, setCountry] = useState('United Kingdom');
 
+  // Next of Kin
+  const [nextOfKinName, setNextOfKinName] = useState('');
+  const [nextOfKinRelationship, setNextOfKinRelationship] = useState('');
+  const [nextOfKinPhone, setNextOfKinPhone] = useState('');
+  const [nextOfKinEmail, setNextOfKinEmail] = useState('');
+  const [nextOfKinAddress, setNextOfKinAddress] = useState('');
+
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -38,6 +45,11 @@ export default function ProfilePage() {
         setCity(data.city || '');
         setPostCode(data.postCode || '');
         setCountry(data.country || 'United Kingdom');
+        setNextOfKinName(data.nextOfKinName || '');
+        setNextOfKinRelationship(data.nextOfKinRelationship || '');
+        setNextOfKinPhone(data.nextOfKinPhone || '');
+        setNextOfKinEmail(data.nextOfKinEmail || '');
+        setNextOfKinAddress(data.nextOfKinAddress || '');
       } else {
         setErrorMsg('Failed to load user profile details.');
       }
@@ -82,6 +94,11 @@ export default function ProfilePage() {
           city,
           postCode,
           country,
+          nextOfKinName,
+          nextOfKinRelationship,
+          nextOfKinPhone,
+          nextOfKinEmail,
+          nextOfKinAddress,
         }),
       });
 
@@ -267,6 +284,98 @@ export default function ProfilePage() {
             className="form-input"
             style={{ width: '100%', padding: '12px 16px', backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '0.95rem', color: '#64748b', cursor: 'not-allowed', fontWeight: 600 }}
           />
+        </div>
+
+        {/* --- NEXT OF KIN SECTION --- */}
+        <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1e293b', marginBottom: '4px' }}>
+            Next of Kin Details
+          </h3>
+          <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '16px' }}>
+            Emergency and nominated contact for your membership records.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '16px' }}>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem', marginBottom: '8px', display: 'block' }}>
+                Full Name
+              </label>
+              <input
+                type="text"
+                value={nextOfKinName}
+                onChange={(e) => setNextOfKinName(e.target.value)}
+                placeholder="e.g. Jane Doe"
+                className="form-input"
+                style={{ width: '100%', padding: '12px 16px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '0.95rem', color: '#1e293b' }}
+              />
+            </div>
+
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem', marginBottom: '8px', display: 'block' }}>
+                Relationship
+              </label>
+              <select
+                value={nextOfKinRelationship}
+                onChange={(e) => setNextOfKinRelationship(e.target.value)}
+                className="form-input"
+                style={{ width: '100%', padding: '12px 16px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '0.95rem', color: '#1e293b' }}
+              >
+                <option value="">Select relationship</option>
+                <option value="Spouse">Spouse</option>
+                <option value="Partner">Partner</option>
+                <option value="Parent">Parent</option>
+                <option value="Child">Child</option>
+                <option value="Sibling">Sibling</option>
+                <option value="Other Relative">Other Relative</option>
+                <option value="Friend">Friend</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '16px' }}>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem', marginBottom: '8px', display: 'block' }}>
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                value={nextOfKinPhone}
+                onChange={(e) => setNextOfKinPhone(e.target.value)}
+                placeholder="e.g. +44 7700 900123"
+                className="form-input"
+                style={{ width: '100%', padding: '12px 16px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '0.95rem', color: '#1e293b' }}
+              />
+            </div>
+
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem', marginBottom: '8px', display: 'block' }}>
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={nextOfKinEmail}
+                onChange={(e) => setNextOfKinEmail(e.target.value)}
+                placeholder="e.g. nextofkin@example.com"
+                className="form-input"
+                style={{ width: '100%', padding: '12px 16px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '0.95rem', color: '#1e293b' }}
+              />
+            </div>
+          </div>
+
+          <div className="form-group" style={{ margin: 0 }}>
+            <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem', marginBottom: '8px', display: 'block' }}>
+              Address
+            </label>
+            <input
+              type="text"
+              value={nextOfKinAddress}
+              onChange={(e) => setNextOfKinAddress(e.target.value)}
+              placeholder="e.g. 12 High Street, London, SW1A 1AA"
+              className="form-input"
+              style={{ width: '100%', padding: '12px 16px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '0.95rem', color: '#1e293b' }}
+            />
+          </div>
         </div>
 
         {/* Save Button */}

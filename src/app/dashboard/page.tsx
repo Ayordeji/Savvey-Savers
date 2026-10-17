@@ -6,6 +6,7 @@ import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 import MonthlyRevenueChart from './MonthlyRevenueChart';
 import SparklineChart from './SparklineChart';
 import YearSelect from './YearSelect';
+import DashboardAnnouncementBanner from './DashboardAnnouncementBanner';
 import {
   TrendingUp,
   Calendar,
@@ -386,6 +387,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
+      {/* Dashboard Announcement Banner */}
+      <DashboardAnnouncementBanner isAdmin={isAdmin} />
+
       {/* 1. Header Greeting & Year Selector */}
       <div className="dashboard-header-greeting-row">
         <div style={{ flex: '1 1 300px', minWidth: 0 }}>

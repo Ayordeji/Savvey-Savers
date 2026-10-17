@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle, Download, Upload, Filter, Send, Wallet, Clock, Check, ChevronDown, ArrowRight, UserCheck, UserX, User, Shield } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle, Download, Upload, Filter, Send, Wallet, Clock, Check, ChevronDown, ArrowRight, UserCheck, UserX, User, Shield, Users } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 import PaginationControls from '../PaginationControls';
 import styles from './users.module.css';
@@ -32,6 +32,11 @@ interface User {
   termsAccepted?: boolean;
   isSuperAdmin?: boolean;
   hasPendingFee?: boolean;
+  nextOfKinName?: string;
+  nextOfKinRelationship?: string;
+  nextOfKinPhone?: string;
+  nextOfKinEmail?: string;
+  nextOfKinAddress?: string;
 }
 
 export default function ManageUsersPage() {
@@ -54,11 +59,18 @@ export default function ManageUsersPage() {
 
 
   // Modal States
-  const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'VIEW' | 'DELETE_CONFIRM' | 'BULK_DELETE_CONFIRM' | 'MEMBERSHIP_DETAILS' | 'AGREEMENT' | 'SCHEDULE' | 'REVIEWS' | 'REQUEST_FEE' | 'CONFIRM_REQUEST_FEE' | 'CONFIRM_FEE_FORM' | 'CONFIRM_FEE_POPUP' | 'REMIND_FEE_POPUP' | 'DEACTIVATE_CONFIRM' | 'ACTIVATE_CONFIRM'>('NONE');
+  const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'VIEW' | 'DELETE_CONFIRM' | 'BULK_DELETE_CONFIRM' | 'MEMBERSHIP_DETAILS' | 'AGREEMENT' | 'SCHEDULE' | 'REVIEWS' | 'REQUEST_FEE' | 'CONFIRM_REQUEST_FEE' | 'CONFIRM_FEE_FORM' | 'CONFIRM_FEE_POPUP' | 'REMIND_FEE_POPUP' | 'DEACTIVATE_CONFIRM' | 'ACTIVATE_CONFIRM' | 'BULK_EMAIL_ANNOUNCEMENT'>('NONE');
   const [deactivationReason, setDeactivationReason] = useState('');
   const [deactivationError, setDeactivationError] = useState('');
   const [membershipAgreement, setMembershipAgreement] = useState('');
   const [feeSchedule, setFeeSchedule] = useState('');
+
+  // Bulk Email Announcement States
+  const [broadcastSubject, setBroadcastSubject] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [broadcastAudience, setBroadcastAudience] = useState<'ACTIVE' | 'ALL' | 'SELECTED' | 'INACTIVE'>('ACTIVE');
+  const [broadcastSending, setBroadcastSending] = useState(false);
+  const [broadcastError, setBroadcastError] = useState('');
 
   const [feeBase, setFeeBase] = useState('35.99');
   const [feeAdmin, setFeeAdmin] = useState('0');
@@ -209,6 +221,13 @@ export default function ManageUsersPage() {
   const [formIsSuperAdmin, setFormIsSuperAdmin] = useState(false);
   const [formIsActive, setFormIsActive] = useState(true);
 
+  // Next of Kin form fields
+  const [formNextOfKinName, setFormNextOfKinName] = useState('');
+  const [formNextOfKinRelationship, setFormNextOfKinRelationship] = useState('');
+  const [formNextOfKinPhone, setFormNextOfKinPhone] = useState('');
+  const [formNextOfKinEmail, setFormNextOfKinEmail] = useState('');
+  const [formNextOfKinAddress, setFormNextOfKinAddress] = useState('');
+
   // Dropdown menus active index
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
@@ -349,6 +368,11 @@ export default function ManageUsersPage() {
     setFormCountry('United Kingdom');
     setFormPermissions(['INVITE_USER', 'ASSIGN_UNAVAILABLE_MONTH']);
     setFormIsActive(true);
+    setFormNextOfKinName('');
+    setFormNextOfKinRelationship('');
+    setFormNextOfKinPhone('');
+    setFormNextOfKinEmail('');
+    setFormNextOfKinAddress('');
     setActiveModal('ADD');
   };
 
@@ -374,6 +398,11 @@ export default function ManageUsersPage() {
     setFormPostCode(user.postCode || '');
     setFormCountry(user.country || 'United Kingdom');
     setFormPermissions(user.permissions || []);
+    setFormNextOfKinName(user.nextOfKinName || '');
+    setFormNextOfKinRelationship(user.nextOfKinRelationship || '');
+    setFormNextOfKinPhone(user.nextOfKinPhone || '');
+    setFormNextOfKinEmail(user.nextOfKinEmail || '');
+    setFormNextOfKinAddress(user.nextOfKinAddress || '');
     setActiveModal('EDIT');
     setOpenDropdownId(null);
   };
@@ -642,6 +671,11 @@ export default function ManageUsersPage() {
           country: formCountry,
           permissions: formPermissions,
           inviteMode,
+          nextOfKinName: formNextOfKinName,
+          nextOfKinRelationship: formNextOfKinRelationship,
+          nextOfKinPhone: formNextOfKinPhone,
+          nextOfKinEmail: formNextOfKinEmail,
+          nextOfKinAddress: formNextOfKinAddress
         }),
       });
 
@@ -691,13 +725,36 @@ export default function ManageUsersPage() {
           city: formCity,
           postCode: formPostCode,
           country: formCountry,
-          permissions: formPermissions
+          permissions: formPermissions,
+          nextOfKinName: formNextOfKinName,
+          nextOfKinRelationship: formNextOfKinRelationship,
+          nextOfKinPhone: formNextOfKinPhone,
+          nextOfKinEmail: formNextOfKinEmail,
+          nextOfKinAddress: formNextOfKinAddress
         }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
+        setSelectedUser(prev => prev ? {
+          ...prev,
+          firstName: formFirstName,
+          lastName: formLastName,
+          name: `${formFirstName} ${formLastName}`.trim(),
+          email: formEmail,
+          phone: formPhone,
+          addressLine1: formAddressLine1,
+          addressLine2: formAddressLine2,
+          city: formCity,
+          postCode: formPostCode,
+          country: formCountry,
+          nextOfKinName: formNextOfKinName,
+          nextOfKinRelationship: formNextOfKinRelationship,
+          nextOfKinPhone: formNextOfKinPhone,
+          nextOfKinEmail: formNextOfKinEmail,
+          nextOfKinAddress: formNextOfKinAddress
+        } : null);
         fetchUsers();
         setActiveModal('NONE');
         if (data.pendingSuperAdmin) {
@@ -746,6 +803,7 @@ export default function ManageUsersPage() {
       });
 
       if (res.ok) {
+        setSelectedUser(prev => prev ? { ...prev, isActive: false } : null);
         fetchUsers();
         setActiveModal('NONE');
       } else {
@@ -773,6 +831,7 @@ export default function ManageUsersPage() {
       });
 
       if (res.ok) {
+        setSelectedUser(prev => prev ? { ...prev, isActive: true } : null);
         fetchUsers();
         setActiveModal('NONE');
       } else {
@@ -783,6 +842,44 @@ export default function ManageUsersPage() {
       await dialog.alert('Status Error', 'A network error occurred while activating user.');
     } finally {
       setFormSubmitting(false);
+    }
+  };
+
+  const handleBroadcastSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!broadcastSubject.trim() || !broadcastMessage.trim()) {
+      setBroadcastError('Subject and message are required.');
+      return;
+    }
+    setBroadcastSending(true);
+    setBroadcastError('');
+
+    try {
+      const res = await fetch('/api/admin/announcements/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: broadcastSubject,
+          message: broadcastMessage,
+          audience: broadcastAudience,
+          userIds: selectedUserIds
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setActiveModal('NONE');
+        await dialog.alert(
+          'Email Announcement Sent',
+          `Successfully delivered announcement to ${data.sentCount} member(s).${data.failedCount > 0 ? ` (${data.failedCount} failed to deliver)` : ''}`
+        );
+      } else {
+        setBroadcastError(data.error || 'Failed to send announcement emails.');
+      }
+    } catch (err) {
+      setBroadcastError('A network error occurred while sending announcement.');
+    } finally {
+      setBroadcastSending(false);
     }
   };
 
@@ -881,13 +978,16 @@ export default function ManageUsersPage() {
       } else {
         setActiveModal('NONE');
         await dialog.alert(
-          'Oops...',
-          data.error || 'This user have a already a saving commitment'
+          'Cannot Delete Member',
+          data.error || 'This member has savings commitment records which contribute to the platform financial records. To preserve data integrity, please use "Mark as Inactive" to deactivate their account instead of deleting.'
         );
       }
     } catch (err) {
       setActiveModal('NONE');
-      await dialog.alert('Oops...', 'This user have a already a saving commitment');
+      await dialog.alert(
+        'Cannot Delete Member',
+        'This member has savings commitment records which contribute to the platform financial records. To preserve data integrity, please use "Mark as Inactive" to deactivate their account instead of deleting.'
+      );
     } finally {
       setFormSubmitting(false);
     }
@@ -984,7 +1084,7 @@ export default function ManageUsersPage() {
     
     // Status matching
     const isActiveStatus = userStatusFilter === 'ACTIVE';
-    const isInvitedStatus = userStatusFilter === 'INVITED' || userStatusFilter === 'PENDING';
+    const isInvitedStatus = userStatusFilter === 'INVITED' || userStatusFilter === 'PENDING' || userStatusFilter === 'INACTIVE';
     const isLoggedInStatus = userStatusFilter === 'LOGGED_IN';
     const isNeverLoggedInStatus = userStatusFilter === 'NEVER_LOGGED_IN';
     const matchesStatus = !userStatusFilter || 
@@ -1087,27 +1187,56 @@ export default function ManageUsersPage() {
           </p>
         </div>
         
-        <button
-          onClick={handleOpenAddModal}
-          className="btn btn-terracotta"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            backgroundColor: '#D97746',
-            color: '#FFFFFF',
-            borderRadius: '8px',
-            padding: '9px 18px',
-            fontSize: '0.875rem',
-            fontWeight: 600,
-            border: 'none',
-            boxShadow: '0 2px 6px rgba(217, 119, 70, 0.25)'
-          }}
-        >
-          <Plus size={16} />
-          <span>Add Member</span>
-          <ChevronDown size={14} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => {
+              setBroadcastAudience(selectedUserIds.length > 0 ? 'SELECTED' : 'ACTIVE');
+              setBroadcastSubject('');
+              setBroadcastMessage('');
+              setBroadcastError('');
+              setActiveModal('BULK_EMAIL_ANNOUNCEMENT');
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: '#0c4e43',
+              color: '#FFFFFF',
+              borderRadius: '8px',
+              padding: '9px 16px',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(12, 78, 67, 0.2)'
+            }}
+          >
+            <Mail size={16} />
+            <span>Broadcast Email</span>
+          </button>
+
+          <button
+            onClick={handleOpenAddModal}
+            className="btn btn-terracotta"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: '#D97746',
+              color: '#FFFFFF',
+              borderRadius: '8px',
+              padding: '9px 18px',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              border: 'none',
+              boxShadow: '0 2px 6px rgba(217, 119, 70, 0.25)'
+            }}
+          >
+            <Plus size={16} />
+            <span>Add Member</span>
+            <ChevronDown size={14} />
+          </button>
+        </div>
       </div>
 
       {/* 4 Summary KPI Cards */}
@@ -1319,7 +1448,7 @@ export default function ManageUsersPage() {
           <option value="LOGGED_IN">Logged In ({users.filter(u => !!u.lastLoginAt).length})</option>
           <option value="NEVER_LOGGED_IN">Never Logged In ({users.filter(u => !u.lastLoginAt).length})</option>
           <option value="ACTIVE">Active ({users.filter(u => u.isActive).length})</option>
-          <option value="INVITED">Invited / Pending ({users.filter(u => !u.isActive).length})</option>
+          <option value="INACTIVE">Inactive ({users.filter(u => !u.isActive).length})</option>
         </select>
 
         <select
@@ -1367,21 +1496,49 @@ export default function ManageUsersPage() {
         </button>
 
         {selectedUserIds.length > 0 && (
-          <button
-            onClick={() => { setErrorMsg(''); setActiveModal('BULK_DELETE_CONFIRM'); }}
-            className="btn btn-danger btn-sm"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 14px',
-              fontSize: '0.82rem'
-            }}
-          >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={() => {
+                setBroadcastAudience('SELECTED');
+                setBroadcastSubject('');
+                setBroadcastMessage('');
+                setBroadcastError('');
+                setActiveModal('BULK_EMAIL_ANNOUNCEMENT');
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                backgroundColor: '#EAF5EE',
+                color: '#0c4e43',
+                border: '1px solid #BBF7D0',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              <Mail size={14} />
+              <span>Email Selected ({selectedUserIds.length})</span>
+            </button>
+
+            <button
+              onClick={() => { setErrorMsg(''); setActiveModal('BULK_DELETE_CONFIRM'); }}
+              className="btn btn-danger btn-sm"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                fontSize: '0.82rem'
+              }}
+            >
             <Trash2 size={14} />
             <span>Delete Selected ({selectedUserIds.length})</span>
           </button>
-        )}
+        </div>
+      )}
       </div>
 
       {/* Main Container with Members Table + Slide-Out Member Profile Drawer */}
@@ -2205,6 +2362,65 @@ export default function ManageUsersPage() {
                   </div>
                 </div>
 
+                {/* Next of Kin Details Card */}
+                <div style={{ backgroundColor: '#FAF9F6', borderRadius: '14px', padding: '16px', border: '1px solid #ECE8E2' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Users size={15} style={{ color: '#0c4e43' }} />
+                      <span>Next of Kin Details</span>
+                    </div>
+                    <button
+                      onClick={() => handleOpenEditModal(selectedUser)}
+                      style={{ background: 'none', border: 'none', color: '#0c4e43', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer', padding: '2px 6px', borderRadius: '4px' }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+
+                  {selectedUser.nextOfKinName || selectedUser.nextOfKinPhone ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.78rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#6B7280' }}>Full Name</span>
+                        <span style={{ color: '#111827', fontWeight: 600 }}>
+                          {selectedUser.nextOfKinName || '—'}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#6B7280' }}>Relationship</span>
+                        <span style={{ color: '#111827', fontWeight: 500 }}>
+                          {selectedUser.nextOfKinRelationship || '—'}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#6B7280' }}>Phone Number</span>
+                        <span style={{ color: '#111827', fontWeight: 500 }}>
+                          {selectedUser.nextOfKinPhone || '—'}
+                        </span>
+                      </div>
+                      {selectedUser.nextOfKinEmail && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ color: '#6B7280' }}>Email Address</span>
+                          <span style={{ color: '#111827', fontWeight: 500, wordBreak: 'break-all' }}>
+                            {selectedUser.nextOfKinEmail}
+                          </span>
+                        </div>
+                      )}
+                      {selectedUser.nextOfKinAddress && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', borderTop: '1px dashed #ECE8E2', paddingTop: '8px' }}>
+                          <span style={{ color: '#6B7280', flexShrink: 0 }}>Address</span>
+                          <span style={{ color: '#111827', textAlign: 'right', fontWeight: 500, lineHeight: 1.4, wordBreak: 'break-word' }}>
+                            {selectedUser.nextOfKinAddress}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.75rem', color: '#9CA3AF', fontStyle: 'italic', padding: '4px 0' }}>
+                      No next of kin details recorded for this member.
+                    </div>
+                  )}
+                </div>
+
                 {/* Account Information Card */}
                 <div style={{ backgroundColor: '#FAF9F6', borderRadius: '14px', padding: '16px', border: '1px solid #ECE8E2' }}>
                   <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -2667,6 +2883,80 @@ export default function ManageUsersPage() {
                 </div>
               </div>
 
+              {/* Next of Kin Details Section */}
+              <div style={{ backgroundColor: '#F8FAFC', borderRadius: '10px', padding: '16px', border: '1px solid #E2E8F0', marginTop: '4px', marginBottom: '4px' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1E293B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Users size={16} style={{ color: '#0c4e43' }} />
+                  <span>Next of Kin Details (Optional)</span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '12px' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Next of Kin Full Name</label>
+                    <input
+                      type="text"
+                      value={formNextOfKinName}
+                      onChange={(e) => setFormNextOfKinName(e.target.value)}
+                      placeholder="e.g. Jane Doe"
+                      className="form-input"
+                    />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Relationship</label>
+                    <select
+                      value={formNextOfKinRelationship}
+                      onChange={(e) => setFormNextOfKinRelationship(e.target.value)}
+                      className="form-select"
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                    >
+                      <option value="">Select relationship</option>
+                      <option value="Spouse">Spouse</option>
+                      <option value="Partner">Partner</option>
+                      <option value="Parent">Parent</option>
+                      <option value="Child">Child</option>
+                      <option value="Sibling">Sibling</option>
+                      <option value="Other Relative">Other Relative</option>
+                      <option value="Friend">Friend</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '12px' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Next of Kin Phone</label>
+                    <input
+                      type="tel"
+                      value={formNextOfKinPhone}
+                      onChange={(e) => setFormNextOfKinPhone(e.target.value)}
+                      placeholder="e.g. +44 7700 900123"
+                      className="form-input"
+                    />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Next of Kin Email</label>
+                    <input
+                      type="email"
+                      value={formNextOfKinEmail}
+                      onChange={(e) => setFormNextOfKinEmail(e.target.value)}
+                      placeholder="e.g. nextofkin@example.com"
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Next of Kin Address</label>
+                  <input
+                    type="text"
+                    value={formNextOfKinAddress}
+                    onChange={(e) => setFormNextOfKinAddress(e.target.value)}
+                    placeholder="e.g. 12 High Street, London, SW1A 1AA"
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
               <div className="form-group" style={{ margin: '0 0 16px 0' }}>
                 <label className="form-label" style={{ fontWeight: 600, color: '#334155' }}>Select Role *</label>
                 <select value={formRole} onChange={(e) => setFormRole(e.target.value as any)} className="form-select" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
@@ -2812,6 +3102,80 @@ export default function ManageUsersPage() {
                     readOnly
                     className="form-input"
                     style={{ backgroundColor: 'rgba(0, 0, 0, 0.05)', color: 'var(--text-muted)', cursor: 'not-allowed' }}
+                  />
+                </div>
+              </div>
+
+              {/* Next of Kin Details Section */}
+              <div style={{ backgroundColor: '#F8FAFC', borderRadius: '10px', padding: '16px', border: '1px solid #E2E8F0', marginTop: '4px', marginBottom: '4px' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1E293B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Users size={16} style={{ color: '#0c4e43' }} />
+                  <span>Next of Kin Details</span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '12px' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Next of Kin Full Name</label>
+                    <input
+                      type="text"
+                      value={formNextOfKinName}
+                      onChange={(e) => setFormNextOfKinName(e.target.value)}
+                      placeholder="e.g. Jane Doe"
+                      className="form-input"
+                    />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Relationship</label>
+                    <select
+                      value={formNextOfKinRelationship}
+                      onChange={(e) => setFormNextOfKinRelationship(e.target.value)}
+                      className="form-select"
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                    >
+                      <option value="">Select relationship</option>
+                      <option value="Spouse">Spouse</option>
+                      <option value="Partner">Partner</option>
+                      <option value="Parent">Parent</option>
+                      <option value="Child">Child</option>
+                      <option value="Sibling">Sibling</option>
+                      <option value="Other Relative">Other Relative</option>
+                      <option value="Friend">Friend</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '12px' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Next of Kin Phone</label>
+                    <input
+                      type="tel"
+                      value={formNextOfKinPhone}
+                      onChange={(e) => setFormNextOfKinPhone(e.target.value)}
+                      placeholder="e.g. +44 7700 900123"
+                      className="form-input"
+                    />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Next of Kin Email</label>
+                    <input
+                      type="email"
+                      value={formNextOfKinEmail}
+                      onChange={(e) => setFormNextOfKinEmail(e.target.value)}
+                      placeholder="e.g. nextofkin@example.com"
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Next of Kin Address</label>
+                  <input
+                    type="text"
+                    value={formNextOfKinAddress}
+                    onChange={(e) => setFormNextOfKinAddress(e.target.value)}
+                    placeholder="e.g. 12 High Street, London, SW1A 1AA"
+                    className="form-input"
                   />
                 </div>
               </div>
@@ -3133,6 +3497,46 @@ export default function ManageUsersPage() {
               ) : (
                 <div style={{ fontSize: '0.82rem', color: '#94a3b8', fontStyle: 'italic' }}>
                   No residential address recorded.
+                </div>
+              )}
+            </div>
+
+            {/* Next of Kin Details Card in View Modal */}
+            <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
+                  Next of Kin Details
+                </span>
+              </div>
+
+              {selectedUser.nextOfKinName || selectedUser.nextOfKinPhone ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '0.85rem' }}>
+                  <div>
+                    <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Full Name:</span>
+                    <div style={{ fontWeight: 600, color: '#1e293b' }}>{selectedUser.nextOfKinName || '—'}</div>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Relationship:</span>
+                    <div style={{ fontWeight: 500, color: '#1e293b' }}>{selectedUser.nextOfKinRelationship || '—'}</div>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Phone Number:</span>
+                    <div style={{ fontWeight: 500, color: '#1e293b' }}>{selectedUser.nextOfKinPhone || '—'}</div>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Email Address:</span>
+                    <div style={{ fontWeight: 500, color: '#1e293b', wordBreak: 'break-all' }}>{selectedUser.nextOfKinEmail || '—'}</div>
+                  </div>
+                  {selectedUser.nextOfKinAddress && (
+                    <div style={{ gridColumn: 'span 2', borderTop: '1px dashed #e2e8f0', paddingTop: '6px' }}>
+                      <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Address:</span>
+                      <div style={{ fontWeight: 500, color: '#1e293b' }}>{selectedUser.nextOfKinAddress}</div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ fontSize: '0.82rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                  No next of kin details recorded for this member.
                 </div>
               )}
             </div>
@@ -4146,6 +4550,124 @@ export default function ManageUsersPage() {
                 {formSubmitting ? 'Activating...' : 'Submit'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- BULK EMAIL ANNOUNCEMENT MODAL --- */}
+      {activeModal === 'BULK_EMAIL_ANNOUNCEMENT' && (
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
+          <div className="modal-content" style={{ maxWidth: '560px', padding: '28px', position: 'relative' }}>
+            <button
+              onClick={() => setActiveModal('NONE')}
+              style={{ position: 'absolute', right: '20px', top: '20px', color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              <X size={20} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <Mail size={22} style={{ color: '#0c4e43' }} />
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: '#111827' }}>
+                Broadcast Email Announcement
+              </h3>
+            </div>
+            <p style={{ color: '#6B7280', fontSize: '0.84rem', marginBottom: '18px', lineHeight: 1.4 }}>
+              Send an official broadcast email directly to members' inboxes from the portal.
+            </p>
+
+            {broadcastError && (
+              <div style={{ backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', padding: '10px 14px', borderRadius: '8px', fontSize: '0.84rem', marginBottom: '16px' }}>
+                {broadcastError}
+              </div>
+            )}
+
+            <form onSubmit={handleBroadcastSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Audience Selector */}
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '6px', display: 'block' }}>
+                  Target Recipients *
+                </label>
+                <select
+                  value={broadcastAudience}
+                  onChange={(e) => setBroadcastAudience(e.target.value as any)}
+                  className="form-select"
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '0.88rem' }}
+                >
+                  <option value="ACTIVE">
+                    All Active Members ({users.filter(u => u.isActive && u.role === 'MEMBER').length})
+                  </option>
+                  <option value="ALL">
+                    All Members ({users.filter(u => u.role === 'MEMBER').length})
+                  </option>
+                  {selectedUserIds.length > 0 && (
+                    <option value="SELECTED">
+                      Selected Members Only ({selectedUserIds.length})
+                    </option>
+                  )}
+                  <option value="INACTIVE">
+                    Inactive Members ({users.filter(u => !u.isActive).length})
+                  </option>
+                </select>
+              </div>
+
+              {/* Subject */}
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '6px', display: 'block' }}>
+                  Email Subject *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={broadcastSubject}
+                  onChange={(e) => setBroadcastSubject(e.target.value)}
+                  placeholder="e.g. Important Notice: Savvey Savers 2027 Fee Schedule & Cycle Dates"
+                  className="form-input"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '0.88rem' }}
+                />
+              </div>
+
+              {/* Message Body */}
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '6px', display: 'block' }}>
+                  Announcement Message *
+                </label>
+                <textarea
+                  rows={6}
+                  required
+                  value={broadcastMessage}
+                  onChange={(e) => setBroadcastMessage(e.target.value)}
+                  placeholder="Type your message here. You can include details on updated fee schedules, savings deadlines, or meeting notes..."
+                  className="form-input"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '0.88rem', fontFamily: 'inherit', lineHeight: 1.5 }}
+                />
+              </div>
+
+              {/* Info Note */}
+              <div style={{ backgroundColor: '#FAF9F6', border: '1px solid #ECE8E2', borderRadius: '8px', padding: '10px 14px', fontSize: '0.78rem', color: '#6B7280', lineHeight: 1.4 }}>
+                ℹ️ <strong>Personalized Delivery:</strong> Each member receives a personalized email starting with <em>&quot;Dear [First Name],&quot;</em> followed by your message, and closing with the official Savvey Savers Network signature and portal link.
+              </div>
+
+              {/* Buttons */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveModal('NONE')}
+                  disabled={broadcastSending}
+                  className="btn btn-secondary"
+                  style={{ borderRadius: '8px', padding: '9px 18px' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={broadcastSending}
+                  className="btn btn-primary"
+                  style={{ backgroundColor: '#0c4e43', color: '#FFFFFF', borderRadius: '8px', padding: '9px 20px', fontWeight: 600 }}
+                >
+                  {broadcastSending ? 'Sending Announcement...' : 'Send Broadcast Email'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

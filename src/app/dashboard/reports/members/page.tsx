@@ -34,6 +34,11 @@ interface User {
   invitedBy?: string;
   displayId?: string;
   invitationId?: string;
+  nextOfKinName?: string;
+  nextOfKinRelationship?: string;
+  nextOfKinPhone?: string;
+  nextOfKinEmail?: string;
+  nextOfKinAddress?: string;
 }
 
 export default function MemberReportPage() {
@@ -191,7 +196,22 @@ function MemberReportContent() {
 
   const handleExportCSV = () => {
     if (filteredUsers.length === 0) return;
-    const headers = ['MEMBER ID', 'NAME', 'EMAIL', 'PHONE NUMBER', 'ROLE', 'STATUS', 'CREATED ON', 'LAST LOGGED', 'INVITED BY'];
+    const headers = [
+      'MEMBER ID',
+      'NAME',
+      'EMAIL',
+      'PHONE NUMBER',
+      'ROLE',
+      'STATUS',
+      'NEXT OF KIN NAME',
+      'NEXT OF KIN RELATIONSHIP',
+      'NEXT OF KIN PHONE',
+      'NEXT OF KIN EMAIL',
+      'NEXT OF KIN ADDRESS',
+      'CREATED ON',
+      'LAST LOGGED',
+      'INVITED BY'
+    ];
     const rows = filteredUsers.map(u => [
       `"${u.displayId || u.invitationId || u.id}"`,
       `"${u.name.replace(/"/g, '""')}"`,
@@ -199,6 +219,11 @@ function MemberReportContent() {
       `"${u.phone || 'N/A'}"`,
       `"${u.isSuperAdmin || (u.id === 'usr_admin' && u.isSuperAdmin !== false) ? 'Super Admin' : u.role === 'ADMIN' ? 'Admin' : 'Member'}"`,
       `"${u.isActive ? 'Active' : 'Pending / Inactive'}"`,
+      `"${(u.nextOfKinName || '').replace(/"/g, '""')}"`,
+      `"${(u.nextOfKinRelationship || '').replace(/"/g, '""')}"`,
+      `"${u.nextOfKinPhone || ''}"`,
+      `"${u.nextOfKinEmail || ''}"`,
+      `"${(u.nextOfKinAddress || '').replace(/"/g, '""')}"`,
       `"${new Date(u.createdAt || Date.now()).toLocaleDateString('en-GB')}"`,
       `"${u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString('en-GB') : 'Never'}"`,
       `"${u.invitedBy || 'System / Platform'}"`

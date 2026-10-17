@@ -46,6 +46,11 @@ export async function GET() {
     country: user.country || 'United Kingdom',
     role: user.role,
     termsAccepted: Boolean(user.termsAccepted),
+    nextOfKinName: user.nextOfKinName || '',
+    nextOfKinRelationship: user.nextOfKinRelationship || '',
+    nextOfKinPhone: user.nextOfKinPhone || '',
+    nextOfKinEmail: user.nextOfKinEmail || '',
+    nextOfKinAddress: user.nextOfKinAddress || '',
   });
 }
 
@@ -84,7 +89,21 @@ export async function PUT(req: Request) {
       });
     }
 
-    const { firstName, lastName, phone, addressLine1, addressLine2, city, postCode, country } = body;
+    const {
+      firstName,
+      lastName,
+      phone,
+      addressLine1,
+      addressLine2,
+      city,
+      postCode,
+      country,
+      nextOfKinName,
+      nextOfKinRelationship,
+      nextOfKinPhone,
+      nextOfKinEmail,
+      nextOfKinAddress
+    } = body;
 
     const updatedFirstName = (firstName || '').trim();
     const updatedLastName = (lastName || '').trim();
@@ -102,6 +121,11 @@ export async function PUT(req: Request) {
         city: (city || '').trim(),
         postCode: (postCode || '').trim(),
         country: (country || 'United Kingdom').trim(),
+        nextOfKinName: nextOfKinName !== undefined ? (nextOfKinName || '').trim() : user.nextOfKinName,
+        nextOfKinRelationship: nextOfKinRelationship !== undefined ? (nextOfKinRelationship || '').trim() : user.nextOfKinRelationship,
+        nextOfKinPhone: nextOfKinPhone !== undefined ? (nextOfKinPhone || '').trim() : user.nextOfKinPhone,
+        nextOfKinEmail: nextOfKinEmail !== undefined ? (nextOfKinEmail || '').trim() : user.nextOfKinEmail,
+        nextOfKinAddress: nextOfKinAddress !== undefined ? (nextOfKinAddress || '').trim() : user.nextOfKinAddress,
       },
     });
 
