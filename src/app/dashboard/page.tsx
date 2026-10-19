@@ -110,6 +110,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   let alreadyReceivedHarvestCount = 0;
   let harvestStillToBePaidAmount = 0;
   let harvestStillToBePaidCount = 0;
+  let memberYearHarvestTotal = 0;
   let lastHarvestPayout = 'None yet';
   let nextHarvestPayout = 'None scheduled';
   let totalGroupSavingsToDate = 0;
@@ -303,6 +304,12 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     harvestStillToBePaidCount = pendingYearCommitments.length;
     harvestStillToBePaidAmount = pendingYearCommitments.reduce(
       (acc, c) => acc + (Number(c.amount) * 12),
+      0
+    );
+
+    // Total Harvest for the year for a member is total monthly contribution * 12 (already received + still to be paid)
+    memberYearHarvestTotal = yearCommitments.reduce(
+      (acc, c) => acc + ((Number(c.amount) || 0) * 12),
       0
     );
 
@@ -596,14 +603,14 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
 
             <div style={{ fontSize: '1.95rem', fontWeight: 800, fontFamily: 'var(--font-family-title)', color: '#064E3B', marginTop: '12px', letterSpacing: '-0.02em' }}>
-              £{harvestReleasedTotal.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              £{(isAdmin ? harvestReleasedTotal : memberYearHarvestTotal).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
 
             <div style={{ fontSize: '0.78rem', color: '#047857', marginTop: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
               <span>
                 {isAdmin
                   ? `${completedHarvestsCount} completed harvest${completedHarvestsCount === 1 ? '' : 's'} recorded`
-                  : `Scheduled payout for ${selectedYear}`}
+                  : `Total scheduled payout for ${selectedYear}`}
               </span>
               <ArrowRight size={13} />
             </div>
