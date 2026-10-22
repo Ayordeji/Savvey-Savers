@@ -515,7 +515,7 @@ export async function PUT(request: Request) {
     }
 
     if (isRoleChanging) {
-      const targetRoleName = body.role === 'ADMIN' ? 'Coordinator' : 'Saver';
+      const targetRoleName = body.role === 'ADMIN' ? 'Coordinator' : 'Member';
       await sendEmail({
         to: updateData.email || user.email,
         subject: 'Savvey Savers - Role Updated',

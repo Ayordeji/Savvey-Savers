@@ -169,8 +169,13 @@ function PaymentsContent() {
   };
 
   const handleOpenOverdueReminders = (targetMonth?: string, targetYear?: number) => {
-    const m = targetMonth || monthFilter || new Date().toLocaleString('en-GB', { month: 'long' });
-    const y = targetYear || (yearFilter ? parseInt(yearFilter, 10) : new Date().getFullYear());
+    const now = new Date();
+    const prevMonthIdx = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+    const prevMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    const defaultPastMonth = monthsList[prevMonthIdx];
+
+    const m = targetMonth || monthFilter || defaultPastMonth;
+    const y = targetYear || (yearFilter ? parseInt(yearFilter, 10) : (monthFilter ? now.getFullYear() : prevMonthYear));
     setOverdueModalMonth(m);
     setOverdueModalYear(y);
     setIsOverdueModalOpen(true);
@@ -438,10 +443,12 @@ function PaymentsContent() {
 
   const receivedCount = scopedPayments.filter(p => p.status === 'CONFIRMED').length;
   const pendingCount = scopedPayments.filter(p => p.status === 'PENDING').length;
-  const currentMonthForOverdue = monthFilter || new Date().toLocaleString('en-GB', { month: 'long' });
-  const currentYearForOverdue = parseInt(yearFilter || new Date().getFullYear().toString(), 10);
+  const computedOverdueStats = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonthIdx = now.getMonth();
+    const filterYear = parseInt(yearFilter || currentYear.toString(), 10);
 
-  const computedOverdueCmts = useMemo(() => {
     let targetCmts = commitments.filter(c => c.status === 'ACTIVE');
     if (currentUser?.role === 'MEMBER') {
       targetCmts = targetCmts.filter(c => c.memberId === currentUser.id || c.memberName === currentUser.name);
@@ -452,18 +459,44 @@ function PaymentsContent() {
       });
     }
 
-    return targetCmts.filter(c => {
-      const hasConfirmed = payments.some(
-        p => p.commitmentId === c.id &&
-             p.month?.toLowerCase() === currentMonthForOverdue.toLowerCase() &&
-             p.year === currentYearForOverdue &&
-             p.status === 'CONFIRMED'
-      );
-      return !hasConfirmed;
-    });
-  }, [commitments, payments, currentMonthForOverdue, currentYearForOverdue, currentUser, memberFilter, users]);
+    // Determine which month indices are strictly in the past and thus eligible to be OVERDUE.
+    // The current ongoing calendar month is NEVER overdue until that month has completed.
+    let overdueMonthsToCheck: number[] = [];
+    if (monthFilter) {
+      const mIdx = monthsList.findIndex(m => m.toLowerCase() === monthFilter.toLowerCase());
+      if (mIdx !== -1) {
+        if (filterYear < currentYear || (filterYear === currentYear && mIdx < currentMonthIdx)) {
+          overdueMonthsToCheck = [mIdx];
+        }
+      }
+    } else {
+      if (filterYear < currentYear) {
+        overdueMonthsToCheck = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+      } else if (filterYear === currentYear) {
+        overdueMonthsToCheck = Array.from({ length: currentMonthIdx }, (_, i) => i);
+      }
+    }
 
-  const overdueCount = computedOverdueCmts.length;
+    let count = 0;
+    for (const c of targetCmts) {
+      for (const mIdx of overdueMonthsToCheck) {
+        const monthName = monthsList[mIdx];
+        const hasConfirmed = payments.some(
+          p => p.commitmentId === c.id &&
+               p.month?.toLowerCase() === monthName.toLowerCase() &&
+               p.year === filterYear &&
+               p.status === 'CONFIRMED'
+        );
+        if (!hasConfirmed) {
+          count++;
+        }
+      }
+    }
+
+    return count;
+  }, [commitments, payments, monthFilter, yearFilter, currentUser, memberFilter, users, monthsList]);
+
+  const overdueCount = computedOverdueStats;
   const totalScopePayments = scopedPayments.length || 1;
   const receivedPct = Math.min(100, Math.round((receivedCount / totalScopePayments) * 100));
 

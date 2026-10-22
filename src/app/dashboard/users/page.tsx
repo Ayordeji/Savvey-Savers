@@ -59,7 +59,7 @@ export default function ManageUsersPage() {
 
 
   // Modal States
-  const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'VIEW' | 'DELETE_CONFIRM' | 'BULK_DELETE_CONFIRM' | 'MEMBERSHIP_DETAILS' | 'AGREEMENT' | 'SCHEDULE' | 'REVIEWS' | 'REQUEST_FEE' | 'CONFIRM_REQUEST_FEE' | 'CONFIRM_FEE_FORM' | 'CONFIRM_FEE_POPUP' | 'REMIND_FEE_POPUP' | 'DEACTIVATE_CONFIRM' | 'ACTIVATE_CONFIRM' | 'BULK_EMAIL_ANNOUNCEMENT'>('NONE');
+  const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'EDIT_NEXT_OF_KIN' | 'VIEW' | 'DELETE_CONFIRM' | 'BULK_DELETE_CONFIRM' | 'MEMBERSHIP_DETAILS' | 'AGREEMENT' | 'SCHEDULE' | 'REVIEWS' | 'REQUEST_FEE' | 'CONFIRM_REQUEST_FEE' | 'CONFIRM_FEE_FORM' | 'CONFIRM_FEE_POPUP' | 'REMIND_FEE_POPUP' | 'DEACTIVATE_CONFIRM' | 'ACTIVATE_CONFIRM' | 'BULK_EMAIL_ANNOUNCEMENT'>('NONE');
   const [deactivationReason, setDeactivationReason] = useState('');
   const [deactivationError, setDeactivationError] = useState('');
   const [membershipAgreement, setMembershipAgreement] = useState('');
@@ -407,6 +407,61 @@ export default function ManageUsersPage() {
     setFormNextOfKinAddress(user.nextOfKinAddress || '');
     setActiveModal('EDIT');
     setOpenDropdownId(null);
+  };
+
+  const handleOpenNextOfKinModal = (user: User) => {
+    setErrorMsg('');
+    setSelectedUser(user);
+    setFormNextOfKinName(user.nextOfKinName || '');
+    setFormNextOfKinRelationship(user.nextOfKinRelationship || '');
+    setFormNextOfKinPhone(user.nextOfKinPhone || '');
+    setFormNextOfKinEmail(user.nextOfKinEmail || '');
+    setFormNextOfKinAddress(user.nextOfKinAddress || '');
+    setActiveModal('EDIT_NEXT_OF_KIN');
+    setOpenDropdownId(null);
+  };
+
+  const handleNextOfKinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    if (!selectedUser) return;
+    setFormSubmitting(true);
+
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedUser.id,
+          nextOfKinName: formNextOfKinName,
+          nextOfKinRelationship: formNextOfKinRelationship,
+          nextOfKinPhone: formNextOfKinPhone,
+          nextOfKinEmail: formNextOfKinEmail,
+          nextOfKinAddress: formNextOfKinAddress
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setSelectedUser(prev => prev ? {
+          ...prev,
+          nextOfKinName: formNextOfKinName,
+          nextOfKinRelationship: formNextOfKinRelationship,
+          nextOfKinPhone: formNextOfKinPhone,
+          nextOfKinEmail: formNextOfKinEmail,
+          nextOfKinAddress: formNextOfKinAddress
+        } : null);
+        fetchUsers();
+        setActiveModal('NONE');
+        await dialog.alert('Next of Kin Updated', `Next of kin details for ${selectedUser.name} have been updated successfully.`);
+      } else {
+        setErrorMsg(data.error || 'Failed to update next of kin details.');
+      }
+    } catch (err) {
+      setErrorMsg('A network error occurred while updating next of kin.');
+    } finally {
+      setFormSubmitting(false);
+    }
   };
 
   const handleOpenViewModal = async (user: User) => {
@@ -1872,6 +1927,10 @@ export default function ManageUsersPage() {
                                       <Edit size={14} />
                                       <span>Edit Member</span>
                                     </button>
+                                    <button onClick={() => handleOpenNextOfKinModal(u)} className={styles.dropdownItem}>
+                                      <Users size={14} />
+                                      <span>Next of Kin</span>
+                                    </button>
                                     {!isSuper && u.id !== currentUser?.id && (
                                       u.isActive ? (
                                         <button 
@@ -2380,7 +2439,7 @@ export default function ManageUsersPage() {
                       <span>Next of Kin Details</span>
                     </div>
                     <button
-                      onClick={() => handleOpenEditModal(selectedUser)}
+                      onClick={() => handleOpenNextOfKinModal(selectedUser)}
                       style={{ background: 'none', border: 'none', color: '#0c4e43', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer', padding: '2px 6px', borderRadius: '4px' }}
                     >
                       Edit
@@ -2970,7 +3029,7 @@ export default function ManageUsersPage() {
               <div className="form-group" style={{ margin: '0 0 16px 0' }}>
                 <label className="form-label" style={{ fontWeight: 600, color: '#334155' }}>Select Role *</label>
                 <select value={formRole} onChange={(e) => setFormRole(e.target.value as any)} className="form-select" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                  <option value="MEMBER">Savers</option>
+                  <option value="MEMBER">Member</option>
                   <option value="ADMIN">Admin</option>
                   <option value="SUPER_ADMIN">Super Admin</option>
                 </select>
@@ -3116,78 +3175,38 @@ export default function ManageUsersPage() {
                 </div>
               </div>
 
-              {/* Next of Kin Details Section */}
-              <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '16px', border: '1px solid #ECE8E2', marginTop: '4px', marginBottom: '4px' }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Users size={16} style={{ color: '#0c4e43' }} />
-                  <span>Next of Kin Details</span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '12px' }}>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">Next of Kin Full Name</label>
-                    <input
-                      type="text"
-                      value={formNextOfKinName}
-                      onChange={(e) => setFormNextOfKinName(e.target.value)}
-                      placeholder="e.g. Jane Doe"
-                      className="form-input"
-                    />
+              {/* Next of Kin Dedicated Section */}
+              <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '14px 16px', border: '1px solid #ECE8E2', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#FAF5EE', color: '#0c4e43', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Users size={16} />
                   </div>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">Relationship</label>
-                    <select
-                      value={formNextOfKinRelationship}
-                      onChange={(e) => setFormNextOfKinRelationship(e.target.value)}
-                      className="form-select"
-                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ECE8E2', backgroundColor: '#FFFFFF', color: '#111827' }}
-                    >
-                      <option value="">Select relationship</option>
-                      <option value="Spouse">Spouse</option>
-                      <option value="Partner">Partner</option>
-                      <option value="Parent">Parent</option>
-                      <option value="Child">Child</option>
-                      <option value="Sibling">Sibling</option>
-                      <option value="Other Relative">Other Relative</option>
-                      <option value="Friend">Friend</option>
-                      <option value="Other">Other</option>
-                    </select>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827' }}>Next of Kin Details</div>
+                    <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                      {selectedUser.nextOfKinName
+                        ? `${selectedUser.nextOfKinName} (${selectedUser.nextOfKinRelationship || 'Contact'})${selectedUser.nextOfKinPhone ? ` • ${selectedUser.nextOfKinPhone}` : ''}`
+                        : 'No next of kin details recorded yet'}
+                    </div>
                   </div>
                 </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '12px' }}>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">Next of Kin Phone</label>
-                    <input
-                      type="tel"
-                      value={formNextOfKinPhone}
-                      onChange={(e) => setFormNextOfKinPhone(e.target.value)}
-                      placeholder="e.g. +44 7700 900123"
-                      className="form-input"
-                    />
-                  </div>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">Next of Kin Email</label>
-                    <input
-                      type="email"
-                      value={formNextOfKinEmail}
-                      onChange={(e) => setFormNextOfKinEmail(e.target.value)}
-                      placeholder="e.g. nextofkin@example.com"
-                      className="form-input"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Next of Kin Address</label>
-                  <input
-                    type="text"
-                    value={formNextOfKinAddress}
-                    onChange={(e) => setFormNextOfKinAddress(e.target.value)}
-                    placeholder="e.g. 12 High Street, London, SW1A 1AA"
-                    className="form-input"
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => handleOpenNextOfKinModal(selectedUser)}
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    padding: '6px 14px',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    color: '#0c4e43',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Edit Next of Kin
+                </button>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -3208,7 +3227,7 @@ export default function ManageUsersPage() {
                     className="form-select"
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
                   >
-                    <option value="MEMBER">Savers</option>
+                    <option value="MEMBER">Member</option>
                     <option value="ADMIN">Admin</option>
                     <option value="SUPER_ADMIN">Super Admin</option>
                   </select>
@@ -3289,6 +3308,135 @@ export default function ManageUsersPage() {
                 </button>
                 <button type="submit" disabled={formSubmitting} className="btn btn-primary" style={{ flex: 1.5, backgroundColor: 'var(--secondary)', color: 'white' }}>
                   {formSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- EDIT NEXT OF KIN MODAL (Dedicated Separate Form) --- */}
+      {activeModal === 'EDIT_NEXT_OF_KIN' && selectedUser && (
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
+          <div className="modal-content" style={{ maxWidth: '520px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '24px', position: 'relative' }}>
+            <button onClick={() => setActiveModal('NONE')} style={{ position: 'absolute', right: '18px', top: '18px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#FAF5EE', color: '#0c4e43', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Users size={20} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, fontFamily: 'var(--font-family-title)', color: '#111827' }}>
+                  Next of Kin Details
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '2px 0 0 0' }}>
+                  Emergency and nominated contact for <strong>{selectedUser.name}</strong>
+                </p>
+              </div>
+            </div>
+
+            {errorMsg && (
+              <div style={{ backgroundColor: 'var(--status-error-bg)', color: 'var(--status-error)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '10px', borderRadius: '6px', fontSize: '0.85rem', margin: '14px 0' }}>
+                {errorMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleNextOfKinSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem', marginBottom: '6px' }}>
+                    Next of Kin Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formNextOfKinName}
+                    onChange={(e) => setFormNextOfKinName(e.target.value)}
+                    placeholder="e.g. Jane Doe"
+                    className="form-input"
+                  />
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem', marginBottom: '6px' }}>
+                    Relationship
+                  </label>
+                  <select
+                    value={formNextOfKinRelationship}
+                    onChange={(e) => setFormNextOfKinRelationship(e.target.value)}
+                    className="form-select"
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ECE8E2', backgroundColor: '#FFFFFF', color: '#111827' }}
+                  >
+                    <option value="">Select relationship</option>
+                    <option value="Spouse">Spouse</option>
+                    <option value="Partner">Partner</option>
+                    <option value="Parent">Parent</option>
+                    <option value="Child">Child</option>
+                    <option value="Sibling">Sibling</option>
+                    <option value="Other Relative">Other Relative</option>
+                    <option value="Friend">Friend</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem', marginBottom: '6px' }}>
+                    Next of Kin Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={formNextOfKinPhone}
+                    onChange={(e) => setFormNextOfKinPhone(e.target.value)}
+                    placeholder="e.g. +44 7700 900123"
+                    className="form-input"
+                  />
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem', marginBottom: '6px' }}>
+                    Next of Kin Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formNextOfKinEmail}
+                    onChange={(e) => setFormNextOfKinEmail(e.target.value)}
+                    placeholder="e.g. nextofkin@example.com"
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem', marginBottom: '6px' }}>
+                  Next of Kin Address
+                </label>
+                <input
+                  type="text"
+                  value={formNextOfKinAddress}
+                  onChange={(e) => setFormNextOfKinAddress(e.target.value)}
+                  placeholder="e.g. 12 High Street, London, SW1A 1AA"
+                  className="form-input"
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveModal('NONE')}
+                  disabled={formSubmitting}
+                  className="btn btn-secondary"
+                  style={{ borderRadius: '8px', padding: '10px 18px', fontWeight: 600 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={formSubmitting}
+                  className="btn btn-primary"
+                  style={{ backgroundColor: '#D97746', color: '#ffffff', borderRadius: '8px', padding: '10px 24px', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+                >
+                  {formSubmitting ? 'Saving...' : 'Save Next of Kin'}
                 </button>
               </div>
             </form>

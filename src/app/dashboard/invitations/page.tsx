@@ -1400,7 +1400,7 @@ export default function MyInvitationsPage() {
                   <div className="form-group" style={{ margin: '0 0 16px 0' }}>
                     <label className="form-label" style={{ fontWeight: 600, color: '#334155' }}>Select Role *</label>
                     <select value={formRole} onChange={(e) => setFormRole(e.target.value as any)} className="form-select" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                      <option value="MEMBER">Savers</option>
+                      <option value="MEMBER">Member</option>
                       <option value="ADMIN">Admin</option>
                       <option value="SUPER_ADMIN">Super Admin</option>
                     </select>
