@@ -13,11 +13,22 @@ export async function POST(request: Request) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if user exists in Database
-    const user = await db.user.findFirst({ where: { email: normalizedEmail } });
+    // Check if user exists in Database (case-insensitive)
+    const user = await db.user.findFirst({
+      where: {
+        email: {
+          equals: normalizedEmail,
+          mode: 'insensitive'
+        }
+      }
+    });
+
     if (!user) {
       // Mitigate user enumeration by returning a success status even if email is not found
-      return NextResponse.json({ success: true, message: 'If this email is registered, a password reset link has been sent.' });
+      return NextResponse.json({
+        success: true,
+        message: 'If this email is registered, a password reset link has been dispatched. Please check your inbox and Spam/Junk folder.'
+      });
     }
 
     // Generate a unique reset token in the M-XXXXXX format
@@ -38,9 +49,13 @@ export async function POST(request: Request) {
       }
     });
 
-    const host = request.headers.get('host') || 'savveysavers.com';
-    const protocol = request.headers.get('x-forwarded-proto') || 'https';
-    const origin = `${protocol}://${host}`;
+    const envAppUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
+    let origin = envAppUrl;
+    if (!origin) {
+      const host = request.headers.get('host') || 'savveysavers.com';
+      const protocol = request.headers.get('x-forwarded-proto') || 'https';
+      origin = `${protocol}://${host}`;
+    }
     
     const resetLink = `${origin}/reset-password?token=${resetToken}`;
 
@@ -54,7 +69,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Failed to send email: ${errMsg}` }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      message: `A password reset link has been dispatched to ${normalizedEmail}. Please check your inbox and Spam/Junk folder.`
+    });
 
   } catch (err: any) {
     console.error('Password reset endpoint error:', err);

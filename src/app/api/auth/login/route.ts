@@ -16,9 +16,14 @@ export async function POST(request: Request) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Find user in Prisma DB
-    const user = await db.user.findUnique({ 
-      where: { email: normalizedEmail } 
+    // Find user in Prisma DB (case-insensitive)
+    const user = await db.user.findFirst({ 
+      where: { 
+        email: {
+          equals: normalizedEmail,
+          mode: 'insensitive'
+        }
+      } 
     });
 
     if (!user) {
