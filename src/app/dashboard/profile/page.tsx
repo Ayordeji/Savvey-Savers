@@ -81,6 +81,24 @@ export default function ProfilePage() {
       return;
     }
 
+    if (!nextOfKinName.trim()) {
+      setErrorMsg('Next of kin full name is a mandatory field.');
+      setSaving(false);
+      return;
+    }
+
+    if (!nextOfKinPhone.trim()) {
+      setErrorMsg('Next of kin phone number is a mandatory field.');
+      setSaving(false);
+      return;
+    }
+
+    if (!validateUkPhoneNumber(nextOfKinPhone)) {
+      setErrorMsg('Next of kin phone number must be a valid UK number (e.g. +44 7700 900123 or 07700900123).');
+      setSaving(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/profile', {
         method: 'PUT',
@@ -301,10 +319,11 @@ export default function ProfilePage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '16px' }}>
             <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem', marginBottom: '8px', display: 'block' }}>
-                Full Name
+                Full Name <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input
                 type="text"
+                required
                 value={nextOfKinName}
                 onChange={(e) => setNextOfKinName(e.target.value)}
                 placeholder="e.g. Jane Doe"
@@ -339,10 +358,11 @@ export default function ProfilePage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '16px' }}>
             <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem', marginBottom: '8px', display: 'block' }}>
-                Phone Number
+                Phone Number <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input
                 type="tel"
+                required
                 value={nextOfKinPhone}
                 onChange={(e) => setNextOfKinPhone(e.target.value)}
                 placeholder="e.g. +44 7700 900123"

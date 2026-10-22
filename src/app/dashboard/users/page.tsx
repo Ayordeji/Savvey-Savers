@@ -425,6 +425,16 @@ export default function ManageUsersPage() {
     e.preventDefault();
     setErrorMsg('');
     if (!selectedUser) return;
+
+    if (!formNextOfKinName.trim()) {
+      setErrorMsg('Next of Kin Full Name is required.');
+      return;
+    }
+    if (!formNextOfKinPhone.trim()) {
+      setErrorMsg('Next of Kin Phone Number is required.');
+      return;
+    }
+
     setFormSubmitting(true);
 
     try {
@@ -2952,80 +2962,6 @@ export default function ManageUsersPage() {
                 </div>
               </div>
 
-              {/* Next of Kin Details Section */}
-              <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '16px', border: '1px solid #ECE8E2', marginTop: '4px', marginBottom: '4px' }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Users size={16} style={{ color: '#0c4e43' }} />
-                  <span>Next of Kin Details (Optional)</span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '12px' }}>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">Next of Kin Full Name</label>
-                    <input
-                      type="text"
-                      value={formNextOfKinName}
-                      onChange={(e) => setFormNextOfKinName(e.target.value)}
-                      placeholder="e.g. Jane Doe"
-                      className="form-input"
-                    />
-                  </div>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">Relationship</label>
-                    <select
-                      value={formNextOfKinRelationship}
-                      onChange={(e) => setFormNextOfKinRelationship(e.target.value)}
-                      className="form-select"
-                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ECE8E2', backgroundColor: '#FFFFFF', color: '#111827' }}
-                    >
-                      <option value="">Select relationship</option>
-                      <option value="Spouse">Spouse</option>
-                      <option value="Partner">Partner</option>
-                      <option value="Parent">Parent</option>
-                      <option value="Child">Child</option>
-                      <option value="Sibling">Sibling</option>
-                      <option value="Other Relative">Other Relative</option>
-                      <option value="Friend">Friend</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '12px' }}>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">Next of Kin Phone</label>
-                    <input
-                      type="tel"
-                      value={formNextOfKinPhone}
-                      onChange={(e) => setFormNextOfKinPhone(e.target.value)}
-                      placeholder="e.g. +44 7700 900123"
-                      className="form-input"
-                    />
-                  </div>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">Next of Kin Email</label>
-                    <input
-                      type="email"
-                      value={formNextOfKinEmail}
-                      onChange={(e) => setFormNextOfKinEmail(e.target.value)}
-                      placeholder="e.g. nextofkin@example.com"
-                      className="form-input"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Next of Kin Address</label>
-                  <input
-                    type="text"
-                    value={formNextOfKinAddress}
-                    onChange={(e) => setFormNextOfKinAddress(e.target.value)}
-                    placeholder="e.g. 12 High Street, London, SW1A 1AA"
-                    className="form-input"
-                  />
-                </div>
-              </div>
-
               <div className="form-group" style={{ margin: '0 0 16px 0' }}>
                 <label className="form-label" style={{ fontWeight: 600, color: '#334155' }}>Select Role *</label>
                 <select value={formRole} onChange={(e) => setFormRole(e.target.value as any)} className="form-select" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
@@ -3175,40 +3111,6 @@ export default function ManageUsersPage() {
                 </div>
               </div>
 
-              {/* Next of Kin Dedicated Section */}
-              <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '14px 16px', border: '1px solid #ECE8E2', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#FAF5EE', color: '#0c4e43', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Users size={16} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827' }}>Next of Kin Details</div>
-                    <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                      {selectedUser.nextOfKinName
-                        ? `${selectedUser.nextOfKinName} (${selectedUser.nextOfKinRelationship || 'Contact'})${selectedUser.nextOfKinPhone ? ` • ${selectedUser.nextOfKinPhone}` : ''}`
-                        : 'No next of kin details recorded yet'}
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleOpenNextOfKinModal(selectedUser)}
-                  style={{
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '8px',
-                    padding: '6px 14px',
-                    fontSize: '0.78rem',
-                    fontWeight: 600,
-                    color: '#0c4e43',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  Edit Next of Kin
-                </button>
-              </div>
-
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label" style={{ marginBottom: '6px', fontWeight: 600, color: '#334155' }}>Select Role *</label>
@@ -3347,10 +3249,11 @@ export default function ManageUsersPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem', marginBottom: '6px' }}>
-                    Next of Kin Full Name
+                    Next of Kin Full Name <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
                     type="text"
+                    required
                     value={formNextOfKinName}
                     onChange={(e) => setFormNextOfKinName(e.target.value)}
                     placeholder="e.g. Jane Doe"
@@ -3383,10 +3286,11 @@ export default function ManageUsersPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label" style={{ fontWeight: 600, color: '#334155', fontSize: '0.85rem', marginBottom: '6px' }}>
-                    Next of Kin Phone
+                    Next of Kin Phone <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
                     type="tel"
+                    required
                     value={formNextOfKinPhone}
                     onChange={(e) => setFormNextOfKinPhone(e.target.value)}
                     placeholder="e.g. +44 7700 900123"
