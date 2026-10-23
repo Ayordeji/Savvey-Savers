@@ -15,7 +15,8 @@ import {
   Mail,
   Phone,
   ArrowUpDown,
-  LogIn
+  LogIn,
+  UserX
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -120,8 +121,16 @@ function MemberReportContent() {
   const activeMembers = users.filter(u => u.isActive).length;
   const pendingMembers = users.filter(u => !u.isActive).length;
   const adminMembers = users.filter(u => u.role === 'ADMIN' || u.isSuperAdmin).length;
-  const loggedInMembers = users.filter(u => !!u.lastLoginAt).length;
-  const neverLoggedInMembers = users.filter(u => !u.lastLoginAt).length;
+  const loggedInMembers = users.filter(u => {
+    if (statusFilter === 'Inactive') return !u.isActive && !!u.lastLoginAt;
+    if (statusFilter === 'All') return !!u.lastLoginAt;
+    return u.isActive && !!u.lastLoginAt;
+  }).length;
+  const neverLoggedInMembers = users.filter(u => {
+    if (statusFilter === 'Inactive') return !u.isActive && !u.lastLoginAt;
+    if (statusFilter === 'All') return !u.lastLoginAt;
+    return u.isActive && !u.lastLoginAt;
+  }).length;
 
   // Filter Logic
   const filteredUsers = useMemo(() => {
@@ -133,8 +142,14 @@ function MemberReportContent() {
       if (loginFilter === 'NEVER_LOGGED_IN' && !!u.lastLoginAt) return false;
 
       // Status matching
-      if (statusFilter === 'Active' && !u.isActive) return false;
-      if (statusFilter === 'Inactive' && u.isActive) return false;
+      if (statusFilter === 'Inactive') {
+        if (u.isActive) return false;
+      } else if (statusFilter === 'All') {
+        // Explicitly requested all records including inactive
+      } else {
+        // Default ('' or 'Active'): Exclude inactive members
+        if (!u.isActive) return false;
+      }
 
       // Role matching
       if (roleFilter) {
@@ -282,12 +297,12 @@ function MemberReportContent() {
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
-        {/* Total Members */}
+        {/* Active Members */}
         <div
           onClick={() => { setLoginFilter(''); setStatusFilter(''); setCurrentPage(1); }}
           style={{
             backgroundColor: '#FFFFFF',
-            border: loginFilter === '' && statusFilter === '' ? '2px solid #0c4e43' : '1px solid #ECE8E2',
+            border: (statusFilter === '' || statusFilter === 'Active') && loginFilter === '' ? '2px solid #0c4e43' : '1px solid #ECE8E2',
             borderRadius: '16px',
             padding: '18px',
             display: 'flex',
@@ -298,13 +313,13 @@ function MemberReportContent() {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Total Members</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Active Members</span>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Users size={16} />
             </div>
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>{totalMembers}</div>
-          <span style={{ fontSize: '0.74rem', color: '#6B7280' }}>Registered directory</span>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>{activeMembers}</div>
+          <span style={{ fontSize: '0.74rem', color: '#6B7280' }}>Active platform directory</span>
         </div>
 
         {/* Logged In */}
@@ -361,12 +376,12 @@ function MemberReportContent() {
           </span>
         </div>
 
-        {/* Active Accounts */}
+        {/* Inactive Accounts */}
         <div
-          onClick={() => { setStatusFilter(statusFilter === 'Active' ? '' : 'Active'); setCurrentPage(1); }}
+          onClick={() => { setStatusFilter(statusFilter === 'Inactive' ? '' : 'Inactive'); setCurrentPage(1); }}
           style={{
-            backgroundColor: statusFilter === 'Active' ? '#EAF5EE' : '#FFFFFF',
-            border: statusFilter === 'Active' ? '2px solid #0c4e43' : '1px solid #ECE8E2',
+            backgroundColor: statusFilter === 'Inactive' ? '#FEF2F2' : '#FFFFFF',
+            border: statusFilter === 'Inactive' ? '2px solid #DC2626' : '1px solid #ECE8E2',
             borderRadius: '16px',
             padding: '18px',
             display: 'flex',
@@ -377,13 +392,15 @@ function MemberReportContent() {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Active Accounts</span>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#0c4e43', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <UserCheck size={16} />
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: statusFilter === 'Inactive' ? '#991B1B' : '#6B7280' }}>Inactive Accounts</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#FEE2E2', color: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <UserX size={16} />
             </div>
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', lineHeight: 1 }}>{activeMembers}</div>
-          <span style={{ fontSize: '0.74rem', color: '#6B7280' }}>Active platform accounts</span>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: statusFilter === 'Inactive' ? '#991B1B' : '#111827', lineHeight: 1 }}>{pendingMembers}</div>
+          <span style={{ fontSize: '0.74rem', color: statusFilter === 'Inactive' ? '#B91C1C' : '#6B7280' }}>
+            {statusFilter === 'Inactive' ? '● Viewing inactive accounts' : 'Click to view inactive'}
+          </span>
         </div>
 
         {/* Administrators */}
@@ -418,7 +435,7 @@ function MemberReportContent() {
             transition: 'all 0.15s ease'
           }}
         >
-          All Members ({totalMembers})
+          All Activity
         </button>
         <button
           onClick={() => { setLoginFilter('LOGGED_IN'); setCurrentPage(1); }}
@@ -459,6 +476,26 @@ function MemberReportContent() {
         >
           <Clock size={13} />
           <span>Never Logged In ({neverLoggedInMembers})</span>
+        </button>
+        <button
+          onClick={() => { setStatusFilter(statusFilter === 'Inactive' ? '' : 'Inactive'); setCurrentPage(1); }}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 14px',
+            borderRadius: '9999px',
+            fontSize: '0.82rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: statusFilter === 'Inactive' ? '1.5px solid #DC2626' : '1px solid #ECE8E2',
+            backgroundColor: statusFilter === 'Inactive' ? '#DC2626' : '#FFFFFF',
+            color: statusFilter === 'Inactive' ? '#FFFFFF' : '#991B1B',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <UserX size={13} />
+          <span>Inactive Accounts ({pendingMembers})</span>
         </button>
       </div>
 
@@ -548,17 +585,17 @@ function MemberReportContent() {
               padding: '7px 12px',
               fontSize: '0.82rem',
               borderRadius: '8px',
-              border: '1px solid #ECE8E2',
-              backgroundColor: '#FAF9F6',
-              color: '#374151',
+              border: statusFilter === 'Inactive' ? '1.5px solid #DC2626' : '1px solid #ECE8E2',
+              backgroundColor: statusFilter === 'Inactive' ? '#FEF2F2' : '#FAF9F6',
+              color: statusFilter === 'Inactive' ? '#991B1B' : '#374151',
               fontWeight: 500,
               cursor: 'pointer',
               minWidth: '150px'
             }}
           >
-            <option value="">All Account Statuses</option>
-            <option value="Active">Active Accounts ({activeMembers})</option>
-            <option value="Inactive">Pending / Inactive ({pendingMembers})</option>
+            <option value="">Active Accounts ({activeMembers})</option>
+            <option value="Inactive">Inactive Accounts ({pendingMembers})</option>
+            <option value="All">All Accounts (incl. Inactive) ({totalMembers})</option>
           </select>
 
           {/* Role Filter */}

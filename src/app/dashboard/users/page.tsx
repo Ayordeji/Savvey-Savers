@@ -1154,15 +1154,19 @@ export default function ManageUsersPage() {
     const q = searchQuery.toLowerCase().trim();
     
     // Status matching
-    const isActiveStatus = userStatusFilter === 'ACTIVE';
-    const isInvitedStatus = userStatusFilter === 'INVITED' || userStatusFilter === 'PENDING' || userStatusFilter === 'INACTIVE';
-    const isLoggedInStatus = userStatusFilter === 'LOGGED_IN';
-    const isNeverLoggedInStatus = userStatusFilter === 'NEVER_LOGGED_IN';
-    const matchesStatus = !userStatusFilter || 
-      (isActiveStatus && u.isActive) || 
-      (isInvitedStatus && !u.isActive) ||
-      (isLoggedInStatus && !!u.lastLoginAt) ||
-      (isNeverLoggedInStatus && !u.lastLoginAt);
+    let matchesStatus = true;
+    if (userStatusFilter === 'INACTIVE' || userStatusFilter === 'INVITED' || userStatusFilter === 'PENDING') {
+      matchesStatus = !u.isActive;
+    } else if (userStatusFilter === 'ALL') {
+      matchesStatus = true;
+    } else if (userStatusFilter === 'LOGGED_IN') {
+      matchesStatus = u.isActive && !!u.lastLoginAt;
+    } else if (userStatusFilter === 'NEVER_LOGGED_IN') {
+      matchesStatus = u.isActive && !u.lastLoginAt;
+    } else {
+      // Default ('' or 'ACTIVE'): Exclude inactive members by default
+      matchesStatus = u.isActive;
+    }
     
     if (!matchesStatus) return false;
 
@@ -1349,13 +1353,19 @@ export default function ManageUsersPage() {
             <div style={{ fontSize: '0.8rem', color: '#6B7280', marginTop: '2px' }}>
               Active Members
             </div>
-            <div style={{ fontSize: '0.72rem', color: '#2E7D32', fontWeight: 600, marginTop: '2px' }}>
-              ↑ 6 this month
+            <div
+              onClick={() => {
+                setUserStatusFilter('');
+                setUsersPage(1);
+              }}
+              style={{ fontSize: '0.72rem', color: '#2E7D32', fontWeight: 600, cursor: 'pointer', marginTop: '2px' }}
+            >
+              View Active
             </div>
           </div>
         </div>
 
-        {/* Card 2: Invited Members */}
+        {/* Card 2: Inactive Members */}
         <div style={{
           backgroundColor: '#FFFFFF',
           borderRadius: '16px',
@@ -1380,13 +1390,19 @@ export default function ManageUsersPage() {
           </div>
           <div>
             <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#111827', lineHeight: 1.1 }}>
-              {users.filter(u => !u.isActive && u.id !== 'usr_admin').length || 2}
+              {users.filter(u => !u.isActive && u.id !== 'usr_admin').length}
             </div>
             <div style={{ fontSize: '0.8rem', color: '#6B7280', marginTop: '2px' }}>
-              Invited Members
+              Inactive Members
             </div>
-            <div style={{ fontSize: '0.72rem', color: '#D97746', fontWeight: 600, marginTop: '2px' }}>
-              ↑ 1 this month
+            <div
+              onClick={() => {
+                setUserStatusFilter('INACTIVE');
+                setUsersPage(1);
+              }}
+              style={{ fontSize: '0.72rem', color: '#D97746', fontWeight: 600, cursor: 'pointer', marginTop: '2px' }}
+            >
+              View Inactive
             </div>
           </div>
         </div>
@@ -1510,18 +1526,18 @@ export default function ManageUsersPage() {
             fontSize: '0.85rem',
             fontWeight: 500,
             borderRadius: '8px',
-            border: '1px solid #ECE8E2',
-            backgroundColor: '#FFFFFF',
-            color: '#374151',
+            border: userStatusFilter === 'INACTIVE' ? '1.5px solid #DC2626' : '1px solid #ECE8E2',
+            backgroundColor: userStatusFilter === 'INACTIVE' ? '#FEF2F2' : '#FFFFFF',
+            color: userStatusFilter === 'INACTIVE' ? '#991B1B' : '#374151',
             cursor: 'pointer',
             outline: 'none'
           }}
         >
-          <option value="">All Status ({users.length})</option>
-          <option value="LOGGED_IN">Logged In ({users.filter(u => !!u.lastLoginAt).length})</option>
-          <option value="NEVER_LOGGED_IN">Never Logged In ({users.filter(u => !u.lastLoginAt).length})</option>
-          <option value="ACTIVE">Active ({users.filter(u => u.isActive).length})</option>
-          <option value="INACTIVE">Inactive ({users.filter(u => !u.isActive).length})</option>
+          <option value="">Active Members ({users.filter(u => u.isActive).length})</option>
+          <option value="LOGGED_IN">Logged In ({users.filter(u => u.isActive && !!u.lastLoginAt).length})</option>
+          <option value="NEVER_LOGGED_IN">Never Logged In ({users.filter(u => u.isActive && !u.lastLoginAt).length})</option>
+          <option value="INACTIVE">Inactive Members ({users.filter(u => !u.isActive).length})</option>
+          <option value="ALL">All Records (incl. Inactive) ({users.length})</option>
         </select>
 
         <select
