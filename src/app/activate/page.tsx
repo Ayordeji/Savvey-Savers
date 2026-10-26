@@ -74,6 +74,11 @@ function ActivationContent() {
       fetch(`/api/auth/activate?invite=${invitationId}`)
         .then((res) => res.json())
         .then((data) => {
+          if (data.referral) {
+            router.replace(`/join?ref=${encodeURIComponent(data.referrerId || invitationId)}`);
+            return;
+          }
+
           if (data.valid) {
             setEmail(data.email || '');
             if (data.name) {

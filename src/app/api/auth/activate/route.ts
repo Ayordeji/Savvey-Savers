@@ -48,6 +48,13 @@ export async function POST(request: Request) {
           ]
         }
       });
+
+      if (user?.isActive) {
+        return NextResponse.json(
+          { error: 'This account is already active. Member IDs cannot be used to reset an account password.' },
+          { status: 400 }
+        );
+      }
     }
 
     if (!user) {
@@ -149,6 +156,14 @@ export async function GET(request: Request) {
           ]
         }
       });
+
+      if (user?.isActive) {
+        return NextResponse.json({
+          valid: false,
+          referral: true,
+          referrerId: user.id,
+        });
+      }
     }
 
     if (!user) {
