@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import MarketingHeader from '@/components/marketing/MarketingHeader';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import AuthModal from '@/components/marketing/AuthModal';
 import WaitlistModal from '@/components/marketing/WaitlistModal';
+import ReferralWaitlistModal from '@/components/marketing/ReferralWaitlistModal';
 import {
   Check,
   CheckCircle2,
@@ -1061,6 +1062,9 @@ export default function HomePage() {
         isOpen={waitlistModalOpen}
         onClose={() => setWaitlistModalOpen(false)}
       />
+      <Suspense fallback={null}>
+        <ReferralWaitlistModal />
+      </Suspense>
 
       <style jsx>{`
         .trust-slider-track {

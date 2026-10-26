@@ -6,15 +6,16 @@ import { X, User, Mail, Phone, ArrowRight, CheckCircle2, AlertCircle, ShieldChec
 interface WaitlistModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialReferrer?: string;
 }
 
-export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
+export default function WaitlistModal({ isOpen, onClose, initialReferrer = '' }: WaitlistModalProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [amount, setAmount] = useState('£100 - £500');
-  const [hasReferrer, setHasReferrer] = useState(false);
-  const [referrer, setReferrer] = useState('');
+  const [hasReferrer, setHasReferrer] = useState(Boolean(initialReferrer));
+  const [referrer, setReferrer] = useState(initialReferrer);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -388,7 +389,7 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
                     type="text"
                     value={referrer}
                     onChange={(e) => setReferrer(e.target.value)}
-                    placeholder="Enter referring member's name"
+                    placeholder="Enter referring member's ID or name"
                     style={{
                       width: '100%',
                       boxSizing: 'border-box',
