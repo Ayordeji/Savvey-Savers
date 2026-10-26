@@ -402,7 +402,9 @@ export default function MyInvitationsPage() {
   const declinedExpiredCount = 0;
 
   const handleCopyLink = (u: User) => {
-    const link = `${window.location.origin}/join?ref=${u.id}`;
+    // Use invitationId (the actual token) if set, otherwise fall back to displayId or id
+    const ref = u.invitationId || u.displayId || u.id;
+    const link = `${window.location.origin}/activate?invite=${ref}`;
     navigator.clipboard.writeText(link);
     setOpenDropdownId(null);
     dialog.alert('Link Copied', `Invitation link for ${u.name} copied to clipboard.`);
