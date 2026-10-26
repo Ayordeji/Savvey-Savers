@@ -34,10 +34,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Look up user by invitation or reset ID
-    const user = await db.user.findFirst({
+    // Look up user by invitation ID, displayId (e.g. M-000426), or ID
+    let user = await db.user.findFirst({
       where: { invitationId }
     });
+
+    if (!user) {
+      user = await db.user.findFirst({
+        where: {
+          OR: [
+            { displayId: invitationId },
+            { id: invitationId }
+          ]
+        }
+      });
+    }
 
     if (!user) {
       return NextResponse.json(
@@ -46,10 +57,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check expiration
+    // Check expiration if set
     if (user.invitationExpiresAt && new Date() > new Date(user.invitationExpiresAt)) {
       return NextResponse.json(
-        { error: 'Invitation link has expired (72h limit). Please contact your administrator.' },
+        { error: 'Invitation link has expired. Please contact your administrator for a new one.' },
         { status: 400 }
       );
     }
@@ -125,9 +136,20 @@ export async function GET(request: Request) {
       );
     }
 
-    const user = await db.user.findFirst({
+    let user = await db.user.findFirst({
       where: { invitationId }
     });
+
+    if (!user) {
+      user = await db.user.findFirst({
+        where: {
+          OR: [
+            { displayId: invitationId },
+            { id: invitationId }
+          ]
+        }
+      });
+    }
 
     if (!user) {
       return NextResponse.json(
@@ -138,7 +160,7 @@ export async function GET(request: Request) {
 
     if (user.invitationExpiresAt && new Date() > new Date(user.invitationExpiresAt)) {
       return NextResponse.json(
-        { valid: false, error: 'This invitation link has expired. Please contact your coordinator for a new one.' },
+        { valid: false, error: 'This invitation link has expired. Please contact your administrator for a new one.' },
         { status: 400 }
       );
     }
@@ -146,7 +168,14 @@ export async function GET(request: Request) {
     return NextResponse.json({
       valid: true,
       email: user.email,
-      name: user.name
+      name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone,
+      addressLine1: user.addressLine1,
+      addressLine2: user.addressLine2,
+      city: user.city,
+      postCode: user.postCode,
     });
   } catch (err: any) {
     console.error('Verify invitation error:', err);
