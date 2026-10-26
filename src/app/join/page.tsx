@@ -6,11 +6,11 @@ type JoinPageProps = {
 
 export default async function JoinPage({ searchParams }: JoinPageProps) {
   const { ref } = await searchParams;
-  const invitationId = Array.isArray(ref) ? ref[0] : ref;
+  const referrerId = Array.isArray(ref) ? ref[0] : ref;
 
-  if (!invitationId) {
-    redirect('/activate');
+  if (!referrerId) {
+    redirect('/');
   }
 
-  redirect(`/activate?${new URLSearchParams({ invite: invitationId })}`);
+  redirect(`/?${new URLSearchParams({ ref: referrerId })}`);
 }
