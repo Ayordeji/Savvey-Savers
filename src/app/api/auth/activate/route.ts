@@ -158,11 +158,10 @@ export async function GET(request: Request) {
       });
 
       if (user?.isActive) {
-        return NextResponse.json({
-          valid: false,
-          referral: true,
-          referrerId: user.id,
-        });
+        return NextResponse.json(
+          { valid: false, error: 'This account is already active. Please log in instead.' },
+          { status: 400 }
+        );
       }
     }
 

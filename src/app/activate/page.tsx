@@ -71,14 +71,9 @@ function ActivationContent() {
 
   useEffect(() => {
     if (invitationId) {
-      fetch(`/api/auth/activate?invite=${invitationId}`)
+      fetch(`/api/auth/activate?invite=${encodeURIComponent(invitationId)}`)
         .then((res) => res.json())
         .then((data) => {
-          if (data.referral) {
-            router.replace(`/join?ref=${encodeURIComponent(data.referrerId || invitationId)}`);
-            return;
-          }
-
           if (data.valid) {
             setEmail(data.email || '');
             if (data.name) {
