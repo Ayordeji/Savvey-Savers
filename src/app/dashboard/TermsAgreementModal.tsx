@@ -207,15 +207,24 @@ export default function TermsAgreementModal({
               style={{ color: '#0c4e43', fontWeight: 600, textDecoration: 'underline' }}
             >
               Terms and Conditions
-            </a>{' '}
-            and{' '}
+            </a>
+            {', '}
+            <a
+              href="/privacy-policy"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#0c4e43', fontWeight: 600, textDecoration: 'underline' }}
+            >
+              Privacy Policy
+            </a>
+            {', and '}
             <a
               href="/cookie-policy"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: '#0c4e43', fontWeight: 600, textDecoration: 'underline' }}
             >
-              Privacy Policy
+              Cookie Policy
             </a>{' '}
             pages.
           </div>

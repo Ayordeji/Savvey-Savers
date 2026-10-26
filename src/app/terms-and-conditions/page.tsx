@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import MarketingHeader from '@/components/marketing/MarketingHeader';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import AuthModal from '@/components/marketing/AuthModal';
@@ -159,7 +160,11 @@ export default function TermsAndConditionsPage() {
                 7. Privacy
               </h3>
               <p style={{ margin: 0, color: '#4a4a4a' }}>
-                Our collection and use of personal information is governed by our Privacy Policy. By using this Website, you acknowledge that you have read our Privacy Policy.
+                Our collection and use of personal information is governed by our{' '}
+                <Link href="/privacy-policy" style={{ color: '#0E4F45', fontWeight: 600, textDecoration: 'underline' }}>
+                  Privacy Policy
+                </Link>
+                . By using this Website, you acknowledge that you have read our Privacy Policy.
               </p>
             </div>
 
@@ -168,7 +173,11 @@ export default function TermsAndConditionsPage() {
                 8. Cookies
               </h3>
               <p style={{ margin: 0, color: '#4a4a4a' }}>
-                This Website uses cookies to improve your browsing experience and understand how visitors use our Website. You can manage your cookie preferences through your browser settings. Further information can be found in our Cookie Policy.
+                This Website uses cookies to improve your browsing experience and understand how visitors use our Website. You can manage your cookie preferences through your browser settings. Further information can be found in our{' '}
+                <Link href="/cookie-policy" style={{ color: '#0E4F45', fontWeight: 600, textDecoration: 'underline' }}>
+                  Cookie Policy
+                </Link>
+                .
               </p>
             </div>
 

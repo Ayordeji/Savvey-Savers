@@ -156,6 +156,21 @@ export default function MarketingFooter({
               </li>
               <li>
                 <Link
+                  href="/privacy-policy"
+                  style={{
+                    color: '#FFFDFA',
+                    textDecoration: 'none',
+                    fontSize: '0.95rem',
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#A46A3F')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#FFFDFA')}
+                >
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/terms-and-conditions"
                   style={{
                     color: '#FFFDFA',

@@ -1530,7 +1530,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       <footer className="dashboard-footer">
         <span>© 2026 Savvey Savers Networks. All rights reserved.</span>
         <div className="dashboard-footer-links">
-          <Link href="/terms-and-conditions" className="dashboard-footer-link">Privacy Policy</Link>
+          <Link href="/privacy-policy" className="dashboard-footer-link">Privacy Policy</Link>
           <span style={{ color: '#D1D5DB' }}>•</span>
           <Link href="/terms-and-conditions" className="dashboard-footer-link">Terms of Service</Link>
         </div>

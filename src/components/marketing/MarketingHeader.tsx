@@ -22,6 +22,7 @@ export default function MarketingHeader({
     { label: 'About Us', href: '/about-us' },
     { label: 'FAQs', href: '/faqs' },
     { label: 'Terms and Conditions', href: '/terms-and-conditions' },
+    { label: 'Privacy Policy', href: '/privacy-policy' },
     { label: 'Cookie Policy', href: '/cookie-policy' },
   ];
 
