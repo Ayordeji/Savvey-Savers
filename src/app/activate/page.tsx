@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { CheckCircle2, Eye, EyeOff, Check, X } from 'lucide-react';
+import { CheckCircle2, Eye, EyeOff, Check, X, LogIn } from 'lucide-react';
 // Firebase auth removed — using JWT-based auth
 
 const DEFAULT_SECURITY_QUESTIONS = [
@@ -43,6 +43,7 @@ function ActivationContent() {
   const [step, setStep] = useState<1 | 2>(1);
   const [verifying, setVerifying] = useState(true);
   const [linkError, setLinkError] = useState('');
+  const [loginRedirect, setLoginRedirect] = useState(false);
 
   // Step 1 Registration details
   const [firstName, setFirstName] = useState('');
@@ -54,7 +55,6 @@ function ActivationContent() {
   const [city, setCity] = useState('');
   const [postCode, setPostCode] = useState('');
   const [country] = useState('UNITED KINGDOM');
-  const [dateOfBirth, setDateOfBirth] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
   const [agreementHtml, setAgreementHtml] = useState(DEFAULT_AGREEMENT);
@@ -87,6 +87,9 @@ function ActivationContent() {
             if (data.addressLine2) setAddressLine2(data.addressLine2);
             if (data.city) setCity(data.city);
             if (data.postCode) setPostCode(data.postCode);
+          } else if (data.loginRedirect) {
+            setLoginRedirect(true);
+            setLinkError(data.error || 'Your account is ready. Please log in.');
           } else {
             setLinkError(data.error || 'Invalid or expired invitation code.');
           }
@@ -131,11 +134,7 @@ function ActivationContent() {
       return;
     }
     if (!firstName.trim() || !lastName.trim() || !phone.trim() || !postCode.trim()) {
-      setError('Please fill in all required fields: First Name, Last Name, Phone, Post Code.');
-      return;
-    }
-    if (!addressLine1.trim() || !city.trim()) {
-      setError('Address Line 1 and City are required.');
+      setError('Please fill in all required fields marked with *.');
       return;
     }
     
@@ -204,7 +203,6 @@ function ActivationContent() {
           city,
           postCode,
           country: 'UNITED KINGDOM',
-          dateOfBirth,
           termsAccepted: true,
           securityQuestions: securityQuestionsData,
         }),
@@ -253,6 +251,51 @@ function ActivationContent() {
   }
 
   if (linkError || !invitationId) {
+    // If the API told us to redirect to login, show a helpful card
+    if (loginRedirect) {
+      return (
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc' }}>
+          <div className="glass-panel" style={{ padding: '40px 36px', textAlign: 'center', maxWidth: '460px', width: '100%', backgroundColor: '#ffffff', borderRadius: '20px', boxShadow: '0 8px 32px rgba(0,0,0,0.08)' }}>
+            <img
+              src="/logo_new-removebg-preview.png"
+              alt="Savvey Savers"
+              style={{ width: '52px', height: '52px', objectFit: 'contain', marginBottom: '16px' }}
+            />
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <LogIn size={26} style={{ color: '#16a34a' }} />
+            </div>
+            <h2 style={{ color: '#111827', marginBottom: '10px', fontSize: '1.35rem', fontWeight: 700 }}>
+              Account Already Set Up
+            </h2>
+            <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>
+              {linkError}
+            </p>
+            <button
+              onClick={() => router.push('/login')}
+              style={{
+                width: '100%',
+                padding: '12px 24px',
+                backgroundColor: '#2E5A44',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '10px',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              <LogIn size={16} />
+              Go to Login
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc' }}>
         <div className="glass-panel" style={{ padding: '36px', textAlign: 'center', maxWidth: '450px', backgroundColor: '#ffffff', borderRadius: '16px' }}>
@@ -382,10 +425,9 @@ function ActivationContent() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
               <div>
-                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Address Line 1 *</label>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Address Line 1</label>
                 <input
                   type="text"
-                  required
                   value={addressLine1}
                   onChange={(e) => setAddressLine1(e.target.value)}
                   placeholder="Address Line 1"
@@ -409,10 +451,9 @@ function ActivationContent() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
               <div>
-                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>City *</label>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>City</label>
                 <input
                   type="text"
-                  required
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="City"
@@ -433,20 +474,6 @@ function ActivationContent() {
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', backgroundColor: 'var(--bg-main)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }}
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Date of Birth (DD/MM/YYYY)</label>
-              <input
-                type="text"
-                value={dateOfBirth}
-                onChange={(e) => setDateOfBirth(e.target.value)}
-                placeholder="e.g. 15/06/1985"
-                pattern="^(0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/\d{4}$"
-                title="Please enter your date of birth in DD/MM/YYYY format"
-                className="form-input"
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', backgroundColor: 'var(--bg-main)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }}
-              />
             </div>
 
             <div>

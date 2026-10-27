@@ -18,6 +18,7 @@ interface User {
   membership?: string;
   membershipFeeConfirmed?: boolean;
   createdAt: string;
+  lastLoginAt?: string | null;
   invitationId?: string;
   invitedBy?: string;
 }
@@ -340,8 +341,10 @@ export default function MyInvitationsPage() {
     }
 
     if (statusFilter) {
-      if (statusFilter === 'ACCEPTED' && !u.isActive) return false;
-      if (statusFilter === 'PENDING' && u.isActive) return false;
+      // 'Accepted' = active AND has logged in at least once
+      const hasLoggedIn = !!u.lastLoginAt;
+      if (statusFilter === 'ACCEPTED' && !(u.isActive && hasLoggedIn)) return false;
+      if (statusFilter === 'PENDING' && (u.isActive && hasLoggedIn)) return false;
       if (statusFilter === 'EXPIRED' || statusFilter === 'DECLINED') return false;
     }
 
@@ -397,8 +400,9 @@ export default function MyInvitationsPage() {
   };
 
   const totalInvitesCount = users.length;
-  const acceptedInvitesCount = users.filter(u => u.isActive).length;
-  const pendingInvitesCount = users.filter(u => !u.isActive).length;
+  // 'Accepted' = isActive AND has logged in at least once (not just migrated)
+  const acceptedInvitesCount = users.filter(u => u.isActive && !!u.lastLoginAt).length;
+  const pendingInvitesCount = users.filter(u => !u.isActive || !u.lastLoginAt).length;
   const declinedExpiredCount = 0;
 
   const handleCopyLink = (u: User) => {
@@ -828,10 +832,10 @@ export default function MyInvitationsPage() {
                               borderRadius: '9999px',
                               fontSize: '0.72rem',
                               fontWeight: 600,
-                              backgroundColor: u.isActive ? '#EAF5EE' : '#FEF3C7',
-                              color: u.isActive ? '#2E7D32' : '#B45309'
+                              backgroundColor: (u.isActive && u.lastLoginAt) ? '#EAF5EE' : '#FEF3C7',
+                              color: (u.isActive && u.lastLoginAt) ? '#2E7D32' : '#B45309'
                             }}>
-                              {u.isActive ? 'ACCEPTED' : 'PENDING'}
+                              {(u.isActive && u.lastLoginAt) ? 'ACCEPTED' : 'PENDING'}
                             </span>
                           </td>
 
@@ -1072,10 +1076,10 @@ export default function MyInvitationsPage() {
                           borderRadius: '9999px',
                           fontSize: '0.7rem',
                           fontWeight: 600,
-                          backgroundColor: selectedUser.isActive ? '#EAF5EE' : '#FEF3C7',
-                          color: selectedUser.isActive ? '#2E7D32' : '#B45309'
+                          backgroundColor: (selectedUser.isActive && selectedUser.lastLoginAt) ? '#EAF5EE' : '#FEF3C7',
+                          color: (selectedUser.isActive && selectedUser.lastLoginAt) ? '#2E7D32' : '#B45309'
                         }}>
-                          {selectedUser.isActive ? 'Accepted' : 'Pending'}
+                          {(selectedUser.isActive && selectedUser.lastLoginAt) ? 'Accepted' : 'Pending'}
                         </span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>

@@ -16,7 +16,6 @@ export async function POST(request: Request) {
       city,
       postCode,
       country,
-      dateOfBirth,
       termsAccepted,
       securityQuestions,
     } = await request.json();
@@ -50,13 +49,25 @@ export async function POST(request: Request) {
         }
       });
 
-      // Only block if they are active AND have a password — migrated members
-      // can be isActive:true but have no password and still need activation.
+      // Block activation only if they are active AND have a password AND have
+      // actually logged in at least once. Migrated members may be isActive:true
+      // with a passwordHash but lastLoginAt=null — they need to log in for the
+      // first time, not re-activate. Direct them to /login instead.
       if (user?.isActive && user?.passwordHash) {
-        return NextResponse.json(
-          { error: 'This account is already active. Please log in instead.' },
-          { status: 400 }
-        );
+        if (user.lastLoginAt) {
+          // Fully onboarded — they've logged in before, send to login.
+          return NextResponse.json(
+            { error: 'This account is already active. Please log in instead.', loginRedirect: true },
+            { status: 400 }
+          );
+        } else {
+          // Migrated member: active + password set but never logged in.
+          // Let them proceed via login page rather than re-activating.
+          return NextResponse.json(
+            { error: 'Your account is ready. Please log in using your email and password.', loginRedirect: true },
+            { status: 400 }
+          );
+        }
       }
     }
 
@@ -97,7 +108,6 @@ export async function POST(request: Request) {
       city: (city || user.city || '').trim(),
       postCode: (postCode || user.postCode || '').trim(),
       country: 'UNITED KINGDOM',
-      dateOfBirth: (dateOfBirth || '').trim() || null,
       termsAccepted: termsAccepted === true,
     };
 
@@ -161,13 +171,23 @@ export async function GET(request: Request) {
         }
       });
 
-      // Only block activation if they are active AND already have a password.
-      // Migrated members may be isActive:true but have no password set yet.
+      // Block activation only if they are active AND have a password AND have
+      // actually logged in at least once. Migrated members may be isActive:true
+      // with a passwordHash but lastLoginAt=null — they need to log in for the
+      // first time, not re-activate.
       if (user?.isActive && user?.passwordHash) {
-        return NextResponse.json(
-          { valid: false, error: 'This account is already active. Please log in instead.' },
-          { status: 400 }
-        );
+        if (user.lastLoginAt) {
+          return NextResponse.json(
+            { valid: false, error: 'This account is already active. Please log in instead.', loginRedirect: true },
+            { status: 400 }
+          );
+        } else {
+          // Migrated: active + password but never logged in — send to login.
+          return NextResponse.json(
+            { valid: false, error: 'Your account is ready. Please log in with your email and password.', loginRedirect: true },
+            { status: 400 }
+          );
+        }
       }
     }
 

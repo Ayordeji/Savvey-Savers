@@ -37,7 +37,6 @@ interface User {
   nextOfKinPhone?: string;
   nextOfKinEmail?: string;
   nextOfKinAddress?: string;
-  dateOfBirth?: string;
 }
 
 export default function ManageUsersPage() {
@@ -218,7 +217,6 @@ export default function ManageUsersPage() {
   const [formCity, setFormCity] = useState('');
   const [formPostCode, setFormPostCode] = useState('');
   const [formCountry, setFormCountry] = useState('United Kingdom');
-  const [formDateOfBirth, setFormDateOfBirth] = useState('');
 
   // Permissions checked array
   const [formPermissions, setFormPermissions] = useState<string[]>([]);
@@ -377,7 +375,6 @@ export default function ManageUsersPage() {
     setFormNextOfKinPhone('');
     setFormNextOfKinEmail('');
     setFormNextOfKinAddress('');
-    setFormDateOfBirth('');
     setActiveModal('ADD');
   };
 
@@ -408,7 +405,6 @@ export default function ManageUsersPage() {
     setFormNextOfKinPhone(user.nextOfKinPhone || '');
     setFormNextOfKinEmail(user.nextOfKinEmail || '');
     setFormNextOfKinAddress(user.nextOfKinAddress || '');
-    setFormDateOfBirth(user.dateOfBirth || '');
     setActiveModal('EDIT');
     setOpenDropdownId(null);
   };
@@ -712,12 +708,8 @@ export default function ManageUsersPage() {
 
   const handleAddSubmit = async (inviteMode: 'SAVE' | 'SAVE_INVITE') => {
     setErrorMsg('');
-    if (!formFirstName || !formLastName || !formEmail || !formPhone || !formRole) {
-      setErrorMsg('First Name, Last Name, Email, Phone, and Access Role are required.');
-      return;
-    }
-    if (!formAddressLine1 || !formCity || !formPostCode) {
-      setErrorMsg('Address Line 1, City, and Post Code are required.');
+    if (!formFirstName || !formEmail || !formPhone || !formRole) {
+      setErrorMsg('First Name, Email, Phone, and Access Role are required.');
       return;
     }
 
@@ -744,7 +736,6 @@ export default function ManageUsersPage() {
           city: formCity,
           postCode: formPostCode,
           country: formCountry,
-          dateOfBirth: formDateOfBirth,
           permissions: formPermissions,
           inviteMode,
           nextOfKinName: formNextOfKinName,
@@ -776,14 +767,6 @@ export default function ManageUsersPage() {
 
     if (!selectedUser) return;
 
-    if (!formLastName.trim()) {
-      setErrorMsg('Last Name is required.');
-      return;
-    }
-    if (!formAddressLine1.trim() || !formCity.trim() || !formPostCode.trim()) {
-      setErrorMsg('Address Line 1, City, and Post Code are required.');
-      return;
-    }
     if (!validateUkPhoneNumber(formPhone)) {
       setErrorMsg('Phone Number must be a valid number. (UK eg.+447975556677)');
       return;
@@ -809,7 +792,6 @@ export default function ManageUsersPage() {
           city: formCity,
           postCode: formPostCode,
           country: formCountry,
-          dateOfBirth: formDateOfBirth,
           permissions: formPermissions,
           nextOfKinName: formNextOfKinName,
           nextOfKinRelationship: formNextOfKinRelationship,
@@ -2944,11 +2926,11 @@ export default function ManageUsersPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">First Name *</label>
-                  <input type="text" required value={formFirstName} onChange={(e) => setFormFirstName(e.target.value)} placeholder="Jane" className="form-input" />
+                  <input type="text" value={formFirstName} onChange={(e) => setFormFirstName(e.target.value)} placeholder="Jane" className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Last Name *</label>
-                  <input type="text" required value={formLastName} onChange={(e) => setFormLastName(e.target.value)} placeholder="Smith" className="form-input" />
+                  <label className="form-label">Last Name</label>
+                  <input type="text" value={formLastName} onChange={(e) => setFormLastName(e.target.value)} placeholder="Smith" className="form-input" />
                 </div>
               </div>
 
@@ -2965,8 +2947,8 @@ export default function ManageUsersPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Address Line 1 *</label>
-                  <input type="text" required value={formAddressLine1} onChange={(e) => setFormAddressLine1(e.target.value)} placeholder="10 Downing St" className="form-input" />
+                  <label className="form-label">Address Line 1</label>
+                  <input type="text" value={formAddressLine1} onChange={(e) => setFormAddressLine1(e.target.value)} placeholder="10 Downing St" className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Address Line 2</label>
@@ -2976,12 +2958,12 @@ export default function ManageUsersPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">City *</label>
-                  <input type="text" required value={formCity} onChange={(e) => setFormCity(e.target.value)} placeholder="London" className="form-input" />
+                  <label className="form-label">City</label>
+                  <input type="text" value={formCity} onChange={(e) => setFormCity(e.target.value)} placeholder="London" className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Post Code *</label>
-                  <input type="text" required value={formPostCode} onChange={(e) => setFormPostCode(e.target.value)} placeholder="SW1A 2AA" className="form-input" />
+                  <label className="form-label">Post Code</label>
+                  <input type="text" value={formPostCode} onChange={(e) => setFormPostCode(e.target.value)} placeholder="SW1A 2AA" className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Country</label>
@@ -2994,19 +2976,6 @@ export default function ManageUsersPage() {
                     style={{ backgroundColor: 'rgba(0, 0, 0, 0.05)', color: 'var(--text-muted)', cursor: 'not-allowed' }}
                   />
                 </div>
-              </div>
-
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Date of Birth (DD/MM/YYYY)</label>
-                <input
-                  type="text"
-                  value={formDateOfBirth}
-                  onChange={(e) => setFormDateOfBirth(e.target.value)}
-                  placeholder="e.g. 15/06/1985"
-                  pattern="^(0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/\d{4}$"
-                  title="Please enter date in DD/MM/YYYY format"
-                  className="form-input"
-                />
               </div>
 
               <div className="form-group" style={{ margin: '0 0 16px 0' }}>
@@ -3109,8 +3078,8 @@ export default function ManageUsersPage() {
                   <input type="text" required value={formFirstName} onChange={(e) => setFormFirstName(e.target.value)} className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Last Name *</label>
-                  <input type="text" required value={formLastName} onChange={(e) => setFormLastName(e.target.value)} className="form-input" />
+                  <label className="form-label">Last Name</label>
+                  <input type="text" value={formLastName} onChange={(e) => setFormLastName(e.target.value)} className="form-input" />
                 </div>
               </div>
 
@@ -3127,8 +3096,8 @@ export default function ManageUsersPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Address Line 1 *</label>
-                  <input type="text" required value={formAddressLine1} onChange={(e) => setFormAddressLine1(e.target.value)} className="form-input" />
+                  <label className="form-label">Address Line 1</label>
+                  <input type="text" value={formAddressLine1} onChange={(e) => setFormAddressLine1(e.target.value)} className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Address Line 2</label>
@@ -3138,12 +3107,12 @@ export default function ManageUsersPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">City *</label>
-                  <input type="text" required value={formCity} onChange={(e) => setFormCity(e.target.value)} className="form-input" />
+                  <label className="form-label">City</label>
+                  <input type="text" value={formCity} onChange={(e) => setFormCity(e.target.value)} className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Post Code *</label>
-                  <input type="text" required value={formPostCode} onChange={(e) => setFormPostCode(e.target.value)} className="form-input" />
+                  <label className="form-label">Post Code</label>
+                  <input type="text" value={formPostCode} onChange={(e) => setFormPostCode(e.target.value)} className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Country</label>
@@ -3156,19 +3125,6 @@ export default function ManageUsersPage() {
                     style={{ backgroundColor: 'rgba(0, 0, 0, 0.05)', color: 'var(--text-muted)', cursor: 'not-allowed' }}
                   />
                 </div>
-              </div>
-
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Date of Birth (DD/MM/YYYY)</label>
-                <input
-                  type="text"
-                  value={formDateOfBirth}
-                  onChange={(e) => setFormDateOfBirth(e.target.value)}
-                  placeholder="e.g. 15/06/1985"
-                  pattern="^(0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/\d{4}$"
-                  title="Please enter date in DD/MM/YYYY format"
-                  className="form-input"
-                />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
