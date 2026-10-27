@@ -223,6 +223,9 @@ export default function ManageUsersPage() {
   const [formIsSuperAdmin, setFormIsSuperAdmin] = useState(false);
   const [formIsActive, setFormIsActive] = useState(true);
 
+  // Date of Birth (optional)
+  const [formDateOfBirth, setFormDateOfBirth] = useState('');
+
   // Next of Kin form fields
   const [formNextOfKinName, setFormNextOfKinName] = useState('');
   const [formNextOfKinRelationship, setFormNextOfKinRelationship] = useState('');
@@ -370,6 +373,7 @@ export default function ManageUsersPage() {
     setFormCountry('United Kingdom');
     setFormPermissions(['INVITE_USER', 'ASSIGN_UNAVAILABLE_MONTH']);
     setFormIsActive(true);
+    setFormDateOfBirth('');
     setFormNextOfKinName('');
     setFormNextOfKinRelationship('');
     setFormNextOfKinPhone('');
@@ -400,6 +404,7 @@ export default function ManageUsersPage() {
     setFormPostCode(user.postCode || '');
     setFormCountry(user.country || 'United Kingdom');
     setFormPermissions(user.permissions || []);
+    setFormDateOfBirth((user as any).dateOfBirth || '');
     setFormNextOfKinName(user.nextOfKinName || '');
     setFormNextOfKinRelationship(user.nextOfKinRelationship || '');
     setFormNextOfKinPhone(user.nextOfKinPhone || '');
@@ -708,8 +713,12 @@ export default function ManageUsersPage() {
 
   const handleAddSubmit = async (inviteMode: 'SAVE' | 'SAVE_INVITE') => {
     setErrorMsg('');
-    if (!formFirstName || !formEmail || !formPhone || !formRole) {
-      setErrorMsg('First Name, Email, Phone, and Access Role are required.');
+    if (!formFirstName.trim() || !formLastName.trim() || !formEmail || !formPhone || !formRole) {
+      setErrorMsg('First Name, Last Name, Email, Phone, and Access Role are required.');
+      return;
+    }
+    if (!formAddressLine1.trim() || !formCity.trim() || !formPostCode.trim()) {
+      setErrorMsg('Address Line 1, City, and Post Code are required.');
       return;
     }
 
@@ -738,6 +747,7 @@ export default function ManageUsersPage() {
           country: formCountry,
           permissions: formPermissions,
           inviteMode,
+          dateOfBirth: formDateOfBirth || null,
           nextOfKinName: formNextOfKinName,
           nextOfKinRelationship: formNextOfKinRelationship,
           nextOfKinPhone: formNextOfKinPhone,
@@ -767,6 +777,14 @@ export default function ManageUsersPage() {
 
     if (!selectedUser) return;
 
+    if (!formFirstName.trim() || !formLastName.trim()) {
+      setErrorMsg('First Name and Last Name are required.');
+      return;
+    }
+    if (!formAddressLine1.trim() || !formCity.trim() || !formPostCode.trim()) {
+      setErrorMsg('Address Line 1, City, and Post Code are required.');
+      return;
+    }
     if (!validateUkPhoneNumber(formPhone)) {
       setErrorMsg('Phone Number must be a valid number. (UK eg.+447975556677)');
       return;
@@ -793,6 +811,7 @@ export default function ManageUsersPage() {
           postCode: formPostCode,
           country: formCountry,
           permissions: formPermissions,
+          dateOfBirth: formDateOfBirth || null,
           nextOfKinName: formNextOfKinName,
           nextOfKinRelationship: formNextOfKinRelationship,
           nextOfKinPhone: formNextOfKinPhone,
@@ -2926,29 +2945,29 @@ export default function ManageUsersPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">First Name *</label>
-                  <input type="text" value={formFirstName} onChange={(e) => setFormFirstName(e.target.value)} placeholder="Jane" className="form-input" />
+                  <input type="text" required value={formFirstName} onChange={(e) => setFormFirstName(e.target.value)} placeholder="Jane" className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Last Name</label>
-                  <input type="text" value={formLastName} onChange={(e) => setFormLastName(e.target.value)} placeholder="Smith" className="form-input" />
+                  <label className="form-label">Last Name *</label>
+                  <input type="text" required value={formLastName} onChange={(e) => setFormLastName(e.target.value)} placeholder="Smith" className="form-input" />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Email Address *</label>
-                  <input type="email" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="jane@example.com" className="form-input" />
+                  <input type="email" required value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="jane@example.com" className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Phone *</label>
-                  <input type="tel" value={formPhone} onChange={(e) => setFormPhone(e.target.value)} placeholder="+44 7700 900011" className="form-input" />
+                  <input type="tel" required value={formPhone} onChange={(e) => setFormPhone(e.target.value)} placeholder="+44 7700 900011" className="form-input" />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Address Line 1</label>
-                  <input type="text" value={formAddressLine1} onChange={(e) => setFormAddressLine1(e.target.value)} placeholder="10 Downing St" className="form-input" />
+                  <label className="form-label">Address Line 1 *</label>
+                  <input type="text" required value={formAddressLine1} onChange={(e) => setFormAddressLine1(e.target.value)} placeholder="10 Downing St" className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Address Line 2</label>
@@ -2958,12 +2977,12 @@ export default function ManageUsersPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">City</label>
-                  <input type="text" value={formCity} onChange={(e) => setFormCity(e.target.value)} placeholder="London" className="form-input" />
+                  <label className="form-label">City *</label>
+                  <input type="text" required value={formCity} onChange={(e) => setFormCity(e.target.value)} placeholder="London" className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Post Code</label>
-                  <input type="text" value={formPostCode} onChange={(e) => setFormPostCode(e.target.value)} placeholder="SW1A 2AA" className="form-input" />
+                  <label className="form-label">Post Code *</label>
+                  <input type="text" required value={formPostCode} onChange={(e) => setFormPostCode(e.target.value)} placeholder="SW1A 2AA" className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Country</label>
@@ -2974,6 +2993,20 @@ export default function ManageUsersPage() {
                     readOnly
                     className="form-input"
                     style={{ backgroundColor: 'rgba(0, 0, 0, 0.05)', color: 'var(--text-muted)', cursor: 'not-allowed' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Date of Birth <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>(DD/MM/YYYY)</span></label>
+                  <input
+                    type="text"
+                    value={formDateOfBirth}
+                    onChange={(e) => setFormDateOfBirth(e.target.value)}
+                    placeholder="e.g. 15/06/1985"
+                    maxLength={10}
+                    className="form-input"
                   />
                 </div>
               </div>
@@ -3078,8 +3111,8 @@ export default function ManageUsersPage() {
                   <input type="text" required value={formFirstName} onChange={(e) => setFormFirstName(e.target.value)} className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Last Name</label>
-                  <input type="text" value={formLastName} onChange={(e) => setFormLastName(e.target.value)} className="form-input" />
+                  <label className="form-label">Last Name *</label>
+                  <input type="text" required value={formLastName} onChange={(e) => setFormLastName(e.target.value)} className="form-input" />
                 </div>
               </div>
 
@@ -3096,8 +3129,8 @@ export default function ManageUsersPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Address Line 1</label>
-                  <input type="text" value={formAddressLine1} onChange={(e) => setFormAddressLine1(e.target.value)} className="form-input" />
+                  <label className="form-label">Address Line 1 *</label>
+                  <input type="text" required value={formAddressLine1} onChange={(e) => setFormAddressLine1(e.target.value)} className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Address Line 2</label>
@@ -3107,12 +3140,12 @@ export default function ManageUsersPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">City</label>
-                  <input type="text" value={formCity} onChange={(e) => setFormCity(e.target.value)} className="form-input" />
+                  <label className="form-label">City *</label>
+                  <input type="text" required value={formCity} onChange={(e) => setFormCity(e.target.value)} className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Post Code</label>
-                  <input type="text" value={formPostCode} onChange={(e) => setFormPostCode(e.target.value)} className="form-input" />
+                  <label className="form-label">Post Code *</label>
+                  <input type="text" required value={formPostCode} onChange={(e) => setFormPostCode(e.target.value)} className="form-input" />
                 </div>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Country</label>
@@ -3123,6 +3156,20 @@ export default function ManageUsersPage() {
                     readOnly
                     className="form-input"
                     style={{ backgroundColor: 'rgba(0, 0, 0, 0.05)', color: 'var(--text-muted)', cursor: 'not-allowed' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Date of Birth <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>(DD/MM/YYYY)</span></label>
+                  <input
+                    type="text"
+                    value={formDateOfBirth}
+                    onChange={(e) => setFormDateOfBirth(e.target.value)}
+                    placeholder="e.g. 15/06/1985"
+                    maxLength={10}
+                    className="form-input"
                   />
                 </div>
               </div>
