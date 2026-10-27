@@ -248,22 +248,53 @@ export default function WaitlistModal({ isOpen, onClose, initialReferrer = '' }:
               </p>
 
               {error && (
-                <div
-                  style={{
-                    backgroundColor: 'var(--status-error-bg)',
-                    color: 'var(--status-error)',
-                    padding: '12px 14px',
-                    borderRadius: '8px',
-                    fontSize: '0.85rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    border: '1px solid rgba(153, 27, 27, 0.2)',
-                  }}
-                >
-                  <AlertCircle size={18} style={{ flexShrink: 0 }} />
-                  <span>{error}</span>
-                </div>
+                error.toLowerCase().includes('already registered') ? (
+                  <div
+                    style={{
+                      backgroundColor: '#f0fdf4',
+                      color: '#166534',
+                      padding: '14px 16px',
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                      border: '1px solid #bbf7d0',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+                      <AlertCircle size={18} style={{ flexShrink: 0, color: '#16a34a' }} />
+                      <span>You're already a member!</span>
+                    </div>
+                    <p style={{ margin: 0, lineHeight: 1.5, color: '#166534' }}>
+                      This email is already registered on the platform. Please{' '}
+                      <a
+                        href="/login"
+                        style={{ color: '#15803d', fontWeight: 700, textDecoration: 'underline' }}
+                      >
+                        log in here
+                      </a>{' '}
+                      with your email and password.
+                    </p>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      backgroundColor: 'var(--status-error-bg)',
+                      color: 'var(--status-error)',
+                      padding: '12px 14px',
+                      borderRadius: '8px',
+                      fontSize: '0.85rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      border: '1px solid rgba(153, 27, 27, 0.2)',
+                    }}
+                  >
+                    <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                    <span>{error}</span>
+                  </div>
+                )
               )}
 
               {/* Full Name */}

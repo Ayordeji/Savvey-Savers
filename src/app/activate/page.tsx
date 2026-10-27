@@ -270,7 +270,11 @@ function ActivationContent() {
               Account Already Set Up
             </h2>
             <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>
-              {linkError}
+              Your account is already set up. Please{' '}
+              <a href="/login" style={{ color: '#2E5A44', fontWeight: 700, textDecoration: 'underline' }}>
+                log in here
+              </a>{' '}
+              with your email and password.
             </p>
             <button
               onClick={() => router.push('/login')}
