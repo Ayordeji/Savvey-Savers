@@ -49,9 +49,11 @@ export async function POST(request: Request) {
         }
       });
 
-      if (user?.isActive) {
+      // Only block if they are active AND have a password — migrated members
+      // can be isActive:true but have no password and still need activation.
+      if (user?.isActive && user?.passwordHash) {
         return NextResponse.json(
-          { error: 'This account is already active. Member IDs cannot be used to reset an account password.' },
+          { error: 'This account is already active. Please log in instead.' },
           { status: 400 }
         );
       }
@@ -157,7 +159,9 @@ export async function GET(request: Request) {
         }
       });
 
-      if (user?.isActive) {
+      // Only block activation if they are active AND already have a password.
+      // Migrated members may be isActive:true but have no password set yet.
+      if (user?.isActive && user?.passwordHash) {
         return NextResponse.json(
           { valid: false, error: 'This account is already active. Please log in instead.' },
           { status: 400 }
