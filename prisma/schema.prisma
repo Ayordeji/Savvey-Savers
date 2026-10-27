@@ -37,6 +37,7 @@ model User {
   nextOfKinPhone           String?
   nextOfKinEmail           String?
   nextOfKinAddress         String?
+  dateOfBirth              String?   // DD/MM/YYYY format
   createdAt                DateTime  @default(now())
   updatedAt                DateTime  @updatedAt
 

@@ -126,7 +126,8 @@ export async function GET() {
       nextOfKinRelationship: u.nextOfKinRelationship || '',
       nextOfKinPhone: u.nextOfKinPhone || '',
       nextOfKinEmail: u.nextOfKinEmail || '',
-      nextOfKinAddress: u.nextOfKinAddress || ''
+      nextOfKinAddress: u.nextOfKinAddress || '',
+      dateOfBirth: u.dateOfBirth || ''
     };
   });
 
@@ -169,7 +170,8 @@ export async function POST(request: Request) {
       nextOfKinRelationship,
       nextOfKinPhone,
       nextOfKinEmail,
-      nextOfKinAddress
+      nextOfKinAddress,
+      dateOfBirth
     } = body;
 
     const name = firstName ? `${firstName} ${lastName || ''}`.trim() : (body.name || '');
@@ -239,7 +241,8 @@ export async function POST(request: Request) {
       nextOfKinRelationship: nextOfKinRelationship || '',
       nextOfKinPhone: nextOfKinPhone || '',
       nextOfKinEmail: nextOfKinEmail || '',
-      nextOfKinAddress: nextOfKinAddress || ''
+      nextOfKinAddress: nextOfKinAddress || '',
+      dateOfBirth: dateOfBirth || null
     } });
 
     // Create commitment if specified
@@ -456,7 +459,8 @@ export async function PUT(request: Request) {
         nextOfKinRelationship,
         nextOfKinPhone,
         nextOfKinEmail,
-        nextOfKinAddress
+        nextOfKinAddress,
+        dateOfBirth
       } = body;
 
       isRoleChanging = role && role !== user.role;
@@ -492,6 +496,7 @@ export async function PUT(request: Request) {
         nextOfKinPhone: nextOfKinPhone !== undefined ? nextOfKinPhone : user.nextOfKinPhone,
         nextOfKinEmail: nextOfKinEmail !== undefined ? nextOfKinEmail : user.nextOfKinEmail,
         nextOfKinAddress: nextOfKinAddress !== undefined ? nextOfKinAddress : user.nextOfKinAddress,
+        dateOfBirth: dateOfBirth !== undefined ? (dateOfBirth || null) : user.dateOfBirth,
         ...(typeof body.isActive === 'boolean' ? { isActive: body.isActive } : {})
       };
 

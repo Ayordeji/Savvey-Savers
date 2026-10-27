@@ -16,6 +16,7 @@ export async function POST(request: Request) {
       city,
       postCode,
       country,
+      dateOfBirth,
       termsAccepted,
       securityQuestions,
     } = await request.json();
@@ -96,6 +97,7 @@ export async function POST(request: Request) {
       city: (city || user.city || '').trim(),
       postCode: (postCode || user.postCode || '').trim(),
       country: 'UNITED KINGDOM',
+      dateOfBirth: (dateOfBirth || '').trim() || null,
       termsAccepted: termsAccepted === true,
     };
 

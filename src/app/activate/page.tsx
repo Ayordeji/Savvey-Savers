@@ -54,6 +54,7 @@ function ActivationContent() {
   const [city, setCity] = useState('');
   const [postCode, setPostCode] = useState('');
   const [country] = useState('UNITED KINGDOM');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
   const [agreementHtml, setAgreementHtml] = useState(DEFAULT_AGREEMENT);
@@ -130,7 +131,11 @@ function ActivationContent() {
       return;
     }
     if (!firstName.trim() || !lastName.trim() || !phone.trim() || !postCode.trim()) {
-      setError('Please fill in all required fields marked with *.');
+      setError('Please fill in all required fields: First Name, Last Name, Phone, Post Code.');
+      return;
+    }
+    if (!addressLine1.trim() || !city.trim()) {
+      setError('Address Line 1 and City are required.');
       return;
     }
     
@@ -199,6 +204,7 @@ function ActivationContent() {
           city,
           postCode,
           country: 'UNITED KINGDOM',
+          dateOfBirth,
           termsAccepted: true,
           securityQuestions: securityQuestionsData,
         }),
@@ -376,9 +382,10 @@ function ActivationContent() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
               <div>
-                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Address Line 1</label>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Address Line 1 *</label>
                 <input
                   type="text"
+                  required
                   value={addressLine1}
                   onChange={(e) => setAddressLine1(e.target.value)}
                   placeholder="Address Line 1"
@@ -402,9 +409,10 @@ function ActivationContent() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
               <div>
-                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>City</label>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>City *</label>
                 <input
                   type="text"
+                  required
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="City"
@@ -425,6 +433,20 @@ function ActivationContent() {
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', backgroundColor: 'var(--bg-main)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }}
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem' }}>Date of Birth (DD/MM/YYYY)</label>
+              <input
+                type="text"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                placeholder="e.g. 15/06/1985"
+                pattern="^(0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/\d{4}$"
+                title="Please enter your date of birth in DD/MM/YYYY format"
+                className="form-input"
+                style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', backgroundColor: 'var(--bg-main)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }}
+              />
             </div>
 
             <div>
