@@ -209,8 +209,10 @@ export async function POST(request: Request) {
     }
     const nextIdStr = String(maxId + 1).padStart(6, '0');
     const displayId = `M-${nextIdStr}`;
-    const invitationId = `invite_${Math.random().toString(36).substring(2, 15)}`;
-    const invitationExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(); // 72 hours
+    // Use displayId as the stable invitation identifier — this keeps links
+    // in the format /activate?invite=M-000426 or /join?ref=M-000426 permanently.
+    const invitationId = displayId;
+    const invitationExpiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(); // 1 year
 
     // Create user in Database
     const newUser = await db.user.create({ data: {
@@ -284,7 +286,7 @@ export async function POST(request: Request) {
     const host = request.headers.get('host') || 'savveysavers.com';
     const protocol = request.headers.get('x-forwarded-proto') || 'https';
     const origin = `${protocol}://${host}`;
-    const activationLink = `${origin}/activate?invite=${invitationId}`;
+    const activationLink = `${origin}/activate?invite=${displayId}`;
 
     await sendTemplatedEmail("2", normalizedEmail, {
       name,
@@ -352,22 +354,36 @@ export async function PUT(request: Request) {
     }
 
     if (body.action === 'send_invite' || body.action === 'send_reset') {
-      const invitationId = (body.action === 'send_reset' ? 'reset_' : 'invite_') + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      const invitationExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
-
-      await db.user.update({
-        where: { id },
-        data: { invitationId, invitationExpiresAt }
-      });
-
       const host = request.headers.get('host') || 'savveysavers.com';
       const protocol = request.headers.get('x-forwarded-proto') || 'https';
       const origin = `${protocol}://${host}`;
-      const link = body.action === 'send_reset' 
-        ? `${origin}/reset-password?token=${invitationId}` 
-        : `${origin}/activate?invite=${invitationId}`;
 
-      const templateId = body.action === 'send_reset' ? '1' : '2';
+      let link: string;
+      let templateId: string;
+
+      if (body.action === 'send_reset') {
+        // Password reset: generate a short-lived token
+        const resetToken = 'reset_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const resetExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
+        await db.user.update({
+          where: { id },
+          data: { invitationId: resetToken, invitationExpiresAt: resetExpiresAt }
+        });
+        link = `${origin}/reset-password?token=${resetToken}`;
+        templateId = '1';
+      } else {
+        // Resend invite: use the member's stable displayId — never generate a new token.
+        // This keeps the link in the /activate?invite=M-000426 format permanently.
+        const stableRef = user.displayId || user.invitationId || user.id;
+        link = `${origin}/activate?invite=${stableRef}`;
+        templateId = '2';
+
+        // Extend expiry to 1 year so the link doesn't expire on them
+        await db.user.update({
+          where: { id },
+          data: { invitationExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() }
+        });
+      }
       const mailRes = await sendTemplatedEmail(templateId, user.email, {
         name: user.name,
         memberName: user.name,

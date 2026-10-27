@@ -78,12 +78,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check expiration if set
+    // If the link has expired but the account is NOT yet activated, auto-extend
+    // rather than blocking. This handles members who received old invite_ style links.
     if (user.invitationExpiresAt && new Date() > new Date(user.invitationExpiresAt)) {
-      return NextResponse.json(
-        { error: 'Invitation link has expired. Please contact your administrator for a new one.' },
-        { status: 400 }
-      );
+      if (user.passwordHash && user.passwordHash !== 'pending_activation') {
+        // Already activated — reject
+        return NextResponse.json(
+          { error: 'Invitation link has expired. Please contact your administrator for a new one.' },
+          { status: 400 }
+        );
+      }
+      // Not yet activated — silently extend expiry and continue
+      await db.user.update({
+        where: { id: user.id },
+        data: { invitationExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() }
+      });
     }
 
     const updatedFirstName = (firstName || user.firstName || '').trim();
@@ -198,11 +207,21 @@ export async function GET(request: Request) {
       );
     }
 
+    // If the link has expired but the account is not yet activated, auto-extend
+    // rather than blocking (handles members with old invite_ format links).
     if (user.invitationExpiresAt && new Date() > new Date(user.invitationExpiresAt)) {
-      return NextResponse.json(
-        { valid: false, error: 'This invitation link has expired. Please contact your administrator for a new one.' },
-        { status: 400 }
-      );
+      if (user.passwordHash && user.passwordHash !== 'pending_activation') {
+        // Already activated — reject
+        return NextResponse.json(
+          { valid: false, error: 'This invitation link has expired. Please contact your administrator for a new one.' },
+          { status: 400 }
+        );
+      }
+      // Not yet activated — silently extend expiry and continue
+      await db.user.update({
+        where: { id: user.id },
+        data: { invitationExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() }
+      });
     }
 
     return NextResponse.json({
