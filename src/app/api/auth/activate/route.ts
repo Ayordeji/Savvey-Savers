@@ -48,32 +48,20 @@ export async function POST(request: Request) {
           ]
         }
       });
-
-      // Block activation only if they are active AND have a password AND have
-      // actually logged in at least once. Migrated members may be isActive:true
-      // with a passwordHash but lastLoginAt=null — they need to log in for the
-      // first time, not re-activate. Direct them to /login instead.
-      if (user?.isActive && user?.passwordHash) {
-        if (user.lastLoginAt) {
-          // Fully onboarded — they've logged in before, send to login.
-          return NextResponse.json(
-            { error: 'This account is already active. Please log in instead.', loginRedirect: true },
-            { status: 400 }
-          );
-        } else {
-          // Migrated member: active + password set but never logged in.
-          // Let them proceed via login page rather than re-activating.
-          return NextResponse.json(
-            { error: 'Your account is ready. Please log in using your email and password.', loginRedirect: true },
-            { status: 400 }
-          );
-        }
-      }
     }
 
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid or expired invitation link.' },
+        { status: 400 }
+      );
+    }
+
+    // Block activation only if they are active AND already have a real password set (not pending_activation)
+    const hasRealPassword = !!(user.passwordHash && user.passwordHash !== 'pending_activation');
+    if (user.isActive && hasRealPassword) {
+      return NextResponse.json(
+        { error: 'This account is already active. Please log in instead.', loginRedirect: true },
         { status: 400 }
       );
     }
@@ -179,30 +167,20 @@ export async function GET(request: Request) {
           ]
         }
       });
-
-      // Block activation only if they are active AND have a password AND have
-      // actually logged in at least once. Migrated members may be isActive:true
-      // with a passwordHash but lastLoginAt=null — they need to log in for the
-      // first time, not re-activate.
-      if (user?.isActive && user?.passwordHash) {
-        if (user.lastLoginAt) {
-          return NextResponse.json(
-            { valid: false, error: 'This account is already active. Please log in instead.', loginRedirect: true },
-            { status: 400 }
-          );
-        } else {
-          // Migrated: active + password but never logged in — send to login.
-          return NextResponse.json(
-            { valid: false, error: 'Your account is ready. Please log in with your email and password.', loginRedirect: true },
-            { status: 400 }
-          );
-        }
-      }
     }
 
     if (!user) {
       return NextResponse.json(
         { valid: false, error: 'This invitation link is invalid or has already been used.' },
+        { status: 400 }
+      );
+    }
+
+    // Block activation only if they are active AND already have a real password set (not pending_activation)
+    const hasRealPassword = !!(user.passwordHash && user.passwordHash !== 'pending_activation');
+    if (user.isActive && hasRealPassword) {
+      return NextResponse.json(
+        { valid: false, error: 'This account is already active. Please log in instead.', loginRedirect: true },
         { status: 400 }
       );
     }

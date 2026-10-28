@@ -366,23 +366,8 @@ export default function PrivacyPolicyPage() {
         onOpenWaitlist={() => setWaitlistModalOpen(true)}
       />
 
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        onOpenWaitlist={() => {
-          setAuthModalOpen(false);
-          setWaitlistModalOpen(true);
-        }}
-      />
-
-      <WaitlistModal
-        isOpen={waitlistModalOpen}
-        onClose={() => setWaitlistModalOpen(false)}
-        onOpenLogin={() => {
-          setWaitlistModalOpen(false);
-          setAuthModalOpen(true);
-        }}
-      />
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+      <WaitlistModal isOpen={waitlistModalOpen} onClose={() => setWaitlistModalOpen(false)} />
     </div>
   );
 }

@@ -125,7 +125,7 @@ export async function sendEmail({
       const response = await resend.emails.send({
         from: getMailFrom(),
         to,
-        reply_to: 'admin@savveysavers.com',
+        replyTo: 'admin@savveysavers.com',
         subject,
         text: plainText,
         html: emailHtml
