@@ -57,8 +57,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Block activation only if they are active AND already have a real password set (not pending_activation)
-    const hasRealPassword = !!(user.passwordHash && user.passwordHash !== 'pending_activation');
+    // Block activation only if they are active AND already have a real password set (not pending_activation and not reset_pending)
+    const hasRealPassword = !!(user.passwordHash && user.passwordHash !== 'pending_activation' && user.passwordHash !== 'reset_pending');
     if (user.isActive && hasRealPassword) {
       return NextResponse.json(
         { error: 'This account is already active. Please log in instead.', loginRedirect: true },
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     // If the link has expired but the account is NOT yet activated, auto-extend
     // rather than blocking. This handles members who received old invite_ style links.
     if (user.invitationExpiresAt && new Date() > new Date(user.invitationExpiresAt)) {
-      if (user.passwordHash && user.passwordHash !== 'pending_activation') {
+      if (user.passwordHash && user.passwordHash !== 'pending_activation' && user.passwordHash !== 'reset_pending') {
         // Already activated — reject
         return NextResponse.json(
           { error: 'Invitation link has expired. Please contact your administrator for a new one.' },
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
       city: (city || user.city || '').trim(),
       postCode: (postCode || user.postCode || '').trim(),
       country: 'UNITED KINGDOM',
-      termsAccepted: termsAccepted === true,
+      termsAccepted: (termsAccepted === true) ? true : Boolean(user.termsAccepted),
     };
 
     // Activate the user
@@ -176,8 +176,8 @@ export async function GET(request: Request) {
       );
     }
 
-    // Block activation only if they are active AND already have a real password set (not pending_activation)
-    const hasRealPassword = !!(user.passwordHash && user.passwordHash !== 'pending_activation');
+    // Block activation only if they are active AND already have a real password set (not pending_activation and not reset_pending)
+    const hasRealPassword = !!(user.passwordHash && user.passwordHash !== 'pending_activation' && user.passwordHash !== 'reset_pending');
     if (user.isActive && hasRealPassword) {
       return NextResponse.json(
         { valid: false, error: 'This account is already active. Please log in instead.', loginRedirect: true },
@@ -188,7 +188,7 @@ export async function GET(request: Request) {
     // If the link has expired but the account is not yet activated, auto-extend
     // rather than blocking (handles members with old invite_ format links).
     if (user.invitationExpiresAt && new Date() > new Date(user.invitationExpiresAt)) {
-      if (user.passwordHash && user.passwordHash !== 'pending_activation') {
+      if (user.passwordHash && user.passwordHash !== 'pending_activation' && user.passwordHash !== 'reset_pending') {
         // Already activated — reject
         return NextResponse.json(
           { valid: false, error: 'This invitation link has expired. Please contact your administrator for a new one.' },

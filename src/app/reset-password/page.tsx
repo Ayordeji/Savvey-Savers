@@ -52,9 +52,7 @@ function ResetPasswordContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           invitationId: token,
-          password: password,
-          // Member must agree to new terms on first login
-          termsAccepted: false
+          password: password
         })
       });
 

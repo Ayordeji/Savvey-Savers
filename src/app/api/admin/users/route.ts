@@ -236,7 +236,7 @@ export async function POST(request: Request) {
       country: country || 'United Kingdom',
       permissions: isMemberInvite ? [] : (permissions || []),
       membershipFeeConfirmed: role === 'ADMIN',
-      termsAccepted: true,
+      termsAccepted: role === 'ADMIN',
       nextOfKinName: nextOfKinName || '',
       nextOfKinRelationship: nextOfKinRelationship || '',
       nextOfKinPhone: nextOfKinPhone || '',
@@ -367,7 +367,11 @@ export async function PUT(request: Request) {
         const resetExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
         await db.user.update({
           where: { id },
-          data: { invitationId: resetToken, invitationExpiresAt: resetExpiresAt }
+          data: { 
+            invitationId: resetToken, 
+            invitationExpiresAt: resetExpiresAt,
+            passwordHash: 'reset_pending'
+          }
         });
         link = `${origin}/reset-password?token=${resetToken}`;
         templateId = '1';

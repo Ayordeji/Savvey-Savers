@@ -40,6 +40,20 @@ export async function POST(request: Request) {
       );
     }
 
+    if (user.passwordHash === 'reset_pending') {
+      return NextResponse.json(
+        { error: 'A password reset is currently pending for this account. Please use the reset link sent to your email to set a new password.' },
+        { status: 401 }
+      );
+    }
+
+    if (!user.passwordHash || user.passwordHash === 'pending_activation') {
+      return NextResponse.json(
+        { error: 'Your account has not been activated yet. Please use the activation link sent to your email to set up your password.' },
+        { status: 401 }
+      );
+    }
+
     // Compare passwords
     let isValidPassword = false;
     let needsRehash = false;

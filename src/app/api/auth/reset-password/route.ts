@@ -39,13 +39,13 @@ export async function POST(request: Request) {
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1);
 
-    // Save token to user
+    // Save token to user and invalidate existing password until reset is completed
     await db.user.update({
       where: { id: user.id },
       data: {
         invitationId: resetToken,
         invitationExpiresAt: expiresAt,
-        termsAccepted: false // Reset so member must agree to terms on first login
+        passwordHash: 'reset_pending'
       }
     });
 
