@@ -20,9 +20,8 @@ export async function POST(request: Request) {
   try {
     const { action, commitmentId, paymentId, month, year, amount, memberId, receiptUrl, sendNotification, sendEmail, templateId, memberIds, commitmentIds } = await request.json();
 
-    // Monthly payment confirmation emails are disabled across the platform.
-    // Members can view their confirmed receipts and payment history directly on the dashboard portal.
-    const notifyByEmail = false;
+    // Check whether email notification is requested (defaults to true unless explicitly turned off)
+    const notifyByEmail = sendEmail === true || sendEmail === 'true' || sendNotification === 'yes' || sendNotification === true || (sendEmail === undefined && sendNotification === undefined);
 
     if (!action) {
       return NextResponse.json({ error: 'Action is required.' }, { status: 400 });
@@ -68,17 +67,23 @@ export async function POST(request: Request) {
       if (member && cmt) {
         // Dispatch Email Notification (only if enabled by admin)
         if (notifyByEmail) {
-          await sendTemplatedEmail("22", member.email, {
-            fullMonthName: payment.month,
-            name: member.name
-          });
+          try {
+            await sendTemplatedEmail("22", member.email, {
+              fullMonthName: `${payment.month} ${payment.year}`,
+              name: member.name,
+              amount: String(payment.amount),
+              url: `${process.env.NEXTAUTH_URL || 'https://savveysavers.com'}/dashboard/payments`
+            });
+          } catch (emailErr) {
+            console.error('[CONFIRM_PAYMENT] Failed to send email notice:', emailErr);
+          }
         }
 
         // Member Notification
         await db.notification.create({ data: {
           userId: member.id,
-          message: `Your payment of £${payment.amount} for ${payment.month} ${payment.year} has been confirmed.`,
-          type: 'PAYMENT_CONFIRMED',
+          message: `Your contribution payment of £${payment.amount} for ${payment.month} ${payment.year} has been recorded in your membership account.`,
+          type: 'PAYMENT_RECORDED',
           isRead: false
         } });
       }
@@ -133,16 +138,22 @@ export async function POST(request: Request) {
       if (member) {
         // Dispatch Email Notification (only if enabled by admin)
         if (notifyByEmail) {
-          await sendTemplatedEmail("22", member.email, {
-            fullMonthName: month,
-            name: member.name
-          });
+          try {
+            await sendTemplatedEmail("22", member.email, {
+              fullMonthName: `${month} ${year}`,
+              name: member.name,
+              amount: String(amount),
+              url: `${process.env.NEXTAUTH_URL || 'https://savveysavers.com'}/dashboard/payments`
+            });
+          } catch (emailErr) {
+            console.error('[RECORD_PAST_PAYMENT] Failed to send email notice:', emailErr);
+          }
         }
 
         // Member Notification
         await db.notification.create({ data: {
           userId: member.id,
-          message: `Past contribution of £${amount} for ${month} ${year} has been recorded by the admin.`,
+          message: `Your contribution payment of £${amount} for ${month} ${year} has been recorded in your membership account.`,
           type: 'PAYMENT_RECORDED',
           isRead: false
         } });

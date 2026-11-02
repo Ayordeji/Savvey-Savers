@@ -74,7 +74,7 @@ function CommitmentsContent() {
     setCurrentPage(1);
   };
   const [yearFilter, setYearFilter] = useState(() => new Date().getFullYear().toString());
-  const [sendEmailNotification, setSendEmailNotification] = useState(false);
+  const [sendEmailNotification, setSendEmailNotification] = useState(true);
   const [loading, setLoading] = useState(true);
 
   // Settings configs
@@ -134,7 +134,7 @@ function CommitmentsContent() {
   // Past payment fields
   const [pastPayMonth, setPastPayMonth] = useState('January');
   const [pastPayCollectionMonth, setPastPayCollectionMonth] = useState('January');
-  const [pastPaySendNotification, setPastPaySendNotification] = useState<'yes' | 'no'>('no');
+  const [pastPaySendNotification, setPastPaySendNotification] = useState<'yes' | 'no'>('yes');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   const months = [

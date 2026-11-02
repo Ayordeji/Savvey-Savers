@@ -92,7 +92,7 @@ function PaymentsContent() {
   const [currentUser, setCurrentUser] = useState<{ id: string; role: 'ADMIN' | 'MEMBER'; displayId?: string; email?: string; name?: string; } | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [commitments, setCommitments] = useState<Commitment[]>([]);
-  const [notifyMemberEmail, setNotifyMemberEmail] = useState(false);
+  const [notifyMemberEmail, setNotifyMemberEmail] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -339,17 +339,35 @@ function PaymentsContent() {
     const memberEmail = memberUser?.email || '';
     const memberDisplayId = (memberUser as any)?.displayId || (memberUser as any)?.invitationId || '';
     const initials = memberName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'MB';
-    const commitmentTag = cmt ? `${cmt.collectionMonth} - ${cmt.goal || 'Savings Pool'} (£${Number(cmt.amount).toFixed(0)})` : 'Savings Pool';
+    
+    // Reason for saving (cleaned of placeholders and without misleading harvest month or redundant amount)
+    let reasonForSaving = 'Savings';
+    if (cmt?.goal) {
+      const g = cmt.goal.trim();
+      if (g.toLowerCase() === 'savings goal' || g.toLowerCase() === 'savings pool' || g.toLowerCase() === 'standard savings') {
+        reasonForSaving = 'Savings';
+      } else {
+        reasonForSaving = g;
+      }
+    }
+    const commitmentTag = reasonForSaving;
+
     const rawId = (p as any).displayId || (p as any).reference || p.id;
-    // Shorten any long IDs to PAY-XXXX...YYYY format
+    // Shorten any long IDs to PAY-XXXX...YYYY format and provide prefix/suffix for clean two-line wrapping
     let displayId = rawId;
+    let idPrefix = rawId;
+    let idSuffix = '';
     if (typeof rawId === 'string' && rawId.length > 14) {
       if (rawId.startsWith('PAY-')) {
         const rest = rawId.substring(4);
-        displayId = `PAY-${rest.slice(0, 4)}...${rest.slice(-4)}`;
+        idPrefix = `PAY-${rest.slice(0, 4)}`;
+        idSuffix = `...${rest.slice(-4)}`;
+        displayId = `${idPrefix}${idSuffix}`;
       } else {
         const clean = rawId.replace(/[^a-zA-Z0-9]/g, '');
-        displayId = `PAY-${clean.slice(0, 4).toUpperCase()}...${clean.slice(-4).toUpperCase()}`;
+        idPrefix = `PAY-${clean.slice(0, 4).toUpperCase()}`;
+        idSuffix = `...${clean.slice(-4).toUpperCase()}`;
+        displayId = `${idPrefix}${idSuffix}`;
       }
     }
 
@@ -362,7 +380,10 @@ function PaymentsContent() {
       memberDisplayId,
       initials,
       commitmentTag,
+      reasonForSaving,
       displayId,
+      idPrefix,
+      idSuffix,
       rawId,
       statusLabel
     };
@@ -405,7 +426,9 @@ function PaymentsContent() {
           details.memberName.toLowerCase().includes(q) ||
           details.memberEmail.toLowerCase().includes(q) ||
           details.displayId.toLowerCase().includes(q) ||
-          details.commitmentTag.toLowerCase().includes(q);
+          details.reasonForSaving.toLowerCase().includes(q) ||
+          details.commitmentTag.toLowerCase().includes(q) ||
+          p.amount.toString().includes(q);
         if (!matches) return false;
       }
 
@@ -578,19 +601,31 @@ function PaymentsContent() {
   };
 
   const handleExport = () => {
-    const csvRows = [
-      ['Payment ID', 'Member', 'Commitment', 'Amount', 'Status', 'Date'].join(',')
-    ];
+    const isAdmin = currentUser?.role === 'ADMIN';
+    const csvHeaders = isAdmin
+      ? ['Payment Date', 'Payment ID', 'Member', 'Reason for Saving', 'Amount', 'Status']
+      : ['Payment Date', 'Payment ID', 'Reason for Saving', 'Amount', 'Status'];
+    const csvRows = [csvHeaders.join(',')];
     filteredPayments.forEach(p => {
       const d = getPaymentDetails(p);
-      csvRows.push([
-        d.displayId,
-        `"${d.memberName}"`,
-        `"${d.commitmentTag}"`,
-        `£${Number(p.amount).toFixed(2)}`,
-        d.statusLabel,
-        p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-GB') : '—'
-      ].join(','));
+      const dateStr = p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-GB') : '—';
+      const row = isAdmin
+        ? [
+            dateStr,
+            d.displayId,
+            `"${d.memberName}"`,
+            `"${d.reasonForSaving}"`,
+            `£${Number(p.amount).toFixed(2)}`,
+            d.statusLabel
+          ]
+        : [
+            dateStr,
+            d.displayId,
+            `"${d.reasonForSaving}"`,
+            `£${Number(p.amount).toFixed(2)}`,
+            d.statusLabel
+          ];
+      csvRows.push(row.join(','));
     });
     const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -806,7 +841,7 @@ function PaymentsContent() {
             <Search size={16} style={{ position: 'absolute', left: '12px', top: '10px', color: '#9CA3AF' }} />
             <input
               type="text"
-              placeholder="Search by member, pool, or ID..."
+              placeholder={currentUser?.role === 'MEMBER' ? "Search by reason, amount, or ID..." : "Search by member, reason, or ID..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -935,7 +970,7 @@ function PaymentsContent() {
               <span style={{ color: 'var(--text-muted)' }}>Loading payments...</span>
             </div>
           ) : (
-            <div className="table-container" style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #ECE8E2', overflow: 'hidden' }}>
+            <div className="table-container" style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #ECE8E2', overflowX: 'auto' }}>
               <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#FAF9F6', borderBottom: '1px solid #ECE8E2' }}>
@@ -950,25 +985,27 @@ function PaymentsContent() {
                         />
                       </th>
                     )}
-                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em', width: '130px', whiteSpace: 'nowrap' }}>
-                      PAYMENT ID
-                    </th>
-                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      MEMBER
-                    </th>
-                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      COMMITMENT
-                    </th>
-                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      AMOUNT
-                    </th>
-                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      STATUS
-                    </th>
-                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <th style={{ padding: '14px 14px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
                       PAYMENT DATE
                     </th>
-                    <th style={{ padding: '14px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <th style={{ padding: '14px 10px', textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em', width: '85px' }}>
+                      PAYMENT ID
+                    </th>
+                    {currentUser?.role === 'ADMIN' && (
+                      <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        MEMBER
+                      </th>
+                    )}
+                    <th style={{ padding: '14px 14px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      REASON FOR SAVING
+                    </th>
+                    <th style={{ padding: '14px 14px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      AMOUNT
+                    </th>
+                    <th style={{ padding: '14px 14px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      STATUS
+                    </th>
+                    <th style={{ padding: '14px 12px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       ACTION
                     </th>
                   </tr>
@@ -976,7 +1013,7 @@ function PaymentsContent() {
                 <tbody>
                   {paginatedPayments.length === 0 ? (
                     <tr>
-                      <td colSpan={currentUser?.role === 'ADMIN' ? 8 : 7} style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF', fontSize: '0.88rem' }}>
+                      <td colSpan={currentUser?.role === 'ADMIN' ? 8 : 6} style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF', fontSize: '0.88rem' }}>
                         No payments match your criteria.
                       </td>
                     </tr>
@@ -1008,8 +1045,13 @@ function PaymentsContent() {
                             </td>
                           )}
 
-                          {/* Payment ID Monospace Pill */}
-                          <td style={{ padding: '14px 16px', width: '130px', whiteSpace: 'nowrap' }}>
+                          {/* Payment Date */}
+                          <td style={{ padding: '14px 14px', color: '#111827', fontSize: '0.82rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            {p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                          </td>
+
+                          {/* Payment ID Wrapped Monospace Badge */}
+                          <td style={{ padding: '12px 10px', textAlign: 'center', width: '85px' }}>
                             <span
                               title={`Payment ID: ${d.rawId} (Click to copy)`}
                               onClick={(e) => {
@@ -1018,64 +1060,73 @@ function PaymentsContent() {
                                 dialog.alert('Copied', `Payment ID ${d.rawId} copied to clipboard.`);
                               }}
                               style={{
-                                padding: '3px 8px',
+                                padding: '3px 6px',
                                 borderRadius: '6px',
-                                fontSize: '0.78rem',
+                                fontSize: '0.72rem',
                                 fontWeight: 700,
                                 fontFamily: 'monospace',
                                 backgroundColor: '#EAF5EE',
                                 color: '#0c4e43',
                                 cursor: 'pointer',
-                                whiteSpace: 'nowrap'
+                                display: 'inline-flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                lineHeight: 1.25,
+                                maxWidth: '80px',
+                                wordBreak: 'break-all',
+                                textAlign: 'center'
                               }}
                             >
-                              {d.displayId}
+                              <span>{d.idPrefix}</span>
+                              {d.idSuffix && <span style={{ fontSize: '0.67rem', opacity: 0.85 }}>{d.idSuffix}</span>}
                             </span>
                           </td>
 
-                          {/* Member */}
-                          <td style={{ padding: '14px 16px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                              <div style={{
-                                width: '36px',
-                                height: '36px',
-                                borderRadius: '50%',
-                                backgroundColor: '#0c4e43',
-                                color: '#FFFFFF',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 700,
-                                fontSize: '0.85rem',
-                                flexShrink: 0
-                              }}>
-                                {d.initials}
-                              </div>
-                              <div>
-                                <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.88rem' }}>
-                                  {d.memberName} {d.memberDisplayId ? <span style={{ fontSize: '0.72rem', color: '#57655c', fontFamily: 'monospace' }}>({d.memberDisplayId})</span> : null}
+                          {/* Member (Admin only) */}
+                          {currentUser?.role === 'ADMIN' && (
+                            <td style={{ padding: '14px 16px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{
+                                  width: '36px',
+                                  height: '36px',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#0c4e43',
+                                  color: '#FFFFFF',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontWeight: 700,
+                                  fontSize: '0.85rem',
+                                  flexShrink: 0
+                                }}>
+                                  {d.initials}
                                 </div>
-                                {d.memberEmail ? (
-                                  <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                                    {d.memberEmail}
+                                <div>
+                                  <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.88rem' }}>
+                                    {d.memberName} {d.memberDisplayId ? <span style={{ fontSize: '0.72rem', color: '#57655c', fontFamily: 'monospace' }}>({d.memberDisplayId})</span> : null}
                                   </div>
-                                ) : null}
+                                  {d.memberEmail ? (
+                                    <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                                      {d.memberEmail}
+                                    </div>
+                                  ) : null}
+                                </div>
                               </div>
-                            </div>
-                          </td>
+                            </td>
+                          )}
 
-                          {/* Commitment */}
-                          <td style={{ padding: '14px 16px', fontSize: '0.82rem', color: '#4B5563' }}>
-                            {d.commitmentTag}
+                          {/* Reason for Saving */}
+                          <td style={{ padding: '14px 14px', fontSize: '0.85rem', fontWeight: 600, color: '#374151' }}>
+                            {d.reasonForSaving}
                           </td>
 
                           {/* Amount */}
-                          <td style={{ padding: '14px 16px', fontWeight: 700, color: '#111827', fontSize: '0.88rem' }}>
+                          <td style={{ padding: '14px 14px', fontWeight: 700, color: '#111827', fontSize: '0.88rem', whiteSpace: 'nowrap' }}>
                             £{Number(p.amount).toFixed(2)}
                           </td>
 
                           {/* Status Pill */}
-                          <td style={{ padding: '14px 16px' }}>
+                          <td style={{ padding: '14px 14px', whiteSpace: 'nowrap' }}>
                             <span style={{
                               padding: '3px 9px',
                               borderRadius: '9999px',
@@ -1088,13 +1139,8 @@ function PaymentsContent() {
                             </span>
                           </td>
 
-                          {/* Payment Date */}
-                          <td style={{ padding: '14px 16px', color: '#6B7280', fontSize: '0.82rem' }}>
-                            {p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
-                          </td>
-
                           {/* Action */}
-                          <td style={{ padding: '14px 16px', textAlign: 'right', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+                          <td style={{ padding: '14px 12px', textAlign: 'right', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={() => setOpenDropdownId(openDropdownId === p.id ? null : p.id)}
                               style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: '4px' }}
@@ -1351,7 +1397,7 @@ function PaymentsContent() {
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1B4332'}
                     >
                       <Receipt size={16} />
-                      <span>Go to Member's Commitment</span>
+                      <span>{currentUser?.role === 'MEMBER' ? 'View My Commitment' : "Go to Member's Commitment"}</span>
                       <ArrowRight size={15} />
                     </button>
                   </div>

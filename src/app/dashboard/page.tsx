@@ -1509,7 +1509,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                         Savings contribution confirmed
                       </div>
                       <div style={{ fontSize: '0.78rem', color: '#57655c' }}>
-                        £{Number(p.amount).toLocaleString()} from {memberName} {memberDisplayId ? `(${memberDisplayId})` : ''} • {p.month} {p.year}
+                        £{Number(p.amount).toLocaleString()} {isAdmin ? `from ${memberName} ${memberDisplayId ? `(${memberDisplayId})` : ''} • ` : '• '}{p.month} {p.year}
                       </div>
                     </div>
                   </div>

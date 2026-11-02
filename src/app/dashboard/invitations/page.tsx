@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Eye, X, Plus, UserPlus, Mail, Phone, ShieldCheck, CheckCircle2, CheckCircle, AlertCircle, Clock, ChevronDown, MoreVertical, Copy, Send, Check, ArrowRight, ExternalLink, Receipt } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
@@ -325,21 +325,39 @@ export default function MyInvitationsPage() {
     }
   };
 
-  // Filter users by search query, status, role, and ownership
-  const filteredUsers = users.filter((u) => {
-    if (currentUser?.role === 'MEMBER') {
+  // Scoped list of invitations:
+  // For members: only users where invitedBy matches the member, excluding the member themselves.
+  // For admin: all users except the root admin.
+  const scopedUsers = useMemo(() => {
+    if (!currentUser) return [];
+
+    if (currentUser.role === 'MEMBER') {
       const myKeys = [
         currentUser.id,
         currentUser.displayId,
         currentUser.invitationId,
-        currentUser.email
+        currentUser.email,
+        currentUser.name
       ].filter(Boolean).map(k => String(k).toLowerCase().trim());
 
-      const inviteKey = u.invitedBy ? String(u.invitedBy).toLowerCase().trim() : '';
-      const isMyInvite = inviteKey && myKeys.includes(inviteKey);
-      if (!isMyInvite) return false;
+      return users.filter(u => {
+        // Exclude the current member themselves from their own invitations list
+        const uId = String(u.id || '').toLowerCase().trim();
+        const uEmail = String(u.email || '').toLowerCase().trim();
+        if (myKeys.includes(uId) || (uEmail && myKeys.includes(uEmail))) {
+          return false;
+        }
+
+        const inviteKey = u.invitedBy ? String(u.invitedBy).toLowerCase().trim() : '';
+        return Boolean(inviteKey && myKeys.includes(inviteKey));
+      });
     }
 
+    return users.filter(u => u.id !== 'usr_admin');
+  }, [users, currentUser]);
+
+  // Filter scoped users by search query, status, and role
+  const filteredUsers = scopedUsers.filter((u) => {
     if (statusFilter) {
       // 'Accepted' = active AND has logged in at least once
       const hasLoggedIn = !!u.lastLoginAt;
@@ -348,7 +366,7 @@ export default function MyInvitationsPage() {
       if (statusFilter === 'EXPIRED' || statusFilter === 'DECLINED') return false;
     }
 
-    if (roleFilter) {
+    if (currentUser?.role === 'ADMIN' && roleFilter) {
       const isSuper = u.isSuperAdmin === true || (u.id === 'usr_admin' && u.isSuperAdmin !== false);
       if (roleFilter === 'SUPER_ADMIN') {
         if (!isSuper) return false;
@@ -399,10 +417,10 @@ export default function MyInvitationsPage() {
     });
   };
 
-  const totalInvitesCount = users.length;
+  const totalInvitesCount = scopedUsers.length;
   // 'Accepted' = isActive AND has logged in at least once (not just migrated)
-  const acceptedInvitesCount = users.filter(u => u.isActive && !!u.lastLoginAt).length;
-  const pendingInvitesCount = users.filter(u => !u.isActive || !u.lastLoginAt).length;
+  const acceptedInvitesCount = scopedUsers.filter(u => u.isActive && !!u.lastLoginAt).length;
+  const pendingInvitesCount = scopedUsers.filter(u => !u.isActive || !u.lastLoginAt).length;
   const declinedExpiredCount = 0;
 
   const handleCopyLink = (u: User) => {
@@ -574,27 +592,29 @@ export default function MyInvitationsPage() {
             <option value="DECLINED">Declined</option>
           </select>
 
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            style={{
-              padding: '8px 14px',
-              fontSize: '0.82rem',
-              borderRadius: '10px',
-              border: '1px solid #ECE8E2',
-              backgroundColor: '#FAF9F6',
-              color: '#374151',
-              fontWeight: 500,
-              cursor: 'pointer'
-            }}
-          >
-            <option value="">Roles: All</option>
-            <option value="SUPER_ADMIN">👑 Super Admin</option>
-            <option value="ADMIN">🛡️ Admin</option>
-            <option value="MEMBER">Member</option>
-          </select>
+          {currentUser?.role === 'ADMIN' && (
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              style={{
+                padding: '8px 14px',
+                fontSize: '0.82rem',
+                borderRadius: '10px',
+                border: '1px solid #ECE8E2',
+                backgroundColor: '#FAF9F6',
+                color: '#374151',
+                fontWeight: 500,
+                cursor: 'pointer'
+              }}
+            >
+              <option value="">Roles: All</option>
+              {currentUser?.isSuperAdmin && <option value="SUPER_ADMIN">👑 Super Admin</option>}
+              <option value="ADMIN">🛡️ Admin</option>
+              <option value="MEMBER">Member</option>
+            </select>
+          )}
 
-          {(searchQuery || statusFilter || roleFilter) && (
+          {(searchQuery || statusFilter || (currentUser?.role === 'ADMIN' && roleFilter)) && (
             <button
               onClick={handleResetFilters}
               style={{
@@ -642,9 +662,11 @@ export default function MyInvitationsPage() {
                     <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       INVITEE
                     </th>
-                    <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      ROLE
-                    </th>
+                    {currentUser?.role === 'ADMIN' && (
+                      <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        ROLE
+                      </th>
+                    )}
                     <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       STATUS
                     </th>
@@ -663,7 +685,7 @@ export default function MyInvitationsPage() {
                 <tbody>
                   {paginatedUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF', fontSize: '0.88rem' }}>
+                      <td colSpan={currentUser?.role === 'ADMIN' ? 8 : 7} style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF', fontSize: '0.88rem' }}>
                         No member invitations found.
                       </td>
                     </tr>
@@ -786,44 +808,46 @@ export default function MyInvitationsPage() {
                             </div>
                           </td>
 
-                          {/* Role */}
-                          <td style={{ padding: '14px 16px' }}>
-                            {isSuper ? (
-                              <span style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                padding: '3px 8px',
-                                borderRadius: '6px',
-                                fontSize: '0.74rem',
-                                fontWeight: 800,
-                                backgroundColor: '#FEF3C7',
-                                color: '#92400E',
-                                border: '1px solid #FCD34D'
-                              }}>
-                                👑 SUPER ADMIN
-                              </span>
-                            ) : isAdmin ? (
-                              <span style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                padding: '3px 8px',
-                                borderRadius: '6px',
-                                fontSize: '0.74rem',
-                                fontWeight: 700,
-                                backgroundColor: '#EFF6FF',
-                                color: '#1D4ED8',
-                                border: '1px solid #BFDBFE'
-                              }}>
-                                🛡️ ADMIN
-                              </span>
-                            ) : (
-                              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>
-                                CONTRIBUTING MEMBER
-                              </span>
-                            )}
-                          </td>
+                          {/* Role (Admin only) */}
+                          {currentUser?.role === 'ADMIN' && (
+                            <td style={{ padding: '14px 16px' }}>
+                              {isSuper ? (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  padding: '3px 8px',
+                                  borderRadius: '6px',
+                                  fontSize: '0.74rem',
+                                  fontWeight: 800,
+                                  backgroundColor: '#FEF3C7',
+                                  color: '#92400E',
+                                  border: '1px solid #FCD34D'
+                                }}>
+                                  👑 SUPER ADMIN
+                                </span>
+                              ) : isAdmin ? (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  padding: '3px 8px',
+                                  borderRadius: '6px',
+                                  fontSize: '0.74rem',
+                                  fontWeight: 700,
+                                  backgroundColor: '#EFF6FF',
+                                  color: '#1D4ED8',
+                                  border: '1px solid #BFDBFE'
+                                }}>
+                                  🛡️ ADMIN
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>
+                                  CONTRIBUTING MEMBER
+                                </span>
+                              )}
+                            </td>
+                          )}
 
                           {/* Status */}
                           <td style={{ padding: '14px 16px' }}>
@@ -1408,7 +1432,7 @@ export default function MyInvitationsPage() {
                     <select value={formRole} onChange={(e) => setFormRole(e.target.value as any)} className="form-select" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
                       <option value="MEMBER">Member</option>
                       <option value="ADMIN">Admin</option>
-                      <option value="SUPER_ADMIN">Super Admin</option>
+                      {currentUser?.isSuperAdmin && <option value="SUPER_ADMIN">Super Admin</option>}
                     </select>
                   </div>
 
