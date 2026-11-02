@@ -872,7 +872,7 @@ function CommitmentsContent() {
         if (cYear < currentYear) {
           maxMonthIdx = 11;
         } else if (cYear === currentYear) {
-          maxMonthIdx = currentMonthIdx;
+          maxMonthIdx = currentMonthIdx - 1; // Prior completed calendar months only (e.g. October when in November)
         } else {
           maxMonthIdx = -1;
         }
@@ -880,19 +880,22 @@ function CommitmentsContent() {
         if (maxMonthIdx < 0) {
           matchesStatus = false;
         } else {
-          const cPayments = paymentsMap[c.id] || [];
-          const confirmedCount = cPayments.filter(p => p.status === 'CONFIRMED' && (Number(p.year) === cYear || !p.year)).length;
-          const confirmedMonthNames = new Set(
-            cPayments
-              .filter(p => p.status === 'CONFIRMED' && (Number(p.year) === cYear || !p.year))
-              .map(p => (p.month || '').toLowerCase().trim())
+          const cPayments: Payment[] = (paymentsMap && paymentsMap[c.id] && paymentsMap[c.id].length > 0)
+            ? paymentsMap[c.id]
+            : (c.payments || []);
+          const confirmedPayments = cPayments.filter(
+            (p: Payment) => p.status === 'CONFIRMED' && (Number(p.year) === cYear || !p.year)
+          );
+          const confirmedCount = confirmedPayments.length;
+          const confirmedMonthNames = new Set<string>(
+            confirmedPayments.map((p: Payment) => (p.month || '').toLowerCase().trim())
           );
 
           let hasUnconfirmedDueMonth = false;
           for (let m = 0; m <= maxMonthIdx; m++) {
             const mName = months[m].toLowerCase();
             const isConfirmed = m < confirmedCount || confirmedMonthNames.has(mName) || 
-              Array.from(confirmedMonthNames).some(cm => cm.startsWith(mName.slice(0, 3)));
+              Array.from(confirmedMonthNames).some((cm: string) => cm.startsWith(mName.slice(0, 3)));
             if (!isConfirmed) {
               hasUnconfirmedDueMonth = true;
               break;
