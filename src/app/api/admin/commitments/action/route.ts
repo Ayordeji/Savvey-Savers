@@ -97,6 +97,114 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
 
+    // --- Action: BULK_CONFIRM_PAYMENTS ---
+    if (action === 'BULK_CONFIRM_PAYMENTS') {
+      const targetCommitmentIds: string[] = Array.isArray(commitmentIds) ? commitmentIds : [];
+      if (targetCommitmentIds.length === 0) {
+        return NextResponse.json({ error: 'At least one commitment must be selected.' }, { status: 400 });
+      }
+      if (!month || !year) {
+        return NextResponse.json({ error: 'Month and year are required.' }, { status: 400 });
+      }
+
+      const parsedYear = parseInt(String(year), 10);
+      let confirmedCount = 0;
+      let alreadyConfirmedCount = 0;
+
+      for (const cId of targetCommitmentIds) {
+        const cmt = await db.commitment.findUnique({
+          where: { id: cId },
+          include: { user: true, payments: true }
+        });
+        if (!cmt) continue;
+
+        // Check if confirmed payment already exists
+        const existingConfirmed = (cmt.payments || []).find(
+          p => p.month?.toLowerCase() === month.toLowerCase() &&
+               p.year === parsedYear &&
+               p.status === 'CONFIRMED'
+        );
+
+        if (existingConfirmed) {
+          alreadyConfirmedCount++;
+          continue;
+        }
+
+        // Check if there is an existing pending payment to update
+        const existingPending = (cmt.payments || []).find(
+          p => p.month?.toLowerCase() === month.toLowerCase() &&
+               p.year === parsedYear &&
+               p.status === 'PENDING'
+        );
+
+        if (existingPending) {
+          await db.payment.update({
+            where: { id: existingPending.id },
+            data: {
+              status: 'CONFIRMED',
+              confirmedAt: new Date()
+            }
+          });
+        } else {
+          await db.payment.create({
+            data: {
+              commitmentId: cmt.id,
+              userId: cmt.memberId,
+              amount: Number(cmt.amount),
+              month,
+              year: parsedYear,
+              status: 'CONFIRMED',
+              confirmedAt: new Date()
+            }
+          });
+        }
+
+        confirmedCount++;
+
+        const member = cmt.user;
+        if (member) {
+          // Dispatch Email Notification (if enabled)
+          if (notifyByEmail) {
+            try {
+              await sendTemplatedEmail("22", member.email, {
+                fullMonthName: `${month} ${parsedYear}`,
+                name: member.name,
+                amount: String(cmt.amount),
+                url: `${process.env.NEXTAUTH_URL || 'https://savveysavers.com'}/dashboard/payments`
+              });
+            } catch (emailErr) {
+              console.error(`[BULK_CONFIRM_PAYMENTS] Email dispatch error for ${member.email}:`, emailErr);
+            }
+          }
+
+          // Member In-App Notification
+          await db.notification.create({
+            data: {
+              userId: member.id,
+              message: `Your contribution payment of £${cmt.amount} for ${month} ${parsedYear} has been recorded in your membership account.`,
+              type: 'PAYMENT_RECORDED',
+              isRead: false
+            }
+          });
+        }
+      }
+
+      await db.auditLog.create({
+        data: {
+          action: 'BULK_PAYMENT_CONFIRM',
+          details: `Mass confirmed payments for ${confirmedCount} commitment(s) for ${month} ${parsedYear}. (${alreadyConfirmedCount} already confirmed and skipped. Email notice: ${notifyByEmail ? 'Sent' : 'Muted'})`,
+          userId: session.id
+        }
+      });
+
+      return NextResponse.json({
+        success: true,
+        confirmedCount,
+        alreadyConfirmedCount,
+        total: targetCommitmentIds.length
+      });
+    }
+
     // --- Action 2: RECORD_PAST_PAYMENT ---
     if (action === 'RECORD_PAST_PAYMENT') {
       if (!commitmentId || !month || !year || !amount) {

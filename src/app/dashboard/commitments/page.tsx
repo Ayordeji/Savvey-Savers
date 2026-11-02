@@ -85,7 +85,7 @@ function CommitmentsContent() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   // Modal states
-  const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'REMINDER' | 'PAST_PAYMENT' | 'VIEW_COMMITMENT'>('NONE');
+  const [activeModal, setActiveModal] = useState<'NONE' | 'ADD' | 'EDIT' | 'REMINDER' | 'PAST_PAYMENT' | 'VIEW_COMMITMENT' | 'BULK_CONFIRM'>('NONE');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedCmt, setSelectedCmt] = useState<Commitment | null>(null);
   const cmtDrawerRef = useRef<HTMLDivElement>(null);
@@ -141,6 +141,20 @@ function CommitmentsContent() {
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
+
+  // Bulk confirm payment fields
+  const [bulkConfirmMonth, setBulkConfirmMonth] = useState<string>(() => {
+    const now = new Date();
+    const prevMonthIdx = now.getMonth() - 1;
+    const monthsArr = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return monthsArr[prevMonthIdx >= 0 ? prevMonthIdx : 11];
+  });
+  const [bulkConfirmYear, setBulkConfirmYear] = useState<string>(() => new Date().getFullYear().toString());
+  const [bulkConfirmSendEmail, setBulkConfirmSendEmail] = useState<'yes' | 'no'>('yes');
+  const [bulkConfirmSubmitting, setBulkConfirmSubmitting] = useState(false);
 
   const fetchInitialData = async () => {
     try {
@@ -249,6 +263,53 @@ function CommitmentsContent() {
       setReminderCmtIds(unpaidCmts.length > 0 ? unpaidCmts : commitments.filter(c => c.status === 'ACTIVE').map(c => c.id));
     }
     setActiveModal('REMINDER');
+  };
+
+  const handleOpenBulkConfirmModal = () => {
+    if (selectedIds.length === 0) return;
+    setErrorMsg('');
+    setActiveModal('BULK_CONFIRM');
+  };
+
+  const handleBulkConfirmSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedIds.length === 0) return;
+    setErrorMsg('');
+    setBulkConfirmSubmitting(true);
+
+    try {
+      const res = await fetch('/api/admin/commitments/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'BULK_CONFIRM_PAYMENTS',
+          commitmentIds: selectedIds,
+          month: bulkConfirmMonth,
+          year: bulkConfirmYear,
+          sendNotification: bulkConfirmSendEmail === 'yes',
+          sendEmail: bulkConfirmSendEmail === 'yes'
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        await fetchInitialData();
+        setActiveModal('NONE');
+        setSelectedIds([]);
+        let msg = `Successfully confirmed payments for ${data.confirmedCount} commitment(s) for ${bulkConfirmMonth} ${bulkConfirmYear}.`;
+        if (data.alreadyConfirmedCount > 0) {
+          msg += ` (${data.alreadyConfirmedCount} commitment(s) were already confirmed for this month and skipped).`;
+        }
+        await dialog.alert('Payments Confirmed', msg);
+      } else {
+        setErrorMsg(data.error || 'Failed to confirm payments.');
+      }
+    } catch (err) {
+      console.error('Bulk confirm error:', err);
+      setErrorMsg('A network error occurred while confirming payments.');
+    } finally {
+      setBulkConfirmSubmitting(false);
+    }
   };
 
   const handleOpenViewCommitmentModal = async (cmt: Commitment) => {
@@ -978,6 +1039,9 @@ function CommitmentsContent() {
 
   const monthNamesList = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+  const selectedCommitmentsList = commitments.filter((c) => selectedIds.includes(c.id));
+  const selectedCommitmentsTotal = selectedCommitmentsList.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Page Header */}
@@ -1036,6 +1100,29 @@ function CommitmentsContent() {
             >
               <BellRing size={15} />
               <span>Send Reminders ({selectedIds.length})</span>
+            </button>
+          )}
+
+          {selectedIds.length > 0 && currentUser?.role === 'ADMIN' && (
+            <button
+              onClick={handleOpenBulkConfirmModal}
+              style={{
+                backgroundColor: '#2E5A44',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '10px',
+                padding: '9px 16px',
+                fontWeight: 600,
+                fontSize: '0.82rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 4px rgba(46, 90, 68, 0.2)'
+              }}
+            >
+              <CheckCircle size={15} />
+              <span>Confirm Payments ({selectedIds.length})</span>
             </button>
           )}
 
@@ -2649,6 +2736,164 @@ function CommitmentsContent() {
                 </button>
                 <button type="submit" disabled={formSubmitting} className="btn btn-primary" style={{ flex: 1 }}>
                   {formSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- BULK CONFIRM PAYMENTS MODAL --- */}
+      {activeModal === 'BULK_CONFIRM' && (
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setActiveModal('NONE'); }}>
+          <div className="modal-content" style={{ maxWidth: '560px' }}>
+            <button
+              onClick={() => setActiveModal('NONE')}
+              style={{ position: 'absolute', right: '20px', top: '20px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              <X size={20} />
+            </button>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-family-title)' }}>
+              Confirm Multiple Payments
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
+              Record and confirm contribution payments for <strong>{selectedIds.length}</strong> selected commitment{selectedIds.length > 1 ? 's' : ''}.
+            </p>
+
+            {errorMsg && (
+              <div style={{ backgroundColor: 'var(--status-error-bg)', color: 'var(--status-error)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '10px', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '16px' }}>
+                {errorMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleBulkConfirmSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Payment Month & Year in Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Payment Month</label>
+                  <select
+                    value={bulkConfirmMonth}
+                    onChange={(e) => setBulkConfirmMonth(e.target.value)}
+                    className="form-select"
+                    required
+                  >
+                    {months.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Payment Year</label>
+                  <select
+                    value={bulkConfirmYear}
+                    onChange={(e) => setBulkConfirmYear(e.target.value)}
+                    className="form-select"
+                    required
+                  >
+                    {[2025, 2026, 2027, 2028].map((y) => (
+                      <option key={y} value={y.toString()}>{y}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Send Confirmation Email */}
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Send Confirmation Email</label>
+                <select
+                  value={bulkConfirmSendEmail}
+                  onChange={(e) => setBulkConfirmSendEmail(e.target.value as 'yes' | 'no')}
+                  className="form-select"
+                >
+                  <option value="yes">Yes — Dispatch email notification & receipt to members</option>
+                  <option value="no">No — Record payment silently without email</option>
+                </select>
+              </div>
+
+              {/* Selected Commitments List Preview */}
+              <div className="form-group" style={{ margin: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label className="form-label" style={{ margin: 0 }}>
+                    Selected Commitments ({selectedIds.length})
+                  </label>
+                  <span style={{ fontSize: '0.78rem', color: '#6B7280' }}>
+                    Total: <strong style={{ color: '#111827' }}>£{selectedCommitmentsTotal.toFixed(2)}</strong>
+                  </span>
+                </div>
+
+                <div style={{ border: '1px solid #ECE8E2', borderRadius: '10px', maxHeight: '190px', overflowY: 'auto', backgroundColor: '#FAF9F6' }}>
+                  {selectedCommitmentsList.map((c) => {
+                    const cPayments = (paymentsMap[c.id] && paymentsMap[c.id].length > 0) ? paymentsMap[c.id] : (c.payments || []);
+                    const isAlreadyConfirmed = cPayments.some(
+                      (p) => p.month?.toLowerCase() === bulkConfirmMonth.toLowerCase() &&
+                             Number(p.year) === Number(bulkConfirmYear) &&
+                             p.status === 'CONFIRMED'
+                    );
+                    const isPending = cPayments.some(
+                      (p) => p.month?.toLowerCase() === bulkConfirmMonth.toLowerCase() &&
+                             Number(p.year) === Number(bulkConfirmYear) &&
+                             p.status === 'PENDING'
+                    );
+
+                    return (
+                      <div
+                        key={c.id}
+                        style={{
+                          padding: '10px 14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          borderBottom: '1px solid #ECE8E2',
+                          gap: '12px'
+                        }}
+                      >
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#111827' }}>
+                            {c.memberName || 'Member'}
+                          </div>
+                          <div style={{ fontSize: '0.74rem', color: '#6B7280' }}>
+                            {c.displayId || c.id} &bull; Monthly: £{Number(c.amount).toFixed(2)}
+                          </div>
+                        </div>
+                        <div style={{ flexShrink: 0 }}>
+                          {isAlreadyConfirmed ? (
+                            <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '9999px', backgroundColor: '#EAF5EE', color: '#15803D', fontWeight: 600 }}>
+                              Already Paid (Skip)
+                            </span>
+                          ) : isPending ? (
+                            <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '9999px', backgroundColor: '#FEF3C7', color: '#B45309', fontWeight: 600 }}>
+                              Pending Receipt
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '9999px', backgroundColor: '#F3F4F6', color: '#374151', fontWeight: 600 }}>
+                              Will Record & Confirm
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveModal('NONE')}
+                  className="btn btn-secondary"
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={bulkConfirmSubmitting}
+                  className="btn btn-primary"
+                  style={{ flex: 1, backgroundColor: '#2E5A44', borderColor: '#2E5A44' }}
+                >
+                  {bulkConfirmSubmitting ? 'Confirming...' : `Confirm ${selectedIds.length} Payment${selectedIds.length > 1 ? 's' : ''}`}
                 </button>
               </div>
             </form>
