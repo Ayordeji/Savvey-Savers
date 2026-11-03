@@ -1205,10 +1205,12 @@ function CommitmentsContent() {
           </span>
         </div>
 
-        {/* Card 3: Total Collected */}
+        {/* Card 3: Total Collected / Total Paid into Pot */}
         <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Total Collected</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>
+              {currentUser?.role === 'MEMBER' ? 'Total Paid into Pot' : 'Total Collected'}
+            </span>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <PoundSterling size={16} />
             </div>
@@ -1217,14 +1219,18 @@ function CommitmentsContent() {
             £{totalCollectedValue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-            {filterLabel ? `${filterLabel} total collection` : 'Total cycle collection'}
+            {currentUser?.role === 'MEMBER'
+              ? (filterLabel ? `${filterLabel} total paid` : 'Total paid into pot')
+              : (filterLabel ? `${filterLabel} total collection` : 'Total cycle collection')}
           </span>
         </div>
 
-        {/* Card 4: Payouts Completed */}
+        {/* Card 4: Payouts Completed / Payouts Received */}
         <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #ECE8E2', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>Payouts Completed</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#6B7280' }}>
+              {currentUser?.role === 'MEMBER' ? 'Payouts Received' : 'Payouts Completed'}
+            </span>
             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EAF5EE', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Calendar size={16} />
             </div>
@@ -1233,7 +1239,9 @@ function CommitmentsContent() {
             {completedPayoutsCount} / {totalPayoutsTarget}
           </div>
           <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-            {filterLabel ? `${filterLabel} completed payouts` : 'Completed payouts'}
+            {currentUser?.role === 'MEMBER'
+              ? (filterLabel ? `${filterLabel} payouts received` : 'Payouts received')
+              : (filterLabel ? `${filterLabel} completed payouts` : 'Completed payouts')}
           </span>
         </div>
       </div>
@@ -1903,7 +1911,9 @@ function CommitmentsContent() {
                     </div>
 
                     <div style={{ backgroundColor: '#FAF9F6', borderRadius: '12px', padding: '12px 14px', border: '1px solid #ECE8E2' }}>
-                      <div style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 500 }}>Total Collected</div>
+                      <div style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 500 }}>
+                        {currentUser?.role === 'MEMBER' ? 'Total Paid into Pot' : 'Total Collected'}
+                      </div>
                       <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', marginTop: '4px' }}>
                         £{paidTotal.toFixed(2)}
                       </div>
