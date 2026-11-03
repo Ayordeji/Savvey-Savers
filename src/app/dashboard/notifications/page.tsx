@@ -120,6 +120,23 @@ export default function NotificationsPage() {
 
   const parseNotificationDetails = (n: Notification) => {
     const msg = n.message || '';
+
+    // Check if it's an admin activity log — do not format as a member payment receipt!
+    const isAdminAction = msg.toLowerCase().startsWith('you successfully recorded') || 
+                          msg.toLowerCase().startsWith('user ') ||
+                          n.type === 'SYSTEM' ||
+                          n.type === 'USER_ADDED';
+
+    if (isAdminAction) {
+      return {
+        isPayment: false,
+        title: 'Admin Activity',
+        amount: null,
+        monthYear: null,
+        body: <span>{msg}</span>,
+        listText: msg
+      };
+    }
     
     // Extract amount: e.g. £500, £500.00, £1,000
     const amountMatch = msg.match(/£([0-9,]+(\.[0-9]{2})?)/);
@@ -129,13 +146,13 @@ export default function NotificationsPage() {
     const monthMatch = msg.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i);
     const monthYear = monthMatch ? `${monthMatch[1]} ${monthMatch[2]}` : null;
 
-    const isPayment = n.type === 'PAYMENT_RECORDED' || 
-                      n.type === 'PAYMENT_CONFIRMED' || 
-                      msg.toLowerCase().includes('contribution payment') || 
-                      msg.toLowerCase().includes('past contribution') ||
-                      (amount !== null && monthYear !== null);
+    const isMemberPaymentReceipt = n.type === 'PAYMENT_RECORDED' || 
+                                  n.type === 'PAYMENT_CONFIRMED' || 
+                                  msg.toLowerCase().includes('contribution payment') || 
+                                  msg.toLowerCase().includes('past contribution') ||
+                                  msg.toLowerCase().startsWith('your payment of');
 
-    if (isPayment && amount && monthYear) {
+    if (isMemberPaymentReceipt && amount && monthYear) {
       return {
         isPayment: true,
         title: 'Contribution Payment Recorded',
@@ -150,7 +167,7 @@ export default function NotificationsPage() {
       };
     }
 
-    if (isPayment) {
+    if (isMemberPaymentReceipt) {
       return {
         isPayment: true,
         title: 'Contribution Payment Recorded',
@@ -163,7 +180,7 @@ export default function NotificationsPage() {
 
     return {
       isPayment: false,
-      title: n.type === 'SUPER_ADMIN_REQUEST' ? 'Super Admin Request' : 'Notification',
+      title: n.type === 'SUPER_ADMIN_REQUEST' ? 'Super Admin Request' : (n.type === 'WAITING_LIST_SIGNUP' ? 'Waiting List Signup' : 'Notification'),
       amount: null,
       monthYear: null,
       body: <span>{msg}</span>,
@@ -431,16 +448,27 @@ export default function NotificationsPage() {
 
               {/* Metadata rows */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#6b7280', fontSize: '0.95rem' }}>Recorded by</span>
-                  <span style={{ color: '#111827', fontSize: '0.95rem', fontWeight: 500 }}>SSC Admin</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#6b7280', fontSize: '0.95rem' }}>Date recorded</span>
-                  <span style={{ color: '#111827', fontSize: '0.95rem', fontWeight: 500 }}>
-                    {formatRecordedDate(selectedNotification.createdAt)}
-                  </span>
-                </div>
+                {details.isPayment ? (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#6b7280', fontSize: '0.95rem' }}>Recorded by</span>
+                      <span style={{ color: '#111827', fontSize: '0.95rem', fontWeight: 500 }}>SSC Admin</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#6b7280', fontSize: '0.95rem' }}>Date recorded</span>
+                      <span style={{ color: '#111827', fontSize: '0.95rem', fontWeight: 500 }}>
+                        {formatRecordedDate(selectedNotification.createdAt)}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#6b7280', fontSize: '0.95rem' }}>Date</span>
+                    <span style={{ color: '#111827', fontSize: '0.95rem', fontWeight: 500 }}>
+                      {formatRecordedDate(selectedNotification.createdAt)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Action buttons if Super Admin Request */}

@@ -267,13 +267,15 @@ export async function POST(request: Request) {
         } });
       }
 
-      // Admin Notification
-      await db.notification.create({ data: {
-        userId: session.id,
-        message: `You successfully recorded a past payment of £${amount} for ${member?.name || 'Unknown'} (${month} ${year}).`,
-        type: 'SYSTEM',
-        isRead: false
-      } });
+      // Admin Activity Notification: only notify admin if they were recording for someone else
+      if (member && session.id !== member.id) {
+        await db.notification.create({ data: {
+          userId: session.id,
+          message: `You successfully recorded a payment of £${amount} for ${member.name || 'Member'} (${month} ${year}).`,
+          type: 'SYSTEM',
+          isRead: false
+        } });
+      }
 
       await db.auditLog.create({ data: {
         action: 'PAST_PAYMENT_RECORD',

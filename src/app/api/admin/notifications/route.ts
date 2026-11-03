@@ -16,10 +16,19 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
-  // Get notifications (Admin gets all, Member gets own)
+  // Get notifications (Each user sees notifications meant for their account; admins also see system alerts)
   let notifications = [];
   if (session.role === 'ADMIN') {
-    notifications = await db.notification.findMany();
+    notifications = await db.notification.findMany({
+      where: {
+        OR: [
+          { userId: session.id },
+          { type: 'SUPER_ADMIN_REQUEST' },
+          { type: 'WAITING_LIST_SIGNUP' },
+          { type: 'MEMBER_INVITATION_SUBMITTED' }
+        ]
+      }
+    });
   } else {
     notifications = await db.notification.findMany({ where: { userId: session.id } });
   }
@@ -49,7 +58,13 @@ export async function POST(request: Request) {
     }
   } else {
     const userNotifications = await db.notification.findMany({
-      where: { userId: session.id, isRead: false }
+      where: {
+        OR: [
+          { userId: session.id },
+          ...(session.role === 'ADMIN' ? [{ type: 'SUPER_ADMIN_REQUEST' }, { type: 'WAITING_LIST_SIGNUP' }, { type: 'MEMBER_INVITATION_SUBMITTED' }] : [])
+        ],
+        isRead: false
+      }
     });
     for (const n of userNotifications) {
       await db.notification.update({
@@ -85,15 +100,20 @@ export async function DELETE(request: Request) {
 
       await db.notification.delete({ where: { id } });
     } else {
-      // Wipes all notifications visible to this user
-      let userNotifications = [];
+      // Wipes notifications for this user/admin inbox only
       if (session.role === 'ADMIN') {
-        userNotifications = await db.notification.findMany();
+        await db.notification.deleteMany({
+          where: {
+            OR: [
+              { userId: session.id },
+              { type: 'SUPER_ADMIN_REQUEST' },
+              { type: 'WAITING_LIST_SIGNUP' },
+              { type: 'MEMBER_INVITATION_SUBMITTED' }
+            ]
+          }
+        });
       } else {
-        userNotifications = await db.notification.findMany({ where: { userId: session.id } });
-      }
-      for (const n of userNotifications) {
-        await db.notification.delete({ where: { id: n.id } });
+        await db.notification.deleteMany({ where: { userId: session.id } });
       }
     }
 

@@ -725,7 +725,7 @@ function CommitmentsContent() {
 
     const confirm = await dialog.confirm(
       'Confirm Multiple Payments',
-      `Mark payments for ${fullNames.join(', ')} ${selectedCmt.collectionYear} (Total: £${totalAmount.toFixed(2)}) as received for ${selectedCmt.memberName}?\n\n(Note: Email receipts are muted; members access payment records directly on their portal).`,
+      `Mark payments for ${fullNames.join(', ')} ${selectedCmt.collectionYear} (Total: £${totalAmount.toFixed(2)}) as received for ${selectedCmt.memberName}?\n\n(Confirmation email receipts will be dispatched to the member).`,
       `Confirm ${sortedSelected.length} Payment${sortedSelected.length > 1 ? 's' : ''}`,
       'Cancel'
     );
@@ -745,8 +745,8 @@ function CommitmentsContent() {
             month: fullMonthName,
             year: selectedCmt.collectionYear,
             amount: selectedCmt.amount,
-            sendNotification: 'no',
-            sendEmail: false
+            sendNotification: 'yes',
+            sendEmail: true
           })
         });
         if (res.ok) {

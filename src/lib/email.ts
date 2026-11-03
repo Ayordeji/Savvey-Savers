@@ -162,6 +162,20 @@ export async function sendTemplatedEmail(
       template = defaultEmailTemplates.find(t => t.id === templateId);
     }
     
+    // For payment confirmation email template 22, ensure enabled is true and updated body is used
+    if (templateId === "22") {
+      const defaultTpl22 = defaultEmailTemplates.find(t => t.id === "22");
+      if (template) {
+        template.enabled = true;
+        if (!template.body.includes('{amount}') && defaultTpl22) {
+          template.subject = defaultTpl22.subject;
+          template.body = defaultTpl22.body;
+        }
+      } else if (defaultTpl22) {
+        template = { ...defaultTpl22, enabled: true };
+      }
+    }
+    
     if (!template) {
       console.warn(`[sendTemplatedEmail] Template ID ${templateId} not found.`);
       return { success: false, error: 'Template not found' };
