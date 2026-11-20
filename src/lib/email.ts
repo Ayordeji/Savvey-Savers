@@ -132,14 +132,59 @@ function wrapInEmailTemplate({
             </td>
           </tr>
 
-          <!-- Footer -->
+          <!-- Footer (Savvey Savers Collective Footnote) -->
           <tr>
-            <td align="center" bgcolor="#FAF9F6" class="footer-cell" style="background-color: #FAF9F6; padding: 24px 32px; border-top: 1px solid #ECE8E2; text-align: center; font-size: 12px; color: #64748B; line-height: 1.6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-              <p style="margin: 0 0 4px 0; font-weight: 700; color: #0E4F45; font-size: 13px;">Savvey Savers Network Limited</p>
-              <p style="margin: 0 0 10px 0; color: #64748B; font-size: 12px;">Official Account &amp; Transaction Notification</p>
-              <p style="margin: 0; color: #94A3B8; font-size: 11px;">
-                Questions? Email <a href="mailto:admin@savveysavers.com" style="color: #0E4F45; text-decoration: underline; font-weight: 600;">admin@savveysavers.com</a> &bull; <a href="https://www.savveysavers.com" target="_blank" style="color: #0E4F45; text-decoration: underline; font-weight: 600;">www.savveysavers.com</a>
-              </p>
+            <td align="left" bgcolor="#FAF9F6" class="footer-cell" style="background-color: #FAF9F6; padding: 28px 32px; border-top: 1px solid #ECE8E2; text-align: left; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+              <!-- Green Accent Bar -->
+              <div style="width: 42px; height: 4px; background-color: #0E4F45; border-radius: 2px; margin: 0 0 16px 0;"></div>
+
+              <!-- Collective Title -->
+              <div style="font-size: 20px; font-weight: 800; color: #0E4F45; letter-spacing: -0.01em; line-height: 1.25; margin: 0 0 16px 0;">
+                Savvey Savers Collective
+              </div>
+
+              <!-- Divider Line -->
+              <div style="height: 1px; background-color: #ECE8E2; width: 100%; margin: 16px 0;"></div>
+
+              <!-- Contact Rows -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 100%; border-collapse: collapse; margin: 0;">
+                <tr>
+                  <td style="padding: 6px 12px 6px 0; width: 22px; vertical-align: middle;">
+                    <img
+                      src="https://www.savveysavers.com/images/icon-email.png"
+                      alt="Email"
+                      width="18"
+                      height="18"
+                      style="display: block; width: 18px; height: 18px; border: 0; outline: none; margin: 0;"
+                    />
+                  </td>
+                  <td style="padding: 6px 0; vertical-align: middle; font-size: 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                    <a href="mailto:admin@savveysavers.com" style="color: #1E293B; text-decoration: none; font-weight: 500;">admin@savveysavers.com</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 12px 6px 0; width: 22px; vertical-align: middle;">
+                    <img
+                      src="https://www.savveysavers.com/images/icon-globe.png"
+                      alt="Website"
+                      width="18"
+                      height="18"
+                      style="display: block; width: 18px; height: 18px; border: 0; outline: none; margin: 0;"
+                    />
+                  </td>
+                  <td style="padding: 6px 0; vertical-align: middle; font-size: 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                    <a href="https://www.savveysavers.com" target="_blank" style="color: #1E293B; text-decoration: none; font-weight: 500;">www.savveysavers.com</a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Divider Line -->
+              <div style="height: 1px; background-color: #ECE8E2; width: 100%; margin: 16px 0;"></div>
+
+              <!-- Legal Entity Subtitle -->
+              <div style="font-size: 14px; font-weight: 500; color: #64748B; margin: 0; line-height: 1.4;">
+                Savvey Savers Network Limited
+              </div>
             </td>
           </tr>
         </table>

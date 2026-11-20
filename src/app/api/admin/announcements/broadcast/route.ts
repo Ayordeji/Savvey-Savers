@@ -60,7 +60,9 @@ export async function POST(request: Request) {
     for (const recipient of recipients) {
       if (!recipient.email) continue;
       const firstName = recipient.firstName || recipient.name.split(' ')[0] || recipient.name;
-      const personalizedBody = `Dear <b>${firstName}</b>,<br /><br />${message.replace(/\n/g, '<br />')}<br /><br />Kind regards,<br /><b>Savvey Savers Network Support</b><br /><a href="https://savveysavers.com">https://savveysavers.com</a>`;
+      const hasSignOff = /kind regards|best regards|warm regards|regards|sincerely/i.test(message);
+      const signOff = hasSignOff ? '' : '<br /><br />Kind regards,<br /><b>Savvey Savers Network Support</b><br /><a href="https://savveysavers.com" style="color: #0E4F45;">https://savveysavers.com</a>';
+      const personalizedBody = `Dear <b>${firstName}</b>,<br /><br />${message.replace(/\n/g, '<br />')}${signOff}`;
 
       try {
         const mailRes = await sendEmail({
