@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Megaphone, AlertTriangle, Info, CheckCircle2, AlertCircle, X, Edit, Plus, Eye, EyeOff } from 'lucide-react';
+import { renderFormattedHtml } from '@/lib/richText';
+import RichFormattingTextarea from '@/components/ui/RichFormattingTextarea';
 
 interface Announcement {
   enabled: boolean;
@@ -177,17 +179,18 @@ export default function DashboardAnnouncementBanner({ isAdmin }: { isAdmin: bool
                   </span>
                 )}
               </div>
-              <p
+              <div
                 style={{
                   margin: 0,
                   fontSize: '0.85rem',
                   color: currentStyle.text,
-                  lineHeight: 1.5,
-                  whiteSpace: 'pre-line'
+                  lineHeight: 1.55
                 }}
-              >
-                {announcement.message}
-              </p>
+                className="announcement-formatted-body"
+                dangerouslySetInnerHTML={{
+                  __html: renderFormattedHtml(announcement.message)
+                }}
+              />
             </div>
           </div>
 
@@ -352,17 +355,14 @@ export default function DashboardAnnouncementBanner({ isAdmin }: { isAdmin: bool
 
               {/* Message */}
               <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '6px', display: 'block' }}>
-                  Message *
-                </label>
-                <textarea
-                  rows={4}
+                <RichFormattingTextarea
+                  label="Message"
                   required={formEnabled}
                   value={formMessage}
-                  onChange={(e) => setFormMessage(e.target.value)}
-                  placeholder="Enter details of the announcement here..."
-                  className="form-input"
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '0.88rem', fontFamily: 'inherit' }}
+                  onChange={setFormMessage}
+                  placeholder="Enter details of the announcement here... E.g. **Important Notice** or - Bullet points"
+                  rows={4}
+                  helperText="Use toolbar or type **bold**, *italic*, - bullet points, and 1. numbered lists."
                 />
               </div>
 

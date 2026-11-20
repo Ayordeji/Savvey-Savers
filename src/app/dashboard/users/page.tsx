@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Plus, Eye, Edit, Trash2, X, MoreVertical, ShieldAlert, CheckCircle, FileText, CalendarRange, Star, Mail, AlertTriangle, AlertCircle, Download, Upload, Filter, Send, Wallet, Clock, Check, ChevronDown, ArrowRight, UserCheck, UserX, User, Shield, Users } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
+import RichFormattingTextarea from '@/components/ui/RichFormattingTextarea';
 import PaginationControls from '../PaginationControls';
 import styles from './users.module.css';
 
@@ -4904,17 +4905,15 @@ export default function ManageUsersPage() {
 
               {/* Message Body */}
               <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '6px', display: 'block' }}>
-                  Announcement Message *
-                </label>
-                <textarea
-                  rows={6}
+                <RichFormattingTextarea
+                  label="Announcement Message"
                   required
                   value={broadcastMessage}
-                  onChange={(e) => setBroadcastMessage(e.target.value)}
+                  onChange={setBroadcastMessage}
                   placeholder="Type your message here. You can include details on updated fee schedules, savings deadlines, or meeting notes..."
-                  className="form-input"
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ECE8E2', backgroundColor: '#FFFFFF', fontSize: '0.88rem', fontFamily: 'inherit', lineHeight: 1.5 }}
+                  rows={6}
+                  forEmail={true}
+                  helperText="Use toolbar or type **bold**, *italic*, - bullet points, and 1. numbered lists. Click Preview to see email layout."
                 />
               </div>
 

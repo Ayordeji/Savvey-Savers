@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail } from '@/lib/email';
+import { renderFormattedHtml } from '@/lib/richText';
 import { cookies } from 'next/headers';
 import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 
@@ -62,7 +63,8 @@ export async function POST(request: Request) {
       const firstName = recipient.firstName || recipient.name.split(' ')[0] || recipient.name;
       const hasSignOff = /kind regards|best regards|warm regards|regards|sincerely/i.test(message);
       const signOff = hasSignOff ? '' : '<br /><br />Kind regards,<br /><b>Savvey Savers Network Support</b><br /><a href="https://savveysavers.com" style="color: #0E4F45;">https://savveysavers.com</a>';
-      const personalizedBody = `Dear <b>${firstName}</b>,<br /><br />${message.replace(/\n/g, '<br />')}${signOff}`;
+      const formattedMessage = renderFormattedHtml(message, { forEmail: true });
+      const personalizedBody = `Dear <b>${firstName}</b>,<br /><br />${formattedMessage}${signOff}`;
 
       try {
         const mailRes = await sendEmail({
